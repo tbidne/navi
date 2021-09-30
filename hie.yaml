@@ -1,0 +1,7 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:navi"
+
+    - path: "app/Main.hs"
+      component: "navi:exe:navi"

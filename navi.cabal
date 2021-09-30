@@ -1,0 +1,78 @@
+cabal-version:      2.4
+name:               navi
+version:            0.1.0.0
+license:            MIT
+license-file:       LICENSE
+copyright:          2021 Thomas Bidne
+author:             Thomas Bidne
+maintainer:         tbidne@prontonmail.com
+homepage:           https://github.com/tbidne/navi/
+bug-reports:        https://github.com/tbidne/navi/issues
+synopsis:           A utility program for sending system notifications.
+description:
+  Please see the README at https://github.com/tbidne/navi/#readme
+
+category:           System, Notifications
+extra-source-files:
+  CHANGELOG.md
+  README.md
+
+source-repository head
+  type:     git
+  location: https://github.com/tbidne/navi
+
+common common-exts
+  default-extensions:
+    AllowAmbiguousTypes
+    DeriveFunctor
+    DerivingVia
+    GADTs
+    ImportQualifiedPost
+    InstanceSigs
+    MultiWayIf
+    NamedFieldPuns
+    NumericUnderscores
+    OverloadedStrings
+    PatternSynonyms
+    ScopedTypeVariables
+    TypeApplications
+
+library
+  import:           common-exts
+  exposed-modules:
+    Navi.Class.Service
+    Navi.Data.Config
+    Navi.Data.Event
+    Navi.Data.NonNegative
+    Navi.Data.ServiceException
+    Navi.Data.Sorted
+    Navi.Services.Battery
+    Navi.Services.Battery.Parsing
+    Navi.Services.Custom
+    Navi.Utils
+
+  build-depends:
+    , attoparsec  ^>=0.14.1
+    , base        ^>=4.14.1.0
+    , containers  ^>=0.6.5.1
+    , fdo-notify  ^>=0.3.1
+    , process     ^>=1.6.9.0
+    , text        ^>=1.2.5.0
+    , tomland     ^>=1.3.3.0
+
+  hs-source-dirs:   src
+  default-language: Haskell2010
+
+executable navi
+  import:           common-exts
+  main-is:          Main.hs
+  build-depends:
+    , base
+    , containers
+    , dbus            ^>=1.2.17
+    , fdo-notify
+    , navi
+
+  hs-source-dirs:   app
+  ghc-options:      -threaded -with-rtsopts=-N
+  default-language: Haskell2010
