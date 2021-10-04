@@ -4,7 +4,7 @@ module Navi.Services.Battery
   )
 where
 
-import Control.Applicative ((<|>))
+import Control.Applicative (Alternative (..))
 import DBus.Notify
   ( Body (..),
     Hint (..),
@@ -23,36 +23,44 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Navi.Data.Event (Command (..), ErrorEvent (..), Event (..), RepeatEvent (..))
 import Navi.Data.Event qualified as Event
+import Navi.Data.NonNegative (NonNegative (..))
+import Navi.Data.NonNegative qualified as NN
+import Navi.Data.Sorted (Sorted)
 import Navi.Data.Sorted qualified as Sorted
 import Navi.Services.Types (ServiceErr (..))
 
-mkBatteryEvent :: [(Int, Note)] -> RepeatEvent BatteryState -> ErrorEvent -> Event
+mkBatteryEvent :: [(NonNegative, Note)] -> RepeatEvent BatteryState -> ErrorEvent -> Event
 mkBatteryEvent lvlNoteList = Event.mkEvent cmd parserFn lvlNoteMap lookupFn
   where
     lvlNoteMap = Map.fromList lvlNoteList
+    upperBoundMap = initBoundMap $ Sorted.fromList $ fmap fst lvlNoteList
     cmd = MkCommand "upower -i `upower -e | grep 'BAT'`"
-    parserFn = queryFn
+    parserFn = queryFn upperBoundMap
     lookupFn = toNote
 
-queryFn :: Text -> Either ServiceErr BatteryState
-queryFn infoStr = do
+queryFn :: Map NonNegative NonNegative -> Text -> Either ServiceErr BatteryState
+queryFn upperBoundMap infoStr = do
   case parseBattery infoStr of
-    Both s -> Right s
+    Both (MkBatteryState l s) ->
+      -- TODO: should remove w/ dependent map?
+      case Map.lookup l upperBoundMap of
+        Nothing ->
+          Left $
+            MkServiceErr
+              "Battery"
+              "Bound error"
+              $ "Could not find bound for: " <> T.pack (show l)
+        Just bound -> Right $ MkBatteryState bound s
     None -> Left $ mkServiceErr $ "Could not parse battery percent and state: " <> show infoStr
     Percent _ -> Left $ mkServiceErr $ "Could not parse battery state: " <> show infoStr
     Status _ -> Left $ mkServiceErr $ "Could not parse battery percent: " <> show infoStr
   where
     mkServiceErr = MkServiceErr "Battery" "Parse error" . T.pack
 
-toNote :: Map Int Note -> BatteryState -> Maybe Note
+toNote :: Map NonNegative Note -> BatteryState -> Maybe Note
 toNote lvlNoteMap (MkBatteryState currLvl status) = case status of
-  Discharging ->
-    let violatedLvl = Sorted.leastUpperBound currLvl alertLvls
-     in -- TODO: Dependent Map?
-        (=<<) (`Map.lookup` lvlNoteMap) violatedLvl
+  Discharging -> Map.lookup currLvl lvlNoteMap
   _ -> Nothing
-  where
-    alertLvls = Sorted.unsafeMkSorted $ Map.keys lvlNoteMap
 
 batteryNNote :: Int -> Maybe Icon -> UrgencyLevel -> Timeout -> Note
 batteryNNote n icon urgency = Event.mkNote icon summary body hints
@@ -61,15 +69,23 @@ batteryNNote n icon urgency = Event.mkNote icon summary body hints
     body = Just (Text ("Power is less than " <> show n <> "%"))
     hints = [Urgency urgency]
 
+initBoundMap :: Sorted NonNegative -> Map NonNegative NonNegative
+initBoundMap = Map.fromList . go 0 . Sorted.toList
+  where
+    go prev [] = [(unsafeNN i, unsafeNN 100) | i <- [prev .. 100]]
+    go prev (n@(MkNonNegative x) : xs) =
+      [(unsafeNN i, n) | i <- [prev .. x]] <> go x xs
+    unsafeNN = NN.unsafeNonNegative
+
 data BatteryState = MkBatteryState
-  { level :: Int,
+  { level :: NonNegative,
     status :: BatteryStatus
   }
   deriving (Eq, Show)
 
 data BatteryResult
   = None
-  | Percent Int
+  | Percent NonNegative
   | Status BatteryStatus
   | Both BatteryState
   deriving (Show)
@@ -98,14 +114,15 @@ parseLine ln = case AP.parseOnly parseState ln of
     Right n -> Percent n
     Left _ -> None
 
-parsePercent :: Parser Int
+parsePercent :: Parser NonNegative
 parsePercent =
   AP.skipSpace
     *> AP.string "percentage:"
     *> AP.skipSpace
-    *> AP.decimal
+    *> parseNN
     <* end
   where
+    parseNN = AP.decimal >>= maybe empty pure . NN.mkNonNegative
     end = AP.char '%' *> AP.skipSpace
 
 data BatteryStatus

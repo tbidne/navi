@@ -18,7 +18,8 @@ import Navi.Data.Event
     RepeatEvent (..),
   )
 import Navi.Data.Event qualified as Event
-import Navi.Data.NonNegative (NonNegative (MkNonNegative), unsafeNonNegative)
+import Navi.Data.NonNegative (NonNegative (..))
+import Navi.Data.NonNegative qualified as NN
 import Navi.Services.Battery qualified as Battery
 import Navi.Services.Custom.Single qualified as Single
 import Navi.Services.Types (ServiceErr (..), ServiceResult (..))
@@ -52,7 +53,7 @@ config = do
   evts <- ioEvts
   pure $
     MkConfig
-      { pollInterval = unsafeNonNegative 10,
+      { pollInterval = NN.unsafeNonNegative 10,
         events = evts,
         logFile = "navi.log"
       }
@@ -67,14 +68,16 @@ ioEvts =
 batteryEvt :: IO Event
 batteryEvt = do
   ref <- IORef.newIORef Nothing
-  let a = (10, Battery.batteryNNote 10 Nothing Critical (Milliseconds 10_000))
-      ab = (55, Battery.batteryNNote 55 Nothing Critical (Milliseconds 10_000))
-      b = (97, Battery.batteryNNote 56 Nothing Critical (Milliseconds 10_000))
-      c = (98, Battery.batteryNNote 80 Nothing Normal (Milliseconds 10_000))
+  let a = (unsafeNN 10, Battery.batteryNNote 10 Nothing Critical (Milliseconds 10_000))
+      ab = (unsafeNN 55, Battery.batteryNNote 55 Nothing Critical (Milliseconds 10_000))
+      b = (unsafeNN 19, Battery.batteryNNote 19 Nothing Critical (Milliseconds 10_000))
+      c = (unsafeNN 20, Battery.batteryNNote 20 Nothing Normal (Milliseconds 10_000))
       mp = [a, ab, b, c]
       repeatErr = ErrEvt AllowRepeats
 
   pure $ Battery.mkBatteryEvent mp (DisallowRepeats ref) repeatErr
+  where
+    unsafeNN = NN.unsafeNonNegative
 
 singleEvt :: IO Event
 singleEvt = do
