@@ -1,7 +1,7 @@
 module Main (main) where
 
 import Control.Concurrent qualified as CC
-import Control.Exception (Exception (..), SomeException)
+import Control.Exception (Exception (..))
 import Control.Exception qualified as Except
 import Control.Monad (forever, void)
 import DBus.Client (ClientError)
@@ -9,19 +9,21 @@ import DBus.Client qualified as DBus
 import DBus.Notify (Body (..), Client, Hint (..), Note, Timeout (..), UrgencyLevel (..))
 import DBus.Notify qualified as DBusN
 import Data.IORef qualified as IORef
-import Data.Map.Strict qualified as Map
+import Data.Text qualified as T
 import Navi.Data.Config (Config (..))
 import Navi.Data.Event
-  ( AnyEvent (..),
+  ( Command (..),
     ErrorEvent (..),
     Event (..),
     RepeatEvent (..),
-    Trigger (..),
   )
 import Navi.Data.Event qualified as Event
 import Navi.Data.NonNegative (NonNegative (MkNonNegative), unsafeNonNegative)
 import Navi.Services.Battery qualified as Battery
-import Navi.Services.Custom qualified as Custom
+import Navi.Services.Custom.Single qualified as Single
+import Navi.Services.Types (ServiceErr (..), ServiceResult (..))
+import UnexceptionalIO (SomeNonPseudoException)
+import UnexceptionalIO qualified as Unexceptional
 
 -- conf file
 -- [general]
@@ -55,34 +57,34 @@ config = do
         logFile = "navi.log"
       }
 
-ioEvts :: IO [AnyEvent]
+ioEvts :: IO [Event]
 ioEvts =
   sequenceA
     [ batteryEvt,
-      customEvt
+      singleEvt
     ]
 
-batteryEvt :: IO AnyEvent
+batteryEvt :: IO Event
 batteryEvt = do
   ref <- IORef.newIORef Nothing
   let a = (10, Battery.batteryNNote 10 Nothing Critical (Milliseconds 10_000))
       ab = (55, Battery.batteryNNote 55 Nothing Critical (Milliseconds 10_000))
-      b = (56, Battery.batteryNNote 56 Nothing Critical (Milliseconds 10_000))
-      c = (80, Battery.batteryNNote 80 Nothing Normal (Milliseconds 10_000))
-      mp = Map.fromList [a, ab, b, c]
+      b = (97, Battery.batteryNNote 56 Nothing Critical (Milliseconds 10_000))
+      c = (98, Battery.batteryNNote 80 Nothing Normal (Milliseconds 10_000))
+      mp = [a, ab, b, c]
       repeatErr = ErrEvt AllowRepeats
 
-  pure $ MkAnyEvent $ Battery.mkBatteryEvent mp (DisallowRepeats ref) repeatErr
+  pure $ Battery.mkBatteryEvent mp (DisallowRepeats ref) repeatErr
 
-customEvt :: IO AnyEvent
-customEvt = do
-  ref <- IORef.newIORef False
-  ref2 <- IORef.newIORef False
-  let note = Custom.customNote "Custom" (Just "A note!") Nothing Normal (Milliseconds 10_000)
-      repeatErr = ErrEvt $ DisallowRepeats ref2 --ErrEvt AllowRepeats
-  pure $ MkAnyEvent $ Custom.mkCustomEvent cmdStr note (DisallowRepeats ref) repeatErr
+singleEvt :: IO Event
+singleEvt = do
+  ref <- IORef.newIORef Nothing
+  ref2 <- IORef.newIORef Nothing
+  let note = Single.mkSingleNote "Single" (Just "A note!") Nothing Normal (Milliseconds 10_000)
+      repeatErr = ErrEvt $ DisallowRepeats ref2
+  pure $ Single.mkSingleEvent cmd ("true", note) (DisallowRepeats ref) repeatErr
   where
-    cmdStr = "min=`date +%M`; if [[ \"$min % 2\" -eq 0 ]]; then echo true; else echo false; fi"
+    cmd = MkCommand "min=`date +%M`; if [[ \"$min % 2\" -eq 0 ]]; then echo true; else echo false; fi"
 
 main :: IO ()
 main = do
@@ -99,35 +101,43 @@ main = do
     CC.threadDelay (sleepTime * 1_000_000)
     traverse (processEvent client) events
 
-processEvent :: Client -> AnyEvent -> IO ()
-processEvent client (MkAnyEvent MkEvent {trigger, getNote, errorEvent}) = do
-  result :: Either SomeException a <- Except.try $ runTrigger trigger
-  either triggerErr (triggerSuccess getNote) result
+processEvent :: Client -> Event -> IO ()
+processEvent client MkEvent {trigger, errorEvent} = do
+  result <- Unexceptional.fromIO trigger
+  either triggerErr triggerSuccess result
   where
-    triggerErr :: SomeException -> IO ()
-    triggerErr e = do
-      putStrLn $ "Exception: " <> displayException e
-      case errorEvent of
-        NoErrEvt -> pure ()
-        ErrEvt AllowRepeats -> void $ DBusN.notify client (exToNote e)
-        ErrEvt (DisallowRepeats ref) -> do
-          prevErr <- IORef.readIORef ref
-          if prevErr
-            then pure ()
-            else do
-              IORef.writeIORef ref True
-              void $ DBusN.notify client (exToNote e)
+    triggerErr :: SomeNonPseudoException -> IO ()
+    triggerErr ex = do
+      putStrLn $ "Exception: " <> displayException ex
+      blockErrEvent <- Event.blockErr errorEvent
+      if blockErrEvent
+        then pure ()
+        else void $ DBusN.notify client (exToNote ex)
 
-    triggerSuccess :: (a -> Maybe Note) -> a -> IO ()
-    triggerSuccess getNoteFn triggerVal =
-      maybe (pure ()) sendNote (getNoteFn triggerVal)
-      where
-        sendNote note = void $ DBusN.notify client note
+    triggerSuccess :: ServiceResult -> IO ()
+    triggerSuccess None = pure ()
+    triggerSuccess (Err err) = do
+      blockErrEvent <- Event.blockErr errorEvent
+      putStrLn $ "Service Error: "
+      if blockErrEvent
+        then pure ()
+        else sendNote (serviceErrToNote err)
+    triggerSuccess (Alert nt) = sendNote nt
 
-exToNote :: SomeException -> Note
+    sendNote note = void $ DBusN.notify client note
+
+exToNote :: SomeNonPseudoException -> Note
 exToNote ex = Event.mkNote Nothing summary body hints timeout
   where
     summary = "Exception"
     body = Just $ Text $ displayException ex
+    hints = [Urgency Critical]
+    timeout = Milliseconds 10_000
+
+serviceErrToNote :: ServiceErr -> Note
+serviceErrToNote (MkServiceErr nm short _) = Event.mkNote Nothing summary body hints timeout
+  where
+    summary = "Service Error"
+    body = Just $ Text $ T.unpack $ nm <> ": " <> short
     hints = [Urgency Critical]
     timeout = Milliseconds 10_000

@@ -40,16 +40,15 @@ common common-exts
 library
   import:           common-exts
   exposed-modules:
-    Navi.Class.Service
     Navi.Data.Config
     Navi.Data.Event
     Navi.Data.NonNegative
-    Navi.Data.ServiceException
     Navi.Data.Sorted
     Navi.Services.Battery
     Navi.Services.Battery.Parsing
-    Navi.Services.Custom
-    Navi.Utils
+    Navi.Services.Custom.Multiple
+    Navi.Services.Custom.Single
+    Navi.Services.Types
 
   build-depends:
     , attoparsec  ^>=0.14.1
@@ -69,9 +68,11 @@ executable navi
   build-depends:
     , base
     , containers
-    , dbus            ^>=1.2.17
+    , dbus             ^>=1.2.17
     , fdo-notify
     , navi
+    , text
+    , unexceptionalio  ^>=0.5.1
 
   hs-source-dirs:   app
   ghc-options:      -threaded -with-rtsopts=-N

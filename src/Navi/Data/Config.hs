@@ -3,11 +3,11 @@ module Navi.Data.Config
   )
 where
 
-import Navi.Data.Event (AnyEvent)
+import Navi.Data.Event (Event)
 import Navi.Data.NonNegative (NonNegative)
 
 data Config = MkConfig
   { pollInterval :: NonNegative,
-    events :: [AnyEvent],
+    events :: [Event],
     logFile :: FilePath
   }
