@@ -10,6 +10,7 @@ import DBus.Notify (Body (..), Client, Hint (..), Note, Timeout (..), UrgencyLev
 import DBus.Notify qualified as DBusN
 import Data.IORef qualified as IORef
 import Data.Text qualified as T
+import Navi.Data.BoundedN qualified as BoundedN
 import Navi.Data.Config (Config (..))
 import Navi.Data.Event
   ( Command (..),
@@ -68,16 +69,16 @@ ioEvts =
 batteryEvt :: IO Event
 batteryEvt = do
   ref <- IORef.newIORef Nothing
-  let a = (unsafeNN 10, Battery.batteryNNote 10 Nothing Critical (Milliseconds 10_000))
-      ab = (unsafeNN 55, Battery.batteryNNote 55 Nothing Critical (Milliseconds 10_000))
-      b = (unsafeNN 19, Battery.batteryNNote 19 Nothing Critical (Milliseconds 10_000))
-      c = (unsafeNN 20, Battery.batteryNNote 20 Nothing Normal (Milliseconds 10_000))
+  let a = (unsafeB 10, Battery.batteryNNote 10 Nothing Critical (Milliseconds 10_000))
+      ab = (unsafeB 55, Battery.batteryNNote 55 Nothing Critical (Milliseconds 10_000))
+      b = (unsafeB 19, Battery.batteryNNote 19 Nothing Critical (Milliseconds 10_000))
+      c = (unsafeB 20, Battery.batteryNNote 20 Nothing Normal (Milliseconds 10_000))
       mp = [a, ab, b, c]
       repeatErr = ErrEvt AllowRepeats
 
   pure $ Battery.mkBatteryEvent mp (DisallowRepeats ref) repeatErr
   where
-    unsafeNN = NN.unsafeNonNegative
+    unsafeB = BoundedN.unsafeBoundedN
 
 singleEvt :: IO Event
 singleEvt = do

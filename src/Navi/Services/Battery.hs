@@ -21,15 +21,17 @@ import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text (Text)
 import Data.Text qualified as T
+import Navi.Data.BoundedN (BoundedN (..))
+import Navi.Data.BoundedN qualified as BoundedN
 import Navi.Data.Event (Command (..), ErrorEvent (..), Event (..), RepeatEvent (..))
 import Navi.Data.Event qualified as Event
-import Navi.Data.NonNegative (NonNegative (..))
-import Navi.Data.NonNegative qualified as NN
 import Navi.Data.Sorted (Sorted)
 import Navi.Data.Sorted qualified as Sorted
 import Navi.Services.Types (ServiceErr (..))
 
-mkBatteryEvent :: [(NonNegative, Note)] -> RepeatEvent BatteryState -> ErrorEvent -> Event
+type BatLevel = BoundedN 0 100
+
+mkBatteryEvent :: [(BatLevel, Note)] -> RepeatEvent BatteryState -> ErrorEvent -> Event
 mkBatteryEvent lvlNoteList = Event.mkEvent cmd parserFn lvlNoteMap lookupFn
   where
     lvlNoteMap = Map.fromList lvlNoteList
@@ -38,7 +40,7 @@ mkBatteryEvent lvlNoteList = Event.mkEvent cmd parserFn lvlNoteMap lookupFn
     parserFn = queryFn upperBoundMap
     lookupFn = toNote
 
-queryFn :: Map NonNegative NonNegative -> Text -> Either ServiceErr BatteryState
+queryFn :: Map BatLevel BatLevel -> Text -> Either ServiceErr BatteryState
 queryFn upperBoundMap infoStr = do
   case parseBattery infoStr of
     Both (MkBatteryState l s) ->
@@ -57,7 +59,7 @@ queryFn upperBoundMap infoStr = do
   where
     mkServiceErr = MkServiceErr "Battery" "Parse error" . T.pack
 
-toNote :: Map NonNegative Note -> BatteryState -> Maybe Note
+toNote :: Map BatLevel Note -> BatteryState -> Maybe Note
 toNote lvlNoteMap (MkBatteryState currLvl status) = case status of
   Discharging -> Map.lookup currLvl lvlNoteMap
   _ -> Nothing
@@ -69,23 +71,23 @@ batteryNNote n icon urgency = Event.mkNote icon summary body hints
     body = Just (Text ("Power is less than " <> show n <> "%"))
     hints = [Urgency urgency]
 
-initBoundMap :: Sorted NonNegative -> Map NonNegative NonNegative
+initBoundMap :: Sorted BatLevel -> Map BatLevel BatLevel
 initBoundMap = Map.fromList . go 0 . Sorted.toList
   where
-    go prev [] = [(unsafeNN i, unsafeNN 100) | i <- [prev .. 100]]
-    go prev (n@(MkNonNegative x) : xs) =
-      [(unsafeNN i, n) | i <- [prev .. x]] <> go x xs
-    unsafeNN = NN.unsafeNonNegative
+    go prev [] = [(unsafeB i, unsafeB 100) | i <- [prev .. 100]]
+    go prev (n@(MkBoundedN x) : xs) =
+      [(unsafeB i, n) | i <- [prev .. x]] <> go x xs
+    unsafeB = BoundedN.unsafeBoundedN
 
 data BatteryState = MkBatteryState
-  { level :: NonNegative,
+  { level :: BatLevel,
     status :: BatteryStatus
   }
   deriving (Eq, Show)
 
 data BatteryResult
   = None
-  | Percent NonNegative
+  | Percent BatLevel
   | Status BatteryStatus
   | Both BatteryState
   deriving (Show)
@@ -114,7 +116,7 @@ parseLine ln = case AP.parseOnly parseState ln of
     Right n -> Percent n
     Left _ -> None
 
-parsePercent :: Parser NonNegative
+parsePercent :: Parser BatLevel
 parsePercent =
   AP.skipSpace
     *> AP.string "percentage:"
@@ -122,7 +124,7 @@ parsePercent =
     *> parseNN
     <* end
   where
-    parseNN = AP.decimal >>= maybe empty pure . NN.mkNonNegative
+    parseNN = AP.decimal >>= maybe empty pure . BoundedN.mkBoundedN
     end = AP.char '%' *> AP.skipSpace
 
 data BatteryStatus

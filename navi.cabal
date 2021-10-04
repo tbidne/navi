@@ -24,6 +24,7 @@ source-repository head
 common common-exts
   default-extensions:
     AllowAmbiguousTypes
+    DataKinds
     DeriveFunctor
     DerivingVia
     GADTs
@@ -35,11 +36,13 @@ common common-exts
     OverloadedStrings
     PatternSynonyms
     ScopedTypeVariables
+    StandaloneKindSignatures
     TypeApplications
 
 library
   import:           common-exts
   exposed-modules:
+    Navi.Data.BoundedN
     Navi.Data.Config
     Navi.Data.Event
     Navi.Data.NonNegative
