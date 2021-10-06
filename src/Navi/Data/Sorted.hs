@@ -9,6 +9,7 @@ module Navi.Data.Sorted
 where
 
 import Data.List (sort)
+import Navi.Prelude
 
 data Sorted a
   = Nil

@@ -7,6 +7,8 @@ module Navi.Data.NonNegative
   )
 where
 
+import Navi.Prelude
+
 -- | Newtype wrapper over 'Int'.
 newtype NonNegative = MkUnsafeNonNegative
   { -- | Unwraps the 'NonNegative'
@@ -42,5 +44,5 @@ unsafeNonNegative n
   | otherwise =
     error $
       "Passed negative "
-        <> show n
+        <> showt n
         <> " to unsafeNonNegative!"

@@ -4,7 +4,6 @@ module Navi.Services.Battery
   )
 where
 
-import Control.Applicative (Alternative (..))
 import DBus.Notify
   ( Body (..),
     Hint (..),
@@ -16,10 +15,8 @@ import DBus.Notify
 import Data.Attoparsec.Combinator qualified as AP
 import Data.Attoparsec.Text (Parser)
 import Data.Attoparsec.Text qualified as AP
-import Data.Functor (($>))
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
-import Data.Text (Text)
 import Data.Text qualified as T
 import Navi.Data.BoundedN (BoundedN (..))
 import Navi.Data.BoundedN qualified as BoundedN
@@ -27,6 +24,7 @@ import Navi.Data.Event (Command (..), ErrorEvent (..), Event (..), RepeatEvent (
 import Navi.Data.Event qualified as Event
 import Navi.Data.Sorted (Sorted)
 import Navi.Data.Sorted qualified as Sorted
+import Navi.Prelude
 import Navi.Services.Types (ServiceErr (..))
 
 type BatLevel = BoundedN 0 100

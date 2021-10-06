@@ -30,8 +30,10 @@ common common-exts
     GADTs
     ImportQualifiedPost
     InstanceSigs
+    LambdaCase
     MultiWayIf
     NamedFieldPuns
+    NoImplicitPrelude
     NumericUnderscores
     OverloadedStrings
     PatternSynonyms
@@ -47,6 +49,7 @@ library
     Navi.Data.Event
     Navi.Data.NonNegative
     Navi.Data.Sorted
+    Navi.Prelude
     Navi.Services.Battery
     Navi.Services.Battery.Parsing
     Navi.Services.Custom.Multiple

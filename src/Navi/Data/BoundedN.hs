@@ -7,10 +7,9 @@ module Navi.Data.BoundedN
   )
 where
 
-import Data.Kind (Type)
 import Data.Proxy (Proxy (..))
-import GHC.Natural (Natural)
 import GHC.TypeNats (KnownNat, Nat, natVal)
+import Navi.Prelude
 
 -- | Newtype wrapper over 'Natural'.
 type BoundedN :: Nat -> Nat -> Type
@@ -40,11 +39,11 @@ unsafeBoundedN n
   | otherwise =
     error $
       "Passed invalid "
-        <> show n
+        <> showt n
         <> " bounded by ["
-        <> show lower
+        <> showt lower
         <> ","
-        <> show upper
+        <> showt upper
         <> "]"
   where
     lower = natVal $ Proxy @l

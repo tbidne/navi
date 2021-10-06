@@ -5,7 +5,7 @@ module Navi.Services.Types
 where
 
 import DBus.Notify (Note)
-import Data.Text (Text)
+import Navi.Prelude
 
 data ServiceResult
   = Err ServiceErr

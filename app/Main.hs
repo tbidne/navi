@@ -3,7 +3,6 @@ module Main (main) where
 import Control.Concurrent qualified as CC
 import Control.Exception (Exception (..))
 import Control.Exception qualified as Except
-import Control.Monad (forever, void)
 import DBus.Client (ClientError)
 import DBus.Client qualified as DBus
 import DBus.Notify (Body (..), Client, Hint (..), Note, Timeout (..), UrgencyLevel (..))
@@ -21,6 +20,7 @@ import Navi.Data.Event
 import Navi.Data.Event qualified as Event
 import Navi.Data.NonNegative (NonNegative (..))
 import Navi.Data.NonNegative qualified as NN
+import Navi.Prelude
 import Navi.Services.Battery qualified as Battery
 import Navi.Services.Custom.Single qualified as Single
 import Navi.Services.Types (ServiceErr (..), ServiceResult (..))
@@ -95,7 +95,7 @@ main = do
   eitherClient :: Either ClientError Client <- Except.try DBusN.connectSession
   client <- case eitherClient of
     Left err -> do
-      putStrLn $ "Error connecting to dbus: " <> DBus.clientErrorMessage err
+      putStrLn $ "Error connecting to dbus: " <> T.pack (DBus.clientErrorMessage err)
       Except.throwIO err
     Right c -> pure c
 
@@ -112,7 +112,7 @@ processEvent client MkEvent {trigger, errorEvent} = do
   where
     triggerErr :: SomeNonPseudoException -> IO ()
     triggerErr ex = do
-      putStrLn $ "Exception: " <> displayException ex
+      putStrLn $ "Exception: " <> T.pack (displayException ex)
       blockErrEvent <- Event.blockErr errorEvent
       if blockErrEvent
         then pure ()

@@ -24,11 +24,10 @@ import DBus.Notify
     Note (..),
     Timeout (..),
   )
-import Data.Functor (($>))
 import Data.IORef (IORef)
 import Data.IORef qualified as IORef
-import Data.Text (Text)
 import Data.Text qualified as T
+import Navi.Prelude
 import Navi.Services.Types (ServiceErr (..), ServiceResult (..))
 import System.Process qualified as P
 
