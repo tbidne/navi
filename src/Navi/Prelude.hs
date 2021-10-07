@@ -12,6 +12,10 @@ module Navi.Prelude
   ( -- * Total versions of partial functions
     headMaybe,
 
+    -- * Strict IO
+    hGetContents',
+    readFile',
+
     -- * Misc utilities
     (>.>),
     maybeToEither,
@@ -21,7 +25,7 @@ module Navi.Prelude
     error,
     showt,
 
-    -- * Prelude exports
+    -- * Base exports
     module X,
   )
 where
@@ -62,7 +66,7 @@ import Data.Functor as X
   )
 import Data.Kind as X (Constraint, Type)
 import Data.List as X (filter)
-import Data.Maybe as X (Maybe (..), maybe)
+import Data.Maybe as X (Maybe (..), fromMaybe, maybe)
 import Data.Monoid as X (Monoid (..))
 import Data.Semigroup as X (Semigroup (..))
 import Data.Text as X (Text)
@@ -70,6 +74,7 @@ import Data.Text qualified as T
 import Data.Text.IO as X (putStr, putStrLn)
 import Data.Traversable as X (Traversable (..))
 import GHC.Natural as X (Natural (..))
+import System.IO qualified as IO
 import Prelude as X
   ( Bool (..),
     Bounded (..),
@@ -127,3 +132,11 @@ monoBimap f = bimap f f
 (>.>) = flip (.)
 
 infixr 8 >.>
+
+-- | Strict version of 'P.hGetContents', until we can upgrade to GHC 9.0.1
+hGetContents' :: IO.Handle -> IO.IO String
+hGetContents' h = IO.hGetContents h >>= \s -> length s `seq` pure s
+
+-- | Strict version of 'P.readFile', until we can upgrade to GHC 9.0.1
+readFile' :: FilePath -> IO String
+readFile' name = IO.openFile name IO.ReadMode >>= hGetContents'

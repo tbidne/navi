@@ -1,0 +1,42 @@
+poll-interval = 10
+
+# Manual battery level alerts
+[[multiple]]
+command = """
+  regex="([0-9]{1,3})%"
+  power=$(upower -i `upower -e | grep 'BAT'` | grep percentage | awk '{print $2}')
+
+  if [[ $power =~ $regex ]]; then
+      power_num="${BASH_REMATCH[1]}"
+
+      if [[ $power_num -lt 5 ]]; then
+          echo 5
+      elif [[ $power_num -lt 40 ]]; then
+          echo 40
+      elif [[ $power_num -lt 80 ]]; then
+          echo 80
+      else
+          echo 100
+      fi
+  else
+      echo "Error reading battery: $power"
+  fi
+"""
+
+[[multiple.trigger-note]]
+trigger = "80"
+
+[multiple.trigger-note.note]
+summary = "Multi"
+body-text = "Battery < 80"
+hints = []
+timeout = "10000"
+
+[[multiple.trigger-note]]
+trigger = "40"
+
+[multiple.trigger-note.note]
+summary = "Multi"
+body-text = "Battery < 40"
+hints = [{ urgency-level = "critical" }]
+timeout = "10000"

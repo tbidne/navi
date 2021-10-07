@@ -6,8 +6,10 @@
     flake-utils.lib.eachSystem [ "x86_64-linux" "x86_64-darwin" ] (system:
       let
         pkgs = import nixpkgs { inherit system; };
+        compilerVersion = "ghc8107"; 
+        compiler = pkgs.haskell.packages."${compilerVersion}";
         mkPkg = returnShellEnv:
-          pkgs.haskellPackages.developPackage {
+          compiler.developPackage {
             inherit returnShellEnv;
             name = "navi";
             root = ./.;

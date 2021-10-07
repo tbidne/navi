@@ -1,12 +1,16 @@
-module Navi.Data.Event
+module Navi.Event
   ( -- * Event type
     Event (..),
     Command (..),
     mkEvent,
 
+    -- * Results
+    EventResult (..),
+    EventErr (..),
+
     -- * Caching previous events/errors
     RepeatEvent (..),
-    ErrorEvent (..),
+    ErrorNote (..),
     blockRepeat,
     blockErr,
     updatePrevTrigger,
@@ -24,41 +28,27 @@ import DBus.Notify
     Note (..),
     Timeout (..),
   )
-import Data.IORef (IORef)
 import Data.IORef qualified as IORef
 import Data.Text qualified as T
+import Navi.Event.Types
+  ( Command (..),
+    ErrorNote (..),
+    Event (..),
+    EventErr (..),
+    EventResult (..),
+    RepeatEvent (..),
+  )
 import Navi.Prelude
-import Navi.Services.Types (ServiceErr (..), ServiceResult (..))
 import System.Process qualified as P
-
-newtype Command = MkCommand {getCommand :: Text}
-  deriving (Show)
-
--- | Determines if we are allowed to send off duplicate notifications
--- simultaneously. If we are not, then 'DisallowRepeats' holds the last trigger
--- so that we can detect duplicates.
-data RepeatEvent a
-  = DisallowRepeats (IORef (Maybe a))
-  | AllowRepeats
-
-data ErrorEvent
-  = NoErrEvt
-  | ErrEvt (RepeatEvent ())
-
--- | 'Event' represents sending notifications.
-data Event = MkEvent
-  { trigger :: IO ServiceResult,
-    errorEvent :: ErrorEvent
-  }
 
 mkEvent ::
   Eq a =>
   Command ->
-  (Text -> Either ServiceErr a) ->
+  (Text -> Either EventErr a) ->
   b ->
   (b -> a -> Maybe Note) ->
   RepeatEvent a ->
-  ErrorEvent ->
+  ErrorNote ->
   Event
 mkEvent cmd parserFn triggerNoteMap lookupFn repeatEvt = MkEvent triggerFn
   where
@@ -67,11 +57,11 @@ mkEvent cmd parserFn triggerNoteMap lookupFn repeatEvt = MkEvent triggerFn
 mTrigger ::
   Eq a =>
   Command ->
-  (Text -> Either ServiceErr a) ->
+  (Text -> Either EventErr a) ->
   b ->
   (b -> a -> Maybe Note) ->
   RepeatEvent a ->
-  IO ServiceResult
+  IO EventResult
 mTrigger (MkCommand cmdString) queryParser alertMap lookupFn repeatEvt = do
   resultStr <- execStr cmdString
   case queryParser resultStr of
@@ -92,7 +82,7 @@ blockRepeat repeatEvt newVal = do
     -- Repeat events are allowed, so do not block.
     AllowRepeats -> pure False
     -- Repeat events are not allowed, must check.
-    DisallowRepeats prevRef -> do
+    NoRepeats prevRef -> do
       prevVal <- IORef.readIORef prevRef
       if prevVal == Just newVal
         then -- Already sent this alert, block.
@@ -102,15 +92,15 @@ blockRepeat repeatEvt newVal = do
           IORef.writeIORef prevRef $ Just newVal
           pure False
 
-blockErr :: ErrorEvent -> IO Bool
+blockErr :: ErrorNote -> IO Bool
 blockErr errorEvent =
   case errorEvent of
     -- Error events are off, block.
-    NoErrEvt -> pure True
+    NoErrNote -> pure True
     -- Error events are on and repeats allowed, do not block.
-    ErrEvt AllowRepeats -> pure False
+    AllowErrNote AllowRepeats -> pure False
     -- Error events are on but repeats not allowed, must check.
-    ErrEvt (DisallowRepeats ref) -> do
+    AllowErrNote (NoRepeats ref) -> do
       prevErr <- IORef.readIORef ref
       case prevErr of
         -- Already sent this error, block
@@ -124,7 +114,7 @@ updatePrevTrigger :: Eq a => RepeatEvent a -> a -> IO ()
 updatePrevTrigger repeatEvt newVal =
   -- Only overwrite value if it's new
   case repeatEvt of
-    DisallowRepeats ref -> do
+    NoRepeats ref -> do
       val <- IORef.readIORef ref
       if val /= Just newVal
         then IORef.writeIORef ref $ Just newVal

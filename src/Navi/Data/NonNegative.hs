@@ -1,13 +1,29 @@
 -- | Provides the 'NonNegative' type for safe mathematical
 -- operations.
 module Navi.Data.NonNegative
-  ( NonNegative (MkNonNegative, unNonNegative),
+  ( -- * Type
+    NonNegative (MkNonNegative, unNonNegative),
+
+    -- * Creation
     mkNonNegative,
     unsafeNonNegative,
+
+    -- * Parsing
+    nonNegativeCodec,
   )
 where
 
+import Control.Category ((>>>))
 import Navi.Prelude
+import Toml
+  ( AnyValue (..),
+    BiMap (..),
+    Key,
+    TomlBiMap,
+    TomlBiMapError (..),
+    TomlCodec,
+  )
+import Toml qualified
 
 -- | Newtype wrapper over 'Int'.
 newtype NonNegative = MkUnsafeNonNegative
@@ -46,3 +62,18 @@ unsafeNonNegative n
       "Passed negative "
         <> showt n
         <> " to unsafeNonNegative!"
+
+-- | Parses a TOML 'NonNegative'.
+nonNegativeCodec :: Key -> TomlCodec NonNegative
+nonNegativeCodec = Toml.match _NonNegative
+
+_NonNegative :: TomlBiMap NonNegative AnyValue
+_NonNegative = _NonNegativeInt >>> Toml._Int
+
+_NonNegativeInt :: TomlBiMap NonNegative Int
+_NonNegativeInt = BiMap (Right . unNonNegative) parseNN
+  where
+    parseNN =
+      mkNonNegative >.> \case
+        Nothing -> Left $ ArbitraryError "Passed negative to mkNonNegative"
+        Just n -> Right n

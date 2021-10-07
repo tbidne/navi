@@ -7,91 +7,29 @@ import DBus.Client (ClientError)
 import DBus.Client qualified as DBus
 import DBus.Notify (Body (..), Client, Hint (..), Note, Timeout (..), UrgencyLevel (..))
 import DBus.Notify qualified as DBusN
-import Data.IORef qualified as IORef
 import Data.Text qualified as T
-import Navi.Data.BoundedN qualified as BoundedN
-import Navi.Data.Config (Config (..))
-import Navi.Data.Event
-  ( Command (..),
-    ErrorEvent (..),
-    Event (..),
-    RepeatEvent (..),
-  )
-import Navi.Data.Event qualified as Event
+import Navi.Config (Config (..))
+import Navi.Config qualified as Config
 import Navi.Data.NonNegative (NonNegative (..))
-import Navi.Data.NonNegative qualified as NN
+import Navi.Event
+  ( Event (..),
+    EventErr (..),
+    EventResult (..),
+  )
+import Navi.Event qualified as Event
 import Navi.Prelude
-import Navi.Services.Battery qualified as Battery
-import Navi.Services.Custom.Single qualified as Single
-import Navi.Services.Types (ServiceErr (..), ServiceResult (..))
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified as Unexceptional
 
--- conf file
--- [general]
--- pollInterval
-
--- [custom]
--- icon (optional)
--- summary
--- body (optional)
--- urgency (optional)
--- trigger = ''' ... '''
-
--- [battery]
--- level = natural
--- icon (optional)
--- urgency
-
--- Steps
--- 1. Parse file into list of triggernotes
-
--- main loop: when awake, for each triggernote (t, n):
---   if t then send(n) else nothing
-
-config :: IO Config
-config = do
-  evts <- ioEvts
-  pure $
-    MkConfig
-      { pollInterval = NN.unsafeNonNegative 10,
-        events = evts,
-        logFile = "navi.log"
-      }
-
-ioEvts :: IO [Event]
-ioEvts =
-  sequenceA
-    [ batteryEvt,
-      singleEvt
-    ]
-
-batteryEvt :: IO Event
-batteryEvt = do
-  ref <- IORef.newIORef Nothing
-  let a = (unsafeB 10, Battery.batteryNNote 10 Nothing Critical (Milliseconds 10_000))
-      ab = (unsafeB 55, Battery.batteryNNote 55 Nothing Critical (Milliseconds 10_000))
-      b = (unsafeB 19, Battery.batteryNNote 19 Nothing Critical (Milliseconds 10_000))
-      c = (unsafeB 20, Battery.batteryNNote 20 Nothing Normal (Milliseconds 10_000))
-      mp = [a, ab, b, c]
-      repeatErr = ErrEvt AllowRepeats
-
-  pure $ Battery.mkBatteryEvent mp (DisallowRepeats ref) repeatErr
-  where
-    unsafeB = BoundedN.unsafeBoundedN
-
-singleEvt :: IO Event
-singleEvt = do
-  ref <- IORef.newIORef Nothing
-  ref2 <- IORef.newIORef Nothing
-  let note = Single.mkSingleNote "Single" (Just "A note!") Nothing Normal (Milliseconds 10_000)
-      repeatErr = ErrEvt $ DisallowRepeats ref2
-  pure $ Single.mkSingleEvent cmd ("true", note) (DisallowRepeats ref) repeatErr
-  where
-    cmd = MkCommand "min=`date +%M`; if [[ \"$min % 2\" -eq 0 ]]; then echo true; else echo false; fi"
-
 main :: IO ()
 main = do
+  eConfig <- Config.readConfig "~/.config/navi/config.toml"
+  MkConfig {events, pollInterval} <- case eConfig of
+    Left errs -> do
+      putStrLn "Error reading config"
+      Except.throwIO errs
+    Right cfg -> pure cfg
+
   eitherClient :: Either ClientError Client <- Except.try DBusN.connectSession
   client <- case eitherClient of
     Left err -> do
@@ -99,7 +37,6 @@ main = do
       Except.throwIO err
     Right c -> pure c
 
-  MkConfig {events, pollInterval} <- config
   let (MkNonNegative sleepTime) = pollInterval
   forever $ do
     CC.threadDelay (sleepTime * 1_000_000)
@@ -118,11 +55,11 @@ processEvent client MkEvent {trigger, errorEvent} = do
         then pure ()
         else void $ DBusN.notify client (exToNote ex)
 
-    triggerSuccess :: ServiceResult -> IO ()
+    triggerSuccess :: EventResult -> IO ()
     triggerSuccess None = pure ()
     triggerSuccess (Err err) = do
       blockErrEvent <- Event.blockErr errorEvent
-      putStrLn $ "Service Error: "
+      putStrLn $ "Event Error: " <> showt err
       if blockErrEvent
         then pure ()
         else sendNote (serviceErrToNote err)
@@ -138,10 +75,10 @@ exToNote ex = Event.mkNote Nothing summary body hints timeout
     hints = [Urgency Critical]
     timeout = Milliseconds 10_000
 
-serviceErrToNote :: ServiceErr -> Note
-serviceErrToNote (MkServiceErr nm short _) = Event.mkNote Nothing summary body hints timeout
+serviceErrToNote :: EventErr -> Note
+serviceErrToNote (MkEventErr nm short _) = Event.mkNote Nothing summary body hints timeout
   where
-    summary = "Service Error"
+    summary = "Event Error"
     body = Just $ Text $ T.unpack $ nm <> ": " <> short
     hints = [Urgency Critical]
     timeout = Milliseconds 10_000

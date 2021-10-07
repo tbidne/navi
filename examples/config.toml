@@ -1,0 +1,44 @@
+poll-interval = 10
+
+[battery]
+repeat-events = false
+error-events = "no-repeats"
+
+[[battery.alert]]
+level = 50
+urgency-level = "low"
+
+[[battery.alert]]
+level = 30
+urgency-level = "normal"
+
+[[battery.alert]]
+level = 20
+urgency-level = "critical"
+
+[[battery.alert]]
+level = 10
+urgency-level = "critical"
+
+[[battery.alert]]
+level = 5
+urgency-level = "critical"
+
+# Send alert when the current minute is even
+[[single]]
+command = """
+  min=`date +%M`;
+  if [[ \"$min % 2\" -eq 0 ]]; then
+    echo true
+  else
+    echo false
+fi
+"""
+trigger = "true"
+
+[single.note]
+summary = "Even/Odd"
+body-text = "We're even, yay!"
+hints = []
+timeout = "10000"
+

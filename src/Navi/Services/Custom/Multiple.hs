@@ -1,32 +1,22 @@
 module Navi.Services.Custom.Multiple
-  ( mkMultipleEvent,
+  ( MultipleToml,
+    MultipleToml.multipleCodec,
+    toMultipleEvent,
   )
 where
 
-import DBus.Notify (Note (..))
-import Data.Attoparsec.Combinator qualified as AP
-import Data.Attoparsec.Text (Parser)
-import Data.Attoparsec.Text qualified as AP
-import Data.Map.Strict qualified as Map
-import Data.Text qualified as T
-import Navi.Data.Event (Command (..), ErrorEvent (..), Event (..), RepeatEvent (..))
-import Navi.Data.Event qualified as Event
+import Navi.Event.Toml qualified as EventToml
+import Navi.Event.Types (Event (..))
 import Navi.Prelude
-import Navi.Services.Types (ServiceErr (..))
+import Navi.Services.Custom.Multiple.Event qualified as MultipleEvent
+import Navi.Services.Custom.Multiple.Toml (MultipleToml (..), TriggerNoteToml (..))
+import Navi.Services.Custom.Multiple.Toml qualified as MultipleToml
 
-mkMultipleEvent :: Command -> [(Text, Note)] -> RepeatEvent Text -> ErrorEvent -> Event
-mkMultipleEvent cmd noteList = Event.mkEvent cmd parser noteMap lookupFn
+toMultipleEvent :: MultipleToml -> IO Event
+toMultipleEvent (MkMultipleToml cmd tn re ee) = do
+  repeatEvt <- EventToml.mRepeatEvtTomlToVal re
+  errorNote <- EventToml.mErrorNoteTomlToVal ee
+  pure $ MultipleEvent.mkMultipleEvent cmd triggerNotes repeatEvt errorNote
   where
-    noteMap = Map.fromList noteList
-    parser = parseFn $ fmap fst noteList
-    lookupFn = flip Map.lookup
-
-parseFn :: [Text] -> Text -> Either ServiceErr Text
-parseFn keys = first toServiceErr . AP.parseOnly (parseTxt keys)
-  where
-    toServiceErr = MkServiceErr "Multiple" "Parse error" . T.pack
-
-parseTxt :: [Text] -> Parser Text
-parseTxt keys = AP.choice keyParsers
-  where
-    keyParsers = fmap AP.string keys
+    triggerNotes = fmap toPair tn
+    toPair (MkTriggerNoteToml t n) = (t, n)

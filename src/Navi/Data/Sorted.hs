@@ -18,7 +18,7 @@ data Sorted a
 
 instance Show a => Show (Sorted a) where
   show Nil = "Nil"
-  show (Cons x xs) = show x ++ " :<: " ++ show xs
+  show (Cons x xs) = show x <> " :<: " <> show xs
 
 infixr 5 `Cons`
 
