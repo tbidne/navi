@@ -47,18 +47,24 @@ readConfig path = do
     toTomlErr = Left . TomlError
 
 tomlToConfig :: MonadNavi m => ConfigToml -> m (Maybe (Config m))
-tomlToConfig (MkConfigToml pi st mt b) = do
-  singleEvents <- traverse Single.toSingleEvent st
-  multipleEvents <- traverse Multiple.toMultipleEvent mt
-  mBatteryEvt <- maybe (pure Nothing) (fmap Just . Battery.toBatteryEvent) b
-  let evts = singleEvents <> multipleEvents
-      allEvts = maybe evts (: evts) mBatteryEvt
+tomlToConfig
+  MkConfigToml
+    { pollToml,
+      singleToml,
+      multipleToml,
+      batteryToml
+    } = do
+    singleEvents <- traverse Single.toSingleEvent singleToml
+    multipleEvents <- traverse Multiple.toMultipleEvent multipleToml
+    mBatteryEvt <- maybe (pure Nothing) (fmap Just . Battery.toBatteryEvent) batteryToml
+    let evts = singleEvents <> multipleEvents
+        allEvts = maybe evts (: evts) mBatteryEvt
 
-  pure $ case allEvts of
-    [] -> Nothing
-    (e : es) ->
-      Just $
-        MkConfig
-          { pollInterval = pi,
-            events = e :| es
-          }
+    pure $ case allEvts of
+      [] -> Nothing
+      (e : es) ->
+        Just $
+          MkConfig
+            { pollInterval = pollToml,
+              events = e :| es
+            }

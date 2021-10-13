@@ -51,15 +51,15 @@ mkBatteryEvent lvlNoteList = Event.mkEvent cmd parserFn lvlNoteMap lookupFn
 queryFn :: Map BatteryLevel BatteryLevel -> Text -> Either EventErr BatteryState
 queryFn upperBoundMap infoStr = do
   case parseBattery infoStr of
-    Both (MkBatteryState l s) ->
-      case Map.lookup l upperBoundMap of
+    Both MkBatteryState {level, status} ->
+      case Map.lookup level upperBoundMap of
         Nothing ->
           Left $
             MkEventErr
               "Battery"
               "Bound error"
-              $ "Could not find bound for: " <> T.pack (show l)
-        Just bound -> Right $ MkBatteryState bound s
+              $ "Could not find bound for: " <> T.pack (show level)
+        Just bound -> Right $ MkBatteryState bound status
     None -> Left $ mkServiceErr $ "Could not parse battery percent and state: " <> show infoStr
     Percent _ -> Left $ mkServiceErr $ "Could not parse battery state: " <> show infoStr
     Status _ -> Left $ mkServiceErr $ "Could not parse battery percent: " <> show infoStr
@@ -67,8 +67,8 @@ queryFn upperBoundMap infoStr = do
     mkServiceErr = MkEventErr "Battery" "Parse error" . T.pack
 
 toNote :: Map BatteryLevel Note -> BatteryState -> Maybe Note
-toNote lvlNoteMap (MkBatteryState currLvl status) = case status of
-  Discharging -> Map.lookup currLvl lvlNoteMap
+toNote lvlNoteMap MkBatteryState {level, status} = case status of
+  Discharging -> Map.lookup level lvlNoteMap
   _ -> Nothing
 
 batteryNNote :: Int -> Maybe Icon -> UrgencyLevel -> Timeout -> Note
