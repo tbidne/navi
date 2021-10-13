@@ -31,7 +31,7 @@ jobs:
       - name: Compile & Test
         run: |
           nix build
-          if [ -d "./result/lib" ]; then
+          if [ -f "./result/bin/navi" ]; then
             echo "Build succeeded"
           else
             echo "Build failed"

@@ -69,13 +69,13 @@ library
     Navi.Services.Custom.Single.Toml
 
   build-depends:
-    , attoparsec       ^>=0.14.1
+    , attoparsec       >=0.13.2.3 && <0.15
     , base             ^>=4.14.1.0
-    , containers       ^>=0.6.5.1
+    , containers       >=0.5.11.0 && <0.7
     , fdo-notify       ^>=0.3.1
-    , process          ^>=1.6.9.0
-    , text             ^>=1.2.5.0
-    , tomland          ^>=1.3.3.0
+    , process          ^>=1.6.7.0
+    , text             ^>=1.2.3.2
+    , tomland          ^>=1.3.0.0
     , unexceptionalio  ^>=0.5.1
 
   hs-source-dirs:   src
@@ -87,8 +87,8 @@ executable navi
   build-depends:
     , base
     , containers
-    , dbus             ^>=1.2.17
-    , directory        ^>=1.3.7.0
+    , dbus             ^>=1.2.14
+    , directory        ^>=1.3.5.0
     , fdo-notify
     , navi
     , text
