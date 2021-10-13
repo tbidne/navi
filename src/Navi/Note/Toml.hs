@@ -76,7 +76,7 @@ urgencyLevelCodec = Toml.textBy showUrgencyLevel parseUrgencyLevel "urgency-leve
 hintsCodec :: TomlCodec [Hint]
 hintsCodec = Toml.list urgencyCodec "hints"
   where
-    urgencyCodec = Toml.dimatch matchUrgency Urgency $ urgencyLevelCodec
+    urgencyCodec = Toml.dimatch matchUrgency Urgency urgencyLevelCodec
     matchUrgency (Urgency u) = Just u
     matchUrgency _ = Nothing
 
