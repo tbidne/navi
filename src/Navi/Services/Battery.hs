@@ -15,13 +15,14 @@ import Navi.Data.BoundedN (BoundedN (..))
 import Navi.Event qualified as Event
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (Event (..))
+import Navi.MonadNavi (MonadNavi)
 import Navi.Prelude
 import Navi.Services.Battery.Event qualified as BatteryEvent
 import Navi.Services.Battery.Toml (BatteryLevelNoteToml (..), BatteryToml (..))
 import Navi.Services.Battery.Toml qualified as BatteryToml
 import Navi.Services.Battery.Types (BatteryLevel)
 
-toBatteryEvent :: BatteryToml -> IO Event
+toBatteryEvent :: MonadNavi m => BatteryToml -> m (Event m)
 toBatteryEvent (MkBatteryToml lu re ee) = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal re
   errorNote <- EventToml.mErrorNoteTomlToVal ee

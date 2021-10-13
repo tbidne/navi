@@ -6,11 +6,11 @@ where
 
 import Control.Exception (Exception (..))
 import Data.List.NonEmpty (NonEmpty (..))
-import Data.Text qualified as T
 import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Toml qualified as ConfigToml
 import Navi.Data.NonNegative (NonNegative)
 import Navi.Event (Event)
+import Navi.MonadNavi (MonadFS (..), MonadNavi)
 import Navi.Prelude
 import Navi.Services.Battery qualified as Battery
 import Navi.Services.Custom.Multiple qualified as Multiple
@@ -18,11 +18,10 @@ import Navi.Services.Custom.Single qualified as Single
 import Toml (TomlDecodeError)
 import Toml qualified
 import UnexceptionalIO (SomeNonPseudoException)
-import UnexceptionalIO qualified as Unexceptional
 
-data Config = MkConfig
+data Config m = MkConfig
   { pollInterval :: NonNegative,
-    events :: NonEmpty Event
+    events :: NonEmpty (Event m)
   }
 
 data ConfigErr
@@ -33,13 +32,13 @@ data ConfigErr
 
 instance Exception ConfigErr
 
-readConfig :: FilePath -> IO (Either ConfigErr Config)
+readConfig :: MonadNavi m => FilePath -> m (Either ConfigErr (Config m))
 readConfig path = do
-  eContents <- Unexceptional.fromIO $ readFile' path
+  eContents <- readFile path
   case eContents of
     Left ex -> pure $ toFileErr ex
     Right contents -> do
-      case Toml.decode ConfigToml.configCodec (T.pack contents) of
+      case Toml.decode ConfigToml.configCodec contents of
         Left tomlErrs -> pure $ toTomlErr tomlErrs
         Right cfg -> do
           maybe (Left NoEvents) Right <$> tomlToConfig cfg
@@ -47,7 +46,7 @@ readConfig path = do
     toFileErr = Left . FileErr
     toTomlErr = Left . TomlError
 
-tomlToConfig :: ConfigToml -> IO (Maybe Config)
+tomlToConfig :: MonadNavi m => ConfigToml -> m (Maybe (Config m))
 tomlToConfig (MkConfigToml pi st mt b) = do
   singleEvents <- traverse Single.toSingleEvent st
   multipleEvents <- traverse Multiple.toMultipleEvent mt

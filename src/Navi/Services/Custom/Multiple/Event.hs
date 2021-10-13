@@ -17,9 +17,16 @@ import Navi.Event.Types
     EventErr (..),
     RepeatEvent (..),
   )
+import Navi.MonadNavi (MonadNavi)
 import Navi.Prelude
 
-mkMultipleEvent :: Command -> [(Text, Note)] -> RepeatEvent Text -> ErrorNote -> Event
+mkMultipleEvent ::
+  MonadNavi m =>
+  Command ->
+  [(Text, Note)] ->
+  RepeatEvent m Text ->
+  ErrorNote m ->
+  Event m
 mkMultipleEvent cmd noteList = Event.mkEvent cmd parser noteMap lookupFn
   where
     noteMap = Map.fromList noteList

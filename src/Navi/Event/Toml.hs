@@ -11,9 +11,9 @@ module Navi.Event.Toml
   )
 where
 
-import Data.IORef qualified as IORef
 import Data.Text qualified as T
 import Navi.Event.Types (Command (..), ErrorNote (..), RepeatEvent (..))
+import Navi.MonadNavi (MutRef (..))
 import Navi.Prelude
 import Toml (TomlCodec)
 import Toml qualified
@@ -40,11 +40,11 @@ repeatEvtCodec = Toml.dimap toBool fromBool $ Toml.bool "repeat-events"
     toBool AllowRepeatsToml = True
     toBool NoRepeatsToml = False
 
-repeatEvtTomlToVal :: RepeatEvtToml -> IO (RepeatEvent a)
+repeatEvtTomlToVal :: (MutRef m) => RepeatEvtToml -> m (RepeatEvent m a)
 repeatEvtTomlToVal AllowRepeatsToml = pure AllowRepeats
-repeatEvtTomlToVal NoRepeatsToml = NoRepeats <$> IORef.newIORef Nothing
+repeatEvtTomlToVal NoRepeatsToml = NoRepeats <$> newRef Nothing
 
-mRepeatEvtTomlToVal :: Maybe RepeatEvtToml -> IO (RepeatEvent a)
+mRepeatEvtTomlToVal :: (MutRef m) => Maybe RepeatEvtToml -> m (RepeatEvent m a)
 mRepeatEvtTomlToVal Nothing = repeatEvtTomlToVal NoRepeatsToml
 mRepeatEvtTomlToVal (Just t) = repeatEvtTomlToVal t
 
@@ -65,11 +65,11 @@ errorNoteCodec = Toml.textBy showErrEvt parseErrEvt "error-events"
     parseErrEvt "no-repeats" = Right NoErrNoteToml
     parseErrEvt other = Left $ "Unsupported error event key: " <> other
 
-errorNoteTomlToVal :: ErrorNoteToml -> IO ErrorNote
+errorNoteTomlToVal :: (Monad m, MutRef m) => ErrorNoteToml -> m (ErrorNote m)
 errorNoteTomlToVal NoErrNoteToml = pure NoErrNote
 errorNoteTomlToVal ErrNoteAllowRepeatsToml = pure $ AllowErrNote AllowRepeats
-errorNoteTomlToVal ErrNoteNoRepeatsToml = AllowErrNote . NoRepeats <$> IORef.newIORef Nothing
+errorNoteTomlToVal ErrNoteNoRepeatsToml = AllowErrNote . NoRepeats <$> newRef Nothing
 
-mErrorNoteTomlToVal :: Maybe ErrorNoteToml -> IO ErrorNote
+mErrorNoteTomlToVal :: (MutRef m) => Maybe ErrorNoteToml -> m (ErrorNote m)
 mErrorNoteTomlToVal Nothing = errorNoteTomlToVal ErrNoteNoRepeatsToml
 mErrorNoteTomlToVal (Just t) = errorNoteTomlToVal t

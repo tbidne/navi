@@ -7,12 +7,13 @@ where
 
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (Event (..))
+import Navi.MonadNavi (MonadNavi)
 import Navi.Prelude
 import Navi.Services.Custom.Single.Event qualified as SingleEvent
 import Navi.Services.Custom.Single.Toml (SingleToml (..))
 import Navi.Services.Custom.Single.Toml qualified as SingleToml
 
-toSingleEvent :: SingleToml -> IO Event
+toSingleEvent :: MonadNavi m => SingleToml -> m (Event m)
 toSingleEvent (MkSingleToml cmd tv n re ee) = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal re
   errorNote <- EventToml.mErrorNoteTomlToVal ee

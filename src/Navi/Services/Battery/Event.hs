@@ -30,10 +30,16 @@ import Navi.Event.Types
     EventErr (..),
     RepeatEvent (..),
   )
+import Navi.MonadNavi (MonadNavi)
 import Navi.Prelude
 import Navi.Services.Battery.Types (BatteryLevel, BatteryState (..), BatteryStatus (..))
 
-mkBatteryEvent :: [(BatteryLevel, Note)] -> RepeatEvent BatteryState -> ErrorNote -> Event
+mkBatteryEvent ::
+  MonadNavi m =>
+  [(BatteryLevel, Note)] ->
+  RepeatEvent m BatteryState ->
+  ErrorNote m ->
+  Event m
 mkBatteryEvent lvlNoteList = Event.mkEvent cmd parserFn lvlNoteMap lookupFn
   where
     lvlNoteMap = Map.fromList lvlNoteList

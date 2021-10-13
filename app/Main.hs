@@ -42,7 +42,7 @@ main = do
     CC.threadDelay (sleepTime * 1_000_000)
     traverse (processEvent client) events
 
-processEvent :: Client -> Event -> IO ()
+processEvent :: Client -> Event IO -> IO ()
 processEvent client MkEvent {trigger, errorEvent} = do
   result <- Unexceptional.fromIO trigger
   either triggerErr triggerSuccess result

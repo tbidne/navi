@@ -25,6 +25,7 @@ common common-exts
   default-extensions:
     NoImplicitPrelude
     AllowAmbiguousTypes
+    ConstraintKinds
     DataKinds
     DeriveFunctor
     DerivingVia
@@ -40,6 +41,7 @@ common common-exts
     ScopedTypeVariables
     StandaloneKindSignatures
     TypeApplications
+    TypeFamilies
 
 library
   import:           common-exts
@@ -52,6 +54,7 @@ library
     Navi.Event
     Navi.Event.Toml
     Navi.Event.Types
+    Navi.MonadNavi
     Navi.Note.Toml
     Navi.Prelude
     Navi.Services.Battery

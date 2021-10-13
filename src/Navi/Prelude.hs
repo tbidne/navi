@@ -18,6 +18,7 @@ module Navi.Prelude
 
     -- * Misc utilities
     (>.>),
+    (<<$>>),
     maybeToEither,
     monoBimap,
 
@@ -132,6 +133,11 @@ monoBimap f = bimap f f
 (>.>) = flip (.)
 
 infixr 8 >.>
+
+(<<$>>) :: (Functor f, Functor g) => (a -> b) -> g (f a) -> g (f b)
+(<<$>>) = fmap . fmap
+
+infixl 4 <<$>>
 
 -- | Strict version of 'P.hGetContents', until we can upgrade to GHC 9.0.1
 hGetContents' :: IO.Handle -> IO.IO String

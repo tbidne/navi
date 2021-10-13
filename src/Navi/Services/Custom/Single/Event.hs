@@ -24,9 +24,16 @@ import Navi.Event.Types
     EventErr (..),
     RepeatEvent (..),
   )
+import Navi.MonadNavi (MonadNavi)
 import Navi.Prelude
 
-mkSingleEvent :: Command -> (Text, Note) -> RepeatEvent Bool -> ErrorNote -> Event
+mkSingleEvent ::
+  MonadNavi m =>
+  Command ->
+  (Text, Note) ->
+  RepeatEvent m Bool ->
+  ErrorNote m ->
+  Event m
 mkSingleEvent cmd (triggerVal, note) = Event.mkEvent cmd parseFn () lookupFn
   where
     parseFn = toServiceErr . AP.parseOnly (parseVal triggerVal)

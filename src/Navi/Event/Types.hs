@@ -9,7 +9,7 @@ module Navi.Event.Types
 where
 
 import DBus.Notify (Note)
-import Data.IORef (IORef)
+import Navi.MonadNavi (Ref)
 import Navi.Prelude
 
 newtype Command = MkCommand {getCommand :: Text}
@@ -18,20 +18,20 @@ newtype Command = MkCommand {getCommand :: Text}
 -- | Determines if we are allowed to send off duplicate notifications
 -- simultaneously. If we are not, then 'NoRepeats' holds the last trigger
 -- so that we can detect duplicates.
-data RepeatEvent a
-  = NoRepeats (IORef (Maybe a))
+data RepeatEvent m a
+  = NoRepeats (Ref m (Maybe a))
   | AllowRepeats
 
 -- | Determines if we should send notifications for errors and, if so, if we
 -- allow repeats.
-data ErrorNote
+data ErrorNote m
   = NoErrNote
-  | AllowErrNote (RepeatEvent ())
+  | AllowErrNote (RepeatEvent m ())
 
 -- | 'Event' represents sending notifications.
-data Event = MkEvent
-  { trigger :: IO EventResult,
-    errorEvent :: ErrorNote
+data Event m = MkEvent
+  { trigger :: m EventResult,
+    errorEvent :: ErrorNote m
   }
 
 -- | The result from querying an 'Event'.
