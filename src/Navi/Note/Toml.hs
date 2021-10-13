@@ -37,7 +37,7 @@ noteCodec =
     <*> timeoutCodec .= expiry
 
 appNameCodec :: TomlCodec String
-appNameCodec = pure "notify-service"
+appNameCodec = pure "navi"
 
 appImageCodec :: TomlCodec (Maybe Icon)
 appImageCodec = Toml.dioptional $ appImagePathCodec <|> appImageIconCodec

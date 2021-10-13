@@ -18,12 +18,15 @@ import Navi.Event
   )
 import Navi.Event qualified as Event
 import Navi.Prelude
+import System.Directory (XdgDirectory (XdgConfig))
+import System.Directory qualified as Dir
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified as Unexceptional
 
 main :: IO ()
 main = do
-  eConfig <- Config.readConfig "~/.config/navi/config.toml"
+  configPath <- Dir.getXdgDirectory XdgConfig "navi/config.toml"
+  eConfig <- Config.readConfig configPath
   MkConfig {events, pollInterval} <- case eConfig of
     Left errs -> do
       putStrLn "Error reading config"
