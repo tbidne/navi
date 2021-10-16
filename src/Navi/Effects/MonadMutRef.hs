@@ -1,0 +1,25 @@
+module Navi.Effects.MonadMutRef
+  ( MonadMutRef (..),
+  )
+where
+
+import Control.Monad.Reader (ReaderT)
+import Control.Monad.Trans (MonadTrans (..))
+import Data.IORef (IORef)
+import Data.IORef qualified as IORef
+import Navi.Prelude
+
+class Monad m => MonadMutRef m ref where
+  newRef :: a -> m (ref a)
+  readRef :: ref a -> m a
+  writeRef :: ref a -> a -> m ()
+
+instance MonadMutRef IO IORef where
+  newRef = IORef.newIORef
+  readRef = IORef.readIORef
+  writeRef ref = IORef.writeIORef ref
+
+instance MonadMutRef m ref => MonadMutRef (ReaderT e m) ref where
+  newRef = lift . newRef
+  readRef = lift . readRef
+  writeRef ref = lift . writeRef ref

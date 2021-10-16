@@ -22,6 +22,7 @@ import Navi.Data.BoundedN (BoundedN (..))
 import Navi.Data.BoundedN qualified as BoundedN
 import Navi.Data.Sorted (Sorted)
 import Navi.Data.Sorted qualified as Sorted
+import Navi.Effects (MonadMutRef, MonadShell)
 import Navi.Event qualified as Event
 import Navi.Event.Types
   ( Command (..),
@@ -30,17 +31,16 @@ import Navi.Event.Types
     EventErr (..),
     RepeatEvent (..),
   )
-import Navi.MonadNavi (MonadNavi)
 import Navi.Prelude
 import Navi.Services.Battery.Types (BatteryLevel, BatteryState (..), BatteryStatus (..))
 
 mkBatteryEvent ::
-  MonadNavi m =>
+  (MonadMutRef m ref, MonadShell m) =>
   [(BatteryLevel, Note)] ->
-  RepeatEvent m BatteryState ->
-  ErrorNote m ->
-  Event m
-mkBatteryEvent lvlNoteList = Event.mkEvent cmd parserFn lvlNoteMap lookupFn
+  RepeatEvent ref BatteryState ->
+  ErrorNote ref ->
+  Event m ref
+mkBatteryEvent lvlNoteList = Event.mkEvent "Battery" cmd parserFn lvlNoteMap lookupFn
   where
     lvlNoteMap = Map.fromList lvlNoteList
     upperBoundMap = initBoundMap $ Sorted.fromList $ fmap fst lvlNoteList

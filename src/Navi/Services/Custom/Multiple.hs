@@ -5,15 +5,15 @@ module Navi.Services.Custom.Multiple
   )
 where
 
+import Navi.Effects (MonadMutRef, MonadShell)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (Event)
-import Navi.MonadNavi (MonadNavi)
 import Navi.Prelude
 import Navi.Services.Custom.Multiple.Event qualified as MultipleEvent
 import Navi.Services.Custom.Multiple.Toml (MultipleToml (..), TriggerNoteToml (..))
 import Navi.Services.Custom.Multiple.Toml qualified as MultipleToml
 
-toMultipleEvent :: MonadNavi m => MultipleToml -> m (Event m)
+toMultipleEvent :: (MonadMutRef m ref, MonadShell m) => MultipleToml -> m (Event m ref)
 toMultipleEvent
   MkMultipleToml
     { command,

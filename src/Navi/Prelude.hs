@@ -25,6 +25,7 @@ module Navi.Prelude
     -- * 'Text' replacements for 'P.String' functions.
     error,
     showt,
+    print,
 
     -- * Base exports
     module X,
@@ -98,6 +99,7 @@ import Prelude as X
     replicate,
     seq,
     snd,
+    undefined,
     ($),
     (&&),
     (++),
@@ -113,6 +115,10 @@ showt = T.pack . P.show
 -- | 'Text' version of 'error'.
 error :: Text -> a
 error = P.error . T.unpack
+
+-- | 'Text' version of 'P.print'.
+print :: P.Show a => a -> IO ()
+print = putStrLn . showt
 
 -- | Safe @head@.
 headMaybe :: [a] -> Maybe a

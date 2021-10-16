@@ -20,6 +20,7 @@ module Navi.Event
   )
 where
 
+import Control.Exception (Exception (..))
 import DBus.Notify
   ( Body (..),
     Hint (..),
@@ -27,6 +28,8 @@ import DBus.Notify
     Note (..),
     Timeout (..),
   )
+import Data.Text qualified as T
+import Navi.Effects (MonadMutRef (..), MonadShell (..))
 import Navi.Event.Types
   ( Command (..),
     ErrorNote (..),
@@ -35,45 +38,55 @@ import Navi.Event.Types
     EventResult (..),
     RepeatEvent (..),
   )
-import Navi.MonadNavi (MonadFS (..), MonadNavi, MutRef (..))
 import Navi.Prelude
 
 mkEvent ::
-  (Eq a, MonadNavi m) =>
+  ( Eq a,
+    MonadMutRef m ref,
+    MonadShell m
+  ) =>
+  Text ->
   Command ->
   (Text -> Either EventErr a) ->
   b ->
   (b -> a -> Maybe Note) ->
-  RepeatEvent m a ->
-  ErrorNote m ->
-  Event m
-mkEvent cmd parserFn triggerNoteMap lookupFn repeatEvt = MkEvent triggerFn
+  RepeatEvent ref a ->
+  ErrorNote ref ->
+  Event m ref
+mkEvent name cmd parserFn triggerNoteMap lookupFn repeatEvt = MkEvent triggerFn
   where
-    triggerFn = mTrigger cmd parserFn triggerNoteMap lookupFn repeatEvt
+    triggerFn = mTrigger name cmd parserFn triggerNoteMap lookupFn repeatEvt
 
 mTrigger ::
-  (Eq a, MonadNavi m) =>
+  ( Eq a,
+    MonadMutRef m ref,
+    MonadShell m
+  ) =>
+  Text ->
   Command ->
   (Text -> Either EventErr a) ->
   b ->
   (b -> a -> Maybe Note) ->
-  RepeatEvent m a ->
+  RepeatEvent ref a ->
   m EventResult
-mTrigger (MkCommand cmdString) queryParser alertMap lookupFn repeatEvt = do
-  resultStr <- execSh cmdString
-  case queryParser resultStr of
-    Left err -> pure $ Err err
-    Right result -> case lookupFn alertMap result of
-      Nothing -> updatePrevTrigger repeatEvt result $> None
-      Just note -> do
-        blocked <- blockRepeat repeatEvt result
-        if blocked
-          then pure None
-          else do
-            updatePrevTrigger repeatEvt result
-            pure $ Alert note
+mTrigger name (MkCommand cmdString) queryParser alertMap lookupFn repeatEvt = do
+  eResultStr <- execSh cmdString
+  case eResultStr of
+    Left ex -> pure $ Err $ MkEventErr name "Exception" $ T.pack $ displayException ex
+    Right resultStr -> do
+      case queryParser resultStr of
+        Left err -> pure $ Err err
+        Right result -> case lookupFn alertMap result of
+          Nothing -> updatePrevTrigger repeatEvt result $> None
+          Just note -> do
+            blocked <- blockRepeat repeatEvt result
+            if blocked
+              then pure None
+              else do
+                updatePrevTrigger repeatEvt result
+                pure $ Alert note
 
-blockRepeat :: (Eq a, MutRef m) => RepeatEvent m a -> a -> m Bool
+blockRepeat :: (Eq a, MonadMutRef m ref) => RepeatEvent ref a -> a -> m Bool
 blockRepeat repeatEvt newVal = do
   case repeatEvt of
     -- Repeat events are allowed, so do not block.
@@ -89,7 +102,7 @@ blockRepeat repeatEvt newVal = do
           writeRef prevRef $ Just newVal
           pure False
 
-blockErr :: (MutRef m) => ErrorNote m -> m Bool
+blockErr :: MonadMutRef m ref => ErrorNote ref -> m Bool
 blockErr errorEvent =
   case errorEvent of
     -- Error events are off, block.
@@ -107,7 +120,7 @@ blockErr errorEvent =
           writeRef ref $ Just ()
           pure False
 
-updatePrevTrigger :: (Eq a, MutRef m) => RepeatEvent m a -> a -> m ()
+updatePrevTrigger :: (Eq a, MonadMutRef m ref) => RepeatEvent ref a -> a -> m ()
 updatePrevTrigger repeatEvt newVal =
   -- Only overwrite value if it's new
   case repeatEvt of

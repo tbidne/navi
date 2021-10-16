@@ -12,17 +12,17 @@ import DBus.Notify
     Timeout (..),
   )
 import Navi.Data.BoundedN qualified as BoundedN
+import Navi.Effects (MonadMutRef, MonadShell)
 import Navi.Event qualified as Event
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (Event)
-import Navi.MonadNavi (MonadNavi)
 import Navi.Prelude
 import Navi.Services.Battery.Event qualified as BatteryEvent
 import Navi.Services.Battery.Toml (BatteryLevelNoteToml (..), BatteryToml (..))
 import Navi.Services.Battery.Toml qualified as BatteryToml
 import Navi.Services.Battery.Types (BatteryLevel)
 
-toBatteryEvent :: MonadNavi m => BatteryToml -> m (Event m)
+toBatteryEvent :: (MonadMutRef m ref, MonadShell m) => BatteryToml -> m (Event m ref)
 toBatteryEvent MkBatteryToml {alerts, repeatEvent, errorEvent} = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal errorEvent

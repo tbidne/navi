@@ -9,6 +9,7 @@ import Data.Attoparsec.Text (Parser)
 import Data.Attoparsec.Text qualified as AP
 import Data.Map.Strict qualified as Map
 import Data.Text qualified as T
+import Navi.Effects (MonadMutRef, MonadShell)
 import Navi.Event qualified as Event
 import Navi.Event.Types
   ( Command (..),
@@ -17,17 +18,16 @@ import Navi.Event.Types
     EventErr (..),
     RepeatEvent (..),
   )
-import Navi.MonadNavi (MonadNavi)
 import Navi.Prelude
 
 mkMultipleEvent ::
-  MonadNavi m =>
+  (MonadMutRef m ref, MonadShell m) =>
   Command ->
   [(Text, Note)] ->
-  RepeatEvent m Text ->
-  ErrorNote m ->
-  Event m
-mkMultipleEvent cmd noteList = Event.mkEvent cmd parser noteMap lookupFn
+  RepeatEvent ref Text ->
+  ErrorNote ref ->
+  Event m ref
+mkMultipleEvent cmd noteList = Event.mkEvent "Multiple" cmd parser noteMap lookupFn
   where
     noteMap = Map.fromList noteList
     parser = parseFn $ fmap fst noteList
