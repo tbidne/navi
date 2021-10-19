@@ -22,7 +22,7 @@ class Monad m => MonadShell m where
 instance MonadShell IO where
   execSh = execIO
   readFile = readFileIO
-  sleep = CC.threadDelay . unNonNegative
+  sleep = CC.threadDelay . (*) 1_000_000 . unNonNegative
 
 instance MonadShell m => MonadShell (ReaderT e m) where
   execSh = lift . execSh
