@@ -65,7 +65,6 @@ library
     Navi.Event
     Navi.Event.Toml
     Navi.Event.Types
-    Navi.MonadNavi
     Navi.Note.Toml
     Navi.Prelude
     Navi.Services.Battery
