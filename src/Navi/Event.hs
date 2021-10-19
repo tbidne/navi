@@ -6,7 +6,6 @@ module Navi.Event
     runEvent,
 
     -- * Results
-    EventResult (..),
     EventErr (..),
 
     -- * Caching previous events/errors
@@ -37,34 +36,21 @@ import Navi.Event.Types
     ErrorNote (..),
     Event (..),
     EventErr (..),
-    EventResult (..),
     RepeatEvent (..),
   )
 import Navi.Prelude
 
 runEvent ::
-  ( Eq a,
-    MonadMutRef m ref,
+  ( MonadMutRef m ref,
     MonadShell m
   ) =>
   Event ref a ->
-  m EventResult
-runEvent (MkEvent name (MkCommand cmdString) parser raiseAlert repeatEvent _) = do
-  eResultStr <- execSh cmdString
-  case eResultStr of
-    Left ex -> pure $ Err $ MkEventErr name "Exception" $ T.pack $ displayException ex
-    Right resultStr -> do
-      case parser resultStr of
-        Left err -> pure $ Err err
-        Right result -> case raiseAlert result of
-          Nothing -> updatePrevTrigger repeatEvent result $> None
-          Just note -> do
-            blocked <- blockRepeat repeatEvent result
-            if blocked
-              then pure None
-              else do
-                updatePrevTrigger repeatEvent result
-                pure $ Alert note
+  m (Either EventErr a)
+runEvent MkEvent {eventName, command, parser} = do
+  eResultStr <- execSh command
+  pure $ case eResultStr of
+    Left ex -> Left $ MkEventErr eventName "Exception" $ T.pack $ displayException ex
+    Right resultStr -> parser resultStr
 
 blockRepeat :: (Eq a, MonadMutRef m ref) => RepeatEvent ref a -> a -> m Bool
 blockRepeat repeatEvt newVal = do

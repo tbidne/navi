@@ -18,7 +18,6 @@ import Navi.Event
   ( AnyEvent (..),
     Event (..),
     EventErr (..),
-    EventResult (..),
   )
 import Navi.Event qualified as Event
 import Navi.Prelude
@@ -73,16 +72,24 @@ processEvents (config, client) = forever $ do
   traverse (processEvent client) (events config)
 
 processEvent :: (MonadMutRef m ref, MonadNotify m, MonadShell m) => Client -> AnyEvent ref -> m ()
-processEvent client (MkAnyEvent event@MkEvent {errorNote}) = Event.runEvent event >>= handleResult
+processEvent client (MkAnyEvent event@MkEvent {repeatEvent, errorNote, raiseAlert}) = Event.runEvent event >>= handleResult
   where
-    handleResult None = pure ()
-    handleResult (Err err) = do
+    handleResult (Left err) = do
       blockErrEvent <- Event.blockErr errorNote
       --putStrLn $ "Event Error: " <> showt err
       if blockErrEvent
         then pure ()
         else sendNote client (serviceErrToNote err)
-    handleResult (Alert nt) = sendNote client nt
+    handleResult (Right result) = do
+      case raiseAlert result of
+        Nothing -> Event.updatePrevTrigger repeatEvent result $> ()
+        Just note -> do
+          blocked <- Event.blockRepeat repeatEvent result
+          if blocked
+            then pure ()
+            else do
+              Event.updatePrevTrigger repeatEvent result
+              sendNote client note
 
 serviceErrToNote :: EventErr -> Note
 serviceErrToNote (MkEventErr nm short _) = Event.mkNote Nothing summary body hints timeout

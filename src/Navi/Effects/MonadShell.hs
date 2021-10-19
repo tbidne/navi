@@ -8,13 +8,14 @@ import Control.Monad.Reader (ReaderT)
 import Control.Monad.Trans (MonadTrans (..))
 import Data.Text qualified as T
 import Navi.Data.NonNegative (NonNegative (..))
+import Navi.Event.Types (Command (..))
 import Navi.Prelude
 import System.Process qualified as P
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified
 
 class Monad m => MonadShell m where
-  execSh :: Text -> m (Either SomeNonPseudoException Text)
+  execSh :: Command -> m (Either SomeNonPseudoException Text)
   readFile :: FilePath -> m (Either SomeNonPseudoException Text)
   sleep :: NonNegative -> m ()
 
@@ -28,8 +29,8 @@ instance MonadShell m => MonadShell (ReaderT e m) where
   readFile = lift . readFile
   sleep = lift . sleep
 
-execIO :: Text -> IO (Either SomeNonPseudoException Text)
-execIO cmd = T.pack <<$>> UnexceptionalIO.fromIO (P.readCreateProcess process "")
+execIO :: Command -> IO (Either SomeNonPseudoException Text)
+execIO (MkCommand cmd) = T.pack <<$>> UnexceptionalIO.fromIO (P.readCreateProcess process "")
   where
     process = P.shell $ T.unpack cmd
 

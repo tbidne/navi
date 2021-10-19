@@ -3,7 +3,6 @@ module Navi.Event.Types
     Event (..),
     RepeatEvent (..),
     ErrorNote (..),
-    EventResult (..),
     EventErr (..),
     AnyEvent (..),
   )
@@ -37,13 +36,6 @@ data Event ref a = MkEvent
     repeatEvent :: RepeatEvent ref a,
     errorNote :: ErrorNote ref
   }
-
--- | The result from querying an 'Event'.
-data EventResult
-  = Err EventErr
-  | None
-  | Alert Note
-  deriving (Show)
 
 -- | Represents an error when querying an 'Event'.
 data EventErr = MkEventErr
