@@ -4,16 +4,14 @@ module Navi
   )
 where
 
-import Control.Exception (Exception (..))
 import Control.Monad.IO.Class (MonadIO (..))
+import Control.Monad.Reader (MonadReader (..), ReaderT, asks)
 import Control.Monad.Trans (MonadTrans (..))
 import DBus.Notify (Body (..), Client, Hint (..), Note, Timeout (..), UrgencyLevel (..))
-import Data.Functor.Identity (Identity (..))
 import Data.Text qualified as T
 import Data.Void (Void)
-import Navi.Args (Args (..))
-import Navi.Config (Config (..), readConfig)
 import Navi.Effects (MonadMutRef (..), MonadNotify (..), MonadShell (..))
+import Navi.Env (Env (..))
 import Navi.Event
   ( AnyEvent (..),
     Event (..),
@@ -22,22 +20,21 @@ import Navi.Event
 import Navi.Event qualified as Event
 import Navi.Prelude
 
-type NaviT :: (Type -> Type) -> Type -> Type
-newtype NaviT m a = MkNaviT {runNaviT :: m a}
+type NaviT :: Type -> (Type -> Type) -> Type -> Type
+newtype NaviT e m a = MkNaviT {runNaviT :: ReaderT e m a}
   deriving
     ( Functor,
       Applicative,
       Monad,
       MonadIO,
       MonadNotify,
-      MonadShell
+      MonadShell,
+      MonadReader e
     )
-    via m
+    via (ReaderT e m)
+  deriving (MonadTrans) via (ReaderT e)
 
-instance MonadTrans NaviT where
-  lift = MkNaviT
-
-instance MonadMutRef m ref => MonadMutRef (NaviT m) ref where
+instance MonadMutRef m ref => MonadMutRef (NaviT e m) ref where
   newRef = lift . newRef
   readRef = lift . readRef
   writeRef ref = lift . writeRef ref
@@ -49,27 +46,17 @@ runNavi ::
   forall ref m.
   ( MonadMutRef m ref,
     MonadNotify m,
-    MonadShell m
+    MonadShell m,
+    MonadReader (Env ref) m
   ) =>
-  Args Identity ->
-  m (Either FatalErr Void)
-runNavi args = prepareNavi @ref args >>= traverse processEvents
-
-prepareNavi ::
-  forall ref m.
-  ( MonadMutRef m ref,
-    MonadNotify m,
-    MonadShell m
-  ) =>
-  Args Identity ->
-  m (Either FatalErr (Config ref, Client))
-prepareNavi args =
-  first MkFatalErr <$> (liftA2 (,) <$> tryParseConfig args <*> tryInit)
-
-processEvents :: (MonadMutRef m ref, MonadNotify m, MonadShell m) => (Config ref, Client) -> m Void
-processEvents (config, client) = forever $ do
-  sleep $ pollInterval config
-  traverse (processEvent client) (events config)
+  m Void
+runNavi = do
+  pollInterval <- asks pollInterval
+  events <- asks events
+  client <- asks client
+  forever $ do
+    sleep pollInterval
+    traverse (processEvent client) events
 
 processEvent :: (MonadMutRef m ref, MonadNotify m, MonadShell m) => Client -> AnyEvent ref -> m ()
 processEvent client (MkAnyEvent event@MkEvent {repeatEvent, errorNote, raiseAlert}) = Event.runEvent event >>= handleResult
@@ -98,21 +85,3 @@ serviceErrToNote (MkEventErr nm short _) = Event.mkNote Nothing summary body hin
     body = Just $ Text $ T.unpack $ nm <> ": " <> short
     hints = [Urgency Critical]
     timeout = Milliseconds 10_000
-
-tryInit :: MonadNotify m => m (Either Text Client)
-tryInit = do
-  eitherClient <- initConn
-  pure $ case eitherClient of
-    Left err -> Left $ mkErr err
-    Right c -> Right c
-  where
-    mkErr = (<>) "Error initiating notifications: " . T.pack . displayException
-
-tryParseConfig :: (MonadMutRef m ref, MonadShell m) => Args Identity -> m (Either Text (Config ref))
-tryParseConfig =
-  fmap (first mkErr)
-    . readConfig
-    . runIdentity
-    . configFile
-  where
-    mkErr = (<>) "Config error: " . showt
