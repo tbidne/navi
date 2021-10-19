@@ -20,6 +20,7 @@
                 cabal-plan
                 haskell-language-server
                 hlint
+                ghcid
                 implicit-hie
                 ormolu
                 pkgs.nixpkgs-fmt

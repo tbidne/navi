@@ -16,7 +16,6 @@ import Data.Attoparsec.Combinator qualified as AP
 import Data.Attoparsec.Text (Parser)
 import Data.Attoparsec.Text qualified as AP
 import Data.Text qualified as T
-import Navi.Effects (MonadMutRef, MonadShell)
 import Navi.Event qualified as Event
 import Navi.Event.Types
   ( Command (..),
@@ -28,16 +27,22 @@ import Navi.Event.Types
 import Navi.Prelude
 
 mkSingleEvent ::
-  (MonadMutRef m ref, MonadShell m) =>
   Command ->
   (Text, Note) ->
   RepeatEvent ref Bool ->
   ErrorNote ref ->
-  Event m ref
-mkSingleEvent cmd (triggerVal, note) = Event.mkEvent "Single" cmd parseFn () lookupFn
+  Event ref Bool
+mkSingleEvent cmd (triggerVal, note) re en =
+  MkEvent
+    { eventName = "Single",
+      command = cmd,
+      parser = parseFn,
+      raiseAlert = \b -> if b then Just note else Nothing,
+      repeatEvent = re,
+      errorNote = en
+    }
   where
     parseFn = toServiceErr . AP.parseOnly (parseVal triggerVal)
-    lookupFn _ b = if b then Just note else Nothing
     toServiceErr =
       first $
         MkEventErr "Single" "Parse error"

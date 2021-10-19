@@ -5,15 +5,15 @@ module Navi.Services.Custom.Single
   )
 where
 
-import Navi.Effects (MonadMutRef, MonadShell)
+import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
-import Navi.Event.Types (Event)
+import Navi.Event.Types (AnyEvent (..))
 import Navi.Prelude
 import Navi.Services.Custom.Single.Event qualified as SingleEvent
 import Navi.Services.Custom.Single.Toml (SingleToml (..))
 import Navi.Services.Custom.Single.Toml qualified as SingleToml
 
-toSingleEvent :: (MonadMutRef m ref, MonadShell m) => SingleToml -> m (Event m ref)
+toSingleEvent :: (MonadMutRef m ref) => SingleToml -> m (AnyEvent ref)
 toSingleEvent
   MkSingleToml
     { command,
@@ -24,4 +24,4 @@ toSingleEvent
     } = do
     repeatEvt <- EventToml.mRepeatEvtTomlToVal repeatEvtCfg
     errorNote <- EventToml.mErrorNoteTomlToVal errEvtCfg
-    pure $ SingleEvent.mkSingleEvent command (triggerVal, note) repeatEvt errorNote
+    pure $ MkAnyEvent $ SingleEvent.mkSingleEvent command (triggerVal, note) repeatEvt errorNote

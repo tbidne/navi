@@ -5,6 +5,7 @@ module Navi.Event.Types
     ErrorNote (..),
     EventResult (..),
     EventErr (..),
+    AnyEvent (..),
   )
 where
 
@@ -28,9 +29,13 @@ data ErrorNote ref
   | AllowErrNote (RepeatEvent ref ())
 
 -- | 'Event' represents sending notifications.
-data Event m ref = MkEvent
-  { trigger :: m EventResult,
-    errorEvent :: ErrorNote ref
+data Event ref a = MkEvent
+  { eventName :: Text,
+    command :: Command,
+    parser :: Text -> Either EventErr a,
+    raiseAlert :: a -> Maybe Note,
+    repeatEvent :: RepeatEvent ref a,
+    errorNote :: ErrorNote ref
   }
 
 -- | The result from querying an 'Event'.
@@ -47,3 +52,7 @@ data EventErr = MkEventErr
     long :: Text
   }
   deriving (Show)
+
+type AnyEvent :: (Type -> Type) -> Type
+data AnyEvent ref where
+  MkAnyEvent :: Eq a => Event ref a -> AnyEvent ref

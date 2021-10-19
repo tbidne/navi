@@ -1,8 +1,9 @@
 module Navi.Event
   ( -- * Event type
     Event (..),
+    AnyEvent (..),
     Command (..),
-    mkEvent,
+    runEvent,
 
     -- * Results
     EventResult (..),
@@ -31,7 +32,8 @@ import DBus.Notify
 import Data.Text qualified as T
 import Navi.Effects (MonadMutRef (..), MonadShell (..))
 import Navi.Event.Types
-  ( Command (..),
+  ( AnyEvent (..),
+    Command (..),
     ErrorNote (..),
     Event (..),
     EventErr (..),
@@ -40,50 +42,28 @@ import Navi.Event.Types
   )
 import Navi.Prelude
 
-mkEvent ::
+runEvent ::
   ( Eq a,
     MonadMutRef m ref,
     MonadShell m
   ) =>
-  Text ->
-  Command ->
-  (Text -> Either EventErr a) ->
-  b ->
-  (b -> a -> Maybe Note) ->
-  RepeatEvent ref a ->
-  ErrorNote ref ->
-  Event m ref
-mkEvent name cmd parserFn triggerNoteMap lookupFn repeatEvt = MkEvent triggerFn
-  where
-    triggerFn = mTrigger name cmd parserFn triggerNoteMap lookupFn repeatEvt
-
-mTrigger ::
-  ( Eq a,
-    MonadMutRef m ref,
-    MonadShell m
-  ) =>
-  Text ->
-  Command ->
-  (Text -> Either EventErr a) ->
-  b ->
-  (b -> a -> Maybe Note) ->
-  RepeatEvent ref a ->
+  Event ref a ->
   m EventResult
-mTrigger name (MkCommand cmdString) queryParser alertMap lookupFn repeatEvt = do
+runEvent (MkEvent name (MkCommand cmdString) parser raiseAlert repeatEvent _) = do
   eResultStr <- execSh cmdString
   case eResultStr of
     Left ex -> pure $ Err $ MkEventErr name "Exception" $ T.pack $ displayException ex
     Right resultStr -> do
-      case queryParser resultStr of
+      case parser resultStr of
         Left err -> pure $ Err err
-        Right result -> case lookupFn alertMap result of
-          Nothing -> updatePrevTrigger repeatEvt result $> None
+        Right result -> case raiseAlert result of
+          Nothing -> updatePrevTrigger repeatEvent result $> None
           Just note -> do
-            blocked <- blockRepeat repeatEvt result
+            blocked <- blockRepeat repeatEvent result
             if blocked
               then pure None
               else do
-                updatePrevTrigger repeatEvt result
+                updatePrevTrigger repeatEvent result
                 pure $ Alert note
 
 blockRepeat :: (Eq a, MonadMutRef m ref) => RepeatEvent ref a -> a -> m Bool

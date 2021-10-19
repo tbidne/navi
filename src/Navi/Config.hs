@@ -11,7 +11,7 @@ import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Toml qualified as ConfigToml
 import Navi.Data.NonNegative (NonNegative)
 import Navi.Effects (MonadMutRef, MonadShell (..))
-import Navi.Event (Event)
+import Navi.Event (AnyEvent)
 import Navi.Prelude
 import Navi.Services.Battery qualified as Battery
 import Navi.Services.Custom.Multiple qualified as Multiple
@@ -20,9 +20,9 @@ import Toml (TomlDecodeError)
 import Toml qualified
 import UnexceptionalIO (SomeNonPseudoException)
 
-data Config m ref = MkConfig
+data Config ref = MkConfig
   { pollInterval :: NonNegative,
-    events :: NonEmpty (Event m ref)
+    events :: NonEmpty (AnyEvent ref)
   }
 
 data ConfigErr
@@ -33,7 +33,7 @@ data ConfigErr
 
 instance Exception ConfigErr
 
-readConfig :: (MonadMutRef m ref, MonadShell m) => FilePath -> m (Either ConfigErr (Config m ref))
+readConfig :: (MonadMutRef m ref, MonadShell m) => FilePath -> m (Either ConfigErr (Config ref))
 readConfig path = do
   eContents <- readFile path
   case eContents of
@@ -47,7 +47,7 @@ readConfig path = do
     toFileErr = Left . FileErr
     toTomlErr = Left . TomlError
 
-tomlToConfig :: (MonadMutRef m ref, MonadShell m) => ConfigToml -> m (Maybe (Config m ref))
+tomlToConfig :: (MonadMutRef m ref) => ConfigToml -> m (Maybe (Config ref))
 tomlToConfig
   MkConfigToml
     { pollToml,

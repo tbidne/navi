@@ -22,7 +22,6 @@ import Navi.Data.BoundedN (BoundedN (..))
 import Navi.Data.BoundedN qualified as BoundedN
 import Navi.Data.Sorted (Sorted)
 import Navi.Data.Sorted qualified as Sorted
-import Navi.Effects (MonadMutRef, MonadShell)
 import Navi.Event qualified as Event
 import Navi.Event.Types
   ( Command (..),
@@ -35,18 +34,24 @@ import Navi.Prelude
 import Navi.Services.Battery.Types (BatteryLevel, BatteryState (..), BatteryStatus (..))
 
 mkBatteryEvent ::
-  (MonadMutRef m ref, MonadShell m) =>
   [(BatteryLevel, Note)] ->
   RepeatEvent ref BatteryState ->
   ErrorNote ref ->
-  Event m ref
-mkBatteryEvent lvlNoteList = Event.mkEvent "Battery" cmd parserFn lvlNoteMap lookupFn
+  Event ref BatteryState
+mkBatteryEvent lvlNoteList re en =
+  MkEvent
+    { eventName = "Battery",
+      command = cmd,
+      parser = parserFn,
+      raiseAlert = toNote lvlNoteMap,
+      repeatEvent = re,
+      errorNote = en
+    }
   where
     lvlNoteMap = Map.fromList lvlNoteList
     upperBoundMap = initBoundMap $ Sorted.fromList $ fmap fst lvlNoteList
     cmd = MkCommand "upower -i `upower -e | grep 'BAT'`"
     parserFn = queryFn upperBoundMap
-    lookupFn = toNote
 
 queryFn :: Map BatteryLevel BatteryLevel -> Text -> Either EventErr BatteryState
 queryFn upperBoundMap infoStr = do

@@ -15,7 +15,8 @@ import Navi.Args (Args (..))
 import Navi.Config (Config (..), readConfig)
 import Navi.Effects (MonadMutRef (..), MonadNotify (..), MonadShell (..))
 import Navi.Event
-  ( Event (..),
+  ( AnyEvent (..),
+    Event (..),
     EventErr (..),
     EventResult (..),
   )
@@ -62,21 +63,21 @@ prepareNavi ::
     MonadShell m
   ) =>
   Args Identity ->
-  m (Either FatalErr (Config m ref, Client))
+  m (Either FatalErr (Config ref, Client))
 prepareNavi args =
   first MkFatalErr <$> (liftA2 (,) <$> tryParseConfig args <*> tryInit)
 
-processEvents :: (MonadMutRef m ref, MonadNotify m, MonadShell m) => (Config m ref, Client) -> m Void
+processEvents :: (MonadMutRef m ref, MonadNotify m, MonadShell m) => (Config ref, Client) -> m Void
 processEvents (config, client) = forever $ do
   sleep $ pollInterval config
   traverse (processEvent client) (events config)
 
-processEvent :: (MonadMutRef m ref, MonadNotify m) => Client -> Event m ref -> m ()
-processEvent client MkEvent {trigger, errorEvent} = trigger >>= handleResult
+processEvent :: (MonadMutRef m ref, MonadNotify m, MonadShell m) => Client -> AnyEvent ref -> m ()
+processEvent client (MkAnyEvent event@MkEvent {errorNote}) = Event.runEvent event >>= handleResult
   where
     handleResult None = pure ()
     handleResult (Err err) = do
-      blockErrEvent <- Event.blockErr errorEvent
+      blockErrEvent <- Event.blockErr errorNote
       --putStrLn $ "Event Error: " <> showt err
       if blockErrEvent
         then pure ()
@@ -100,7 +101,7 @@ tryInit = do
   where
     mkErr = (<>) "Error initiating notifications: " . T.pack . displayException
 
-tryParseConfig :: (MonadMutRef m ref, MonadShell m) => Args Identity -> m (Either Text (Config m ref))
+tryParseConfig :: (MonadMutRef m ref, MonadShell m) => Args Identity -> m (Either Text (Config ref))
 tryParseConfig =
   fmap (first mkErr)
     . readConfig
