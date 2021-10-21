@@ -31,14 +31,20 @@ import Navi.Event.Types
     RepeatEvent (..),
   )
 import Navi.Prelude
-import Navi.Services.Battery.Types (BatteryLevel, BatteryState (..), BatteryStatus (..))
+import Navi.Services.Battery.Types
+  ( BatteryLevel,
+    BatteryState (..),
+    BatteryStatus (..),
+    BatteryType (..),
+  )
 
 mkBatteryEvent ::
   [(BatteryLevel, Note)] ->
+  BatteryType ->
   RepeatEvent ref BatteryState ->
   ErrorNote ref ->
   Event ref BatteryState
-mkBatteryEvent lvlNoteList re en =
+mkBatteryEvent lvlNoteList batteryType re en =
   MkEvent
     { eventName = "Battery",
       command = cmd,
@@ -50,7 +56,7 @@ mkBatteryEvent lvlNoteList re en =
   where
     lvlNoteMap = Map.fromList lvlNoteList
     upperBoundMap = initBoundMap $ Sorted.fromList $ fmap fst lvlNoteList
-    cmd = MkCommand "upower -i `upower -e | grep 'BAT'`"
+    cmd = typeToCmd batteryType
     parserFn = queryFn upperBoundMap
 
 queryFn :: Map BatteryLevel BatteryLevel -> Text -> Either EventErr BatteryState
@@ -144,3 +150,7 @@ parseState =
     charging = AP.string "charging" $> Charging <* rest
     full = AP.string "fully-charged" $> Full <* rest
     rest = AP.skipSpace *> AP.endOfInput
+
+typeToCmd :: BatteryType -> Command
+typeToCmd UPower = MkCommand "upower -i `upower -e | grep 'BAT'`"
+typeToCmd (Custom c) = MkCommand c

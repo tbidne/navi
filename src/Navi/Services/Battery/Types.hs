@@ -2,6 +2,7 @@ module Navi.Services.Battery.Types
   ( BatteryLevel,
     BatteryStatus (..),
     BatteryState (..),
+    BatteryType (..),
   )
 where
 
@@ -15,6 +16,11 @@ data BatteryStatus
   | Discharging
   | Full
   deriving (Eq, Show)
+
+data BatteryType
+  = UPower
+  | Custom Text
+  deriving (Show)
 
 data BatteryState = MkBatteryState
   { level :: BatteryLevel,

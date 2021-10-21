@@ -23,10 +23,10 @@ import Navi.Services.Battery.Toml qualified as BatteryToml
 import Navi.Services.Battery.Types (BatteryLevel)
 
 toBatteryEvent :: (MonadMutRef m ref) => BatteryToml -> m (AnyEvent ref)
-toBatteryEvent MkBatteryToml {alerts, repeatEvent, errorEvent} = do
+toBatteryEvent MkBatteryToml {alerts, repeatEvent, errorEvent, batteryType} = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal errorEvent
-  let evt = BatteryEvent.mkBatteryEvent lvlNoteList repeatEvt errorNote
+  let evt = BatteryEvent.mkBatteryEvent lvlNoteList batteryType repeatEvt errorNote
   pure $ MkAnyEvent evt
   where
     lvlNoteList = toNote <$> alerts
