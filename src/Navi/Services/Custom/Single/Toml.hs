@@ -20,7 +20,7 @@ data SingleToml = MkSingleToml
     repeatEvtCfg :: Maybe RepeatEvtToml,
     errEvtCfg :: Maybe ErrorNoteToml
   }
-  deriving (Show)
+  deriving (Generic, Show)
 
 singleCodec :: TomlCodec SingleToml
 singleCodec =

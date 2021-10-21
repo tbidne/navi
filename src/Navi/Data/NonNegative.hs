@@ -30,7 +30,7 @@ newtype NonNegative = MkUnsafeNonNegative
   { -- | Unwraps the 'NonNegative'
     unNonNegative :: Int
   }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Generic, Ord, Show)
 
 -- | Allows pattern matching on 'NonNegative'.
 pattern MkNonNegative :: Int -> NonNegative

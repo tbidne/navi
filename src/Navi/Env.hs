@@ -24,6 +24,7 @@ data Env ref = MkEnv
     logCtx :: LogContexts,
     logNamespace :: Namespace
   }
+  deriving (Generic)
 
 mkEnv ::
   MonadNotify m =>

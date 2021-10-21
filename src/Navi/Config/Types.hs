@@ -19,20 +19,21 @@ data Config ref = MkConfig
     events :: NonEmpty (AnyEvent ref),
     logging :: Logging
   }
+  deriving (Generic)
 
 data Logging = MkLogging
   { severity :: Maybe Severity,
     location :: Maybe LogLoc
   }
-  deriving (Show)
+  deriving (Generic, Show)
 
 data LogLoc
   = Stdout
   | File FilePath
-  deriving (Show)
+  deriving (Generic, Show)
 
 data ConfigErr
   = FileErr SomeNonPseudoException
   | TomlError [TomlDecodeError]
   | NoEvents
-  deriving (Show)
+  deriving (Generic, Show)

@@ -75,6 +75,7 @@ import Data.Text as X (Text)
 import Data.Text qualified as T
 import Data.Text.IO as X (putStr, putStrLn)
 import Data.Traversable as X (Traversable (..))
+import GHC.Generics as X (Generic)
 import GHC.Natural as X (Natural (..))
 import System.IO qualified as IO
 import Prelude as X

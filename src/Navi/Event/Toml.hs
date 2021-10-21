@@ -22,7 +22,7 @@ data EventConfig = MkEventConfig
   { repeatEvt :: Maybe RepeatEvtToml,
     errEvt :: Maybe ErrorNoteToml
   }
-  deriving (Show)
+  deriving (Generic, Show)
 
 commandCodec :: TomlCodec Command
 commandCodec = Toml.textBy (T.pack . show) (Right . MkCommand) "command"
@@ -30,7 +30,7 @@ commandCodec = Toml.textBy (T.pack . show) (Right . MkCommand) "command"
 data RepeatEvtToml
   = NoRepeatsToml
   | AllowRepeatsToml
-  deriving (Show)
+  deriving (Generic, Show)
 
 repeatEvtCodec :: TomlCodec RepeatEvtToml
 repeatEvtCodec = Toml.dimap toBool fromBool $ Toml.bool "repeat-events"
@@ -52,7 +52,7 @@ data ErrorNoteToml
   = NoErrNoteToml
   | ErrNoteAllowRepeatsToml
   | ErrNoteNoRepeatsToml
-  deriving (Show)
+  deriving (Generic, Show)
 
 errorNoteCodec :: TomlCodec ErrorNoteToml
 errorNoteCodec = Toml.textBy showErrEvt parseErrEvt "error-events"

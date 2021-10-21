@@ -15,15 +15,15 @@ data BatteryStatus
   = Charging
   | Discharging
   | Full
-  deriving (Eq, Show)
+  deriving (Eq, Generic, Show)
 
 data BatteryType
   = UPower
   | Custom Text
-  deriving (Show)
+  deriving (Generic, Show)
 
 data BatteryState = MkBatteryState
   { level :: BatteryLevel,
     status :: BatteryStatus
   }
-  deriving (Eq, Show)
+  deriving (Eq, Generic, Show)

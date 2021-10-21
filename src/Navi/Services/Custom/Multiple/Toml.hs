@@ -28,13 +28,13 @@ data MultipleToml = MkMultipleToml
     repeatEvtCfg :: Maybe RepeatEvtToml,
     errEvtCfg :: Maybe ErrorNoteToml
   }
-  deriving (Show)
+  deriving (Generic, Show)
 
 data TriggerNoteToml = MkTriggerNoteToml
   { trigger :: Text,
     note :: Note
   }
-  deriving (Show)
+  deriving (Generic, Show)
 
 triggerNotesCodec :: TomlCodec [TriggerNoteToml]
 triggerNotesCodec = Toml.list triggerNoteCodec "trigger-note"

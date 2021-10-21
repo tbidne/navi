@@ -21,7 +21,7 @@ data BatteryToml = MkBatteryToml
     errorEvent :: Maybe ErrorNoteToml,
     batteryType :: BatteryType
   }
-  deriving (Show)
+  deriving (Generic, Show)
 
 data BatteryLevelNoteToml = MkBatteryLevelNoteToml
   { level :: BatteryLevel,
@@ -29,7 +29,7 @@ data BatteryLevelNoteToml = MkBatteryLevelNoteToml
     mIcon :: Maybe Icon,
     mTimeout :: Maybe Timeout
   }
-  deriving (Show)
+  deriving (Generic, Show)
 
 batteryCodec :: TomlCodec BatteryToml
 batteryCodec =

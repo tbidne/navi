@@ -12,7 +12,7 @@ import DBus.Notify (Note)
 import Navi.Prelude
 
 newtype Command = MkCommand {getCommand :: Text}
-  deriving (Show)
+  deriving (Generic, Show)
 
 -- | Determines if we are allowed to send off duplicate notifications
 -- simultaneously. If we are not, then 'NoRepeats' holds the last trigger
@@ -20,12 +20,14 @@ newtype Command = MkCommand {getCommand :: Text}
 data RepeatEvent ref a
   = NoRepeats (ref (Maybe a))
   | AllowRepeats
+  deriving (Generic)
 
 -- | Determines if we should send notifications for errors and, if so, if we
 -- allow repeats.
 data ErrorNote ref
   = NoErrNote
   | AllowErrNote (RepeatEvent ref ())
+  deriving (Generic)
 
 -- | 'Event' represents sending notifications.
 data Event ref a = MkEvent
@@ -36,6 +38,7 @@ data Event ref a = MkEvent
     repeatEvent :: RepeatEvent ref a,
     errorNote :: ErrorNote ref
   }
+  deriving (Generic)
 
 -- | Represents an error when querying an 'Event'.
 data EventErr = MkEventErr
@@ -43,7 +46,7 @@ data EventErr = MkEventErr
     short :: Text,
     long :: Text
   }
-  deriving (Show)
+  deriving (Generic, Show)
 
 type AnyEvent :: (Type -> Type) -> Type
 data AnyEvent ref where

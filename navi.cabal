@@ -28,6 +28,7 @@ common common-exts
     ConstraintKinds
     DataKinds
     DeriveFunctor
+    DeriveGeneric
     DerivingVia
     FlexibleContexts
     FlexibleInstances
@@ -90,6 +91,7 @@ library
     , fdo-notify            ^>=0.3.1
     , katip                 ^>=0.8.4.0
     , mtl                   ^>=2.2.2
+    , optics-core           ^>=0.4
     , optparse-applicative  ^>=0.16.1.0
     , process               ^>=1.6.7.0
     , text                  ^>=1.2.3.2

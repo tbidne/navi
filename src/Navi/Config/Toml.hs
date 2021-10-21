@@ -23,7 +23,7 @@ data ConfigToml = MkConfigToml
     multipleToml :: [MultipleToml],
     batteryToml :: Maybe BatteryToml
   }
-  deriving (Show)
+  deriving (Generic, Show)
 
 configCodec :: TomlCodec ConfigToml
 configCodec =
