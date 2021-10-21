@@ -5,7 +5,9 @@ module Navi.Data.NaviNote
     summaryCodec,
     bodyCodec,
     appImageCodec,
+    appImageKeyCodec,
     urgencyLevelCodec,
+    urgencyLevelKeyCodec,
     timeoutCodec,
   )
 where
@@ -15,7 +17,7 @@ import Data.Text qualified as T
 import Navi.Data.NonNegative (NonNegative)
 import Navi.Data.NonNegative qualified as NN
 import Navi.Prelude
-import Toml (TomlCodec, (.=))
+import Toml (Key, TomlCodec, (.=))
 import Toml qualified
 
 data NaviNote = MkNaviNote
@@ -48,17 +50,23 @@ bodyCodec :: TomlCodec Text
 bodyCodec = Toml.text "body"
 
 appImageCodec :: TomlCodec Icon
-appImageCodec = appImagePathCodec <|> appImageIconCodec
+appImageCodec = appImageKeyCodec "app-image"
+
+appImageKeyCodec :: Key -> TomlCodec Icon
+appImageKeyCodec key = appImagePathCodec <|> appImageIconCodec
   where
-    appImageIconCodec = Toml.dimatch matchIcon Icon $ Toml.string "app-image-path"
+    appImageIconCodec = Toml.dimatch matchIcon Icon $ Toml.string $ key <> "-path"
     matchIcon (Icon i) = Just i
     matchIcon _ = Nothing
-    appImagePathCodec = Toml.dimatch matchFile File $ Toml.string "app-image-file"
+    appImagePathCodec = Toml.dimatch matchFile File $ Toml.string $ key <> "-file"
     matchFile (File p) = Just p
     matchFile _ = Nothing
 
 urgencyLevelCodec :: TomlCodec UrgencyLevel
-urgencyLevelCodec = Toml.textBy showUrgencyLevel parseUrgencyLevel "urgency"
+urgencyLevelCodec = urgencyLevelKeyCodec "urgency"
+
+urgencyLevelKeyCodec :: Key -> TomlCodec UrgencyLevel
+urgencyLevelKeyCodec = Toml.textBy showUrgencyLevel parseUrgencyLevel
   where
     showUrgencyLevel Low = "low"
     showUrgencyLevel Normal = "normal"

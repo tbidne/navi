@@ -10,7 +10,8 @@ import Navi.Config.Types (LogLoc (..), Logging (..))
 import Navi.Data.NonNegative (NonNegative)
 import Navi.Data.NonNegative qualified as NonNegative
 import Navi.Prelude
-import Navi.Services.Battery.Toml as BatteryToml
+import Navi.Services.Battery.Level.Toml as BatteryLevelToml
+import Navi.Services.Battery.Status.Toml as BatteryStatusToml
 import Navi.Services.Custom.Multiple.Toml as MultipleToml
 import Navi.Services.Custom.Single.Toml as SingleToml
 import Toml (TomlCodec, (.=))
@@ -21,7 +22,8 @@ data ConfigToml = MkConfigToml
     logToml :: Logging,
     singleToml :: [SingleToml],
     multipleToml :: [MultipleToml],
-    batteryToml :: Maybe BatteryToml
+    batteryLevelToml :: Maybe BatteryLevelToml,
+    batteryStatusToml :: Maybe BatteryStatusToml
   }
   deriving (Generic, Show)
 
@@ -32,7 +34,8 @@ configCodec =
     <*> Toml.table logCodec "logging" .= logToml
     <*> Toml.list SingleToml.singleCodec "single" .= singleToml
     <*> Toml.list MultipleToml.multipleCodec "multiple" .= multipleToml
-    <*> Toml.dioptional (Toml.table BatteryToml.batteryCodec "battery") .= batteryToml
+    <*> Toml.dioptional (Toml.table BatteryLevelToml.batteryLevelCodec "battery-level") .= batteryLevelToml
+    <*> Toml.dioptional (Toml.table BatteryStatusToml.batteryStatusCodec "battery-status") .= batteryStatusToml
 
 logCodec :: TomlCodec Logging
 logCodec =

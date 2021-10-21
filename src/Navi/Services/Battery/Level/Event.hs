@@ -1,4 +1,4 @@
-module Navi.Services.Battery.Event
+module Navi.Services.Battery.Level.Event
   ( mkBatteryEvent,
   )
 where

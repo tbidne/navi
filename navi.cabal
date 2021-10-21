@@ -72,9 +72,12 @@ library
     Navi.Event.Toml
     Navi.Event.Types
     Navi.Prelude
-    Navi.Services.Battery
-    Navi.Services.Battery.Event
-    Navi.Services.Battery.Toml
+    Navi.Services.Battery.Level
+    Navi.Services.Battery.Level.Event
+    Navi.Services.Battery.Level.Toml
+    Navi.Services.Battery.Status
+    Navi.Services.Battery.Status.Event
+    Navi.Services.Battery.Status.Toml
     Navi.Services.Battery.Types
     Navi.Services.Custom.Multiple
     Navi.Services.Custom.Multiple.Event
