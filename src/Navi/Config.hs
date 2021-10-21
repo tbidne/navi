@@ -1,37 +1,27 @@
 module Navi.Config
   ( Config (..),
+    Logging (..),
+    LogLoc (..),
     ConfigErr (..),
     readConfig,
   )
 where
 
-import Control.Exception (Exception (..))
 import Data.List.NonEmpty (NonEmpty (..))
 import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Toml qualified as ConfigToml
-import Navi.Data.NonNegative (NonNegative)
+import Navi.Config.Types
+  ( Config (..),
+    ConfigErr (..),
+    LogLoc (..),
+    Logging (..),
+  )
 import Navi.Effects (MonadMutRef, MonadShell (..))
-import Navi.Event (AnyEvent)
 import Navi.Prelude
 import Navi.Services.Battery qualified as Battery
 import Navi.Services.Custom.Multiple qualified as Multiple
 import Navi.Services.Custom.Single qualified as Single
-import Toml (TomlDecodeError)
 import Toml qualified
-import UnexceptionalIO (SomeNonPseudoException)
-
-data Config ref = MkConfig
-  { pollInterval :: NonNegative,
-    events :: NonEmpty (AnyEvent ref)
-  }
-
-data ConfigErr
-  = FileErr SomeNonPseudoException
-  | TomlError [TomlDecodeError]
-  | NoEvents
-  deriving (Show)
-
-instance Exception ConfigErr
 
 readConfig :: (MonadMutRef m ref, MonadShell m) => FilePath -> m (Either ConfigErr (Config ref))
 readConfig path = do
@@ -53,7 +43,8 @@ tomlToConfig
     { pollToml,
       singleToml,
       multipleToml,
-      batteryToml
+      batteryToml,
+      logToml
     } = do
     singleEvents <- traverse Single.toSingleEvent singleToml
     multipleEvents <- traverse Multiple.toMultipleEvent multipleToml
@@ -67,5 +58,6 @@ tomlToConfig
         Just $
           MkConfig
             { pollInterval = pollToml,
-              events = e :| es
+              events = e :| es,
+              logging = logToml
             }

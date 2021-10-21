@@ -47,4 +47,4 @@ data EventErr = MkEventErr
 
 type AnyEvent :: (Type -> Type) -> Type
 data AnyEvent ref where
-  MkAnyEvent :: Eq a => Event ref a -> AnyEvent ref
+  MkAnyEvent :: (Eq a, Show a) => Event ref a -> AnyEvent ref
