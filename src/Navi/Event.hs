@@ -17,6 +17,7 @@ module Navi.Event
 
     -- * Helper functions
     mkNote,
+    logEvent,
   )
 where
 
@@ -29,7 +30,8 @@ import DBus.Notify
     Timeout (..),
   )
 import Data.Text qualified as T
-import Navi.Effects (MonadMutRef (..), MonadShell (..))
+import Katip (Severity (..))
+import Navi.Effects (MonadLogger (..), MonadMutRef (..), MonadShell (..))
 import Navi.Event.Types
   ( AnyEvent (..),
     Command (..),
@@ -41,25 +43,34 @@ import Navi.Event.Types
 import Navi.Prelude
 
 runEvent ::
-  ( MonadMutRef m ref,
-    MonadShell m
+  ( MonadLogger m,
+    MonadShell m,
+    Show a
   ) =>
   Event ref a ->
   m (Either EventErr a)
-runEvent MkEvent {eventName, command, parser} = do
+runEvent evt@MkEvent {eventName, command, parser} = addNamespace "Run Event" $ do
   eResultStr <- execSh command
-  pure $ case eResultStr of
-    Left ex -> Left $ MkEventErr eventName "Exception" $ T.pack $ displayException ex
-    Right resultStr -> parser resultStr
+  case eResultStr of
+    Left ex -> do
+      let exStr = T.pack $ displayException ex
+      logEvent evt ErrorS $ "Exception: " <> exStr
+      pure $ Left $ MkEventErr eventName "Exception" exStr
+    Right resultStr -> do
+      let parsed = parser resultStr
+      logEvent evt DebugS $ "Parsed: " <> showt parsed
+      pure parsed
 
-blockRepeat :: (Eq a, MonadMutRef m ref) => RepeatEvent ref a -> a -> m Bool
-blockRepeat repeatEvt newVal = do
+blockRepeat :: (Eq a, MonadLogger m, MonadMutRef m ref, Show a) => RepeatEvent ref a -> a -> m Bool
+blockRepeat repeatEvt newVal = addNamespace "Checking event repeats" $ do
   case repeatEvt of
     -- Repeat events are allowed, so do not block.
     AllowRepeats -> pure False
     -- Repeat events are not allowed, must check.
     NoRepeats prevRef -> do
       prevVal <- readRef prevRef
+      logText DebugS $ "Previous value: " <> showt prevVal
+      logText DebugS $ "New value: " <> showt newVal
       if prevVal == Just newVal
         then -- Already sent this alert, block.
           pure True
@@ -109,3 +120,6 @@ mkNote icon summary body hints timeout =
       hints = hints,
       expiry = timeout
     }
+
+logEvent :: MonadLogger m => Event ref a -> Severity -> Text -> m ()
+logEvent MkEvent {eventName} s t = logText s $ "[" <> eventName <> "] " <> t

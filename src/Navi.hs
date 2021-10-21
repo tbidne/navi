@@ -73,7 +73,6 @@ instance MonadMutRef m ref => MonadMutRef (NaviT e m) ref where
   writeRef ref = lift . writeRef ref
 
 runNavi ::
-  forall ref m.
   ( MonadLogger m,
     MonadMutRef m ref,
     MonadNotify m,
@@ -90,7 +89,15 @@ runNavi = do
     logText DebugS "Checking alerts..."
     traverse (processEvent client) events
 
-processEvent :: (MonadLogger m, MonadMutRef m ref, MonadNotify m, MonadShell m) => Client -> AnyEvent ref -> m ()
+processEvent ::
+  ( MonadLogger m,
+    MonadMutRef m ref,
+    MonadNotify m,
+    MonadShell m
+  ) =>
+  Client ->
+  AnyEvent ref ->
+  m ()
 processEvent
   client
   ( MkAnyEvent
@@ -102,9 +109,9 @@ processEvent
         }
     ) = Event.runEvent event >>= handleResult eventName
     where
-      handleResult name (Left err) = addNamespace "Handling Result" $ do
+      handleResult name (Left err@MkEventErr {short, long}) = addNamespace "Handling Result" $ do
         blockErrEvent <- Event.blockErr errorNote
-        logText ErrorS $ mkLog name "Event Error" err
+        logText ErrorS $ mkLog name "Event Error" $ short <> ": " <> long
         if blockErrEvent
           then logText DebugS "Error note blocked"
           else sendNote client (serviceErrToNote err)
@@ -118,7 +125,7 @@ processEvent
             if blocked
               then logText DebugS $ mkLog name "Alert blocked" result
               else do
-                logText DebugS $ mkLog name "Sending alert" result
+                logText InfoS $ mkLog name "Sending alert" result
                 Event.updatePrevTrigger repeatEvent result
                 sendNote client note
       mkLog name msg x = "[" <> name <> "] " <> msg <> ": " <> showt x
