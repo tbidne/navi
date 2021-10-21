@@ -3,30 +3,31 @@ module Navi.Services.Custom.Multiple.Event
   )
 where
 
-import DBus.Notify (Note (..))
 import Data.Attoparsec.Combinator qualified as AP
 import Data.Attoparsec.Text (Parser)
 import Data.Attoparsec.Text qualified as AP
 import Data.Map.Strict qualified as Map
 import Data.Text qualified as T
+import Navi.Data.NaviNote (NaviNote)
 import Navi.Event.Types
   ( Command (..),
     ErrorNote (..),
     Event (..),
-    EventErr (..),
+    EventErr,
     RepeatEvent (..),
   )
+import Navi.Event.Types qualified as ETypes
 import Navi.Prelude
 
 mkMultipleEvent ::
   Command ->
-  [(Text, Note)] ->
+  [(Text, NaviNote)] ->
   RepeatEvent ref Text ->
   ErrorNote ref ->
   Event ref Text
 mkMultipleEvent cmd noteList re en =
   MkEvent
-    { eventName = "Multiple",
+    { name = "Multiple",
       command = cmd,
       parser = parseFn $ fmap fst noteList,
       raiseAlert = flip Map.lookup noteMap,
@@ -39,7 +40,7 @@ mkMultipleEvent cmd noteList re en =
 parseFn :: [Text] -> Text -> Either EventErr Text
 parseFn keys = first toEventErr . AP.parseOnly (parseTxt keys)
   where
-    toEventErr = MkEventErr "Multiple" "Parse error" . T.pack
+    toEventErr = ETypes.MkEventErr "Multiple" "Parse error" . T.pack
 
 parseTxt :: [Text] -> Parser Text
 parseTxt keys = AP.choice keyParsers

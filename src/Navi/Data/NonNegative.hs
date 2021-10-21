@@ -6,6 +6,7 @@ module Navi.Data.NonNegative
 
     -- * Creation
     mkNonNegative,
+    readNonNegative,
     unsafeNonNegative,
 
     -- * Parsing
@@ -15,6 +16,7 @@ where
 
 import Control.Category ((>>>))
 import Navi.Prelude
+import Text.Read qualified as TR
 import Toml
   ( AnyValue (..),
     BiMap (..),
@@ -62,6 +64,9 @@ unsafeNonNegative n
       "Passed negative "
         <> showt n
         <> " to unsafeNonNegative!"
+
+readNonNegative :: String -> Maybe NonNegative
+readNonNegative = TR.readMaybe >=> mkNonNegative
 
 -- | Parses a TOML 'NonNegative'.
 nonNegativeCodec :: Key -> TomlCodec NonNegative

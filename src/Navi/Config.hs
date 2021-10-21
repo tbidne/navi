@@ -29,7 +29,7 @@ readConfig path = do
   case eContents of
     Left ex -> pure $ toFileErr ex
     Right contents -> do
-      case Toml.decode ConfigToml.configCodec contents of
+      case Toml.decodeExact ConfigToml.configCodec contents of
         Left tomlErrs -> pure $ toTomlErr tomlErrs
         Right cfg -> do
           maybe (Left NoEvents) Right <$> tomlToConfig cfg

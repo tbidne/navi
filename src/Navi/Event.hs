@@ -16,19 +16,11 @@ module Navi.Event
     updatePrevTrigger,
 
     -- * Helper functions
-    mkNote,
     logEvent,
   )
 where
 
 import Control.Exception (Exception (..))
-import DBus.Notify
-  ( Body (..),
-    Hint (..),
-    Icon (..),
-    Note (..),
-    Timeout (..),
-  )
 import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Effects (MonadLogger (..), MonadMutRef (..), MonadShell (..))
@@ -41,6 +33,8 @@ import Navi.Event.Types
     RepeatEvent (..),
   )
 import Navi.Prelude
+import Optics.Generic (GField (..))
+import Optics.Operators ((^.))
 
 runEvent ::
   ( MonadLogger m,
@@ -49,17 +43,22 @@ runEvent ::
   ) =>
   Event ref a ->
   m (Either EventErr a)
-runEvent evt@MkEvent {eventName, command, parser} = addNamespace "Run Event" $ do
+runEvent event = addNamespace "Run Event" $ do
   eResultStr <- execSh command
+  logEvent event DebugS $ "Shell returned: " <> showt eResultStr
   case eResultStr of
     Left ex -> do
       let exStr = T.pack $ displayException ex
-      logEvent evt ErrorS $ "Exception: " <> exStr
-      pure $ Left $ MkEventErr eventName "Exception" exStr
+      logEvent event ErrorS $ "Exception: " <> exStr
+      pure $ Left $ MkEventErr name "Exception" exStr
     Right resultStr -> do
       let parsed = parser resultStr
-      logEvent evt DebugS $ "Parsed: " <> showt parsed
+      logEvent event DebugS $ "Parsed: " <> showt parsed
       pure parsed
+  where
+    name = event ^. gfield @"name"
+    command = event ^. gfield @"command"
+    parser = event ^. gfield @"parser"
 
 blockRepeat :: (Eq a, MonadLogger m, MonadMutRef m ref, Show a) => RepeatEvent ref a -> a -> m Bool
 blockRepeat repeatEvt newVal = addNamespace "Checking event repeats" $ do
@@ -108,18 +107,7 @@ updatePrevTrigger repeatEvt newVal =
         else pure ()
     _ -> pure ()
 
--- | Helper function for creating notifications.
-mkNote :: Maybe Icon -> String -> Maybe Body -> [Hint] -> Timeout -> Note
-mkNote icon summary body hints timeout =
-  Note
-    { appName = "navi",
-      appImage = icon,
-      summary = summary,
-      body = body,
-      actions = [],
-      hints = hints,
-      expiry = timeout
-    }
-
 logEvent :: MonadLogger m => Event ref a -> Severity -> Text -> m ()
-logEvent MkEvent {eventName} s t = logText s $ "[" <> eventName <> "] " <> t
+logEvent event s t = logText s $ "[" <> name <> "] " <> t
+  where
+    name = event ^. gfield @"name"

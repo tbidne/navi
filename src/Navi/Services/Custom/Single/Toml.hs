@@ -4,11 +4,11 @@ module Navi.Services.Custom.Single.Toml
   )
 where
 
-import DBus.Notify (Note (..))
+import Navi.Data.NaviNote (NaviNote)
+import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Event (Command (..))
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EventToml
-import Navi.Note.Toml qualified as NoteToml
 import Navi.Prelude
 import Toml (TomlCodec, (.=))
 import Toml qualified
@@ -16,7 +16,7 @@ import Toml qualified
 data SingleToml = MkSingleToml
   { command :: Command,
     triggerVal :: Text,
-    note :: Note,
+    note :: NaviNote,
     repeatEvtCfg :: Maybe RepeatEvtToml,
     errEvtCfg :: Maybe ErrorNoteToml
   }
@@ -27,6 +27,6 @@ singleCodec =
   MkSingleToml
     <$> EventToml.commandCodec .= command
       <*> Toml.text "trigger" .= triggerVal
-      <*> Toml.table NoteToml.noteCodec "note" .= note
+      <*> Toml.table NaviNote.naviNoteCodec "note" .= note
       <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvtCfg
       <*> Toml.dioptional EventToml.errorNoteCodec .= errEvtCfg

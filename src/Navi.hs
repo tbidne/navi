@@ -7,17 +7,12 @@ where
 import Control.Monad.IO.Class (MonadIO (..))
 import Control.Monad.Reader (MonadReader (..), ReaderT (..), asks)
 import Control.Monad.Trans (MonadTrans (..))
-import DBus.Notify (Body (..), Client, Hint (..), Note, Timeout (..), UrgencyLevel (..))
-import Data.Text qualified as T
+import DBus.Notify (Client, UrgencyLevel (..))
 import Data.Text.Lazy.Builder qualified as T
 import Data.Void (Void)
-import Katip
-  ( Katip (..),
-    KatipContext (..),
-    LogStr (..),
-    Severity (..),
-  )
+import Katip (Katip (..), KatipContext (..), LogStr (..), Severity (..))
 import Katip qualified as K
+import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Effects
   ( MonadLogger (..),
     MonadMutRef (..),
@@ -25,13 +20,11 @@ import Navi.Effects
     MonadShell (..),
   )
 import Navi.Env (Env (..))
-import Navi.Event
-  ( AnyEvent (..),
-    Event (..),
-    EventErr (..),
-  )
+import Navi.Event (AnyEvent (..), Event (..), EventErr (..))
 import Navi.Event qualified as Event
 import Navi.Prelude
+import Optics.Generic (GField (..))
+import Optics.Operators ((^.))
 
 type NaviT :: Type -> (Type -> Type) -> Type -> Type
 newtype NaviT e m a = MkNaviT {runNaviT :: ReaderT e m a}
@@ -98,42 +91,44 @@ processEvent ::
   Client ->
   AnyEvent ref ->
   m ()
-processEvent
-  client
-  ( MkAnyEvent
-      event@MkEvent
-        { eventName,
-          repeatEvent,
-          errorNote,
-          raiseAlert
-        }
-    ) = Event.runEvent event >>= handleResult eventName
-    where
-      handleResult name (Left err@MkEventErr {short, long}) = addNamespace "Handling Result" $ do
-        blockErrEvent <- Event.blockErr errorNote
-        logText ErrorS $ mkLog name "Event Error" $ short <> ": " <> long
-        if blockErrEvent
-          then logText DebugS "Error note blocked"
-          else sendNote client (serviceErrToNote err)
-      handleResult name (Right result) = addNamespace "Handling Result" $ do
-        case raiseAlert result of
-          Nothing -> do
-            logText DebugS $ mkLog name "No alert to raise" result
-            Event.updatePrevTrigger repeatEvent result
-          Just note -> do
-            blocked <- Event.blockRepeat repeatEvent result
-            if blocked
-              then logText DebugS $ mkLog name "Alert blocked" result
-              else do
-                logText InfoS $ mkLog name "Sending alert" result
-                Event.updatePrevTrigger repeatEvent result
-                sendNote client note
-      mkLog name msg x = "[" <> name <> "] " <> msg <> ": " <> showt x
-
-serviceErrToNote :: EventErr -> Note
-serviceErrToNote (MkEventErr nm short _) = Event.mkNote Nothing summary body hints timeout
+processEvent client (MkAnyEvent event) = Event.runEvent event >>= handleResult
   where
-    summary = "Event Error"
-    body = Just $ Text $ T.unpack $ nm <> ": " <> short
-    hints = [Urgency Critical]
-    timeout = Milliseconds 10_000
+    name = event ^. gfield @"name"
+    repeatEvent = event ^. gfield @"repeatEvent"
+    errorNote = event ^. gfield @"errorNote"
+    raiseAlert = event ^. gfield @"raiseAlert"
+
+    handleResult (Left err@MkEventErr {short, long}) = addNamespace "Handling Result" $ do
+      blockErrEvent <- Event.blockErr errorNote
+      logText ErrorS $ mkLog "Event Error" $ short <> ": " <> long
+      if blockErrEvent
+        then logText DebugS "Error note blocked"
+        else sendNote client (serviceErrToNote err)
+    handleResult (Right result) = addNamespace "Handling Result" $ do
+      case raiseAlert result of
+        Nothing -> do
+          logText DebugS $ mkLog "No alert to raise" result
+          Event.updatePrevTrigger repeatEvent result
+        Just note -> do
+          blocked <- Event.blockRepeat repeatEvent result
+          if blocked
+            then logText DebugS $ mkLog "Alert blocked" result
+            else do
+              logText InfoS $ mkLog "Sending alert" result
+              Event.updatePrevTrigger repeatEvent result
+              sendNote client note
+    mkLog :: Show a => Text -> a -> Text
+    mkLog msg x = "[" <> name <> "] " <> msg <> ": " <> showt x
+
+serviceErrToNote :: EventErr -> NaviNote
+serviceErrToNote eventErr =
+  MkNaviNote
+    { summary = "Event Error",
+      body = Just $ name <> ": " <> short,
+      image = Nothing,
+      urgency = Just Critical,
+      timeout = Nothing
+    }
+  where
+    name = eventErr ^. gfield @"name"
+    short = eventErr ^. gfield @"short"

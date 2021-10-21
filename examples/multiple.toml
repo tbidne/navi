@@ -28,15 +28,14 @@ trigger = "80"
 
 [multiple.trigger-note.note]
 summary = "Multi"
-body-text = "Battery < 80"
-hints = []
-timeout = "10000"
+body = "Battery < 80"
+timeout = "10"
 
 [[multiple.trigger-note]]
 trigger = "40"
 
 [multiple.trigger-note.note]
 summary = "Multi"
-body-text = "Battery < 40"
-hints = [{ urgency-level = "critical" }]
-timeout = "10000"
+body = "Battery < 40"
+urgency = "critical"
+timeout = "10"

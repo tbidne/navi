@@ -68,7 +68,7 @@ import Data.Functor as X
   )
 import Data.Kind as X (Constraint, Type)
 import Data.List as X (filter)
-import Data.Maybe as X (Maybe (..), fromMaybe, maybe)
+import Data.Maybe as X (Maybe (..), fromMaybe, maybe, maybeToList)
 import Data.Monoid as X (Monoid (..))
 import Data.Semigroup as X (Semigroup (..))
 import Data.Text as X (Text)

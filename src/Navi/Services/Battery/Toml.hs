@@ -5,11 +5,12 @@ module Navi.Services.Battery.Toml
   )
 where
 
-import DBus.Notify (Icon, Timeout, UrgencyLevel)
+import DBus.Notify (Icon, UrgencyLevel)
 import Navi.Data.BoundedN qualified as BoundedN
+import Navi.Data.NaviNote (Timeout)
+import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EventToml
-import Navi.Note.Toml qualified as NoteToml
 import Navi.Prelude
 import Navi.Services.Battery.Types (BatteryLevel, BatteryType (..))
 import Toml (TomlCodec, (.=))
@@ -25,7 +26,7 @@ data BatteryToml = MkBatteryToml
 
 data BatteryLevelNoteToml = MkBatteryLevelNoteToml
   { level :: BatteryLevel,
-    urgency :: UrgencyLevel,
+    urgency :: Maybe UrgencyLevel,
     mIcon :: Maybe Icon,
     mTimeout :: Maybe Timeout
   }
@@ -46,9 +47,9 @@ batteryLevelNoteTomlCodec :: TomlCodec BatteryLevelNoteToml
 batteryLevelNoteTomlCodec =
   MkBatteryLevelNoteToml
     <$> lvlCodec .= level
-    <*> NoteToml.urgencyLevelCodec .= urgency
-    <*> NoteToml.appImageCodec .= mIcon
-    <*> Toml.dioptional NoteToml.timeoutCodec .= mTimeout
+    <*> Toml.dioptional NaviNote.urgencyLevelCodec .= urgency
+    <*> Toml.dioptional NaviNote.appImageCodec .= mIcon
+    <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
 
 batteryTypeCodec :: TomlCodec BatteryType
 batteryTypeCodec =

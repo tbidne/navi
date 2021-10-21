@@ -1,17 +1,8 @@
 module Navi.Services.Battery.Event
   ( mkBatteryEvent,
-    batteryNNote,
   )
 where
 
-import DBus.Notify
-  ( Body (..),
-    Hint (..),
-    Icon (..),
-    Note (..),
-    Timeout (..),
-    UrgencyLevel (..),
-  )
 import Data.Attoparsec.Combinator qualified as AP
 import Data.Attoparsec.Text (Parser)
 import Data.Attoparsec.Text qualified as AP
@@ -20,16 +11,17 @@ import Data.Map.Strict qualified as Map
 import Data.Text qualified as T
 import Navi.Data.BoundedN (BoundedN (..))
 import Navi.Data.BoundedN qualified as BoundedN
+import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Data.Sorted (Sorted)
 import Navi.Data.Sorted qualified as Sorted
-import Navi.Event qualified as Event
 import Navi.Event.Types
   ( Command (..),
     ErrorNote (..),
     Event (..),
-    EventErr (..),
+    EventErr,
     RepeatEvent (..),
   )
+import Navi.Event.Types qualified as ETypes
 import Navi.Prelude
 import Navi.Services.Battery.Types
   ( BatteryLevel,
@@ -39,14 +31,14 @@ import Navi.Services.Battery.Types
   )
 
 mkBatteryEvent ::
-  [(BatteryLevel, Note)] ->
+  [(BatteryLevel, NaviNote)] ->
   BatteryType ->
   RepeatEvent ref BatteryState ->
   ErrorNote ref ->
   Event ref BatteryState
 mkBatteryEvent lvlNoteList batteryType re en =
   MkEvent
-    { eventName = "Battery",
+    { name = "Battery",
       command = cmd,
       parser = parserFn,
       raiseAlert = toNote lvlNoteMap,
@@ -66,7 +58,7 @@ queryFn upperBoundMap infoStr = do
       case Map.lookup level upperBoundMap of
         Nothing ->
           Left $
-            MkEventErr
+            ETypes.MkEventErr
               "Battery"
               "Bound error"
               $ "Could not find bound for: " <> T.pack (show level)
@@ -75,19 +67,12 @@ queryFn upperBoundMap infoStr = do
     Percent _ -> Left $ mkServiceErr $ "Could not parse battery state: " <> show infoStr
     Status _ -> Left $ mkServiceErr $ "Could not parse battery percent: " <> show infoStr
   where
-    mkServiceErr = MkEventErr "Battery" "Parse error" . T.pack
+    mkServiceErr = ETypes.MkEventErr "Battery" "Parse error" . T.pack
 
-toNote :: Map BatteryLevel Note -> BatteryState -> Maybe Note
+toNote :: Map BatteryLevel NaviNote -> BatteryState -> Maybe NaviNote
 toNote lvlNoteMap MkBatteryState {level, status} = case status of
   Discharging -> Map.lookup level lvlNoteMap
   _ -> Nothing
-
-batteryNNote :: Int -> Maybe Icon -> UrgencyLevel -> Timeout -> Note
-batteryNNote n icon urgency = Event.mkNote icon summary body hints
-  where
-    summary = "Battery"
-    body = Just (Text ("Power is less than " <> show n <> "%"))
-    hints = [Urgency urgency]
 
 initBoundMap :: Sorted BatteryLevel -> Map BatteryLevel BatteryLevel
 initBoundMap = Map.fromList . go 0 . Sorted.toList

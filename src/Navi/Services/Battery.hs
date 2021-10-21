@@ -5,15 +5,9 @@ module Navi.Services.Battery
   )
 where
 
-import DBus.Notify
-  ( Body (..),
-    Hint (..),
-    Note (..),
-    Timeout (..),
-  )
 import Navi.Data.BoundedN qualified as BoundedN
+import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Effects (MonadMutRef)
-import Navi.Event qualified as Event
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..))
 import Navi.Prelude
@@ -21,6 +15,8 @@ import Navi.Services.Battery.Event qualified as BatteryEvent
 import Navi.Services.Battery.Toml (BatteryLevelNoteToml (..), BatteryToml (..))
 import Navi.Services.Battery.Toml qualified as BatteryToml
 import Navi.Services.Battery.Types (BatteryLevel)
+import Optics.Generic (GField (..))
+import Optics.Operators ((^.))
 
 toBatteryEvent :: (MonadMutRef m ref) => BatteryToml -> m (AnyEvent ref)
 toBatteryEvent MkBatteryToml {alerts, repeatEvent, errorEvent, batteryType} = do
@@ -31,16 +27,21 @@ toBatteryEvent MkBatteryToml {alerts, repeatEvent, errorEvent, batteryType} = do
   where
     lvlNoteList = toNote <$> alerts
 
-toNote :: BatteryLevelNoteToml -> (BatteryLevel, Note)
-toNote MkBatteryLevelNoteToml {level, urgency, mIcon, mTimeout} =
-  (level, Event.mkNote mIcon summary body hints timeout)
+toNote :: BatteryLevelNoteToml -> (BatteryLevel, NaviNote)
+toNote toml =
+  ( level,
+    MkNaviNote
+      summary
+      body
+      (toml ^. gfield @"mIcon")
+      (toml ^. gfield @"urgency")
+      (toml ^. gfield @"mTimeout")
+  )
   where
+    level = toml ^. gfield @"level"
+    summary = "Battery"
     body =
       Just $
-        Text $
-          "Power is less than "
-            <> show (BoundedN.unBoundedN level)
-            <> "%"
-    summary = "Battery"
-    hints = [Urgency urgency]
-    timeout = fromMaybe (Milliseconds 10000) mTimeout
+        "Power is less than "
+          <> showt (BoundedN.unBoundedN level)
+          <> "%"

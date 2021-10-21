@@ -5,11 +5,11 @@ module Navi.Services.Custom.Multiple.Toml
   )
 where
 
-import DBus.Notify (Note (..))
+import Navi.Data.NaviNote (NaviNote)
+import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Event (Command (..))
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EventToml
-import Navi.Note.Toml qualified as NoteToml
 import Navi.Prelude
 import Toml (TomlCodec, (.=))
 import Toml qualified
@@ -32,7 +32,7 @@ data MultipleToml = MkMultipleToml
 
 data TriggerNoteToml = MkTriggerNoteToml
   { trigger :: Text,
-    note :: Note
+    note :: NaviNote
   }
   deriving (Generic, Show)
 
@@ -43,6 +43,6 @@ triggerNoteCodec :: TomlCodec TriggerNoteToml
 triggerNoteCodec =
   MkTriggerNoteToml
     <$> triggerCodec .= trigger
-    <*> Toml.table NoteToml.noteCodec "note" .= note
+    <*> Toml.table NaviNote.naviNoteCodec "note" .= note
   where
     triggerCodec = Toml.text "trigger"

@@ -11,6 +11,8 @@ import Katip (Severity (..))
 import Navi.Data.NonNegative (NonNegative)
 import Navi.Event (AnyEvent (..))
 import Navi.Prelude
+import Optics.Generic (GField (..))
+import Optics.Operators ((^.))
 import Toml (TomlDecodeError)
 import UnexceptionalIO (SomeNonPseudoException)
 
@@ -20,6 +22,16 @@ data Config ref = MkConfig
     logging :: Logging
   }
   deriving (Generic)
+
+instance Show (Config ref) where
+  show config =
+    "MkConfig {pollInterval = "
+      <> show (config ^. gfield @"pollInterval")
+      <> ", events = "
+      <> show (config ^. gfield @"events")
+      <> ", logging = "
+      <> show (config ^. gfield @"logging")
+      <> "}"
 
 data Logging = MkLogging
   { severity :: Maybe Severity,

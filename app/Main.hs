@@ -38,10 +38,7 @@ main = do
 
     absurd <$> runReaderT (runNaviT runNavi) env
   where
-    tryOrDie e = either exit pure e
-    exit e = do
-      putStrLn e
-      Exit.die $ T.unpack e
+    tryOrDie = either (Exit.die . T.unpack) pure
 
 tryParseConfig :: MonadMutRef IO ref => Args Identity -> IO (Either Text (Config ref))
 tryParseConfig =

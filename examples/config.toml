@@ -6,23 +6,23 @@ error-events = "no-repeats"
 
 [[battery.alert]]
 level = 50
-urgency-level = "low"
+urgency = "low"
 
 [[battery.alert]]
 level = 30
-urgency-level = "normal"
+urgency = "normal"
 
 [[battery.alert]]
 level = 20
-urgency-level = "critical"
+urgency = "critical"
 
 [[battery.alert]]
 level = 10
-urgency-level = "critical"
+urgency = "critical"
 
 [[battery.alert]]
 level = 5
-urgency-level = "critical"
+urgency = "critical"
 
 # Send alert when the current minute is even
 [[single]]
@@ -38,7 +38,6 @@ trigger = "true"
 
 [single.note]
 summary = "Even/Odd"
-body-text = "We're even, yay!"
-hints = []
-timeout = "10000"
+body = "We're even, yay!"
+timeout = "10"
 

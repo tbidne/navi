@@ -45,6 +45,7 @@ common common-exts
     PatternSynonyms
     RankNTypes
     ScopedTypeVariables
+    StandaloneDeriving
     StandaloneKindSignatures
     TypeApplications
     TypeFamilyDependencies
@@ -58,6 +59,7 @@ library
     Navi.Config.Toml
     Navi.Config.Types
     Navi.Data.BoundedN
+    Navi.Data.NaviNote
     Navi.Data.NonNegative
     Navi.Data.Sorted
     Navi.Effects
@@ -69,7 +71,6 @@ library
     Navi.Event
     Navi.Event.Toml
     Navi.Event.Types
-    Navi.Note.Toml
     Navi.Prelude
     Navi.Services.Battery
     Navi.Services.Battery.Event

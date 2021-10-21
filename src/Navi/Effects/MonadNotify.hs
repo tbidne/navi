@@ -6,20 +6,46 @@ where
 import Control.Monad.Reader (ReaderT)
 import Control.Monad.Trans (MonadTrans (..))
 import DBus.Client (Client)
-import DBus.Notify (Note)
+import DBus.Notify (Note (..))
 import DBus.Notify qualified as DBusN
+import Data.Text qualified as T
+import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
+import Navi.Data.NonNegative (NonNegative (..))
 import Navi.Prelude
+import Optics.Generic (GField (..))
+import Optics.Operators ((^.))
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified
 
 class Monad m => MonadNotify m where
   initConn :: m (Either SomeNonPseudoException Client)
-  sendNote :: Client -> Note -> m ()
+  sendNote :: Client -> NaviNote -> m ()
 
 instance MonadNotify IO where
   initConn = UnexceptionalIO.fromIO DBusN.connectSession
-  sendNote client = void . DBusN.notify client
+  sendNote client = void . DBusN.notify client . naviToDBus
 
 instance MonadNotify m => MonadNotify (ReaderT e m) where
   initConn = lift initConn
   sendNote client = lift . sendNote client
+
+naviToDBus :: NaviNote -> Note
+naviToDBus naviNote =
+  Note
+    { appName = "Navi",
+      DBusN.summary = T.unpack $ naviNote ^. gfield @"summary",
+      DBusN.body = body,
+      DBusN.appImage = naviNote ^. gfield @"image",
+      DBusN.hints = hints,
+      DBusN.expiry = timeout,
+      DBusN.actions = []
+    }
+  where
+    body = DBusN.Text . T.unpack <$> naviNote ^. gfield @"body"
+    hints = maybeToList $ DBusN.Urgency <$> naviNote ^. gfield @"urgency"
+    timeout = maybe defTimeout naviToDBusTimeout $ naviNote ^. gfield @"timeout"
+    defTimeout = DBusN.Milliseconds 10_000
+
+naviToDBusTimeout :: Timeout -> DBusN.Timeout
+naviToDBusTimeout Never = DBusN.Never
+naviToDBusTimeout (Seconds (MkNonNegative s)) = DBusN.Milliseconds $ fromIntegral $ s * 1_000
