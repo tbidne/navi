@@ -1,3 +1,5 @@
+-- | This module provides the core logic for constructing an event with
+-- a single alert condition.
 module Navi.Services.Custom.Single.Event
   ( mkSingleEvent,
   )
@@ -17,6 +19,7 @@ import Navi.Event.Types
 import Navi.Event.Types qualified as ETypes
 import Navi.Prelude
 
+-- | Constructs an 'Event' for a single alert.
 mkSingleEvent ::
   Command ->
   (Text, NaviNote) ->

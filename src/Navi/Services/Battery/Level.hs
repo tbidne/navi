@@ -1,3 +1,4 @@
+-- | This module provides a service for alerts related to battery levels.
 module Navi.Services.Battery.Level
   ( BatteryLevelToml,
     BatteryLevelToml.batteryLevelCodec,
@@ -18,6 +19,7 @@ import Navi.Services.Battery.Types (BatteryLevel)
 import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 
+-- | Transforms toml configuration data into an 'AnyEvent'.
 toBatteryLevelEvent :: (MonadMutRef m ref) => BatteryLevelToml -> m (AnyEvent ref)
 toBatteryLevelEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. gfield @"repeatEvent"

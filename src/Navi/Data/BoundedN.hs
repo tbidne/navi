@@ -27,7 +27,7 @@ import Toml
   )
 import Toml qualified
 
--- | Newtype wrapper over 'Natural'.
+-- | Newtype wrapper over 'Natural'. The underlying 'Natural' is in \([l, u]\).
 type BoundedN :: Nat -> Nat -> Type
 newtype BoundedN l u = MkUnsafeBoundedN
   { -- | Unwraps the 'BoundedN'
@@ -41,6 +41,13 @@ pattern MkBoundedN n <- MkUnsafeBoundedN n
 
 {-# COMPLETE MkBoundedN #-}
 
+-- | Contructs a 'BoundedN'.
+--
+-- >>> mkBoundedN @0 @100 50
+-- Just (MkUnsafeBoundedN {unBoundedN = 50})
+--
+-- >>> mkBoundedN @10 @20 25
+-- Nothing
 mkBoundedN :: forall l u. (KnownNat l, KnownNat u) => Natural -> Maybe (BoundedN l u)
 mkBoundedN n
   | n >= lower && n <= upper = Just $ MkUnsafeBoundedN n
@@ -49,6 +56,8 @@ mkBoundedN n
     lower = natVal $ Proxy @l
     upper = natVal $ Proxy @u
 
+-- | Unsafe constructor for 'BoundedN', intended to be used with
+-- known constants, e.g. @unsafeBoundedN \@0 \@100 50@. Exercise restraint!
 unsafeBoundedN :: forall l u. (KnownNat l, KnownNat u) => Natural -> BoundedN l u
 unsafeBoundedN n
   | n >= lower && n <= upper = MkUnsafeBoundedN n

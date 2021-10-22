@@ -1,3 +1,4 @@
+-- | This module provides toml configuration for the custom single service.
 module Navi.Services.Custom.Single.Toml
   ( SingleToml (..),
     singleCodec,
@@ -13,15 +14,22 @@ import Navi.Prelude
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
+-- | Codec for 'SingleToml'.
 data SingleToml = MkSingleToml
-  { command :: Command,
+  { -- | The command to run.
+    command :: Command,
+    -- | The alert trigger.
     triggerVal :: Text,
+    -- | The notification to send.
     note :: NaviNote,
+    -- | Determines how we treat repeat alerts.
     repeatEvtCfg :: Maybe RepeatEvtToml,
+    -- | Determines how we handle errors.
     errEvtCfg :: Maybe ErrorNoteToml
   }
   deriving (Generic, Show)
 
+-- | Codec for 'SingleToml'.
 singleCodec :: TomlCodec SingleToml
 singleCodec =
   MkSingleToml

@@ -1,3 +1,4 @@
+-- | Reexports effects.
 module Navi.Effects
   ( module X,
   )

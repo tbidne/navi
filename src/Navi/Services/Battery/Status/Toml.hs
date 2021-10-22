@@ -1,3 +1,4 @@
+-- | This module provides toml configuration for the battery status service.
 module Navi.Services.Battery.Status.Toml
   ( BatteryStatusToml (..),
     BatteryStatusNoteToml (..),
@@ -16,22 +17,33 @@ import Navi.Services.Battery.Types qualified as BTypes
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
+-- | TOML for the battery status service.
 data BatteryStatusToml = MkBatteryStatusToml
-  { batteryType :: BatteryType,
+  { -- | Determines how we should query the system for battery information.
+    batteryType :: BatteryType,
+    -- | Determines how we treat repeat alerts.
     repeatEvent :: Maybe RepeatEvtToml,
+    -- | Determines how we handle errors.
     errorNote :: Maybe ErrorNoteToml,
+    -- | The alert for this service.
     note :: BatteryStatusNoteToml
   }
   deriving (Generic, Show)
 
+-- | TOML for the battery status notification.
 data BatteryStatusNoteToml = MkBatteryStatusNoteToml
-  { mTimeout :: Maybe Timeout,
+  { -- | The timeout for this alert.
+    mTimeout :: Maybe Timeout,
+    -- | The image for charging.
     mChargingImage :: Maybe Icon,
+    -- | The image for discharging.
     mDischargingImage :: Maybe Icon,
+    -- | The image for full.
     mFullImage :: Maybe Icon
   }
   deriving (Generic, Show)
 
+-- | Codec for 'BatteryStatusToml'.
 batteryStatusCodec :: TomlCodec BatteryStatusToml
 batteryStatusCodec =
   MkBatteryStatusToml

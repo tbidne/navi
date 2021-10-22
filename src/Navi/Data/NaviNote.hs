@@ -1,3 +1,4 @@
+-- | Provides the 'NaviNote' type, representing notifications.
 module Navi.Data.NaviNote
   ( NaviNote (..),
     Timeout (..),
@@ -20,20 +21,28 @@ import Navi.Prelude
 import Toml (Key, TomlCodec, (.=))
 import Toml qualified
 
+-- | 'NaviNote' represents desktop notifications.
 data NaviNote = MkNaviNote
-  { summary :: Text,
+  { -- | Text summary.
+    summary :: Text,
+    -- | Text body.
     body :: Maybe Text,
+    -- | Notification image.
     image :: Maybe Icon,
+    -- | Urgency (e.g. low, critical)
     urgency :: Maybe UrgencyLevel,
+    -- | Determines how long the notification stays on-screen.
     timeout :: Maybe Timeout
   }
   deriving (Generic, Show)
 
+-- | Determines how long a notification persists.
 data Timeout
   = Never
   | Seconds NonNegative
   deriving (Generic, Show)
 
+-- | Codec for 'NaviNote'.
 naviNoteCodec :: TomlCodec NaviNote
 naviNoteCodec =
   MkNaviNote
@@ -43,15 +52,19 @@ naviNoteCodec =
     <*> Toml.dioptional urgencyLevelCodec .= urgency
     <*> Toml.dioptional timeoutCodec .= timeout
 
+-- | Codec for the 'NaviNote' 'summary'.
 summaryCodec :: TomlCodec Text
 summaryCodec = Toml.text "summary"
 
+-- | Codec for the 'NaviNote' 'body'.
 bodyCodec :: TomlCodec Text
 bodyCodec = Toml.text "body"
 
+-- | Codec for the 'NaviNote' 'image'.
 appImageCodec :: TomlCodec Icon
 appImageCodec = appImageKeyCodec "app-image"
 
+-- | Codec for the 'NaviNote' 'image' with a custom 'Key'.
 appImageKeyCodec :: Key -> TomlCodec Icon
 appImageKeyCodec key = appImagePathCodec <|> appImageIconCodec
   where
@@ -62,9 +75,11 @@ appImageKeyCodec key = appImagePathCodec <|> appImageIconCodec
     matchFile (File p) = Just p
     matchFile _ = Nothing
 
+-- | Codec for the 'NaviNote' 'urgency'.
 urgencyLevelCodec :: TomlCodec UrgencyLevel
 urgencyLevelCodec = urgencyLevelKeyCodec "urgency"
 
+-- | Codec for the 'NaviNote' 'urgency' with custom 'Key'.
 urgencyLevelKeyCodec :: Key -> TomlCodec UrgencyLevel
 urgencyLevelKeyCodec = Toml.textBy showUrgencyLevel parseUrgencyLevel
   where
@@ -76,6 +91,7 @@ urgencyLevelKeyCodec = Toml.textBy showUrgencyLevel parseUrgencyLevel
     parseUrgencyLevel "critical" = Right Critical
     parseUrgencyLevel other = Left $ "Unsupported urgency level: " <> other
 
+-- | Codec for the 'NaviNote' 'timeout'.
 timeoutCodec :: TomlCodec Timeout
 timeoutCodec =
   Toml.textBy showTimeout parseTimeout "timeout"

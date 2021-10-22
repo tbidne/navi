@@ -1,3 +1,4 @@
+-- | Provides functionality for parsing command-line arguments.
 module Navi.Args
   ( Args (..),
     getArgs,
@@ -17,8 +18,17 @@ import Options.Applicative.Types (ArgPolicy (..))
 import System.Directory (XdgDirectory (..))
 import System.Directory qualified as Dir
 
+-- | Represents command-line arguments. We use the \"higher-kinded data\"
+-- approach for:
+--
+-- 1. Parsing optional arguments (@'Args' 'Maybe'@).
+-- 2. Filling missing arguments with defaults (@'Args' 'Identity'@).
 data Args f = MkArgs
-  { configFile :: f FilePath,
+  { -- | Path to the configuration file.
+    configFile :: f FilePath,
+    -- | Path to the configuration directory. In addition to informing
+    -- on 'configFile', this is used to determine where the log file is
+    -- written.
     configDir :: f FilePath
   }
 
@@ -28,6 +38,30 @@ instance (Show1 f) => Show (Args f) where
       <> Functor.showsPrec1 9 configFile " "
       <> Functor.showsPrec1 9 configDir ""
 
+-- |
+--
+-- Parses cli args and fills in defaults. These defaults are based on the
+-- detected XDG Base Directory. The semantics are:
+--
+-- * No arguments provided.
+--
+--     * configFile:  xdgBase/config.toml
+--     * configDir: xdgBase
+--
+-- * configFile' provided.
+--
+--     * configFile: configFile'
+--     * configDir: xdgBase
+--
+-- * configDir' provided.
+--
+--     * configFile: configDir'/config.toml
+--     * configDir: configDir'
+--
+-- * configFile' and configDir' provided.
+--
+--     * configFile: configFile'
+--     * configDir: configDir'
 getArgs :: MonadIO m => m (Args Identity)
 getArgs = liftIO $ do
   args <- OptApp.execParser parserInfoArgs

@@ -1,3 +1,4 @@
+-- | Provides a \"shell\" effect.
 module Navi.Effects.MonadShell
   ( MonadShell (..),
   )
@@ -14,6 +15,7 @@ import System.Process qualified as P
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified
 
+-- | This class represents effects that a shell can provide.
 class Monad m => MonadShell m where
   execSh :: Command -> m (Either SomeNonPseudoException Text)
   readFile :: FilePath -> m (Either SomeNonPseudoException Text)

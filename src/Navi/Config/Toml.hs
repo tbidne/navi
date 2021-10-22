@@ -1,3 +1,5 @@
+-- | This module provides functionality for decoding data from a toml
+-- configuration file.
 module Navi.Config.Toml
   ( ConfigToml (..),
     configCodec,
@@ -17,6 +19,7 @@ import Navi.Services.Custom.Single.Toml as SingleToml
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
+-- | 'ConfigToml' holds the data that is defined in the configuration file.
 data ConfigToml = MkConfigToml
   { pollToml :: NonNegative,
     logToml :: Logging,
@@ -27,6 +30,7 @@ data ConfigToml = MkConfigToml
   }
   deriving (Generic, Show)
 
+-- | Toml decoder for 'ConfigToml'.
 configCodec :: TomlCodec ConfigToml
 configCodec =
   MkConfigToml

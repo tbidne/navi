@@ -1,3 +1,5 @@
+-- | This modules provides functionality for parsing configuration data
+-- from a toml file.
 module Navi.Config
   ( Config (..),
     Logging (..),
@@ -26,6 +28,7 @@ import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 import Toml qualified
 
+-- | Parses the provided toml file into a 'Config'.
 readConfig :: (MonadMutRef m ref, MonadShell m) => FilePath -> m (Either ConfigErr (Config ref))
 readConfig path = do
   eContents <- readFile path

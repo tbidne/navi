@@ -1,3 +1,4 @@
+-- | This module provides a service for alerts related to battery statuses.
 module Navi.Services.Battery.Status
   ( BatteryStatusToml,
     BatteryStatusToml.batteryStatusCodec,
@@ -15,6 +16,7 @@ import Navi.Services.Battery.Status.Toml qualified as BatteryStatusToml
 import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 
+-- | Transforms toml configuration data into an 'AnyEvent'.
 toBatteryStatusEvent :: (MonadMutRef m ref) => BatteryStatusToml -> m (AnyEvent ref)
 toBatteryStatusEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. gfield @"repeatEvent"

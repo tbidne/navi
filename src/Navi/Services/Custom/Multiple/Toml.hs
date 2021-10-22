@@ -1,3 +1,4 @@
+-- | This module provides toml configuration for the custom multiple service.
 module Navi.Services.Custom.Multiple.Toml
   ( MultipleToml (..),
     TriggerNoteToml (..),
@@ -14,6 +15,7 @@ import Navi.Prelude
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
+-- | Codec for 'MultipleToml'.
 multipleCodec :: TomlCodec MultipleToml
 multipleCodec =
   MkMultipleToml
@@ -22,16 +24,24 @@ multipleCodec =
     <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvtCfg
     <*> Toml.dioptional EventToml.errorNoteCodec .= errEvtCfg
 
+-- | TOML for the custom multiple service.
 data MultipleToml = MkMultipleToml
-  { command :: Command,
+  { -- | The command to run.
+    command :: Command,
+    -- | The alert triggers.
     triggerNotes :: [TriggerNoteToml],
+    -- | Determines how we treat repeat alerts.
     repeatEvtCfg :: Maybe RepeatEvtToml,
+    -- | Determines how we handle errors.
     errEvtCfg :: Maybe ErrorNoteToml
   }
   deriving (Generic, Show)
 
+-- | TOML for alerts.
 data TriggerNoteToml = MkTriggerNoteToml
-  { trigger :: Text,
+  { -- | The text that triggers an alert.
+    trigger :: Text,
+    -- | The notification to send when triggered.
     note :: NaviNote
   }
   deriving (Generic, Show)

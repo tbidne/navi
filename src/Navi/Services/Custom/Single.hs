@@ -1,3 +1,4 @@
+-- | This module provides a service for a single alert.
 module Navi.Services.Custom.Single
   ( SingleToml,
     SingleToml.singleCodec,
@@ -13,6 +14,7 @@ import Navi.Services.Custom.Single.Event qualified as SingleEvent
 import Navi.Services.Custom.Single.Toml (SingleToml (..))
 import Navi.Services.Custom.Single.Toml qualified as SingleToml
 
+-- | Transforms toml configuration data into an 'AnyEvent'.
 toSingleEvent :: (MonadMutRef m ref) => SingleToml -> m (AnyEvent ref)
 toSingleEvent
   MkSingleToml

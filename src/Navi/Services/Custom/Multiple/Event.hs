@@ -1,3 +1,5 @@
+-- | This module provides the core logic for constructing an event with
+-- multiple alert conditions.
 module Navi.Services.Custom.Multiple.Event
   ( mkMultipleEvent,
   )
@@ -19,6 +21,7 @@ import Navi.Event.Types
 import Navi.Event.Types qualified as ETypes
 import Navi.Prelude
 
+-- | Constructs an 'Event' for multiple alerts.
 mkMultipleEvent ::
   Command ->
   [(Text, NaviNote)] ->

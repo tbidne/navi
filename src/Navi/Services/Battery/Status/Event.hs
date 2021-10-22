@@ -1,3 +1,5 @@
+-- | This module provides the core logic for constructing an event that
+-- alerts at different battery statuses.
 module Navi.Services.Battery.Status.Event
   ( mkStatusEvent,
   )
@@ -24,6 +26,7 @@ import Navi.Services.Battery.Types (BatteryStatus (..), BatteryType (..))
 import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 
+-- | Constructs an 'Event' for battery statuses.
 mkStatusEvent ::
   BatteryStatusNoteToml ->
   BatteryType ->

@@ -1,3 +1,5 @@
+-- | This module provides the core logic for constructing an event that
+-- alerts at different battery levels.
 module Navi.Services.Battery.Level.Event
   ( mkBatteryEvent,
   )
@@ -30,6 +32,7 @@ import Navi.Services.Battery.Types
     BatteryType (..),
   )
 
+-- | Constructs an 'Event' for battery levels.
 mkBatteryEvent ::
   [(BatteryLevel, NaviNote)] ->
   BatteryType ->

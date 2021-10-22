@@ -1,3 +1,4 @@
+-- | Provides an effect for sending system notifications.
 module Navi.Effects.MonadNotify
   ( MonadNotify (..),
   )
@@ -17,6 +18,9 @@ import Optics.Operators ((^.))
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified
 
+-- | This class represents sending desktop notifications. For now it is
+-- implemented in terms of 'DBus.Client', though this may be generalized
+-- to other notification systems.
 class Monad m => MonadNotify m where
   initConn :: m (Either SomeNonPseudoException Client)
   sendNote :: Client -> NaviNote -> m ()

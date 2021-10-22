@@ -1,3 +1,4 @@
+-- | This module provides functionality for handling events.
 module Navi.Event
   ( -- * Event type
     Event (..),
@@ -36,6 +37,10 @@ import Navi.Prelude
 import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 
+-- | Runs an event, i.e.,
+--
+-- 1. Queries the system via 'execSh'.
+-- 2. Returns the parsed result.
 runEvent ::
   ( MonadLogger m,
     MonadShell m,
@@ -60,6 +65,11 @@ runEvent event = addNamespace "Run Event" $ do
     command = event ^. gfield @"command"
     parser = event ^. gfield @"parser"
 
+-- | Determines if we should block the event. The semantics are:
+--
+-- 1. 'AllowRepeats': never block (returns 'False').
+-- 2. 'NoRepeats': block only if the parameter @a@ equals the previous @a@
+--    stored in our @ref@.
 blockRepeat :: (Eq a, MonadLogger m, MonadMutRef m ref, Show a) => RepeatEvent ref a -> a -> m Bool
 blockRepeat repeatEvt newVal = addNamespace "Checking event repeats" $ do
   case repeatEvt of
@@ -78,6 +88,12 @@ blockRepeat repeatEvt newVal = addNamespace "Checking event repeats" $ do
           writeRef prevRef $ Just newVal
           pure False
 
+-- | Determines if we should block the error event. The semantics are:
+--
+-- 1. 'NoErrNote': always block (returns 'True').
+-- 2. 'AllowErrNote' 'AllowRepeats': never block (returns 'False').
+-- 3. 'AllowErrNote' 'NoRepeats': block only if we have sent a notifcation
+--    for this error before.
 blockErr :: MonadMutRef m ref => ErrorNote ref -> m Bool
 blockErr errorEvent =
   case errorEvent of
@@ -96,6 +112,8 @@ blockErr errorEvent =
           writeRef ref $ Just ()
           pure False
 
+-- | If the reference is 'NoRepeats' then we overwrite the previous reference
+-- with the new parameter. Otherwise we do nothing.
 updatePrevTrigger :: (Eq a, MonadMutRef m ref) => RepeatEvent ref a -> a -> m ()
 updatePrevTrigger repeatEvt newVal =
   -- Only overwrite value if it's new
@@ -107,6 +125,7 @@ updatePrevTrigger repeatEvt newVal =
         else pure ()
     _ -> pure ()
 
+-- | Helper function for logging events.
 logEvent :: MonadLogger m => Event ref a -> Severity -> Text -> m ()
 logEvent event s t = logText s $ "[" <> name <> "] " <> t
   where

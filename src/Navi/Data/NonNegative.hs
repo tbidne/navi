@@ -65,6 +65,16 @@ unsafeNonNegative n
         <> showt n
         <> " to unsafeNonNegative!"
 
+-- | Safely attempts to read a 'NonNegative'.
+--
+-- >>> readNonNegative "5"
+-- Just (MkUnsafeNonNegative {unNonNegative = 5})
+--
+-- >>> readNonNegative "cat"
+-- Nothing
+--
+-- >>> readNonNegative "-5"
+-- Nothing
 readNonNegative :: String -> Maybe NonNegative
 readNonNegative = TR.readMaybe >=> mkNonNegative
 

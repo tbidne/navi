@@ -141,6 +141,7 @@ monoBimap f = bimap f f
 
 infixr 8 >.>
 
+-- | Composed 'fmap'.
 (<<$>>) :: (Functor f, Functor g) => (a -> b) -> g (f a) -> g (f b)
 (<<$>>) = fmap . fmap
 

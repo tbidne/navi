@@ -1,3 +1,4 @@
+-- | This module provides the core application type and logic.
 module Navi
   ( NaviT (..),
     runNavi,
@@ -26,6 +27,7 @@ import Navi.Prelude
 import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 
+-- | NaviT is the core type used to run the application.
 type NaviT :: Type -> (Type -> Type) -> Type -> Type
 newtype NaviT e m a = MkNaviT {runNaviT :: ReaderT e m a}
   deriving
@@ -65,6 +67,7 @@ instance MonadMutRef m ref => MonadMutRef (NaviT e m) ref where
   readRef = lift . readRef
   writeRef ref = lift . writeRef ref
 
+-- | Entry point for the application.
 runNavi ::
   ( MonadLogger m,
     MonadMutRef m ref,

@@ -1,3 +1,4 @@
+-- | This module provides the 'Env' type.
 module Navi.Env
   ( Env (..),
     mkEnv,
@@ -16,6 +17,7 @@ import Navi.Effects (MonadNotify (..))
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
 
+-- | 'Env' holds all of our environment data that is used while running navi.
 data Env ref = MkEnv
   { pollInterval :: NonNegative,
     events :: NonEmpty (AnyEvent ref),
@@ -26,6 +28,7 @@ data Env ref = MkEnv
   }
   deriving (Generic)
 
+-- | Creates an 'Env' from the provided log types and configuration data.
 mkEnv ::
   MonadNotify m =>
   LogEnv ->

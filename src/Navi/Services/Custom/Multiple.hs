@@ -1,3 +1,4 @@
+-- | This module provides a service for multiple alerts.
 module Navi.Services.Custom.Multiple
   ( MultipleToml,
     MultipleToml.multipleCodec,
@@ -13,6 +14,7 @@ import Navi.Services.Custom.Multiple.Event qualified as MultipleEvent
 import Navi.Services.Custom.Multiple.Toml (MultipleToml (..), TriggerNoteToml (..))
 import Navi.Services.Custom.Multiple.Toml qualified as MultipleToml
 
+-- | Transforms toml configuration data into an 'AnyEvent'.
 toMultipleEvent :: (MonadMutRef m ref) => MultipleToml -> m (AnyEvent ref)
 toMultipleEvent
   MkMultipleToml
