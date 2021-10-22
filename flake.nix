@@ -26,6 +26,9 @@
                 pkgs.nixpkgs-fmt
                 pkgs.zlib
               ]);
+            overrides = hself: hsuper: with pkgs.haskellPackages; {
+              optics-core = callHackage "optics-core" "0.4" { };
+            };
           };
       in
       {
