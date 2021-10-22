@@ -23,4 +23,4 @@ jobs:
           nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/31ffc50c571e6683e9ecc9dbcbd4a8e9914b4497.tar.gz
 
       - name: Check Haddock
-        run: nix-shell shell.nix --command "bash ./ci_scripts/haddock.sh"
+        run: nix-shell shell.nix --pure --command "bash ./ci_scripts/haddock.sh"

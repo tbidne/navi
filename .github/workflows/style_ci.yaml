@@ -23,13 +23,13 @@ jobs:
           nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/31ffc50c571e6683e9ecc9dbcbd4a8e9914b4497.tar.gz
 
       - name: cabal-fmt
-        run: nix-shell shell.nix --command "bash ./ci_scripts/cabal-fmt.sh"
+        run: nix-shell shell.nix --pure --command "bash ./ci_scripts/cabal-fmt.sh"
 
       - name: hlint
-        run: nix-shell shell.nix --command "bash ./ci_scripts/hlint.sh"
+        run: nix-shell shell.nix --pure --command "bash ./ci_scripts/hlint.sh"
 
       - name: ormolu
-        run: nix-shell shell.nix --command "bash ./ci_scripts/ormolu.sh"
+        run: nix-shell shell.nix --pure --command "bash ./ci_scripts/ormolu.sh"
 
       - name: nixpkgs-fmt
-        run: nix-shell shell.nix --command "bash ./ci_scripts/nixpkgs-fmt.sh"
+        run: nix-shell shell.nix --pure --command "bash ./ci_scripts/nixpkgs-fmt.sh"

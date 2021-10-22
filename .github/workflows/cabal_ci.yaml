@@ -23,4 +23,4 @@ jobs:
           nix_path: nixpkgs=https://github.com/NixOS/nixpkgs/archive/31ffc50c571e6683e9ecc9dbcbd4a8e9914b4497.tar.gz
 
       - name: Compile
-        run: nix-shell shell.nix --command "cabal update && cabal build"
+        run: nix-shell shell.nix --pure --command "cabal update && cabal build"
