@@ -124,7 +124,7 @@ configFileParser =
   where
     helpTxt =
       "Path to config file. Overrides default "
-        <> " <config-dir>/config.toml if <config-dir> is specificed."
+        <> " <config-dir>/config.toml if <config-dir> is specified."
 
 configDirParser :: Parser (Maybe String)
 configDirParser =
