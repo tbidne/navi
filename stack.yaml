@@ -1,0 +1,8 @@
+resolver:
+  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/13.yaml
+packages:
+- .
+
+extra-deps:
+- fdo-notify-0.3.1@sha256:9cfb75a5a0d5e4b1d40b0b4dbcc6bb29e58f21e4e14c83e2ffe1ca78bdee59d8,734
+- optics-core-0.4@sha256:59e04aebca536bd011ae50c781937f45af4c1456af1eb9fb578f9a69eee293cd,4995
