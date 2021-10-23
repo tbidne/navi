@@ -24,21 +24,25 @@ import Navi.Env (mkEnv)
 import Navi.Prelude
 import System.Exit qualified as Exit
 import System.IO qualified as IO
+import Optics.Optic ((%))
+import Optics.Generic (GField (..))
+import Optics.Getter qualified as O
 
 main :: IO ()
 main = do
   args <- getArgs
-  eConfig <- tryParseConfig @IORef args
-  config <- tryOrDie eConfig
+  config <- tryOrDie =<< tryParseConfig @IORef args
 
-  let mkLogEnvFn = mkLogEnv (runIdentity (configDir args)) (logging config)
+  let mkLogEnvFn = mkLogEnv (argsToDir args) (logging config)
   Except.bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
-    eEnv <- mkEnv logEnv logCtx namespace config
-    env <- tryOrDie eEnv
-
-    absurd <$> runReaderT (runNaviT runNavi) env
+    env <- tryOrDie =<< mkEnv logEnv logCtx namespace config
+    absurd <$> runReaderT (runNaviT (runNavi @IORef)) env
   where
     tryOrDie = either (Exit.die . T.unpack) pure
+
+    argsToDir :: Args Identity -> FilePath
+    argsToDir = O.view $ gfield @"configDir" % gfield @"runIdentity"
+    
 
 tryParseConfig :: MonadMutRef IO ref => Args Identity -> IO (Either Text (Config ref))
 tryParseConfig =

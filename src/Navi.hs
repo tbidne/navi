@@ -11,18 +11,23 @@ import Control.Monad.Trans (MonadTrans (..))
 import DBus.Notify (Client, UrgencyLevel (..))
 import Data.Text.Lazy.Builder qualified as T
 import Data.Void (Void)
-import Katip (Katip (..), KatipContext (..), LogStr (..), Severity (..))
+import Katip (Katip, KatipContext, LogStr (..), Severity (..))
 import Katip qualified as K
 import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Effects
-  ( MonadLogger (..),
-    MonadMutRef (..),
-    MonadNotify (..),
-    MonadShell (..),
+import Navi.Effects.MonadLogger (MonadLogger (..))
+import Navi.Effects.MonadMutRef (MonadMutRef (..))
+import Navi.Effects.MonadNotify (MonadNotify (..))
+import Navi.Effects.MonadShell (MonadShell (..))
+import Navi.Env
+  ( HasClient (..),
+    HasEvents (..),
+    HasLogContexts (..),
+    HasLogEnv (..),
+    HasLogNamespace (..),
+    HasPollInterval (..),
   )
-import Navi.Env (Env (..))
-import Navi.Event (AnyEvent (..), Event (..), EventErr (..))
 import Navi.Event qualified as Event
+import Navi.Event.Types (AnyEvent (..), Event (..), EventErr (..))
 import Navi.Prelude
 import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
@@ -42,22 +47,41 @@ newtype NaviT e m a = MkNaviT {runNaviT :: ReaderT e m a}
     via (ReaderT e m)
   deriving (MonadTrans) via (ReaderT e)
 
-instance MonadIO m => Katip (NaviT (Env ref) m) where
-  getLogEnv = asks logEnv
-  localLogEnv = updateEnvField logEnv (\x e -> e {logEnv = x})
+instance (HasLogEnv env, MonadIO m) => Katip (NaviT env m) where
+  getLogEnv = asks getLogEnv
+  localLogEnv = updateEnvField overLogEnv
 
-instance MonadIO m => KatipContext (NaviT (Env ref) m) where
-  getKatipContext = asks logCtx
-  localKatipContext = updateEnvField logCtx (\x e -> e {logCtx = x})
-  getKatipNamespace = asks logNamespace
-  localKatipNamespace = updateEnvField logNamespace (\x e -> e {logNamespace = x})
+instance
+  ( HasLogContexts env,
+    HasLogEnv env,
+    HasLogNamespace env,
+    MonadIO m
+  ) =>
+  KatipContext (NaviT env m)
+  where
+  getKatipContext = asks getLogContexts
+  localKatipContext = updateEnvField overLogContexts
+  getKatipNamespace = asks getLogNamespace
+  localKatipNamespace = updateEnvField overLogNamespace
 
-updateEnvField :: MonadReader e m => (e -> f1) -> (f2 -> e -> e) -> (f1 -> f2) -> m a -> m a
-updateEnvField getter setter modifier m = do
-  f <- asks getter
-  local (setter (modifier f)) m
+updateEnvField ::
+  MonadReader env m =>
+  (env -> (f1 -> f2) -> env -> env) ->
+  (f1 -> f2) ->
+  m a ->
+  m a
+updateEnvField over modifier m = do
+  over' <- asks over
+  local (over' modifier) m
 
-instance MonadIO m => MonadLogger (NaviT (Env ref) m) where
+instance
+  ( HasLogContexts env,
+    HasLogEnv env,
+    HasLogNamespace env,
+    MonadIO m
+  ) =>
+  MonadLogger (NaviT env m)
+  where
   logFm = K.logFM
   logText s = logFm s . LogStr . T.fromText
   addNamespace = K.katipAddNamespace
@@ -69,17 +93,21 @@ instance MonadMutRef m ref => MonadMutRef (NaviT e m) ref where
 
 -- | Entry point for the application.
 runNavi ::
-  ( MonadLogger m,
+  forall ref env m.
+  ( HasClient env,
+    HasEvents ref env,
+    HasPollInterval env,
+    MonadLogger m,
     MonadMutRef m ref,
     MonadNotify m,
     MonadShell m,
-    MonadReader (Env ref) m
+    MonadReader env m
   ) =>
   m Void
 runNavi = do
-  pollInterval <- asks pollInterval
-  events <- asks events
-  client <- asks client
+  pollInterval <- asks getPollInterval
+  events <- asks (getEvents @ref)
+  client <- asks getClient
   forever $ do
     sleep pollInterval
     logText DebugS "Checking alerts..."

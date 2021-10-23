@@ -31,6 +31,7 @@ data Args f = MkArgs
     -- written.
     configDir :: f FilePath
   }
+  deriving (Generic)
 
 instance (Show1 f) => Show (Args f) where
   show MkArgs {configFile, configDir} =

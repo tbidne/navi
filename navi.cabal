@@ -122,6 +122,7 @@ executable navi
     , katip
     , mtl
     , navi
+    , optics-core
     , optparse-applicative
     , text
     , unexceptionalio
