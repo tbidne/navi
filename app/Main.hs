@@ -30,6 +30,11 @@ import System.IO qualified as IO
 main :: IO ()
 main = do
   args <- getArgs
+
+  if args ^. #displayVersion
+    then putStrLn versionTxt *> Exit.exitSuccess
+    else pure ()
+
   config <- tryOrDie =<< tryParseConfig @IORef args
 
   let mkLogEnvFn = mkLogEnv (args ^. #configDir % #runIdentity) (config ^. #logging)
@@ -67,3 +72,8 @@ namespace = "navi"
 
 logCtx :: LogContexts
 logCtx = K.liftPayload ()
+
+versionTxt :: Text
+versionTxt = "navi version " <> version
+  where
+    version = "0.1.0.0"

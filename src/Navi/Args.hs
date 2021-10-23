@@ -14,6 +14,7 @@ import Data.Functor.Classes (Show1 (..))
 import Data.Functor.Classes qualified as Functor
 import Data.Functor.Identity (Identity (..))
 import Navi.Prelude
+import Optics.Operators ((^.))
 import Optics.TH qualified as O
 import Options.Applicative (Parser, ParserInfo (..))
 import Options.Applicative qualified as OptApp
@@ -33,7 +34,9 @@ data Args f = MkArgs
     -- | Path to the configuration directory. In addition to informing
     -- on 'configFile', this is used to determine where the log file is
     -- written.
-    configDir :: f FilePath
+    configDir :: f FilePath,
+    -- | If true we print the version and exit.
+    displayVersion :: Bool
   }
 
 O.makeFieldLabelsNoPrefix ''Args
@@ -74,7 +77,7 @@ getArgs = liftIO $ do
   fillMissingDefaults args
 
 fillMissingDefaults :: Args Maybe -> IO (Args Identity)
-fillMissingDefaults MkArgs {configFile, configDir} = do
+fillMissingDefaults args = do
   (configFile', configDir') <- case (configFile, configDir) of
     -- No custom paths provided, use defaults
     (Nothing, Nothing) -> do
@@ -92,9 +95,12 @@ fillMissingDefaults MkArgs {configFile, configDir} = do
   pure $
     MkArgs
       { configFile = Identity configFile',
-        configDir = Identity configDir'
+        configDir = Identity configDir',
+        displayVersion = args ^. #displayVersion
       }
   where
+    configFile = args ^. #configFile
+    configDir = args ^. #configDir
     defaultXdg = Dir.getXdgDirectory XdgConfig "navi/"
 
 -- | 'ParserInfo' type for parsing 'Args'.
@@ -115,6 +121,7 @@ argsParser =
   MkArgs
     <$> configFileParser
     <*> configDirParser
+    <*> versionParser
       <**> OptApp.helper
 
 configFileParser :: Parser (Maybe String)
@@ -146,3 +153,11 @@ configDirParser =
     helpTxt =
       "Path to config directory. Determines where we look for "
         <> " config.toml and output log file."
+
+versionParser :: Parser Bool
+versionParser =
+  OptApp.switch
+    ( OptApp.long "version"
+        <> OptApp.short 'v'
+        <> OptApp.help "Displays the version number."
+    )
