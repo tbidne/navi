@@ -67,9 +67,9 @@ data Env ref = MkEnv
   { pollInterval :: NonNegative,
     events :: NonEmpty (AnyEvent ref),
     client :: Client,
-    kLogEnv :: LogEnv,
-    kLogCtx :: LogContexts,
-    kLogNamespace :: Namespace
+    logEnv :: LogEnv,
+    logCtx :: LogContexts,
+    logNamespace :: Namespace
   }
 
 O.makeFieldLabelsNoPrefix ''Env
@@ -84,19 +84,19 @@ instance HasClient (Env ref) where
   getClient = O.view #client
 
 instance HasLogEnv (Env ref) where
-  getLogEnv = O.view #kLogEnv
-  setLogEnv = O.set #kLogEnv
-  overLogEnv = O.over #kLogEnv
+  getLogEnv = O.view #logEnv
+  setLogEnv = O.set #logEnv
+  overLogEnv = O.over #logEnv
 
 instance HasLogContexts (Env ref) where
-  getLogContexts = O.view #kLogCtx
-  setLogContexts = O.set #kLogCtx
-  overLogContexts = O.over #kLogCtx
+  getLogContexts = O.view #logCtx
+  setLogContexts = O.set #logCtx
+  overLogContexts = O.over #logCtx
 
 instance HasLogNamespace (Env ref) where
-  getLogNamespace = O.view #kLogNamespace
-  setLogNamespace = O.set #kLogNamespace
-  overLogNamespace = O.over #kLogNamespace
+  getLogNamespace = O.view #logNamespace
+  setLogNamespace = O.set #logNamespace
+  overLogNamespace = O.over #logNamespace
 
 -- | Creates an 'Env' from the provided log types and configuration data.
 mkEnv ::
@@ -116,9 +116,9 @@ mkEnv logEnv logContext namespace config = do
           { pollInterval = Config.pollInterval config,
             events = Config.events config,
             client = client,
-            kLogEnv = logEnv,
-            kLogCtx = logContext,
-            kLogNamespace = namespace
+            logEnv = logEnv,
+            logCtx = logContext,
+            logNamespace = namespace
           }
   where
     mkErr = (<>) "Error initiating notifications: " . T.pack . displayException
