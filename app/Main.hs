@@ -24,6 +24,7 @@ import Navi.Env (mkEnv)
 import Navi.Prelude
 import Optics.Operators ((^.))
 import Optics.Optic ((%))
+import System.Directory qualified as Dir
 import System.Exit qualified as Exit
 import System.IO qualified as IO
 
@@ -58,14 +59,22 @@ mkLogEnv dir MkLogging {severity, location} = do
   let severityFn :: forall a. Item a -> IO Bool
       severityFn = maybe (K.permitItem ErrorS) K.permitItem severity
   scribe <- case location of
-    Nothing ->
-      K.mkFileScribe (dir <> "navi.log") severityFn V2
-    Just (File f) ->
+    Nothing -> do
+      let path = dir <> "navi.log"
+      delIfExist path
+      K.mkFileScribe path severityFn V2
+    Just (File f) -> do
+      delIfExist f
       K.mkFileScribe f severityFn V2
     Just Stdout -> K.mkHandleScribe ColorIfTerminal IO.stdout severityFn V2
   K.registerScribe "logger" scribe K.defaultScribeSettings =<< K.initLogEnv namespace environment
   where
     environment = "production"
+    delIfExist fp = do
+      fileExists <- Dir.doesFileExist fp
+      if fileExists
+        then Dir.removeFile fp
+        else pure ()
 
 namespace :: Namespace
 namespace = "navi"
