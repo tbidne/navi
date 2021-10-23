@@ -28,7 +28,9 @@
               ]);
             overrides = hself: hsuper: with pkgs.haskellPackages; {
               optics-core = callHackage "optics-core" "0.4" { };
-              optics-th = callHackage "optics-th" "0.4" { };
+              optics-th = callHackage "optics-th" "0.4" {
+                optics-core = hself.optics-core;
+              };
             };
           };
       in
