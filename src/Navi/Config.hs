@@ -24,7 +24,6 @@ import Navi.Services.Battery.Level qualified as BatteryLevel
 import Navi.Services.Battery.Status qualified as BatteryStatus
 import Navi.Services.Custom.Multiple qualified as Multiple
 import Navi.Services.Custom.Single qualified as Single
-import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 import Toml qualified
 
@@ -63,9 +62,9 @@ tomlToConfig toml = do
             logging = logToml
           }
   where
-    pollToml = toml ^. gfield @"pollToml"
-    logToml = toml ^. gfield @"logToml"
-    singleToml = toml ^. gfield @"singleToml"
-    multipleToml = toml ^. gfield @"multipleToml"
-    batteryLevelToml = toml ^. gfield @"batteryLevelToml"
-    batteryStatusToml = toml ^. gfield @"batteryStatusToml"
+    pollToml = toml ^. #pollToml
+    logToml = toml ^. #logToml
+    singleToml = toml ^. #singleToml
+    multipleToml = toml ^. #multipleToml
+    batteryLevelToml = toml ^. #batteryLevelToml
+    batteryStatusToml = toml ^. #batteryStatusToml

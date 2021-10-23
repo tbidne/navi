@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Provides types used by battery services.
 module Navi.Services.Battery.Types
   ( BatteryLevel,
@@ -12,6 +15,7 @@ where
 import Navi.Data.BoundedN (BoundedN)
 import Navi.Data.BoundedN qualified as BoundedN
 import Navi.Prelude
+import Optics.TH qualified as O
 import Toml (TomlCodec)
 import Toml qualified
 
@@ -27,13 +31,13 @@ data BatteryStatus
   = Charging
   | Discharging
   | Full
-  deriving (Eq, Generic, Show)
+  deriving (Eq, Show)
 
 -- | Determines how we should query the system for battery information.
 data BatteryType
   = UPower
   | Custom Text
-  deriving (Generic, Show)
+  deriving (Show)
 
 -- | Codec for 'BatteryType'.
 batteryTypeCodec :: TomlCodec BatteryType
@@ -53,4 +57,6 @@ data BatteryState = MkBatteryState
     -- | The status data.
     status :: BatteryStatus
   }
-  deriving (Eq, Generic, Show)
+  deriving (Eq, Show)
+
+O.makeFieldLabelsNoPrefix ''BatteryState

@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | This module provides the 'Env' type.
 module Navi.Env
   ( -- * HasX-style typeclasses
@@ -25,8 +28,9 @@ import Navi.Data.NonNegative (NonNegative)
 import Navi.Effects (MonadNotify (..))
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
-import Optics.Generic (GField (..))
 import Optics.Getter as O
+import Optics.Setter as O
+import Optics.TH qualified as O
 
 -- | Retrieves the poll interval.
 class HasPollInterval env where
@@ -43,20 +47,20 @@ class HasClient env where
 -- | Retrieves the log environment.
 class HasLogEnv env where
   getLogEnv :: env -> LogEnv
-  setLogEnv :: env -> LogEnv -> env
-  overLogEnv :: env -> (LogEnv -> LogEnv) -> env -> env
+  setLogEnv :: LogEnv -> env -> env
+  overLogEnv :: (LogEnv -> LogEnv) -> env -> env
 
 -- | Retrieves the log context.
 class HasLogContexts env where
   getLogContexts :: env -> LogContexts
-  setLogContexts :: env -> LogContexts -> env
-  overLogContexts :: env -> (LogContexts -> LogContexts) -> env -> env
+  setLogContexts :: LogContexts -> env -> env
+  overLogContexts :: (LogContexts -> LogContexts) -> env -> env
 
 -- | Retrieves the log namespace.
 class HasLogNamespace env where
   getLogNamespace :: env -> Namespace
-  setLogNamespace :: env -> Namespace -> env
-  overLogNamespace :: env -> (Namespace -> Namespace) -> env -> env
+  setLogNamespace :: Namespace -> env -> env
+  overLogNamespace :: (Namespace -> Namespace) -> env -> env
 
 -- | 'Env' holds all of our environment data that is used while running navi.
 data Env ref = MkEnv
@@ -67,37 +71,32 @@ data Env ref = MkEnv
     kLogCtx :: LogContexts,
     kLogNamespace :: Namespace
   }
-  deriving (Generic)
+
+O.makeFieldLabelsNoPrefix ''Env
 
 instance HasPollInterval (Env ref) where
-  getPollInterval = O.view $ gfield @"pollInterval"
+  getPollInterval = O.view #pollInterval
 
 instance HasEvents ref (Env ref) where
-  getEvents = O.view $ gfield @"events"
+  getEvents = O.view #events
 
 instance HasClient (Env ref) where
-  getClient = O.view $ gfield @"client"
+  getClient = O.view #client
 
 instance HasLogEnv (Env ref) where
-  getLogEnv = O.view $ gfield @"kLogEnv"
-  setLogEnv env le = env {kLogEnv = le}
-  overLogEnv env f = \env' -> env' {kLogEnv = le'}
-    where
-      le' = f $ kLogEnv env
+  getLogEnv = O.view #kLogEnv
+  setLogEnv = O.set #kLogEnv
+  overLogEnv = O.over #kLogEnv
 
 instance HasLogContexts (Env ref) where
-  getLogContexts = O.view $ gfield @"kLogCtx"
-  setLogContexts env ctx = env {kLogCtx = ctx}
-  overLogContexts env f = \env' -> env' {kLogCtx = ctx'}
-    where
-      ctx' = f $ kLogCtx env
+  getLogContexts = O.view #kLogCtx
+  setLogContexts = O.set #kLogCtx
+  overLogContexts = O.over #kLogCtx
 
 instance HasLogNamespace (Env ref) where
-  getLogNamespace = O.view $ gfield @"kLogNamespace"
-  setLogNamespace env ns = env {kLogNamespace = ns}
-  overLogNamespace env f = \env' -> env' {kLogNamespace = ns'}
-    where
-      ns' = f $ kLogNamespace env
+  getLogNamespace = O.view #kLogNamespace
+  setLogNamespace = O.set #kLogNamespace
+  overLogNamespace = O.over #kLogNamespace
 
 -- | Creates an 'Env' from the provided log types and configuration data.
 mkEnv ::

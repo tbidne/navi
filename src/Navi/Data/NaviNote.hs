@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Provides the 'NaviNote' type, representing notifications.
 module Navi.Data.NaviNote
   ( NaviNote (..),
@@ -18,8 +21,17 @@ import Data.Text qualified as T
 import Navi.Data.NonNegative (NonNegative)
 import Navi.Data.NonNegative qualified as NN
 import Navi.Prelude
+import Optics.TH qualified as O
 import Toml (Key, TomlCodec, (.=))
 import Toml qualified
+
+-- | Determines how long a notification persists.
+data Timeout
+  = Never
+  | Seconds NonNegative
+  deriving (Show)
+
+O.makeFieldLabelsNoPrefix ''Timeout
 
 -- | 'NaviNote' represents desktop notifications.
 data NaviNote = MkNaviNote
@@ -34,13 +46,9 @@ data NaviNote = MkNaviNote
     -- | Determines how long the notification stays on-screen.
     timeout :: Maybe Timeout
   }
-  deriving (Generic, Show)
+  deriving (Show)
 
--- | Determines how long a notification persists.
-data Timeout
-  = Never
-  | Seconds NonNegative
-  deriving (Generic, Show)
+O.makeFieldLabelsNoPrefix ''NaviNote
 
 -- | Codec for 'NaviNote'.
 naviNoteCodec :: TomlCodec NaviNote

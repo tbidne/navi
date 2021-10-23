@@ -27,7 +27,7 @@ data SingleToml = MkSingleToml
     -- | Determines how we handle errors.
     errEvtCfg :: Maybe ErrorNoteToml
   }
-  deriving (Generic, Show)
+  deriving (Show)
 
 -- | Codec for 'SingleToml'.
 singleCodec :: TomlCodec SingleToml

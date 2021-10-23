@@ -41,6 +41,7 @@ common common-exts
     MultiWayIf
     NamedFieldPuns
     NumericUnderscores
+    OverloadedLabels
     OverloadedStrings
     PatternSynonyms
     RankNTypes
@@ -101,6 +102,7 @@ library
     , katip                 ^>=0.8.4.0
     , mtl                   ^>=2.2.2
     , optics-core           ^>=0.4
+    , optics-th             ^>=0.4
     , optparse-applicative  ^>=0.16.1.0
     , process               ^>=1.6.7.0
     , text                  ^>=1.2.3.2

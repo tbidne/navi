@@ -15,7 +15,7 @@ import Navi.Prelude
 data Sorted a
   = Nil
   | Cons a (Sorted a)
-  deriving (Eq, Generic, Ord)
+  deriving (Eq, Ord)
 
 instance Show a => Show (Sorted a) where
   show Nil = "Nil"

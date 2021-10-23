@@ -35,7 +35,7 @@ data MultipleToml = MkMultipleToml
     -- | Determines how we handle errors.
     errEvtCfg :: Maybe ErrorNoteToml
   }
-  deriving (Generic, Show)
+  deriving (Show)
 
 -- | TOML for alerts.
 data TriggerNoteToml = MkTriggerNoteToml
@@ -44,7 +44,7 @@ data TriggerNoteToml = MkTriggerNoteToml
     -- | The notification to send when triggered.
     note :: NaviNote
   }
-  deriving (Generic, Show)
+  deriving (Show)
 
 triggerNotesCodec :: TomlCodec [TriggerNoteToml]
 triggerNotesCodec = Toml.list triggerNoteCodec "trigger-note"

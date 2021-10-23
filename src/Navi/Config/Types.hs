@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Provides configuration types.
 module Navi.Config.Types
   ( Config (..),
@@ -12,10 +15,29 @@ import Katip (Severity (..))
 import Navi.Data.NonNegative (NonNegative)
 import Navi.Event (AnyEvent (..))
 import Navi.Prelude
-import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
+import Optics.TH qualified as O
 import Toml (TomlDecodeError)
 import UnexceptionalIO (SomeNonPseudoException)
+
+-- | Log location configuration.
+data LogLoc
+  = Stdout
+  | File FilePath
+  deriving (Show)
+
+O.makeFieldLabelsNoPrefix ''LogLoc
+
+-- | Logging configuration.
+data Logging = MkLogging
+  { -- | Determines the log level.
+    severity :: Maybe Severity,
+    -- | Deterines the log location (i.e. file or stdout).
+    location :: Maybe LogLoc
+  }
+  deriving (Show)
+
+O.makeFieldLabelsNoPrefix ''Logging
 
 -- | 'Config' holds the data from 'Navi.Config.Toml.ConfigToml' once it has been processed
 -- (e.g., all user defined Events are parsed).
@@ -27,32 +49,18 @@ data Config ref = MkConfig
     -- | Logging configuration.
     logging :: Logging
   }
-  deriving (Generic)
+
+O.makeFieldLabelsNoPrefix ''Config
 
 instance Show (Config ref) where
   show config =
     "MkConfig {pollInterval = "
-      <> show (config ^. gfield @"pollInterval")
+      <> show (config ^. #pollInterval)
       <> ", events = "
-      <> show (config ^. gfield @"events")
+      <> show (config ^. #events)
       <> ", logging = "
-      <> show (config ^. gfield @"logging")
+      <> show (config ^. #logging)
       <> "}"
-
--- | Logging configuration.
-data Logging = MkLogging
-  { -- | Determines the log level.
-    severity :: Maybe Severity,
-    -- | Deterines the log location (i.e. file or stdout).
-    location :: Maybe LogLoc
-  }
-  deriving (Generic, Show)
-
--- | Log location configuration.
-data LogLoc
-  = Stdout
-  | File FilePath
-  deriving (Generic, Show)
 
 -- | 'ConfigErr' represents the errors we can encounter when attempting to
 -- parse a config file.
@@ -60,4 +68,6 @@ data ConfigErr
   = FileErr SomeNonPseudoException
   | TomlError [TomlDecodeError]
   | NoEvents
-  deriving (Generic, Show)
+  deriving (Show)
+
+O.makeFieldLabelsNoPrefix ''ConfigErr

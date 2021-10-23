@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | This module provides toml configuration for the battery status service.
 module Navi.Services.Battery.Status.Toml
   ( BatteryStatusToml (..),
@@ -14,21 +17,9 @@ import Navi.Event.Toml qualified as EToml
 import Navi.Prelude
 import Navi.Services.Battery.Types (BatteryType (..))
 import Navi.Services.Battery.Types qualified as BTypes
+import Optics.TH qualified as O
 import Toml (TomlCodec, (.=))
 import Toml qualified
-
--- | TOML for the battery status service.
-data BatteryStatusToml = MkBatteryStatusToml
-  { -- | Determines how we should query the system for battery information.
-    batteryType :: BatteryType,
-    -- | Determines how we treat repeat alerts.
-    repeatEvent :: Maybe RepeatEvtToml,
-    -- | Determines how we handle errors.
-    errorNote :: Maybe ErrorNoteToml,
-    -- | The alert for this service.
-    note :: BatteryStatusNoteToml
-  }
-  deriving (Generic, Show)
 
 -- | TOML for the battery status notification.
 data BatteryStatusNoteToml = MkBatteryStatusNoteToml
@@ -41,7 +32,24 @@ data BatteryStatusNoteToml = MkBatteryStatusNoteToml
     -- | The image for full.
     mFullImage :: Maybe Icon
   }
-  deriving (Generic, Show)
+  deriving (Show)
+
+O.makeFieldLabelsNoPrefix ''BatteryStatusNoteToml
+
+-- | TOML for the battery status service.
+data BatteryStatusToml = MkBatteryStatusToml
+  { -- | Determines how we should query the system for battery information.
+    batteryType :: BatteryType,
+    -- | Determines how we treat repeat alerts.
+    repeatEvent :: Maybe RepeatEvtToml,
+    -- | Determines how we handle errors.
+    errorNote :: Maybe ErrorNoteToml,
+    -- | The alert for this service.
+    note :: BatteryStatusNoteToml
+  }
+  deriving (Show)
+
+O.makeFieldLabelsNoPrefix ''BatteryStatusToml
 
 -- | Codec for 'BatteryStatusToml'.
 batteryStatusCodec :: TomlCodec BatteryStatusToml

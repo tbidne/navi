@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Provides functionality for parsing command-line arguments.
 module Navi.Args
   ( Args (..),
@@ -11,6 +14,7 @@ import Data.Functor.Classes (Show1 (..))
 import Data.Functor.Classes qualified as Functor
 import Data.Functor.Identity (Identity (..))
 import Navi.Prelude
+import Optics.TH qualified as O
 import Options.Applicative (Parser, ParserInfo (..))
 import Options.Applicative qualified as OptApp
 import Options.Applicative.Help.Chunk (Chunk (..))
@@ -31,7 +35,8 @@ data Args f = MkArgs
     -- written.
     configDir :: f FilePath
   }
-  deriving (Generic)
+
+O.makeFieldLabelsNoPrefix ''Args
 
 instance (Show1 f) => Show (Args f) where
   show MkArgs {configFile, configDir} =

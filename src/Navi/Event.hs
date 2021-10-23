@@ -34,7 +34,6 @@ import Navi.Event.Types
     RepeatEvent (..),
   )
 import Navi.Prelude
-import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 
 -- | Runs an event, i.e.,
@@ -49,7 +48,7 @@ runEvent ::
   Event ref a ->
   m (Either EventErr a)
 runEvent event = addNamespace "Run Event" $ do
-  eResultStr <- execSh command
+  eResultStr <- execSh $ event ^. #command
   logEvent event DebugS $ "Shell returned: " <> showt eResultStr
   case eResultStr of
     Left ex -> do
@@ -57,13 +56,11 @@ runEvent event = addNamespace "Run Event" $ do
       logEvent event ErrorS $ "Exception: " <> exStr
       pure $ Left $ MkEventErr name "Exception" exStr
     Right resultStr -> do
-      let parsed = parser resultStr
+      let parsed = event ^. #parser $ resultStr
       logEvent event DebugS $ "Parsed: " <> showt parsed
       pure parsed
   where
-    name = event ^. gfield @"name"
-    command = event ^. gfield @"command"
-    parser = event ^. gfield @"parser"
+    name = event ^. #name
 
 -- | Determines if we should block the event. The semantics are:
 --
@@ -127,6 +124,4 @@ updatePrevTrigger repeatEvt newVal =
 
 -- | Helper function for logging events.
 logEvent :: MonadLogger m => Event ref a -> Severity -> Text -> m ()
-logEvent event s t = logText s $ "[" <> name <> "] " <> t
-  where
-    name = event ^. gfield @"name"
+logEvent event s t = logText s $ "[" <> event ^. #name <> "] " <> t

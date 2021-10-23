@@ -27,9 +27,8 @@ import Navi.Env
     HasPollInterval (..),
   )
 import Navi.Event qualified as Event
-import Navi.Event.Types (AnyEvent (..), Event (..), EventErr (..))
+import Navi.Event.Types (AnyEvent (..), EventErr (..))
 import Navi.Prelude
-import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 
 -- | NaviT is the core type used to run the application.
@@ -66,13 +65,11 @@ instance
 
 updateEnvField ::
   MonadReader env m =>
-  (env -> (f1 -> f2) -> env -> env) ->
+  ((f1 -> f2) -> env -> env) ->
   (f1 -> f2) ->
   m a ->
   m a
-updateEnvField over modifier m = do
-  over' <- asks over
-  local (over' modifier) m
+updateEnvField over modifier = local (over modifier)
 
 instance
   ( HasLogContexts env,
@@ -124,10 +121,10 @@ processEvent ::
   m ()
 processEvent client (MkAnyEvent event) = Event.runEvent event >>= handleResult
   where
-    name = event ^. gfield @"name"
-    repeatEvent = event ^. gfield @"repeatEvent"
-    errorNote = event ^. gfield @"errorNote"
-    raiseAlert = event ^. gfield @"raiseAlert"
+    name = event ^. #name
+    repeatEvent = event ^. #repeatEvent
+    errorNote = event ^. #errorNote
+    raiseAlert = event ^. #raiseAlert
 
     handleResult (Left err@MkEventErr {short, long}) = addNamespace "Handling Result" $ do
       blockErrEvent <- Event.blockErr errorNote
@@ -161,5 +158,5 @@ serviceErrToNote eventErr =
       timeout = Nothing
     }
   where
-    name = eventErr ^. gfield @"name"
-    short = eventErr ^. gfield @"short"
+    name = eventErr ^. #name
+    short = eventErr ^. #short

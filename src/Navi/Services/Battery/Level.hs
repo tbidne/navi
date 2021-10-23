@@ -16,19 +16,18 @@ import Navi.Services.Battery.Level.Event qualified as BatteryLevelEvent
 import Navi.Services.Battery.Level.Toml (BatteryLevelNoteToml (..), BatteryLevelToml (..))
 import Navi.Services.Battery.Level.Toml qualified as BatteryLevelToml
 import Navi.Services.Battery.Types (BatteryLevel)
-import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toBatteryLevelEvent :: (MonadMutRef m ref) => BatteryLevelToml -> m (AnyEvent ref)
 toBatteryLevelEvent toml = do
-  repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. gfield @"repeatEvent"
-  errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. gfield @"errorNote"
+  repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
+  errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
   let evt = BatteryLevelEvent.mkBatteryEvent lvlNoteList batteryType repeatEvt errorNote
   pure $ MkAnyEvent evt
   where
-    lvlNoteList = toNote <$> toml ^. gfield @"alerts"
-    batteryType = toml ^. gfield @"batteryType"
+    lvlNoteList = toNote <$> toml ^. #alerts
+    batteryType = toml ^. #batteryType
 
 toNote :: BatteryLevelNoteToml -> (BatteryLevel, NaviNote)
 toNote toml =
@@ -36,12 +35,12 @@ toNote toml =
     MkNaviNote
       summary
       body
-      (toml ^. gfield @"mIcon")
-      (toml ^. gfield @"urgency")
-      (toml ^. gfield @"mTimeout")
+      (toml ^. #mIcon)
+      (toml ^. #urgency)
+      (toml ^. #mTimeout)
   )
   where
-    level = toml ^. gfield @"level"
+    level = toml ^. #level
     summary = "Battery"
     body =
       Just $

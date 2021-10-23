@@ -23,7 +23,6 @@ import Navi.Event.Types
 import Navi.Prelude
 import Navi.Services.Battery.Status.Toml (BatteryStatusNoteToml (..))
 import Navi.Services.Battery.Types (BatteryStatus (..), BatteryType (..))
-import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 
 -- | Constructs an 'Event' for battery statuses.
@@ -61,10 +60,10 @@ instance Monoid BatteryResult where
 toNote :: BatteryStatusNoteToml -> BatteryStatus -> Maybe NaviNote
 toNote noteToml status = toNote' timeout $ fromStatus status
   where
-    timeout = noteToml ^. gfield @"mTimeout"
-    mChargingImage = noteToml ^. gfield @"mChargingImage"
-    mDischargingImage = noteToml ^. gfield @"mChargingImage"
-    mFullImage = noteToml ^. gfield @"mFullImage"
+    timeout = noteToml ^. #mTimeout
+    mChargingImage = noteToml ^. #mChargingImage
+    mDischargingImage = noteToml ^. #mChargingImage
+    mFullImage = noteToml ^. #mFullImage
 
     fromStatus Charging = ("Battery charging", mChargingImage)
     fromStatus Discharging = ("Battery discharging", mDischargingImage)

@@ -33,7 +33,7 @@ newtype BoundedN l u = MkUnsafeBoundedN
   { -- | Unwraps the 'BoundedN'
     unBoundedN :: Natural
   }
-  deriving (Eq, Generic, Ord, Show)
+  deriving (Eq, Ord, Show)
 
 -- | Allows pattern matching on 'BoundedN'.
 pattern MkBoundedN :: Natural -> BoundedN l u

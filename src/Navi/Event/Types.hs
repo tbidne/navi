@@ -1,4 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | This module provides types for defining notification events.
 module Navi.Event.Types
@@ -14,13 +16,15 @@ where
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Prelude
-import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
+import Optics.TH qualified as O
 
 -- | Represents the shell command that we run to query for our event
 -- status.
 newtype Command = MkCommand {getCommand :: Text}
-  deriving (Generic, Show)
+  deriving (Show)
+
+O.makeFieldLabelsNoPrefix ''Command
 
 -- | Determines if we are allowed to send off duplicate notifications
 -- simultaneously. If we are not, then 'NoRepeats' holds the last trigger
@@ -28,7 +32,8 @@ newtype Command = MkCommand {getCommand :: Text}
 data RepeatEvent ref a
   = NoRepeats (ref (Maybe a))
   | AllowRepeats
-  deriving (Generic)
+
+O.makeFieldLabelsNoPrefix ''RepeatEvent
 
 instance Show (RepeatEvent ref a) where
   show (NoRepeats _) = "NoRepeats <ref>"
@@ -39,7 +44,22 @@ instance Show (RepeatEvent ref a) where
 data ErrorNote ref
   = NoErrNote
   | AllowErrNote (RepeatEvent ref ())
-  deriving (Generic, Show)
+  deriving (Show)
+
+O.makeFieldLabelsNoPrefix ''ErrorNote
+
+-- | Represents an error when querying an 'Event'.
+data EventErr = MkEventErr
+  { -- | The name of the event.
+    name :: Text,
+    -- | Short description of the error.
+    short :: Text,
+    -- | Long description of the error.
+    long :: Text
+  }
+  deriving (Show)
+
+O.makeFieldLabelsNoPrefix ''EventErr
 
 -- | 'Event' represents sending notifications. An event will:
 --
@@ -60,30 +80,20 @@ data Event ref a = MkEvent
     -- | Determines how we handle errors.
     errorNote :: ErrorNote ref
   }
-  deriving (Generic)
+
+O.makeFieldLabelsNoPrefix ''Event
 
 instance Show (Event ref a) where
   show event =
     "MkEvent {name = "
-      <> T.unpack (event ^. gfield @"name")
+      <> T.unpack (event ^. #name)
       <> ", command = "
-      <> show (event ^. gfield @"command")
+      <> show (event ^. #command)
       <> ", parser = <func>, raiseAlert = <func>, repeatEvent = "
-      <> show (event ^. gfield @"repeatEvent")
+      <> show (event ^. #repeatEvent)
       <> ", errorNote = "
-      <> show (event ^. gfield @"errorNote")
+      <> show (event ^. #errorNote)
       <> "}"
-
--- | Represents an error when querying an 'Event'.
-data EventErr = MkEventErr
-  { -- | The name of the event.
-    name :: Text,
-    -- | Short description of the error.
-    short :: Text,
-    -- | Long description of the error.
-    long :: Text
-  }
-  deriving (Generic, Show)
 
 -- | Existentially quantifies result type on an 'Event'. Used so that we can
 -- store different events in the same list.
@@ -92,3 +102,5 @@ data AnyEvent ref where
   MkAnyEvent :: (Eq a, Show a) => Event ref a -> AnyEvent ref
 
 deriving instance Show (AnyEvent ref)
+
+O.makeFieldLabelsNoPrefix ''AnyEvent

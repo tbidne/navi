@@ -13,7 +13,6 @@ import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Data.NonNegative (NonNegative (..))
 import Navi.Prelude
-import Optics.Generic (GField (..))
 import Optics.Operators ((^.))
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified
@@ -37,17 +36,17 @@ naviToDBus :: NaviNote -> Note
 naviToDBus naviNote =
   Note
     { appName = "Navi",
-      DBusN.summary = T.unpack $ naviNote ^. gfield @"summary",
+      DBusN.summary = T.unpack $ naviNote ^. #summary,
       DBusN.body = body,
-      DBusN.appImage = naviNote ^. gfield @"image",
+      DBusN.appImage = naviNote ^. #image,
       DBusN.hints = hints,
       DBusN.expiry = timeout,
       DBusN.actions = []
     }
   where
-    body = DBusN.Text . T.unpack <$> naviNote ^. gfield @"body"
-    hints = maybeToList $ DBusN.Urgency <$> naviNote ^. gfield @"urgency"
-    timeout = maybe defTimeout naviToDBusTimeout $ naviNote ^. gfield @"timeout"
+    body = DBusN.Text . T.unpack <$> naviNote ^. #body
+    hints = maybeToList $ DBusN.Urgency <$> naviNote ^. #urgency
+    timeout = maybe defTimeout naviToDBusTimeout $ naviNote ^. #timeout
     defTimeout = DBusN.Milliseconds 10_000
 
 naviToDBusTimeout :: Timeout -> DBusN.Timeout
