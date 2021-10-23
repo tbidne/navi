@@ -25,7 +25,7 @@
       - [Battery Level](#battery-level)
     - [Custom](#custom)
       - [Single](#single)
-      - [MultipleSingel](#multiple)
+      - [Multiple](#multiple)
 - [Building](#building)
   - [Prerequisites](#prerequisites)
   - [Cabal](#cabal)
