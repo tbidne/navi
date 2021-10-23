@@ -5,7 +5,6 @@ module Navi.Data.Sorted
     toList,
     insSorted,
     leastUpperBound,
-    unsafeMkSorted,
   )
 where
 
@@ -26,7 +25,7 @@ infixr 5 `Cons`
 
 -- | Unsafely constructs a 'Sorted' from a list. This is intended to be used
 -- when a list is already sorted, for performance. Runs in
--- \(\mathcal{O}(1)\). Exercise restraint!
+-- \(\mathcal{O}(n)\). Exercise restraint!
 unsafeMkSorted :: [a] -> Sorted a
 unsafeMkSorted = foldr Cons Nil
 
