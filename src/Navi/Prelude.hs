@@ -81,6 +81,7 @@ import System.IO qualified as IO
 import Prelude as X
   ( Bool (..),
     Bounded (..),
+    Char,
     Eq (..),
     FilePath,
     IO,

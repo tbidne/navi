@@ -19,6 +19,8 @@ import Navi.Services.Battery.Level.Toml as BatteryLevelToml
 import Navi.Services.Battery.Status.Toml as BatteryStatusToml
 import Navi.Services.Custom.Multiple.Toml as MultipleToml
 import Navi.Services.Custom.Single.Toml as SingleToml
+import Navi.Services.Network.Connectivity.Toml (NetworkConnectivityToml)
+import Navi.Services.Network.Connectivity.Toml qualified as NetworkConnectivityToml
 import Optics.TH qualified as O
 import Toml (TomlCodec, (.=))
 import Toml qualified
@@ -30,7 +32,8 @@ data ConfigToml = MkConfigToml
     singleToml :: [SingleToml],
     multipleToml :: [MultipleToml],
     batteryLevelToml :: Maybe BatteryLevelToml,
-    batteryStatusToml :: Maybe BatteryStatusToml
+    batteryStatusToml :: Maybe BatteryStatusToml,
+    networkConnectivityToml :: [NetworkConnectivityToml]
   }
   deriving (Show)
 
@@ -44,6 +47,7 @@ configCodec =
     <*> Toml.list MultipleToml.multipleCodec "multiple" .= multipleToml
     <*> Toml.dioptional (Toml.table BatteryLevelToml.batteryLevelCodec "battery-level") .= batteryLevelToml
     <*> Toml.dioptional (Toml.table BatteryStatusToml.batteryStatusCodec "battery-status") .= batteryStatusToml
+    <*> Toml.list NetworkConnectivityToml.networkConnectivityCodec "network-connectivity" .= networkConnectivityToml
 
 logCodec :: TomlCodec Logging
 logCodec =

@@ -86,6 +86,9 @@ library
     Navi.Services.Custom.Single
     Navi.Services.Custom.Single.Event
     Navi.Services.Custom.Single.Toml
+    Navi.Services.Network.Connectivity
+    Navi.Services.Network.Connectivity.Toml
+    Navi.Services.Network.Types
 
   -- Navi does not use aeson directly, but it is a transitive dependency and
   -- unfortunately some libraries have overly permissive upper bounds

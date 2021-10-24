@@ -24,6 +24,7 @@ import Navi.Services.Battery.Level qualified as BatteryLevel
 import Navi.Services.Battery.Status qualified as BatteryStatus
 import Navi.Services.Custom.Multiple qualified as Multiple
 import Navi.Services.Custom.Single qualified as Single
+import Navi.Services.Network.Connectivity qualified as NetworkConnectivity
 import Optics.Operators ((^.))
 import Toml qualified
 
@@ -44,13 +45,28 @@ readConfig path = do
 
 tomlToConfig :: (MonadMutRef m ref) => ConfigToml -> m (Maybe (Config ref))
 tomlToConfig toml = do
-  singleEvents <- traverse Single.toSingleEvent singleToml
-  multipleEvents <- traverse Multiple.toMultipleEvent multipleToml
-  mBatteryLevelEvt <- traverse BatteryLevel.toBatteryLevelEvent batteryLevelToml
-  mBatteryStatusEvt <- traverse BatteryStatus.toBatteryStatusEvent batteryStatusToml
-  let customEvts = singleEvents <> multipleEvents
-      maybeEvts = fromMaybe [] $ liftA2 (\x y -> [x, y]) mBatteryLevelEvt mBatteryStatusEvt
-      allEvts = maybeEvts <> customEvts
+  singleEvents <-
+    traverse Single.toSingleEvent singleToml
+  multipleEvents <-
+    traverse Multiple.toMultipleEvent multipleToml
+  mBatteryLevelEvt <-
+    traverse BatteryLevel.toBatteryLevelEvent batteryLevelToml
+  mBatteryStatusEvt <-
+    traverse BatteryStatus.toBatteryStatusEvent batteryStatusToml
+  mNetworkConnectivityEvt <-
+    traverse
+      NetworkConnectivity.toNetworkConnectivityEvent
+      networkConnectivityToml
+  let multipleEvts =
+        singleEvents
+          <> multipleEvents
+          <> mNetworkConnectivityEvt
+      maybeEvts =
+        mToList
+          [ mBatteryLevelEvt,
+            mBatteryStatusEvt
+          ]
+      allEvts = maybeEvts <> multipleEvts
 
   pure $ case allEvts of
     [] -> Nothing
@@ -62,9 +78,11 @@ tomlToConfig toml = do
             logging = logToml
           }
   where
+    mToList = fromMaybe [] . sequenceA
     pollToml = toml ^. #pollToml
     logToml = toml ^. #logToml
     singleToml = toml ^. #singleToml
     multipleToml = toml ^. #multipleToml
     batteryLevelToml = toml ^. #batteryLevelToml
     batteryStatusToml = toml ^. #batteryStatusToml
+    networkConnectivityToml = toml ^. #networkConnectivityToml
