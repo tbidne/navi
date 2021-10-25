@@ -50,8 +50,8 @@ There are plans to generalize navi to other notification systems, but for now Na
 
 Navi has the following usage:
 
-```text
-Usage: navi [-f|--config-file PATH] [-d|--config-dir PATH]
+```
+Usage: navi [-f|--config-file PATH] [-d|--config-dir PATH] [-v|--version]
 
 Available options:
   -f,--config-file PATH    Path to config file. Overrides default
@@ -59,6 +59,7 @@ Available options:
                            specified.
   -d,--config-dir PATH     Path to config directory. Determines where we look
                            for config.toml and output log file.
+  -v,--version             Displays the version number.
   -h,--help                Show this help text
 ```
 
@@ -105,15 +106,15 @@ The full list of notification options are:
 * `body`: (Optional). Text body.
 * `app-image-file`: (Optional). Path to image file.
 * `app-image-path`: (Optional). Path to image file.
-* `urgency`: (Optional). One of `<low|normal|critical>`.
-* `timeout`: (Optional). One of `<never|<seconds>>`. Determines how long notifications persist. Defaults to 10 seconds.
+* `urgency`: (Optional). One of `[low|normal|critical]`.
+* `timeout`: (Optional). One of `[never|<seconds>]`. Determines how long notifications persist. Defaults to 10 seconds.
 
 ## Service Options
 
 Individual services have their own options, but there are a few that are common to most.
 
-* `repeat-events`: One of `<true|false>`. Determines if we send off the same notification twice in a row. Defaults to `false` (i.e., no repeats) unless stated otherwise.
-* `error-events`: One of `<"none"|"repeats"|"no-repeats">`. Determines if we send off notifications for errors, and how we handle repeats. Defaults to `"no-repeats"` unless stated otherwise, i.e., we send error notifications but no repeats.
+* `repeat-events`: One of `[true|false>`. Determines if we send off the same notification twice in a row. Defaults to `false` (i.e., no repeats) unless stated otherwise.
+* `error-events`: One of `["none"|"repeats"|"no-repeats">`. Determines if we send off notifications for errors, and how we handle repeats. Defaults to `"no-repeats"` unless stated otherwise, i.e., we send error notifications but no repeats.
 
 ### Predefined
 
@@ -123,10 +124,10 @@ This service sends notifications based on the current battery status. Options in
 
 ##### Specific Options
 
-* `battery-status.type`: One of `<upower|<custom command>>`.
+* `battery-status.type`: One of `[upower|<custom command>>`.
   * `upower` requires the `UPower` utility.
   * A custom command allows one to pass an arbitrary shell command. The requirement is that its output contains a line:
-    * `<whitespace> state: <charge status> <whitespace>`, where `<charge status>` is one of `<charging|discharging|fully-charged>`.
+    * `state: <charge status>`, where `<charge status>` is one of `[charging|discharging|fully-charged]`.
 
 
 ##### General Options
@@ -157,11 +158,11 @@ This service sends notifications based on the current battery level when it is d
 
 * `battery-level.alert.level`: integer in `[0, 100]`. Sends a notification once the battery level drops below the level.
 
-* `battery-level.type`: One of `<upower|<custom command>>`.
+* `battery-level.type`: One of `[upower|<custom command>]`.
   * `upower` requires the `UPower` utility.
   * A custom command allows one to pass an arbitrary shell command. The requirement is that its output contains two lines:
-    * `<whitespace> percentage: N% <whitespace>`, where `N` is in `[0, 100]`.
-    * `<whitespace> state: <charge status> <whitespace>`, where `<charge status>` is one of `<charging|discharging|fully-charged>`.
+    * `percentage: N%`, where `N` is in `[0, 100]`.
+    * `state: <charge status>`, where `<charge status>` is one of `[charging|discharging|fully-charged]`.
 
 ##### General Options
 
@@ -187,6 +188,41 @@ level = 20
 urgency = "critical"
 ```
 
+#### Network Connectivity
+
+This service sends notifications based on the network connectivity for given devices.
+
+##### Specific Options
+
+* `network-connectivity.device`: The name of the network device to monitor (e.g. `wlp0s20f3`).
+* `network-connectivity.type`: One of `[networkmanager|<custom command>]`.
+  * `networkmanager` requires the `NetworkManager` utility.
+  * A custom command allows one to pass an arbitrary shell command. The requirement is that its output contains the following four lines for each device (i.e., there should be `4n` lines for the number of total network devices, `n`):
+    * `DEVICE: <device>`
+    * `TYPE: <type>`: One of `[wifi|wifi-p2p|ethernet|loopback|tun|<other>]`.
+    * `STATE: <state>`: One of `[connected|disconnected|unavailable|unmanaged|<other>]`.
+    * `CONNECTION: <name>`: One of `[--|<some name>]`.
+
+##### General Options
+
+* `network-connectivity.repeat-events`
+* `network-connectivity.error-events`
+* `network-connectivity.alert.urgency`
+* `network-connectivity.alert.app-image-file`
+* `network-connectivity.alert.app-image-path`
+* `network-connectivity.alert.timeout`
+
+
+##### Example
+
+```toml
+[[network-connectivity]]
+device = "wlp0s20f3"
+
+[[network-connectivity]]
+device = "enp0s31f6"
+```
+
 ### Custom
 
 #### Single
@@ -209,7 +245,9 @@ This service allows one to create a single notification based on an arbitrary co
 * `single.note.urgency`
 * `single.note.timeout`
 
-Example:
+***** Example
+
+
 
 ```toml
 # Send alert when the current minute is even

@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | Provides types used by network services.
 module Navi.Services.Network.Types
   ( NetworkCommand (..),
     networkCommandCodec,
@@ -15,6 +16,7 @@ import Optics.TH qualified as O
 import Toml (TomlCodec)
 import Toml qualified
 
+-- | Determines how we should query the system for network information.
 data NetworkCommand
   = NetworkManager
   | Custom Text
@@ -31,6 +33,7 @@ networkCommandCodec =
     parseBatteryType "networkmanager" = Right NetworkManager
     parseBatteryType t = Right $ Custom t
 
+-- | Various connection types.
 data ConnType
   = Ethernet
   | Wifi
@@ -40,6 +43,7 @@ data ConnType
   | UnknownType Text
   deriving (Eq, Show)
 
+-- | Various connection states.
 data ConnState
   = Connected
   | Disconnected
@@ -48,10 +52,15 @@ data ConnState
   | UnknownState Text
   deriving (Eq, Show)
 
+-- | Full connection data.
 data Connection = MkConnection
-  { device :: Text,
+  { -- | The device name.
+    device :: Text,
+    -- | The connection type.
     ctype :: ConnType,
+    -- | The connection state.
     state :: ConnState,
+    -- | The name of the connection (e.g. Wifi SSID).
     name :: Maybe Text
   }
   deriving (Eq, Show)
