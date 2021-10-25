@@ -23,6 +23,7 @@
     - [Predefined](#predefined)
       - [Battery Status](#battery-status)
       - [Battery Level](#battery-level)
+      - [Network Connectivity](#network-connectivity)
     - [Custom](#custom)
       - [Single](#single)
       - [Multiple](#multiple)
@@ -42,7 +43,7 @@ There are built-in services for sending specific notifications, along with funct
 
 Navi sends [freedesktop.org](https://specifications.freedesktop.org/notification-spec/notification-spec-latest.html)-compatible notifications via [D-Bus](https://en.wikipedia.org/wiki/D-Bus).
 
-There are plans to generalize navi to other notification systems, but for now Navi requires a running notification compatible with freedesktop.org. For example, Navi has been tested with:
+There are plans to generalize navi to other notification systems, but for now Navi requires a running notification service compatible with freedesktop.org. For example, Navi has been tested with:
 
 - [deadd-notification-center](https://github.com/phuhl/linux_notification_center)
 
@@ -85,7 +86,7 @@ Navi is configured via a toml file, by default located at `xdgBase/navi/config.t
 ## General Options
 
 * `poll-interval`: Mandatory. Non-negative integer, determines how often we query the system in seconds.
-* `logging.severity`: Optional. One of `<debug|info|error>`. Controls the logging level. Defaults to `error`.
+* `logging.severity`: Optional. One of `[debug|info|error]`. Controls the logging level. Defaults to `error`.
 * `logging.location`: Optional. Either `stdout` or `<filename>`. Defaults to a file, `xdgBase/navi/navi.log`.
 
 Example:
