@@ -20,4 +20,4 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/system-info.git
-    tag: 849110d501a56cf6d87f10e4eb816ee2e0106078
+    tag: 9109ddf6dc30539430fe7861a1b72df7ca764f3d

@@ -12,4 +12,4 @@ extra-deps:
 - git: https://github.com/tbidne/smart-data.git
   commit: 71e382392d506869c83bc548edb015c7c7ef4501
 - git: https://github.com/tbidne/system-info.git
-  commit: 849110d501a56cf6d87f10e4eb816ee2e0106078
+  commit: 9109ddf6dc30539430fe7861a1b72df7ca764f3d

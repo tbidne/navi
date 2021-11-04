@@ -22,8 +22,8 @@ data ServiceType result where
   BatteryState :: State.Program -> ServiceType BatteryState
   BatteryChargeStatus :: ChargeStatus.Program -> ServiceType ChargeStatus
   NetworkConnection :: Connection.Program -> ServiceType Connection
-  Single :: Command -> Text -> ServiceType Text
-  Multiple :: Command -> [Text] -> ServiceType Text
+  Single :: Command -> ServiceType Text
+  Multiple :: Command -> ServiceType Text
 
 deriving instance Show (ServiceType result)
 

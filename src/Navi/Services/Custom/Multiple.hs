@@ -47,11 +47,10 @@ mkMultipleEvent ::
 mkMultipleEvent cmd noteList re en =
   MkEvent
     { name = "Multiple",
-      serviceType = Multiple cmd triggers,
+      serviceType = Multiple cmd,
       raiseAlert = flip Map.lookup noteMap,
       repeatEvent = re,
       errorNote = en
     }
   where
     noteMap = Map.fromList noteList
-    triggers = fmap fst noteList

@@ -1,26 +1,26 @@
 poll-interval = 10
 
-[battery]
+[battery-state]
 repeat-events = false
 error-events = "no-repeats"
 
-[[battery.alert]]
+[[battery-state.alert]]
 level = 50
 urgency = "low"
 
-[[battery.alert]]
+[[battery-state.alert]]
 level = 30
 urgency = "normal"
 
-[[battery.alert]]
+[[battery-state.alert]]
 level = 20
 urgency = "critical"
 
-[[battery.alert]]
+[[battery-state.alert]]
 level = 10
 urgency = "critical"
 
-[[battery.alert]]
+[[battery-state.alert]]
 level = 5
 urgency = "critical"
 
@@ -29,9 +29,9 @@ urgency = "critical"
 command = """
   min=`date +%M`;
   if [[ \"$min % 2\" -eq 0 ]]; then
-    echo true
+    echo -n "true"
   else
-    echo false
+    echo -n "false"
 fi
 """
 trigger = "true"

@@ -5,7 +5,6 @@ module Navi.Effects.MonadSystemInfo
 where
 
 import Control.Monad.Reader (MonadTrans (..), ReaderT)
-import Data.Attoparsec.Combinator qualified as AP
 import Data.Attoparsec.Text (Parser)
 import Data.Attoparsec.Text qualified as AP
 import Data.Text qualified as T
@@ -27,45 +26,49 @@ instance MonadSystemInfo IO where
     BatteryState bp -> SysInfo.queryBatteryState bp
     BatteryChargeStatus bp -> SysInfo.queryChargeStatus bp
     NetworkConnection cp -> SysInfo.queryConnection cp
-    Single cmd trigger -> querySingle cmd trigger
-    Multiple cmd triggers -> queryMultiple cmd triggers
+    Single cmd -> querySingle cmd
+    Multiple cmd -> queryMultiple cmd
 
 instance MonadSystemInfo m => MonadSystemInfo (ReaderT e m) where
   query = lift . query
 
-queryMultiple :: Command -> [Text] -> IO (Either QueryError Text)
-queryMultiple cmd triggers =
-  let shellApp = multipleShellApp cmd triggers
+queryMultiple :: Command -> IO (Either QueryError Text)
+queryMultiple cmd =
+  let shellApp = multipleShellApp cmd
    in ShellApp.runShellApp shellApp
 
-multipleShellApp :: Command -> [Text] -> ShellApp Text
-multipleShellApp cmd triggers =
+multipleShellApp :: Command -> ShellApp Text
+multipleShellApp cmd =
   MkShellApp
     { command = cmd,
-      parser = parseMultiple triggers
+      parser = parseMultiple
     }
 
-parseMultiple :: [Text] -> Text -> Either QueryError Text
-parseMultiple keys = first toEventErr . AP.parseOnly parseTxt
+parseMultiple :: Text -> Either QueryError Text
+parseMultiple = first toEventErr . AP.parseOnly parseTxt
   where
     toEventErr = MkQueryError "Multiple" "Parse error" . T.pack
-    parseTxt = AP.choice (fmap AP.string keys)
+    parseTxt = AP.takeText
 
-querySingle :: Command -> Text -> IO (Either QueryError Text)
-querySingle cmd trigger =
-  let shellApp = singleShellApp cmd trigger
+querySingle :: Command -> IO (Either QueryError Text)
+querySingle cmd =
+  let shellApp = singleShellApp cmd
    in ShellApp.runShellApp shellApp
 
-singleShellApp :: Command -> Text -> ShellApp Text
-singleShellApp cmd trigger =
+singleShellApp :: Command -> ShellApp Text
+singleShellApp cmd =
   MkShellApp
     { command = cmd,
-      parser = parseSingle trigger
+      parser = parseSingle
     }
 
-parseSingle :: Text -> Text -> Either QueryError Text
-parseSingle trigger = first toEventErr . AP.parseOnly parseTxt
+parseSingle :: Text -> Either QueryError Text
+parseSingle result = first toEventErr $ AP.parseOnly parseTxt result
   where
-    toEventErr = MkQueryError "Single" "Parse error" . T.pack
+    toEventErr err =
+      MkQueryError
+        "Single"
+        "Parse error"
+        ("Error parsing `" <> result <> "`: " <> T.pack err)
     parseTxt :: Parser Text
-    parseTxt = AP.string trigger
+    parseTxt = AP.takeText

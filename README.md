@@ -21,8 +21,8 @@
   - [Notification Options](#notification-options)
   - [Service Options](#service-options)
     - [Predefined](#predefined)
-      - [Battery Status](#battery-status)
-      - [Battery Level](#battery-level)
+      - [Battery Charging](#battery-charging)
+      - [Battery Level](#battery-state)
       - [Network Connectivity](#network-connectivity)
     - [Custom](#custom)
       - [Single](#single)
@@ -119,13 +119,13 @@ Individual services have their own options, but there are a few that are common 
 
 ### Predefined
 
-#### Battery Status
+#### Battery Charging
 
-This service sends notifications based on the current battery status. Options include:
+This service sends notifications based on the current battery charging status. Options include:
 
 ##### Specific Options
 
-* `battery-status.type`: One of `[upower|<custom command>>`.
+* `battery-charging.type`: One of `[upower|<custom command>>`.
   * `upower` requires the `UPower` utility.
   * A custom command allows one to pass an arbitrary shell command. The requirement is that its output contains a line:
     * `state: <charge status>`, where `<charge status>` is one of `[charging|discharging|fully-charged]`.
@@ -133,33 +133,33 @@ This service sends notifications based on the current battery status. Options in
 
 ##### General Options
 
-* `battery-status.repeat-events`
-* `battery-status.error-events`
-* `battery-status.charging-file`
-* `battery-status.charging-path`
-* `battery-status.discharging-file`
-* `battery-status.discharging-path`
-* `battery-status.full-file`
-* `battery-status.full-path`
-* `battery-status.timeout`
+* `battery-charging.repeat-events`
+* `battery-charging.error-events`
+* `battery-charging.charging-file`
+* `battery-charging.charging-path`
+* `battery-charging.discharging-file`
+* `battery-charging.discharging-path`
+* `battery-charging.full-file`
+* `battery-charging.full-path`
+* `battery-charging.timeout`
 
 Example:
 
 ```toml
-[battery-status]
+[battery-charging]
 repeat-events = false
 error-events = "repeats"
 ```
 
-#### Battery Level
+#### Battery State
 
 This service sends notifications based on the current battery level when it is discharging. Options include:
 
 ##### Specific Options
 
-* `battery-level.alert.level`: integer in `[0, 100]`. Sends a notification once the battery level drops below the level.
+* `battery-state.alert.level`: integer in `[0, 100]`. Sends a notification once the battery level drops below the level.
 
-* `battery-level.type`: One of `[upower|<custom command>]`.
+* `battery-state.type`: One of `[upower|<custom command>]`.
   * `upower` requires the `UPower` utility.
   * A custom command allows one to pass an arbitrary shell command. The requirement is that its output contains two lines:
     * `percentage: N%`, where `N` is in `[0, 100]`.
@@ -167,24 +167,24 @@ This service sends notifications based on the current battery level when it is d
 
 ##### General Options
 
-* `battery-level.repeat-events`
-* `battery-level.error-events`
-* `battery-level.alert.urgency`
-* `battery-level.alert.app-image-file`
-* `battery-level.alert.app-image-path`
-* `battery-level.alert.timeout`
+* `battery-state.repeat-events`
+* `battery-state.error-events`
+* `battery-state.alert.urgency`
+* `battery-state.alert.app-image-file`
+* `battery-state.alert.app-image-path`
+* `battery-state.alert.timeout`
 
 Example:
 
 ```toml
-[battery-level]
+[battery-state]
 repeat-events = false
 error-events = "repeats"
 
-[[battery-level.alert]]
+[[battery-state.alert]]
 level = 80
 
-[[battery-level.alert]]
+[[battery-state.alert]]
 level = 20
 urgency = "critical"
 ```

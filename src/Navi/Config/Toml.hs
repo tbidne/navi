@@ -54,8 +54,8 @@ configCodec =
     <*> Toml.table logCodec "logging" .= logToml
     <*> Toml.list SingleToml.singleCodec "single" .= singleToml
     <*> Toml.list MultipleToml.multipleCodec "multiple" .= multipleToml
-    <*> Toml.dioptional (Toml.table BatteryLevelToml.batteryLevelCodec "battery-level") .= batteryLevelToml
-    <*> Toml.dioptional (Toml.table BatteryStatusToml.batteryStatusCodec "battery-status") .= batteryStatusToml
+    <*> Toml.dioptional (Toml.table BatteryLevelToml.batteryLevelCodec "battery-state") .= batteryLevelToml
+    <*> Toml.dioptional (Toml.table BatteryStatusToml.batteryStatusCodec "battery-charging") .= batteryStatusToml
     <*> Toml.list NetworkConnectivityToml.networkConnectivityCodec "network-connectivity" .= networkConnectivityToml
 
 logCodec :: TomlCodec Logging

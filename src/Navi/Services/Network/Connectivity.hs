@@ -11,7 +11,7 @@ import Navi.Event.Types (AnyEvent (..), Event (..))
 import Navi.Prelude
 import Navi.Services.Network.Connectivity.Toml (NetworkConnectivityToml, ProgramToml (..))
 import Navi.Services.Types (ServiceType (..))
-import Optics.Operators ((^.))
+import Optics.Core ((%), (^.))
 import System.Info.Services.Network.Connection (ConnState (..), Connection, Device (..), Program (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
@@ -48,7 +48,7 @@ toNote noteToml conn =
         image = noteToml ^. #mImage
       }
   where
-    deviceTxt = showt $ conn ^. #device
+    deviceTxt = conn ^. (#device % #unDevice)
     nameTxt = fromMaybe "Unknown" $ conn ^. #name
     body = "Device " <> deviceTxt <> stateTxt
     stateTxt = case conn ^. #state of

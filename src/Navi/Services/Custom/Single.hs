@@ -44,7 +44,7 @@ mkSingleEvent ::
 mkSingleEvent cmd (triggerVal, note) re en =
   MkEvent
     { name = "Single",
-      serviceType = Single cmd triggerVal,
+      serviceType = Single cmd,
       raiseAlert = \b -> if b == triggerVal then Just note else Nothing,
       repeatEvent = re,
       errorNote = en
