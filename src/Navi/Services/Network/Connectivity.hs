@@ -9,10 +9,10 @@ import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), Event (..))
 import Navi.Prelude
-import Navi.Services.Network.Connectivity.Toml (NetworkConnectivityToml)
-import Navi.Services.Network.Types (ConnState (..), Connection)
-import Navi.Services.Types (ServiceType)
+import Navi.Services.Network.Connectivity.Toml (NetworkConnectivityToml, ProgramToml (..))
+import Navi.Services.Types (ServiceType (..))
 import Optics.Operators ((^.))
+import System.Info.Services.Network.Connection (ConnState (..), Connection, Device (..), Program (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toNetworkConnectivityEvent ::
@@ -32,8 +32,10 @@ toNetworkConnectivityEvent toml = do
           errorNote = errorNote
         }
   where
-    cmd :: ServiceType Connection
-    cmd = undefined
+    device = MkDevice $ toml ^. #deviceName
+    cmd = NetworkConnection $ case toml ^. #programToml of
+      NetworkManagerToml -> NetworkManager device
+      CustomToml t -> Custom device t
 
 toNote :: NetworkConnectivityToml -> Connection -> Maybe NaviNote
 toNote noteToml conn =

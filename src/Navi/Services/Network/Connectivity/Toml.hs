@@ -5,6 +5,7 @@
 -- connectivity service.
 module Navi.Services.Network.Connectivity.Toml
   ( NetworkConnectivityToml (..),
+    ProgramToml (..),
     networkConnectivityCodec,
   )
 where
@@ -15,16 +16,20 @@ import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EToml
 import Navi.Prelude
-import Navi.Services.Network.Types (NetworkCommand (..))
-import Navi.Services.Network.Types qualified as NTypes
 import Optics.TH qualified as O
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
+-- | TOML for network connectivity program.
+data ProgramToml
+  = NetworkManagerToml
+  | CustomToml Text
+  deriving (Show)
+
 -- | TOML for the network connectivity service.
 data NetworkConnectivityToml = MkNetworkConnectivityToml
   { -- | Determines how we should query the system for network information.
-    networkCommand :: NetworkCommand,
+    programToml :: ProgramToml,
     -- | The name of the network device, corresponding to the output from
     -- 'networkCommand'. For \"standard\" formats like ifconfig or
     -- NetworkManager, this might be something like wlp0s20f3 or enp0s31f6.
@@ -46,9 +51,19 @@ O.makeFieldLabelsNoPrefix ''NetworkConnectivityToml
 networkConnectivityCodec :: TomlCodec NetworkConnectivityToml
 networkConnectivityCodec =
   MkNetworkConnectivityToml
-    <$> NTypes.networkCommandCodec .= networkCommand
+    <$> programTomlCodec .= programToml
     <*> Toml.text "device" .= deviceName
     <*> Toml.dioptional EToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EToml.errorNoteCodec .= errorNote
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
     <*> Toml.dioptional (NaviNote.appImageKeyCodec "image") .= mImage
+
+programTomlCodec :: TomlCodec ProgramToml
+programTomlCodec =
+  Toml.textBy showProgram parseProgram "type"
+    <|> pure NetworkManagerToml
+  where
+    showProgram NetworkManagerToml = "networkmanager"
+    showProgram (CustomToml t) = t
+    parseProgram "networkmanager" = Right NetworkManagerToml
+    parseProgram t = Right $ CustomToml t
