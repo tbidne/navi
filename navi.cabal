@@ -70,10 +70,10 @@ library
     Navi.Event.Toml
     Navi.Event.Types
     Navi.Prelude
-    Navi.Services.Battery.Level
-    Navi.Services.Battery.Level.Toml
-    Navi.Services.Battery.Status
-    Navi.Services.Battery.Status.Toml
+    Navi.Services.Battery.ChargeStatus
+    Navi.Services.Battery.ChargeStatus.Toml
+    Navi.Services.Battery.State
+    Navi.Services.Battery.State.Toml
     Navi.Services.Custom.Multiple
     Navi.Services.Custom.Multiple.Toml
     Navi.Services.Custom.Single

@@ -2,7 +2,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | This module provides toml configuration for the battery level service.
-module Navi.Services.Battery.Level.Toml
+module Navi.Services.Battery.State.Toml
   ( BatteryLevelToml (..),
     BatteryLevelNoteToml (..),
     batteryLevelCodec,

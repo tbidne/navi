@@ -1,5 +1,5 @@
 -- | This module provides a service for alerts related to battery levels.
-module Navi.Services.Battery.Level
+module Navi.Services.Battery.State
   ( BatteryLevelToml,
     BatteryLevelToml.batteryLevelCodec,
     toBatteryLevelEvent,
@@ -13,8 +13,8 @@ import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), ErrorNote, Event (..), RepeatEvent)
 import Navi.Prelude
-import Navi.Services.Battery.Level.Toml (BatteryLevelNoteToml (..), BatteryLevelToml)
-import Navi.Services.Battery.Level.Toml qualified as BatteryLevelToml
+import Navi.Services.Battery.State.Toml (BatteryLevelNoteToml (..), BatteryLevelToml)
+import Navi.Services.Battery.State.Toml qualified as BatteryLevelToml
 import Navi.Services.Types (ServiceType (BatteryState))
 import Optics.Operators ((^.))
 import Smart.Data.Math.BoundedNat (BoundedNat (..))

@@ -1,5 +1,5 @@
 -- | This module provides a service for alerts related to battery statuses.
-module Navi.Services.Battery.Status
+module Navi.Services.Battery.ChargeStatus
   ( BatteryStatusToml,
     BatteryStatusToml.batteryStatusCodec,
     toBatteryStatusEvent,
@@ -18,8 +18,8 @@ import Navi.Event.Types
     RepeatEvent (..),
   )
 import Navi.Prelude
-import Navi.Services.Battery.Status.Toml (BatteryStatusNoteToml (..), BatteryStatusToml)
-import Navi.Services.Battery.Status.Toml qualified as BatteryStatusToml
+import Navi.Services.Battery.ChargeStatus.Toml (BatteryStatusNoteToml (..), BatteryStatusToml)
+import Navi.Services.Battery.ChargeStatus.Toml qualified as BatteryStatusToml
 import Navi.Services.Types (ServiceType (..))
 import Optics.Operators ((^.))
 import System.Info.Services.Battery.ChargeStatus (ChargeStatus (..), Program)

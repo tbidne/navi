@@ -20,8 +20,8 @@ import Navi.Config.Types
   )
 import Navi.Effects (MonadMutRef, MonadShell (..))
 import Navi.Prelude
-import Navi.Services.Battery.Level qualified as BatteryLevel
-import Navi.Services.Battery.Status qualified as BatteryStatus
+import Navi.Services.Battery.ChargeStatus qualified as BatteryStatus
+import Navi.Services.Battery.State qualified as BatteryLevel
 import Navi.Services.Custom.Multiple qualified as Multiple
 import Navi.Services.Custom.Single qualified as Single
 import Navi.Services.Network.Connectivity qualified as NetworkConnectivity

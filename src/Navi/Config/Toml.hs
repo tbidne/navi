@@ -14,8 +14,8 @@ import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Config.Types (LogLoc (..), Logging (..))
 import Navi.Prelude
-import Navi.Services.Battery.Level.Toml as BatteryLevelToml
-import Navi.Services.Battery.Status.Toml as BatteryStatusToml
+import Navi.Services.Battery.ChargeStatus.Toml as BatteryStatusToml
+import Navi.Services.Battery.State.Toml as BatteryLevelToml
 import Navi.Services.Custom.Multiple.Toml as MultipleToml
 import Navi.Services.Custom.Single.Toml as SingleToml
 import Navi.Services.Network.Connectivity.Toml (NetworkConnectivityToml)
