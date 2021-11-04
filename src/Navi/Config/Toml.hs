@@ -9,11 +9,10 @@ module Navi.Config.Toml
   )
 where
 
+import Control.Category ((>>>))
 import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Config.Types (LogLoc (..), Logging (..))
-import Navi.Data.NonNegative (NonNegative)
-import Navi.Data.NonNegative qualified as NonNegative
 import Navi.Prelude
 import Navi.Services.Battery.Level.Toml as BatteryLevelToml
 import Navi.Services.Battery.Status.Toml as BatteryStatusToml
@@ -22,12 +21,22 @@ import Navi.Services.Custom.Single.Toml as SingleToml
 import Navi.Services.Network.Connectivity.Toml (NetworkConnectivityToml)
 import Navi.Services.Network.Connectivity.Toml qualified as NetworkConnectivityToml
 import Optics.TH qualified as O
-import Toml (TomlCodec, (.=))
+import Smart.Data.Math.NonNegative (NonNegative (..))
+import Smart.Data.Math.NonNegative qualified as NN
+import Toml
+  ( AnyValue,
+    BiMap (..),
+    Key,
+    TomlBiMap,
+    TomlBiMapError (..),
+    TomlCodec,
+    (.=),
+  )
 import Toml qualified
 
 -- | 'ConfigToml' holds the data that is defined in the configuration file.
 data ConfigToml = MkConfigToml
-  { pollToml :: NonNegative,
+  { pollToml :: NonNegative Int,
     logToml :: Logging,
     singleToml :: [SingleToml],
     multipleToml :: [MultipleToml],
@@ -41,7 +50,7 @@ data ConfigToml = MkConfigToml
 configCodec :: TomlCodec ConfigToml
 configCodec =
   MkConfigToml
-    <$> NonNegative.nonNegativeCodec "poll-interval" .= pollToml
+    <$> nonNegativeCodec "poll-interval" .= pollToml
     <*> Toml.table logCodec "logging" .= logToml
     <*> Toml.list SingleToml.singleCodec "single" .= singleToml
     <*> Toml.list MultipleToml.multipleCodec "multiple" .= multipleToml
@@ -79,5 +88,20 @@ locationCodec = Toml.textBy showLoc parseLoc "location"
     showLoc (File f) = T.pack f
     parseLoc "stdout" = Right Stdout
     parseLoc f = Right $ File $ T.unpack f
+
+--- | Parses a TOML 'NonNegative'.
+nonNegativeCodec :: Key -> TomlCodec (NonNegative Int)
+nonNegativeCodec = Toml.match _NonNegative
+
+_NonNegative :: TomlBiMap (NonNegative Int) AnyValue
+_NonNegative = _NonNegativeInt >>> Toml._Int
+
+_NonNegativeInt :: TomlBiMap (NonNegative Int) Int
+_NonNegativeInt = BiMap (Right . unNonNegative) parseNN
+  where
+    parseNN =
+      NN.mkNonNegative >.> \case
+        Nothing -> Left $ ArbitraryError "Passed negative to mkNonNegative"
+        Just n -> Right n
 
 O.makeFieldLabelsNoPrefix ''ConfigToml

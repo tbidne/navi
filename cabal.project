@@ -6,3 +6,18 @@ package navi
     -Wincomplete-record-updates -Wincomplete-uni-patterns
     -Wmissing-home-modules -Wmissing-export-lists -Wpartial-fields
     -Wredundant-constraints
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/simple-algebra.git
+    tag: 5dc4a95ffaa8ef53dcf24fed2aec3a16af878a50
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/smart-data.git
+    tag: 71e382392d506869c83bc548edb015c7c7ef4501
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/system-info.git
+    tag: 849110d501a56cf6d87f10e4eb816ee2e0106078

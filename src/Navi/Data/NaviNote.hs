@@ -18,17 +18,17 @@ where
 
 import DBus.Notify (Icon (..), UrgencyLevel (..))
 import Data.Text qualified as T
-import Navi.Data.NonNegative (NonNegative)
-import Navi.Data.NonNegative qualified as NN
 import Navi.Prelude
 import Optics.TH qualified as O
+import Smart.Data.Math.NonNegative (NonNegative)
+import Smart.Data.Math.NonNegative qualified as NN
 import Toml (Key, TomlCodec, (.=))
 import Toml qualified
 
 -- | Determines how long a notification persists.
 data Timeout
   = Never
-  | Seconds NonNegative
+  | Seconds (NonNegative Int)
   deriving (Show)
 
 O.makeFieldLabelsNoPrefix ''Timeout

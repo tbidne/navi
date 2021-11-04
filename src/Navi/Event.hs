@@ -3,7 +3,6 @@ module Navi.Event
   ( -- * Event type
     Event (..),
     AnyEvent (..),
-    Command (..),
     runEvent,
 
     -- * Results
@@ -21,18 +20,16 @@ module Navi.Event
   )
 where
 
-import Control.Exception (Exception (..))
-import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Effects (MonadLogger (..), MonadMutRef (..), MonadShell (..))
 import Navi.Event.Types
   ( AnyEvent (..),
-    Command (..),
     ErrorNote (..),
     Event (..),
     EventErr (..),
     RepeatEvent (..),
   )
+import Navi.Event.Types qualified as ETypes
 import Navi.Prelude
 import Optics.Operators ((^.))
 
@@ -43,24 +40,14 @@ import Optics.Operators ((^.))
 runEvent ::
   ( MonadLogger m,
     MonadShell m,
-    Show a
+    Show result
   ) =>
-  Event ref a ->
-  m (Either EventErr a)
+  Event ref result ->
+  m (Either EventErr result)
 runEvent event = addNamespace "Run Event" $ do
-  eResultStr <- execSh $ event ^. #command
-  logEvent event DebugS $ "Shell returned: " <> showt eResultStr
-  case eResultStr of
-    Left ex -> do
-      let exStr = T.pack $ displayException ex
-      logEvent event ErrorS $ "Exception: " <> exStr
-      pure $ Left $ MkEventErr name "Exception" exStr
-    Right resultStr -> do
-      let parsed = event ^. #parser $ resultStr
-      logEvent event DebugS $ "Parsed: " <> showt parsed
-      pure parsed
-  where
-    name = event ^. #name
+  eResult <- execSh $ event ^. #serviceType
+  logEvent event DebugS $ "Shell returned: " <> showt eResult
+  pure $ first ETypes.fromQueryError eResult
 
 -- | Determines if we should block the event. The semantics are:
 --

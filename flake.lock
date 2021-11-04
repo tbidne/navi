@@ -33,7 +33,88 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "simple-algebra-src": "simple-algebra-src",
+        "smart-data-src": "smart-data-src",
+        "system-info-src": "system-info-src"
+      }
+    },
+    "simple-algebra-src": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1635726528,
+        "narHash": "sha256-2I6xR2icoaxaoWNQ4E/6UwiDiFiHdo1yshFoUT1z63s=",
+        "owner": "tbidne",
+        "repo": "simple-algebra",
+        "rev": "5dc4a95ffaa8ef53dcf24fed2aec3a16af878a50",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tbidne",
+        "repo": "simple-algebra",
+        "type": "github"
+      }
+    },
+    "smart-data-src": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "simple-algebra-src": [
+          "simple-algebra-src"
+        ]
+      },
+      "locked": {
+        "lastModified": 1635726587,
+        "narHash": "sha256-zGuBukgHwfgN7fblrKjT6PtUxZ9rLjiGUCv8CDnHcKo=",
+        "owner": "tbidne",
+        "repo": "smart-data",
+        "rev": "71e382392d506869c83bc548edb015c7c7ef4501",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tbidne",
+        "repo": "smart-data",
+        "type": "github"
+      }
+    },
+    "system-info-src": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "simple-algebra-src": [
+          "simple-algebra-src"
+        ],
+        "smart-data-src": [
+          "smart-data-src"
+        ]
+      },
+      "locked": {
+        "lastModified": 1635987603,
+        "narHash": "sha256-KCN0lKsaBAErVPEg9jYRRRb/S1/GOCLS1SFYh+khQrg=",
+        "owner": "tbidne",
+        "repo": "system-info",
+        "rev": "849110d501a56cf6d87f10e4eb816ee2e0106078",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tbidne",
+        "repo": "system-info",
+        "type": "github"
       }
     }
   },

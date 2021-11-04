@@ -6,31 +6,34 @@ module Navi.Services.Battery.Level
   )
 where
 
-import Navi.Data.BoundedN qualified as BoundedN
+import Data.Map (Map)
+import Data.Map qualified as Map
 import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
-import Navi.Event.Types (AnyEvent (..))
+import Navi.Event.Types (AnyEvent (..), ErrorNote, Event (..), RepeatEvent)
 import Navi.Prelude
-import Navi.Services.Battery.Level.Event qualified as BatteryLevelEvent
-import Navi.Services.Battery.Level.Toml (BatteryLevelNoteToml (..), BatteryLevelToml (..))
+import Navi.Services.Battery.Level.Toml (BatteryLevelNoteToml (..), BatteryLevelToml)
 import Navi.Services.Battery.Level.Toml qualified as BatteryLevelToml
-import Navi.Services.Battery.Types (BatteryLevel)
+import Navi.Services.Types (ServiceType (BatteryState))
 import Optics.Operators ((^.))
+import Smart.Data.Math.BoundedNat (BoundedNat (..))
+import System.Info.Services.Battery.State (BatteryLevel, ChargeStatus (..), Program)
+import System.Info.Services.Battery.Types (BatteryState)
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toBatteryLevelEvent :: (MonadMutRef m ref) => BatteryLevelToml -> m (AnyEvent ref)
 toBatteryLevelEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
-  let evt = BatteryLevelEvent.mkBatteryEvent lvlNoteList batteryType repeatEvt errorNote
+  let evt = mkBatteryEvent lvlNoteList program repeatEvt errorNote
   pure $ MkAnyEvent evt
   where
-    lvlNoteList = toNote <$> toml ^. #alerts
-    batteryType = toml ^. #batteryType
+    lvlNoteList = tomlToNote <$> toml ^. #alerts
+    program = toml ^. #program
 
-toNote :: BatteryLevelNoteToml -> (BatteryLevel, NaviNote)
-toNote toml =
+tomlToNote :: BatteryLevelNoteToml -> (BatteryLevel, NaviNote)
+tomlToNote toml =
   ( level,
     MkNaviNote
       summary
@@ -45,5 +48,27 @@ toNote toml =
     body =
       Just $
         "Power is less than "
-          <> showt (BoundedN.unBoundedN level)
+          <> showt (unBoundedNat level)
           <> "%"
+
+mkBatteryEvent ::
+  [(BatteryLevel, NaviNote)] ->
+  Program ->
+  RepeatEvent ref BatteryState ->
+  ErrorNote ref ->
+  Event ref BatteryState
+mkBatteryEvent lvlNoteList batteryProgram re en =
+  MkEvent
+    { name = "Battery",
+      serviceType = BatteryState batteryProgram,
+      raiseAlert = lookupLevel lvlNoteMap,
+      repeatEvent = re,
+      errorNote = en
+    }
+  where
+    lvlNoteMap = Map.fromList lvlNoteList
+
+lookupLevel :: Map BatteryLevel NaviNote -> BatteryState -> Maybe NaviNote
+lookupLevel lvlNoteMap state = case state ^. #status of
+  Discharging -> Map.lookup (state ^. #level) lvlNoteMap
+  _ -> Nothing

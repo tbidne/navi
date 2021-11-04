@@ -1,7 +1,6 @@
 -- | This modules provides toml configuration related to events.
 module Navi.Event.Toml
-  ( commandCodec,
-    RepeatEvtToml (..),
+  ( RepeatEvtToml (..),
     repeatEvtCodec,
     repeatEvtTomlToVal,
     mRepeatEvtTomlToVal,
@@ -12,9 +11,8 @@ module Navi.Event.Toml
   )
 where
 
-import Data.Text qualified as T
-import Navi.Effects (MonadMutRef (..))
-import Navi.Event.Types (Command (..), ErrorNote (..), RepeatEvent (..))
+import Navi.Effects.MonadMutRef (MonadMutRef (..))
+import Navi.Event.Types (ErrorNote (..), RepeatEvent (..))
 import Navi.Prelude
 import Toml (TomlCodec)
 import Toml qualified
@@ -25,10 +23,6 @@ data EventConfig = MkEventConfig
     errEvt :: Maybe ErrorNoteToml
   }
   deriving (Show)
-
--- | Codec for 'Command'.
-commandCodec :: TomlCodec Command
-commandCodec = Toml.textBy (T.pack . show) (Right . MkCommand) "command"
 
 -- | TOML for 'RepeatEvent'.
 data RepeatEvtToml

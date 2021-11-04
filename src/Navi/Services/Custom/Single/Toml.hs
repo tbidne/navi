@@ -5,12 +5,13 @@ module Navi.Services.Custom.Single.Toml
   )
 where
 
+import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.NaviNote qualified as NaviNote
-import Navi.Event (Command (..))
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Prelude
+import System.Info.Data (Command (..))
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
@@ -33,8 +34,11 @@ data SingleToml = MkSingleToml
 singleCodec :: TomlCodec SingleToml
 singleCodec =
   MkSingleToml
-    <$> EventToml.commandCodec .= command
+    <$> commandCodec .= command
       <*> Toml.text "trigger" .= triggerVal
       <*> Toml.table NaviNote.naviNoteCodec "note" .= note
       <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvtCfg
       <*> Toml.dioptional EventToml.errorNoteCodec .= errEvtCfg
+
+commandCodec :: TomlCodec Command
+commandCodec = Toml.textBy (T.pack . show) (Right . MkCommand) "command"

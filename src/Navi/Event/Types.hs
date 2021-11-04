@@ -4,27 +4,22 @@
 
 -- | This module provides types for defining notification events.
 module Navi.Event.Types
-  ( Command (..),
-    Event (..),
+  ( Event (..),
+    AnyEvent (..),
     RepeatEvent (..),
     ErrorNote (..),
     EventErr (..),
-    AnyEvent (..),
+    fromQueryError,
   )
 where
 
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Prelude
+import Navi.Services.Types (ServiceType)
 import Optics.Operators ((^.))
 import Optics.TH qualified as O
-
--- | Represents the shell command that we run to query for our event
--- status.
-newtype Command = MkCommand {getCommand :: Text}
-  deriving (Show)
-
-O.makeFieldLabelsNoPrefix ''Command
+import System.Info.Data (QueryError ())
 
 -- | Determines if we are allowed to send off duplicate notifications
 -- simultaneously. If we are not, then 'NoRepeats' holds the last trigger
@@ -66,29 +61,25 @@ O.makeFieldLabelsNoPrefix ''EventErr
 -- 1. Query for information (i.e., run a shell command).
 -- 2. Parse the result.
 -- 3. Raise an alert if the result matches some condition.
-data Event ref a = MkEvent
+data Event ref result = MkEvent
   { -- | The name of this event.
     name :: Text,
-    -- | The shell command to run.
-    command :: Command,
-    -- | Parses the command result.
-    parser :: Text -> Either EventErr a,
+    -- | The service to run.
+    serviceType :: ServiceType result,
     -- | Conditionally raises an alert based on the result.
-    raiseAlert :: a -> Maybe NaviNote,
+    raiseAlert :: result -> Maybe NaviNote,
     -- | Determines how we handle repeat alerts.
-    repeatEvent :: RepeatEvent ref a,
+    repeatEvent :: RepeatEvent ref result,
     -- | Determines how we handle errors.
     errorNote :: ErrorNote ref
   }
 
 O.makeFieldLabelsNoPrefix ''Event
 
-instance Show (Event ref a) where
+instance Show (Event ref result) where
   show event =
     "MkEvent {name = "
       <> T.unpack (event ^. #name)
-      <> ", command = "
-      <> show (event ^. #command)
       <> ", parser = <func>, raiseAlert = <func>, repeatEvent = "
       <> show (event ^. #repeatEvent)
       <> ", errorNote = "
@@ -99,8 +90,17 @@ instance Show (Event ref a) where
 -- store different events in the same list.
 type AnyEvent :: (Type -> Type) -> Type
 data AnyEvent ref where
-  MkAnyEvent :: (Eq a, Show a) => Event ref a -> AnyEvent ref
+  MkAnyEvent :: (Eq result, Show result) => Event ref result -> AnyEvent ref
 
 deriving instance Show (AnyEvent ref)
 
 O.makeFieldLabelsNoPrefix ''AnyEvent
+
+-- | Maps 'QueryError' to 'EventErr'.
+fromQueryError :: QueryError -> EventErr
+fromQueryError qe =
+  MkEventErr
+    { name = qe ^. #name,
+      short = qe ^. #short,
+      long = qe ^. #long
+    }

@@ -11,9 +11,9 @@ import DBus.Notify (Note (..))
 import DBus.Notify qualified as DBusN
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
-import Navi.Data.NonNegative (NonNegative (..))
 import Navi.Prelude
 import Optics.Operators ((^.))
+import Smart.Data.Math.NonNegative (NonNegative (..))
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified
 

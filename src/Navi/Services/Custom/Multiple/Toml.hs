@@ -6,12 +6,13 @@ module Navi.Services.Custom.Multiple.Toml
   )
 where
 
+import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.NaviNote qualified as NaviNote
-import Navi.Event (Command (..))
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Prelude
+import System.Info.Data (Command (..))
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
@@ -19,7 +20,7 @@ import Toml qualified
 multipleCodec :: TomlCodec MultipleToml
 multipleCodec =
   MkMultipleToml
-    <$> EventToml.commandCodec .= command
+    <$> commandCodec .= command
     <*> triggerNotesCodec .= triggerNotes
     <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvtCfg
     <*> Toml.dioptional EventToml.errorNoteCodec .= errEvtCfg
@@ -56,3 +57,6 @@ triggerNoteCodec =
     <*> Toml.table NaviNote.naviNoteCodec "note" .= note
   where
     triggerCodec = Toml.text "trigger"
+
+commandCodec :: TomlCodec Command
+commandCodec = Toml.textBy (T.pack . show) (Right . MkCommand) "command"
