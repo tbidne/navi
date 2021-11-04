@@ -65,6 +65,7 @@ library
     Navi.Effects.MonadMutRef
     Navi.Effects.MonadNotify
     Navi.Effects.MonadShell
+    Navi.Effects.MonadSystemInfo
     Navi.Env
     Navi.Event
     Navi.Event.Toml

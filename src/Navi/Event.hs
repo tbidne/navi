@@ -21,7 +21,7 @@ module Navi.Event
 where
 
 import Katip (Severity (..))
-import Navi.Effects (MonadLogger (..), MonadMutRef (..), MonadShell (..))
+import Navi.Effects (MonadLogger (..), MonadMutRef (..), MonadSystemInfo (..))
 import Navi.Event.Types
   ( AnyEvent (..),
     ErrorNote (..),
@@ -39,13 +39,13 @@ import Optics.Operators ((^.))
 -- 2. Returns the parsed result.
 runEvent ::
   ( MonadLogger m,
-    MonadShell m,
+    MonadSystemInfo m,
     Show result
   ) =>
   Event ref result ->
   m (Either EventErr result)
 runEvent event = addNamespace "Run Event" $ do
-  eResult <- execSh $ event ^. #serviceType
+  eResult <- query $ event ^. #serviceType
   logEvent event DebugS $ "Shell returned: " <> showt eResult
   pure $ first ETypes.fromQueryError eResult
 

@@ -18,6 +18,7 @@ import Navi.Effects.MonadLogger (MonadLogger (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadShell (MonadShell (..))
+import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env
   ( HasClient (..),
     HasEvents (..),
@@ -41,7 +42,8 @@ newtype NaviT e m a = MkNaviT {runNaviT :: ReaderT e m a}
       MonadIO,
       MonadNotify,
       MonadShell,
-      MonadReader e
+      MonadReader e,
+      MonadSystemInfo
     )
     via (ReaderT e m)
   deriving (MonadTrans) via (ReaderT e)
@@ -98,6 +100,7 @@ runNavi ::
     MonadMutRef m ref,
     MonadNotify m,
     MonadShell m,
+    MonadSystemInfo m,
     MonadReader env m
   ) =>
   m Void
@@ -114,7 +117,7 @@ processEvent ::
   ( MonadLogger m,
     MonadMutRef m ref,
     MonadNotify m,
-    MonadShell m
+    MonadSystemInfo m
   ) =>
   Client ->
   AnyEvent ref ->
