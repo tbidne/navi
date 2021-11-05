@@ -20,11 +20,11 @@ import Navi.Config.Types
   )
 import Navi.Effects (MonadMutRef, MonadShell (..))
 import Navi.Prelude
-import Navi.Services.Battery.ChargeStatus qualified as BatteryStatus
-import Navi.Services.Battery.State qualified as BatteryLevel
+import Navi.Services.Battery.ChargeStatus qualified as BattChargeStatus
+import Navi.Services.Battery.State qualified as BattState
 import Navi.Services.Custom.Multiple qualified as Multiple
 import Navi.Services.Custom.Single qualified as Single
-import Navi.Services.Network.Connectivity qualified as NetworkConnectivity
+import Navi.Services.Network.Connectivity qualified as NetConn
 import Optics.Operators ((^.))
 import Toml qualified
 
@@ -45,18 +45,11 @@ readConfig path = do
 
 tomlToConfig :: (MonadMutRef m ref) => ConfigToml -> m (Maybe (Config ref))
 tomlToConfig toml = do
-  singleEvents <-
-    traverse Single.toSingleEvent singleToml
-  multipleEvents <-
-    traverse Multiple.toMultipleEvent multipleToml
-  mBatteryLevelEvt <-
-    traverse BatteryLevel.toBatteryLevelEvent batteryLevelToml
-  mBatteryStatusEvt <-
-    traverse BatteryStatus.toBatteryStatusEvent batteryStatusToml
-  mNetworkConnectivityEvt <-
-    traverse
-      NetworkConnectivity.toNetworkConnectivityEvent
-      networkConnectivityToml
+  singleEvents <- traverse Single.toEvent singleToml
+  multipleEvents <- traverse Multiple.toEvent multipleToml
+  mBatteryLevelEvt <- traverse BattState.toEvent batteryStateToml
+  mBatteryStatusEvt <- traverse BattChargeStatus.toEvent batteryStatusToml
+  mNetworkConnectivityEvt <- traverse NetConn.toEvent netConnToml
   let multipleEvts =
         singleEvents
           <> multipleEvents
@@ -83,6 +76,6 @@ tomlToConfig toml = do
     logToml = toml ^. #logToml
     singleToml = toml ^. #singleToml
     multipleToml = toml ^. #multipleToml
-    batteryLevelToml = toml ^. #batteryLevelToml
-    batteryStatusToml = toml ^. #batteryStatusToml
-    networkConnectivityToml = toml ^. #networkConnectivityToml
+    batteryStateToml = toml ^. #batteryStateToml
+    batteryStatusToml = toml ^. #batteryChargeStatusToml
+    netConnToml = toml ^. #networkConnectivityToml

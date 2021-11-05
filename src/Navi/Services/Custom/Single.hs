@@ -2,7 +2,7 @@
 module Navi.Services.Custom.Single
   ( SingleToml,
     SingleToml.singleCodec,
-    toSingleEvent,
+    toEvent,
   )
 where
 
@@ -22,8 +22,8 @@ import Navi.Services.Types (ServiceType (..))
 import System.Info.Data (Command)
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
-toSingleEvent :: (MonadMutRef m ref) => SingleToml -> m (AnyEvent ref)
-toSingleEvent
+toEvent :: (MonadMutRef m ref) => SingleToml -> m (AnyEvent ref)
+toEvent
   MkSingleToml
     { command,
       triggerVal,

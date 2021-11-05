@@ -2,7 +2,7 @@
 module Navi.Services.Custom.Multiple
   ( MultipleToml,
     MultipleToml.multipleCodec,
-    toMultipleEvent,
+    toEvent,
   )
 where
 
@@ -23,8 +23,8 @@ import Navi.Services.Types (ServiceType (..))
 import System.Info.Data (Command)
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
-toMultipleEvent :: (MonadMutRef m ref) => MultipleToml -> m (AnyEvent ref)
-toMultipleEvent
+toEvent :: (MonadMutRef m ref) => MultipleToml -> m (AnyEvent ref)
+toEvent
   MkMultipleToml
     { command,
       triggerNotes,

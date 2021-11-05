@@ -35,7 +35,7 @@ import Optics.Operators ((^.))
 
 -- | Runs an event, i.e.,
 --
--- 1. Queries the system via 'execSh'.
+-- 1. Queries the system via 'MonadSystemInfo'.
 -- 2. Returns the parsed result.
 runEvent ::
   ( MonadLogger m,

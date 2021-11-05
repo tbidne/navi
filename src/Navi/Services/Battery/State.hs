@@ -1,8 +1,8 @@
 -- | This module provides a service for alerts related to battery levels.
 module Navi.Services.Battery.State
-  ( BatteryLevelToml,
-    BatteryLevelToml.batteryLevelCodec,
-    toBatteryLevelEvent,
+  ( BatteryStateToml,
+    BatteryStateToml.batteryStateCodec,
+    toEvent,
   )
 where
 
@@ -13,8 +13,8 @@ import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), ErrorNote, Event (..), RepeatEvent)
 import Navi.Prelude
-import Navi.Services.Battery.State.Toml (BatteryLevelNoteToml (..), BatteryLevelToml)
-import Navi.Services.Battery.State.Toml qualified as BatteryLevelToml
+import Navi.Services.Battery.State.Toml (BatteryStateNoteToml (..), BatteryStateToml)
+import Navi.Services.Battery.State.Toml qualified as BatteryStateToml
 import Navi.Services.Types (ServiceType (BatteryState))
 import Optics.Operators ((^.))
 import Smart.Data.Math.BoundedNat (BoundedNat (..))
@@ -22,8 +22,8 @@ import System.Info.Services.Battery.State (BatteryLevel, ChargeStatus (..), Prog
 import System.Info.Services.Battery.Types (BatteryState)
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
-toBatteryLevelEvent :: (MonadMutRef m ref) => BatteryLevelToml -> m (AnyEvent ref)
-toBatteryLevelEvent toml = do
+toEvent :: (MonadMutRef m ref) => BatteryStateToml -> m (AnyEvent ref)
+toEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
   let evt = mkBatteryEvent lvlNoteList program repeatEvt errorNote
@@ -32,19 +32,18 @@ toBatteryLevelEvent toml = do
     lvlNoteList = tomlToNote <$> toml ^. #alerts
     program = toml ^. #program
 
-tomlToNote :: BatteryLevelNoteToml -> (BatteryLevel, NaviNote)
+tomlToNote :: BatteryStateNoteToml -> (BatteryLevel, NaviNote)
 tomlToNote toml =
   ( level,
     MkNaviNote
       summary
       body
-      (toml ^. #mIcon)
       (toml ^. #urgency)
       (toml ^. #mTimeout)
   )
   where
     level = toml ^. #level
-    summary = "Battery"
+    summary = "Battery State"
     body =
       Just $
         "Power is less than "

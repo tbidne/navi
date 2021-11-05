@@ -145,6 +145,7 @@ processEvent client (MkAnyEvent event) = Event.runEvent event >>= handleResult
           if blocked
             then logText DebugS $ mkLog "Alert blocked" result
             else do
+              logText InfoS $ mkLog "Sending note" note
               logText InfoS $ mkLog "Sending alert" result
               Event.updatePrevTrigger repeatEvent result
               sendNote client note
@@ -156,7 +157,6 @@ serviceErrToNote eventErr =
   MkNaviNote
     { summary = "Event Error",
       body = Just $ name <> ": " <> short,
-      image = Nothing,
       urgency = Just Critical,
       timeout = Nothing
     }

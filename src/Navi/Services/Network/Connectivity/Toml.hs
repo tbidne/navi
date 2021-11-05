@@ -10,7 +10,6 @@ module Navi.Services.Network.Connectivity.Toml
   )
 where
 
-import DBus.Notify (Icon)
 import Navi.Data.NaviNote (Timeout)
 import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
@@ -39,15 +38,13 @@ data NetworkConnectivityToml = MkNetworkConnectivityToml
     -- | Determines how we handle errors.
     errorNote :: Maybe ErrorNoteToml,
     -- | The timeout for this alert.
-    mTimeout :: Maybe Timeout,
-    -- | The image.
-    mImage :: Maybe Icon
+    mTimeout :: Maybe Timeout
   }
   deriving (Show)
 
 O.makeFieldLabelsNoPrefix ''NetworkConnectivityToml
 
--- | Codec for 'BatteryStatusToml'.
+-- | Codec for 'BatteryChargeStatusToml'.
 networkConnectivityCodec :: TomlCodec NetworkConnectivityToml
 networkConnectivityCodec =
   MkNetworkConnectivityToml
@@ -56,7 +53,6 @@ networkConnectivityCodec =
     <*> Toml.dioptional EToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EToml.errorNoteCodec .= errorNote
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
-    <*> Toml.dioptional (NaviNote.appImageKeyCodec "image") .= mImage
 
 programTomlCodec :: TomlCodec ProgramToml
 programTomlCodec =

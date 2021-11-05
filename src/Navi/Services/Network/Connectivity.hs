@@ -1,6 +1,6 @@
 -- | This module provides a service for network connectivity.
 module Navi.Services.Network.Connectivity
-  ( toNetworkConnectivityEvent,
+  ( toEvent,
   )
 where
 
@@ -15,11 +15,11 @@ import Optics.Core ((%), (^.))
 import System.Info.Services.Network.Connection (ConnState (..), Connection, Device (..), Program (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
-toNetworkConnectivityEvent ::
+toEvent ::
   (MonadMutRef m ref) =>
   NetworkConnectivityToml ->
   m (AnyEvent ref)
-toNetworkConnectivityEvent toml = do
+toEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
   pure $
@@ -44,8 +44,7 @@ toNote noteToml conn =
       { summary = "Network Connectivity",
         body = Just body,
         urgency = Nothing,
-        timeout = noteToml ^. #mTimeout,
-        image = noteToml ^. #mImage
+        timeout = noteToml ^. #mTimeout
       }
   where
     deviceTxt = conn ^. (#device % #unDevice)

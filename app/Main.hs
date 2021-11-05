@@ -83,6 +83,14 @@ logCtx :: LogContexts
 logCtx = K.liftPayload ()
 
 versionTxt :: Text
-versionTxt = "navi version " <> version
+versionTxt =
+  T.concat
+    [ "Navi",
+      "\nversion: ",
+      version,
+      "\ndate:    ",
+      date
+    ]
   where
     version = "0.1.0.0"
+    date = "2021-11-05"

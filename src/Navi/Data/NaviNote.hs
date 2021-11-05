@@ -8,15 +8,13 @@ module Navi.Data.NaviNote
     naviNoteCodec,
     summaryCodec,
     bodyCodec,
-    appImageCodec,
-    appImageKeyCodec,
     urgencyLevelCodec,
     urgencyLevelKeyCodec,
     timeoutCodec,
   )
 where
 
-import DBus.Notify (Icon (..), UrgencyLevel (..))
+import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
 import Navi.Prelude
 import Optics.TH qualified as O
@@ -39,8 +37,6 @@ data NaviNote = MkNaviNote
     summary :: Text,
     -- | Text body.
     body :: Maybe Text,
-    -- | Notification image.
-    image :: Maybe Icon,
     -- | Urgency (e.g. low, critical)
     urgency :: Maybe UrgencyLevel,
     -- | Determines how long the notification stays on-screen.
@@ -56,7 +52,6 @@ naviNoteCodec =
   MkNaviNote
     <$> summaryCodec .= summary
     <*> Toml.dioptional bodyCodec .= body
-    <*> Toml.dioptional appImageCodec .= image
     <*> Toml.dioptional urgencyLevelCodec .= urgency
     <*> Toml.dioptional timeoutCodec .= timeout
 
@@ -67,21 +62,6 @@ summaryCodec = Toml.text "summary"
 -- | Codec for the 'NaviNote' 'body'.
 bodyCodec :: TomlCodec Text
 bodyCodec = Toml.text "body"
-
--- | Codec for the 'NaviNote' 'image'.
-appImageCodec :: TomlCodec Icon
-appImageCodec = appImageKeyCodec "app-image"
-
--- | Codec for the 'NaviNote' 'image' with a custom 'Key'.
-appImageKeyCodec :: Key -> TomlCodec Icon
-appImageKeyCodec key = appImagePathCodec <|> appImageIconCodec
-  where
-    appImageIconCodec = Toml.dimatch matchIcon Icon $ Toml.string $ key <> "-path"
-    matchIcon (Icon i) = Just i
-    matchIcon _ = Nothing
-    appImagePathCodec = Toml.dimatch matchFile File $ Toml.string $ key <> "-file"
-    matchFile (File p) = Just p
-    matchFile _ = Nothing
 
 -- | Codec for the 'NaviNote' 'urgency'.
 urgencyLevelCodec :: TomlCodec UrgencyLevel

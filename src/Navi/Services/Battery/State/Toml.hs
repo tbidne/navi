@@ -3,14 +3,14 @@
 
 -- | This module provides toml configuration for the battery level service.
 module Navi.Services.Battery.State.Toml
-  ( BatteryLevelToml (..),
-    BatteryLevelNoteToml (..),
-    batteryLevelCodec,
+  ( BatteryStateToml (..),
+    BatteryStateNoteToml (..),
+    batteryStateCodec,
   )
 where
 
 import Control.Category ((>>>))
-import DBus.Notify (Icon, UrgencyLevel)
+import DBus.Notify (UrgencyLevel)
 import GHC.TypeNats (KnownNat)
 import Navi.Data.NaviNote (Timeout)
 import Navi.Data.NaviNote qualified as NaviNote
@@ -32,24 +32,22 @@ import Toml
 import Toml qualified
 
 -- | TOML for each individual battery level.
-data BatteryLevelNoteToml = MkBatteryLevelNoteToml
+data BatteryStateNoteToml = MkBatteryStateNoteToml
   { -- | The level for this alert.
     level :: BatteryLevel,
     -- | The urgency for this alert.
     urgency :: Maybe UrgencyLevel,
-    -- | The image for this alert.
-    mIcon :: Maybe Icon,
     -- | The timeout for this alert.
     mTimeout :: Maybe Timeout
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''BatteryLevelNoteToml
+O.makeFieldLabelsNoPrefix ''BatteryStateNoteToml
 
 -- | TOML for the battery level service.
-data BatteryLevelToml = MkBatteryLevelToml
+data BatteryStateToml = MkBatteryStateToml
   { -- | All alerts for this service.
-    alerts :: [BatteryLevelNoteToml],
+    alerts :: [BatteryStateNoteToml],
     -- | Determines how we treat repeat alerts.
     repeatEvent :: Maybe RepeatEvtToml,
     -- | Determines how we handle errors.
@@ -59,23 +57,22 @@ data BatteryLevelToml = MkBatteryLevelToml
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''BatteryLevelToml
+O.makeFieldLabelsNoPrefix ''BatteryStateToml
 
--- | Codec for 'BatteryLevelToml'.
-batteryLevelCodec :: TomlCodec BatteryLevelToml
-batteryLevelCodec =
-  MkBatteryLevelToml
+-- | Codec for 'BatteryStateToml'.
+batteryStateCodec :: TomlCodec BatteryStateToml
+batteryStateCodec =
+  MkBatteryStateToml
     <$> Toml.list batteryLevelNoteTomlCodec "alert" .= alerts
     <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EventToml.errorNoteCodec .= errorNote
     <*> programCodec .= program
 
-batteryLevelNoteTomlCodec :: TomlCodec BatteryLevelNoteToml
+batteryLevelNoteTomlCodec :: TomlCodec BatteryStateNoteToml
 batteryLevelNoteTomlCodec =
-  MkBatteryLevelNoteToml
+  MkBatteryStateNoteToml
     <$> levelCodec .= level
     <*> Toml.dioptional NaviNote.urgencyLevelCodec .= urgency
-    <*> Toml.dioptional NaviNote.appImageCodec .= mIcon
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
 
 programCodec :: TomlCodec Program

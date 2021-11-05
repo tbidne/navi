@@ -14,12 +14,12 @@ import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Config.Types (LogLoc (..), Logging (..))
 import Navi.Prelude
-import Navi.Services.Battery.ChargeStatus.Toml as BatteryStatusToml
-import Navi.Services.Battery.State.Toml as BatteryLevelToml
+import Navi.Services.Battery.ChargeStatus.Toml as BChargeStatusToml
+import Navi.Services.Battery.State.Toml as BStateToml
 import Navi.Services.Custom.Multiple.Toml as MultipleToml
 import Navi.Services.Custom.Single.Toml as SingleToml
 import Navi.Services.Network.Connectivity.Toml (NetworkConnectivityToml)
-import Navi.Services.Network.Connectivity.Toml qualified as NetworkConnectivityToml
+import Navi.Services.Network.Connectivity.Toml qualified as NetConnToml
 import Optics.TH qualified as O
 import Smart.Data.Math.NonNegative (NonNegative (..))
 import Smart.Data.Math.NonNegative qualified as NN
@@ -40,8 +40,8 @@ data ConfigToml = MkConfigToml
     logToml :: Logging,
     singleToml :: [SingleToml],
     multipleToml :: [MultipleToml],
-    batteryLevelToml :: Maybe BatteryLevelToml,
-    batteryStatusToml :: Maybe BatteryStatusToml,
+    batteryStateToml :: Maybe BatteryStateToml,
+    batteryChargeStatusToml :: Maybe BatteryChargeStatusToml,
     networkConnectivityToml :: [NetworkConnectivityToml]
   }
   deriving (Show)
@@ -54,9 +54,9 @@ configCodec =
     <*> Toml.table logCodec "logging" .= logToml
     <*> Toml.list SingleToml.singleCodec "single" .= singleToml
     <*> Toml.list MultipleToml.multipleCodec "multiple" .= multipleToml
-    <*> Toml.dioptional (Toml.table BatteryLevelToml.batteryLevelCodec "battery-state") .= batteryLevelToml
-    <*> Toml.dioptional (Toml.table BatteryStatusToml.batteryStatusCodec "battery-charging") .= batteryStatusToml
-    <*> Toml.list NetworkConnectivityToml.networkConnectivityCodec "network-connectivity" .= networkConnectivityToml
+    <*> Toml.dioptional (Toml.table BStateToml.batteryStateCodec "battery-state") .= batteryStateToml
+    <*> Toml.dioptional (Toml.table BChargeStatusToml.batteryChargeStatusCodec "battery-charging") .= batteryChargeStatusToml
+    <*> Toml.list NetConnToml.networkConnectivityCodec "network-connectivity" .= networkConnectivityToml
 
 logCodec :: TomlCodec Logging
 logCodec =

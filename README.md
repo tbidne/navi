@@ -105,8 +105,6 @@ The full list of notification options are:
 
 * `summary`: Text summary.
 * `body`: (Optional). Text body.
-* `app-image-file`: (Optional). Path to image file.
-* `app-image-path`: (Optional). Path to image file.
 * `urgency`: (Optional). One of `[low|normal|critical]`.
 * `timeout`: (Optional). One of `[never|<seconds>]`. Determines how long notifications persist. Defaults to 10 seconds.
 
@@ -170,8 +168,6 @@ This service sends notifications based on the current battery level when it is d
 * `battery-state.repeat-events`
 * `battery-state.error-events`
 * `battery-state.alert.urgency`
-* `battery-state.alert.app-image-file`
-* `battery-state.alert.app-image-path`
 * `battery-state.alert.timeout`
 
 Example:
@@ -209,8 +205,6 @@ This service sends notifications based on the network connectivity for given dev
 * `network-connectivity.repeat-events`
 * `network-connectivity.error-events`
 * `network-connectivity.alert.urgency`
-* `network-connectivity.alert.app-image-file`
-* `network-connectivity.alert.app-image-path`
 * `network-connectivity.alert.timeout`
 
 
@@ -241,8 +235,6 @@ This service allows one to create a single notification based on an arbitrary co
 * `single.error-events`
 * `single.note.summary`
 * `single.note.body`
-* `single.note.app-image-file`
-* `single.note.app-image-path`
 * `single.note.urgency`
 * `single.note.timeout`
 
@@ -283,8 +275,6 @@ This service allows one to create multiple notifications based on an arbitrary c
 * `multiple.error-events`
 * `multiple.trigger-note.summary`
 * `multiple.trigger-note.body`
-* `multiple.trigger-note.app-image-file`
-* `multiple.trigger-note.app-image-path`
 * `multiple.trigger-note.urgency`
 * `multiple.trigger-note.timeout`
 
