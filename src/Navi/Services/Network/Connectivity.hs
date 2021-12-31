@@ -12,7 +12,7 @@ import Navi.Prelude
 import Navi.Services.Network.Connectivity.Toml (NetworkConnectivityToml, ProgramToml (..))
 import Navi.Services.Types (ServiceType (..))
 import Optics.Core ((%), (^.))
-import System.Info.Services.Network.Connection (ConnState (..), Connection, Device (..), Program (..))
+import Pythia.Services.Network.Connection (ConnState (..), Connection, Device (..), NetConnApp (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
@@ -34,8 +34,8 @@ toEvent toml = do
   where
     device = MkDevice $ toml ^. #deviceName
     cmd = NetworkConnection $ case toml ^. #programToml of
-      NetworkManagerToml -> NetworkManager device
-      CustomToml t -> Custom device t
+      NetworkManagerToml -> NetConNmCli device
+      CustomToml t -> NetConCustom device t
 
 toNote :: NetworkConnectivityToml -> Connection -> Maybe NaviNote
 toNote noteToml conn =
@@ -47,10 +47,10 @@ toNote noteToml conn =
         timeout = noteToml ^. #mTimeout
       }
   where
-    deviceTxt = conn ^. (#device % #unDevice)
-    nameTxt = fromMaybe "Unknown" $ conn ^. #name
+    deviceTxt = conn ^. (#connDevice % #unDevice)
+    nameTxt = fromMaybe "Unknown" $ conn ^. #connName
     body = "Device " <> deviceTxt <> stateTxt
-    stateTxt = case conn ^. #state of
+    stateTxt = case conn ^. #connState of
       Connected -> " is connected to: " <> nameTxt
       Disconnected -> " is disconnected from: " <> nameTxt
       Unavailable -> " is unavailable"

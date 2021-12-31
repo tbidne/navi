@@ -1,32 +1,28 @@
 {
   description = "navi flake";
-  inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.nixpkgs.url = "nixpkgs/nixos-unstable";
-  inputs.simple-algebra-src = {
-    url = "github:tbidne/simple-algebra";
-    inputs.flake-utils.follows = "flake-utils";
-    inputs.nixpkgs.follows = "nixpkgs";
-  };
-  inputs.smart-data-src = {
-    url = "github:tbidne/smart-data";
-    inputs.flake-utils.follows = "flake-utils";
-    inputs.nixpkgs.follows = "nixpkgs";
-    inputs.simple-algebra-src.follows = "simple-algebra-src";
-  };
-  inputs.system-info-src = {
-    url = "github:tbidne/system-info";
-    inputs.flake-utils.follows = "flake-utils";
-    inputs.nixpkgs.follows = "nixpkgs";
-    inputs.simple-algebra-src.follows = "simple-algebra-src";
-    inputs.smart-data-src.follows = "smart-data-src";
+  inputs = {
+    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    pythia-src = {
+      url = "github:tbidne/pythia";
+      inputs.flake-utils.follows = "flake-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.refined-extras-src.follows = "refined-extras-src";
+      inputs.refined-extras-src.inputs.flake-utils.follows = "flake-utils";
+      inputs.refined-extras-src.inputs.nixpkgs.follows = "nixpkgs";
+    };
+    refined-extras-src = {
+      url = "github:tbidne/refined-extras";
+      inputs.flake-utils.follows = "flake-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
   outputs =
     { flake-utils
     , nixpkgs
+    , pythia-src
+    , refined-extras-src
     , self
-    , simple-algebra-src
-    , smart-data-src
-    , system-info-src
     }:
     flake-utils.lib.eachSystem [ "x86_64-linux" "x86_64-darwin" ] (system:
     let
@@ -54,18 +50,18 @@
           overrides = final: prev: with pkgs.haskellPackages;
             let
               optics-core = callHackage "optics-core" "0.4" { };
-              smart-data = final.callCabal2nix "smart-data" smart-data-src {
-                simple-algebra =
-                  final.callCabal2nix "simple-algebra" simple-algebra-src { };
-              };
-            in
-            {
-              optics-core = optics-core;
               optics-th = callHackage "optics-th" "0.4"
                 { inherit optics-core; };
-              smart-data = smart-data;
-              system-info = final.callCabal2nix "system-info" system-info-src
-                { inherit smart-data; };
+              pythia = final.callCabal2nix "pythia" pythia-src
+                { inherit refined-extras; };
+              refined-extras =
+                final.callCabal2nix "refined-extras" refined-extras-src { };
+            in
+            {
+              inherit
+                optics-core
+                optics-th
+                pythia;
             };
         };
     in

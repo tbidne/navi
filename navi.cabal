@@ -50,6 +50,7 @@ common common-exts
     StandaloneKindSignatures
     TypeApplications
     TypeFamilyDependencies
+    TypeOperators
 
 library
   import:           common-exts
@@ -83,12 +84,7 @@ library
     Navi.Services.Network.Connectivity.Toml
     Navi.Services.Types
 
-  -- Navi does not use aeson directly, but it is a transitive dependency and
-  -- unfortunately some libraries have overly permissive upper bounds
-  -- (e.g. katip <= 0.8.5.0 will not build with aeson >= 2), so we explicitly
-  -- write the bounds here until upstream is fixed.
   build-depends:
-    , aeson                 >=1.4.7.0  && <1.6
     , attoparsec            >=0.13.2.3 && <0.15
     , base                  ^>=4.14.1.0
     , containers            >=0.5.11.0 && <0.7
@@ -101,8 +97,8 @@ library
     , optics-th             ^>=0.4
     , optparse-applicative  ^>=0.16.1.0
     , process               ^>=1.6.7.0
-    , smart-data            ^>=0.1.0.0
-    , system-info           ^>=0.1.0.0
+    , pythia                ^>=0.1.0.0
+    , refined               ^>=0.6
     , text                  ^>=1.2.3.2
     , tomland               ^>=1.3.0.0
     , unexceptionalio       ^>=0.5.1

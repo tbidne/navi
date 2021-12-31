@@ -11,7 +11,7 @@ import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Prelude
-import System.Info.Data (Command (..))
+import Pythia.Data (Command (..))
 import Toml (TomlCodec, (.=))
 import Toml qualified
 

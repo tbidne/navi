@@ -15,7 +15,7 @@ import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EToml
 import Navi.Prelude
 import Optics.TH qualified as O
-import System.Info.Services.Battery.ChargeStatus (Program (..))
+import Pythia.Services.Battery.ChargeStatus (BatteryChargeStatusApp (..))
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
@@ -31,7 +31,7 @@ O.makeFieldLabelsNoPrefix ''BatteryChargeStatusNoteToml
 -- | TOML for the battery status service.
 data BatteryChargeStatusToml = MkBatteryChargeStatusToml
   { -- | Determines how we should query the system for battery information.
-    program :: Program,
+    program :: BatteryChargeStatusApp,
     -- | Determines how we treat repeat alerts.
     repeatEvent :: Maybe RepeatEvtToml,
     -- | Determines how we handle errors.
@@ -57,12 +57,12 @@ batteryStatusNoteCodec =
   MkBatteryChargeStatusNoteToml
     <$> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
 
-programCodec :: TomlCodec Program
+programCodec :: TomlCodec BatteryChargeStatusApp
 programCodec =
   Toml.textBy showBatteryType parseBatteryType "type"
-    <|> pure UPower
+    <|> pure ChargeStatusUPower
   where
-    showBatteryType UPower = "upower"
-    showBatteryType (Custom t) = t
-    parseBatteryType "upower" = Right UPower
-    parseBatteryType t = Right $ Custom t
+    showBatteryType ChargeStatusUPower = "upower"
+    showBatteryType (ChargeStatusCustom t) = t
+    parseBatteryType "upower" = Right ChargeStatusUPower
+    parseBatteryType t = Right $ ChargeStatusCustom t

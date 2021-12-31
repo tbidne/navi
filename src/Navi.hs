@@ -129,12 +129,9 @@ processEvent client (MkAnyEvent event) = Event.runEvent event >>= handleResult
     errorNote = event ^. #errorNote
     raiseAlert = event ^. #raiseAlert
 
-    handleResult (Left err@MkEventErr {short, long}) = addNamespace "Handling Result" $ do
-      blockErrEvent <- Event.blockErr errorNote
-      logText ErrorS $ mkLog "Event Error" $ short <> ": " <> long
-      if blockErrEvent
-        then logText DebugS "Error note blocked"
-        else sendNote client (serviceErrToNote err)
+    handleResult (Left errs) =
+      addNamespace "Handling Result" $
+        traverse handleErr errs $> ()
     handleResult (Right result) = addNamespace "Handling Result" $ do
       case raiseAlert result of
         Nothing -> do
@@ -149,6 +146,14 @@ processEvent client (MkAnyEvent event) = Event.runEvent event >>= handleResult
               logText InfoS $ mkLog "Sending alert" result
               Event.updatePrevTrigger repeatEvent result
               sendNote client note
+
+    handleErr err@MkEventErr {short, long} = do
+      blockErrEvent <- Event.blockErr errorNote
+      logText ErrorS $ mkLog "Event Error" $ short <> ": " <> long
+      if blockErrEvent
+        then logText DebugS "Error note blocked"
+        else sendNote client (serviceErrToNote err)
+
     mkLog :: Show a => Text -> a -> Text
     mkLog msg x = "[" <> name <> "] " <> msg <> ": " <> showt x
 

@@ -13,7 +13,7 @@ import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Prelude
 import Optics.Operators ((^.))
-import Smart.Data.Math.NonNegative (NonNegative (..))
+import Refined qualified as R
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified
 
@@ -51,4 +51,6 @@ naviToDBus naviNote =
 
 naviToDBusTimeout :: Timeout -> DBusN.Timeout
 naviToDBusTimeout Never = DBusN.Never
-naviToDBusTimeout (Seconds (MkNonNegative s)) = DBusN.Milliseconds $ fromIntegral $ s * 1_000
+naviToDBusTimeout (Seconds s) = DBusN.Milliseconds $ fromIntegral $ multNN s
+  where
+    multNN = (* 1_000) . R.unrefine

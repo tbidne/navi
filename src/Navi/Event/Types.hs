@@ -19,7 +19,7 @@ import Navi.Prelude
 import Navi.Services.Types (ServiceType)
 import Optics.Operators ((^.))
 import Optics.TH qualified as O
-import System.Info.Data (QueryError ())
+import Pythia.Data (QueryError ())
 
 -- | Determines if we are allowed to send off duplicate notifications
 -- simultaneously. If we are not, then 'NoRepeats' holds the last trigger

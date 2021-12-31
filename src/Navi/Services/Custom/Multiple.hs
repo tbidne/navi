@@ -20,7 +20,7 @@ import Navi.Prelude
 import Navi.Services.Custom.Multiple.Toml (MultipleToml (..), TriggerNoteToml (..))
 import Navi.Services.Custom.Multiple.Toml qualified as MultipleToml
 import Navi.Services.Types (ServiceType (..))
-import System.Info.Data (Command)
+import Pythia.Data (Command)
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent :: (MonadMutRef m ref) => MultipleToml -> m (AnyEvent ref)

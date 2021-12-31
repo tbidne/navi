@@ -15,11 +15,11 @@ import Navi.Event.Types (AnyEvent (..), ErrorNote, Event (..), RepeatEvent)
 import Navi.Prelude
 import Navi.Services.Battery.State.Toml (BatteryStateNoteToml (..), BatteryStateToml)
 import Navi.Services.Battery.State.Toml qualified as BatteryStateToml
-import Navi.Services.Types (ServiceType (BatteryState))
+import Navi.Services.Types (ServiceType (..))
 import Optics.Operators ((^.))
-import Smart.Data.Math.BoundedNat (BoundedNat (..))
-import System.Info.Services.Battery.State (BatteryLevel, ChargeStatus (..), Program)
-import System.Info.Services.Battery.Types (BatteryState)
+import Pythia.Services.Battery.State (BatteryLevel, BatteryStateApp, ChargeStatus (..))
+import Pythia.Services.Battery.Types (BatteryState)
+import Refined qualified as R
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent :: (MonadMutRef m ref) => BatteryStateToml -> m (AnyEvent ref)
@@ -47,12 +47,12 @@ tomlToNote toml =
     body =
       Just $
         "Power is less than "
-          <> showt (unBoundedNat level)
+          <> showt (R.unrefine level)
           <> "%"
 
 mkBatteryEvent ::
   [(BatteryLevel, NaviNote)] ->
-  Program ->
+  BatteryStateApp ->
   RepeatEvent ref BatteryState ->
   ErrorNote ref ->
   Event ref BatteryState

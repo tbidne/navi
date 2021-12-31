@@ -21,7 +21,7 @@ import Navi.Services.Battery.ChargeStatus.Toml (BatteryChargeStatusNoteToml (..)
 import Navi.Services.Battery.ChargeStatus.Toml qualified as BatteryChargeStatusToml
 import Navi.Services.Types (ServiceType (..))
 import Optics.Operators ((^.))
-import System.Info.Services.Battery.ChargeStatus (ChargeStatus (..), Program)
+import Pythia.Services.Battery.ChargeStatus (BatteryChargeStatusApp, ChargeStatus (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
@@ -39,7 +39,7 @@ toEvent toml = do
 
 mkStatusEvent ::
   BatteryChargeStatusNoteToml ->
-  Program ->
+  BatteryChargeStatusApp ->
   RepeatEvent ref ChargeStatus ->
   ErrorNote ref ->
   Event ref ChargeStatus

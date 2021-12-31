@@ -43,11 +43,11 @@ runEvent ::
     Show result
   ) =>
   Event ref result ->
-  m (Either EventErr result)
+  m (Either [EventErr] result)
 runEvent event = addNamespace "Run Event" $ do
   eResult <- query $ event ^. #serviceType
   logEvent event DebugS $ "Shell returned: " <> showt eResult
-  pure $ first ETypes.fromQueryError eResult
+  pure $ first (fmap ETypes.fromQueryError) eResult
 
 -- | Determines if we should block the event. The semantics are:
 --

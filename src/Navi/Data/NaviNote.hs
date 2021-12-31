@@ -18,15 +18,16 @@ import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
 import Navi.Prelude
 import Optics.TH qualified as O
-import Smart.Data.Math.NonNegative (NonNegative)
-import Smart.Data.Math.NonNegative qualified as NN
+import Refined (NonNegative, Refined)
+import Refined qualified as R
+import Text.Read qualified as TR
 import Toml (Key, TomlCodec, (.=))
 import Toml qualified
 
 -- | Determines how long a notification persists.
 data Timeout
   = Never
-  | Seconds (NonNegative Int)
+  | Seconds (Refined NonNegative Int)
   deriving (Show)
 
 O.makeFieldLabelsNoPrefix ''Timeout
@@ -88,6 +89,7 @@ timeoutCodec =
     showTimeout (Seconds s) = T.pack $ show s
     parseTimeout "never" = Right Never
     parseTimeout other =
-      case NN.readNonNegative (T.unpack other) of
-        Just s -> Right $ Seconds s
-        Nothing -> Left $ "Unsupported timeout: " <> other
+      case readNN (T.unpack other) of
+        Right s -> Right $ Seconds s
+        Left _ -> Left $ "Unsupported timeout: " <> other
+    readNN = TR.readEither >=> first show . R.refine
