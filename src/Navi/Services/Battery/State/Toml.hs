@@ -16,9 +16,9 @@ import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Prelude
+import Numeric.Data.Interval qualified as Interval
 import Optics.TH qualified as O
 import Pythia.Services.Battery.State (BatteryLevel, BatteryStateApp (..))
-import Refined qualified as R
 import Toml
   ( AnyValue,
     BiMap (..),
@@ -94,9 +94,9 @@ _BoundedN :: TomlBiMap BatteryLevel AnyValue
 _BoundedN = _BoundedNNatural >>> Toml._Natural
 
 _BoundedNNatural :: TomlBiMap BatteryLevel Natural
-_BoundedNNatural = BiMap (Right . fromIntegral . R.unrefine) parseBounded
+_BoundedNNatural = BiMap (Right . fromIntegral . Interval.unLRInterval) parseBounded
   where
     parseBounded =
-      (R.refine . fromIntegral) >.> \case
-        Left _ -> Left $ ArbitraryError "Passed integer outside of bounds"
-        Right n -> Right n
+      (Interval.mkLRInterval . fromIntegral) >.> \case
+        Nothing -> Left $ ArbitraryError "Passed integer outside of bounds"
+        Just n -> Right n

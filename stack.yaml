@@ -1,13 +1,17 @@
-resolver:
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/13.yaml
+resolver: nightly-2022-03-23
 packages:
 - .
 
 extra-deps:
 - fdo-notify-0.3.1@sha256:9cfb75a5a0d5e4b1d40b0b4dbcc6bb29e58f21e4e14c83e2ffe1ca78bdee59d8,734
-- optics-core-0.4@sha256:59e04aebca536bd011ae50c781937f45af4c1456af1eb9fb578f9a69eee293cd,4995
-- optics-th-0.4@sha256:7c838b5b1d6998133bf8f0641c36197ed6cb468dc69515e1952f33f0bbe8e11d,2009
+- package-version-0.1.0.0@sha256:bb9fc93e905540aa8e1b32f80c2dc82756a4481c63779bd92e3796ed8085ab98,2854
+- git: https://github.com/tbidne/algebra-simple.git
+  commit: 325be17d256d257cedfada4087beddaf5d2ec7c2
 - git: https://github.com/tbidne/pythia.git
-  commit: e6ec28722c9e77a8bbe20c1ee10e1b45e25842e6
+  commit: 7d8082643c0e78c41f35f0d4bab226cb0794550f
 - git: https://github.com/tbidne/refined-extras.git
-  commit: c55a868eefec2837417fa7949a73fff01feb76f5
+  commit: bcee9c3c3d838243134166937c74d64c707fa236
+- git: https://github.com/tbidne/smart-math.git
+  commit: c76b316979c2f704bb3959d073c1ed0b24034103
+
+allow-newer: true

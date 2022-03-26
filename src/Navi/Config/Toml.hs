@@ -20,9 +20,9 @@ import Navi.Services.Custom.Multiple.Toml as MultipleToml
 import Navi.Services.Custom.Single.Toml as SingleToml
 import Navi.Services.Network.Connectivity.Toml (NetworkConnectivityToml)
 import Navi.Services.Network.Connectivity.Toml qualified as NetConnToml
+import Numeric.Data.NonNegative (NonNegative)
+import Numeric.Data.NonNegative qualified as NonNegative
 import Optics.TH qualified as O
-import Refined (NonNegative, Refined)
-import Refined qualified as R
 import Toml
   ( AnyValue,
     BiMap (..),
@@ -36,7 +36,7 @@ import Toml qualified
 
 -- | 'ConfigToml' holds the data that is defined in the configuration file.
 data ConfigToml = MkConfigToml
-  { pollToml :: Refined NonNegative Int,
+  { pollToml :: NonNegative Int,
     logToml :: Logging,
     singleToml :: [SingleToml],
     multipleToml :: [MultipleToml],
@@ -90,18 +90,18 @@ locationCodec = Toml.textBy showLoc parseLoc "location"
     parseLoc f = Right $ File $ T.unpack f
 
 --- | Parses a TOML 'NonNegative'.
-nonNegativeCodec :: Key -> TomlCodec (Refined NonNegative Int)
+nonNegativeCodec :: Key -> TomlCodec (NonNegative Int)
 nonNegativeCodec = Toml.match _NonNegative
 
-_NonNegative :: TomlBiMap (Refined NonNegative Int) AnyValue
+_NonNegative :: TomlBiMap (NonNegative Int) AnyValue
 _NonNegative = _NonNegativeInt >>> Toml._Int
 
-_NonNegativeInt :: TomlBiMap (Refined NonNegative Int) Int
-_NonNegativeInt = BiMap (Right . R.unrefine) parseNN
+_NonNegativeInt :: TomlBiMap (NonNegative Int) Int
+_NonNegativeInt = BiMap (Right . NonNegative.unNonNegative) parseNN
   where
     parseNN =
-      R.refine >.> \case
-        Left _ -> Left $ ArbitraryError "Passed negative to mkNonNegative"
-        Right n -> Right n
+      NonNegative.mkNonNegative >.> \case
+        Nothing -> Left $ ArbitraryError "Passed negative to mkNonNegative"
+        Just n -> Right n
 
 O.makeFieldLabelsNoPrefix ''ConfigToml

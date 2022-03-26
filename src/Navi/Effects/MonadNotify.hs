@@ -12,8 +12,8 @@ import DBus.Notify qualified as DBusN
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Prelude
+import Numeric.Data.NonNegative qualified as NonNegative
 import Optics.Operators ((^.))
-import Refined qualified as R
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified
 
@@ -53,4 +53,4 @@ naviToDBusTimeout :: Timeout -> DBusN.Timeout
 naviToDBusTimeout Never = DBusN.Never
 naviToDBusTimeout (Seconds s) = DBusN.Milliseconds $ fromIntegral $ multNN s
   where
-    multNN = (* 1_000) . R.unrefine
+    multNN = (* 1_000) . NonNegative.unNonNegative

@@ -1,11 +1,16 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Main (main) where
 
 import Control.Exception qualified as Except
 import Control.Monad.Reader (ReaderT (..))
 import Data.Functor.Identity (Identity (..))
 import Data.IORef (IORef)
+import Data.List qualified as L
 import Data.Text qualified as T
+import Data.Version.Package qualified as PV
 import Data.Void (absurd)
+import Development.GitRev qualified as GitRev
 import Katip
   ( ColorStrategy (..),
     Item,
@@ -84,13 +89,11 @@ logCtx = K.liftPayload ()
 
 versionTxt :: Text
 versionTxt =
-  T.concat
-    [ "Navi",
-      "\nversion: ",
-      version,
-      "\ndate:    ",
-      date
-    ]
-  where
-    version = "0.1.0.0"
-    date = "2021-11-05"
+  T.pack $
+    L.intercalate
+      "\n"
+      [ "Navi",
+        "Version: " <> $$(PV.packageVersionStringTH "navi.cabal"),
+        "Revision: " <> $(GitRev.gitHash),
+        "Date: " <> $(GitRev.gitCommitDate)
+      ]

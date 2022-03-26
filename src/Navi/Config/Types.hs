@@ -14,9 +14,9 @@ import Data.List.NonEmpty
 import Katip (Severity (..))
 import Navi.Event (AnyEvent (..))
 import Navi.Prelude
+import Numeric.Data.NonNegative (NonNegative)
 import Optics.Operators ((^.))
 import Optics.TH qualified as O
-import Refined (NonNegative, Refined)
 import Toml (TomlDecodeError)
 import UnexceptionalIO (SomeNonPseudoException)
 
@@ -43,7 +43,7 @@ O.makeFieldLabelsNoPrefix ''Logging
 -- (e.g., all user defined Events are parsed).
 data Config ref = MkConfig
   { -- | Determines how often we query for alerts, in seconds.
-    pollInterval :: Refined NonNegative Int,
+    pollInterval :: NonNegative Int,
     -- | The notification events.
     events :: NonEmpty (AnyEvent ref),
     -- | Logging configuration.
