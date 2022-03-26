@@ -9,19 +9,19 @@ import Control.Monad.Reader (ReaderT)
 import Control.Monad.Trans (MonadTrans (..))
 import Data.Text qualified as T
 import Navi.Prelude
-import Refined (NonNegative, Refined)
-import Refined qualified as R
+import Numeric.Data.NonNegative (NonNegative)
+import Numeric.Data.NonNegative qualified as NonNegative
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified
 
 -- | This class represents effects that a shell can provide.
 class Monad m => MonadShell m where
   readFile :: FilePath -> m (Either SomeNonPseudoException Text)
-  sleep :: Refined NonNegative Int -> m ()
+  sleep :: NonNegative Int -> m ()
 
 instance MonadShell IO where
   readFile = readFileIO
-  sleep = CC.threadDelay . (*) 1_000_000 . R.unrefine
+  sleep = CC.threadDelay . (*) 1_000_000 . NonNegative.unNonNegative
 
 instance MonadShell m => MonadShell (ReaderT e m) where
   readFile = lift . readFile

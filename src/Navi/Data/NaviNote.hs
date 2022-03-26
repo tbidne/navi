@@ -17,9 +17,9 @@ where
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
 import Navi.Prelude
+import Numeric.Data.NonNegative (NonNegative)
+import Numeric.Data.NonNegative qualified as NonNegative
 import Optics.TH qualified as O
-import Refined (NonNegative, Refined)
-import Refined qualified as R
 import Text.Read qualified as TR
 import Toml (Key, TomlCodec, (.=))
 import Toml qualified
@@ -27,7 +27,7 @@ import Toml qualified
 -- | Determines how long a notification persists.
 data Timeout
   = Never
-  | Seconds (Refined NonNegative Int)
+  | Seconds (NonNegative Int)
   deriving (Show)
 
 O.makeFieldLabelsNoPrefix ''Timeout
@@ -90,6 +90,6 @@ timeoutCodec =
     parseTimeout "never" = Right Never
     parseTimeout other =
       case readNN (T.unpack other) of
-        Right s -> Right $ Seconds s
-        Left _ -> Left $ "Unsupported timeout: " <> other
-    readNN = TR.readEither >=> first show . R.refine
+        Just s -> Right $ Seconds s
+        Nothing -> Left $ "Unsupported timeout: " <> other
+    readNN = TR.readMaybe >=> NonNegative.mkNonNegative
