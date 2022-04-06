@@ -13,7 +13,6 @@ module Navi.Event.Types
   )
 where
 
-import Control.Exception (Exception)
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Prelude

@@ -73,16 +73,16 @@ library
     Navi.Event.Toml
     Navi.Event.Types
     Navi.Prelude
-    Navi.Services.Battery.ChargeStatus
-    Navi.Services.Battery.ChargeStatus.Toml
-    Navi.Services.Battery.State
-    Navi.Services.Battery.State.Toml
+    Navi.Services.Battery.Status
+    Navi.Services.Battery.Status.Toml
+    Navi.Services.Battery.Percentage
+    Navi.Services.Battery.Percentage.Toml
     Navi.Services.Custom.Multiple
     Navi.Services.Custom.Multiple.Toml
     Navi.Services.Custom.Single
     Navi.Services.Custom.Single.Toml
-    Navi.Services.Network.Connectivity
-    Navi.Services.Network.Connectivity.Toml
+    Navi.Services.Network.NetInterfaces
+    Navi.Services.Network.NetInterfaces.Toml
     Navi.Services.Types
 
   build-depends:

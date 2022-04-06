@@ -2,11 +2,11 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
--- | This module provides toml configuration for the battery level service.
-module Navi.Services.Battery.State.Toml
+-- | This module provides toml configuration for the battery percentage service.
+module Navi.Services.Battery.Percentage.Toml
   ( BatteryPercentageToml (..),
     BatteryPercentageNoteToml (..),
-    batteryStateCodec,
+    batteryPercentageCodec,
   )
 where
 
@@ -32,12 +32,10 @@ import Toml
   )
 import Toml qualified
 
--- TODO: Rename module to percentage
-
--- | TOML for each individual battery level.
+-- | TOML for each individual battery percentage.
 data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml
-  { -- | The level for this alert.
-    level :: BatteryPercentage,
+  { -- | The percentage for this alert.
+    percentage :: BatteryPercentage,
     -- | The urgency for this alert.
     urgency :: Maybe UrgencyLevel,
     -- | The timeout for this alert.
@@ -47,7 +45,7 @@ data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml
 
 O.makeFieldLabelsNoPrefix ''BatteryPercentageNoteToml
 
--- | TOML for the battery level service.
+-- | TOML for the battery percentage service.
 data BatteryPercentageToml = MkBatteryPercentageToml
   { -- | All alerts for this service.
     alerts :: [BatteryPercentageNoteToml],
@@ -63,18 +61,18 @@ data BatteryPercentageToml = MkBatteryPercentageToml
 O.makeFieldLabelsNoPrefix ''BatteryPercentageToml
 
 -- | Codec for 'BatteryPercentageToml'.
-batteryStateCodec :: TomlCodec BatteryPercentageToml
-batteryStateCodec =
+batteryPercentageCodec :: TomlCodec BatteryPercentageToml
+batteryPercentageCodec =
   MkBatteryPercentageToml
-    <$> Toml.list batteryLevelNoteTomlCodec "alert" .= alerts
+    <$> Toml.list batteryPercentageNoteTomlCodec "alert" .= alerts
     <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EventToml.errorNoteCodec .= errorNote
     <*> programCodec .= program
 
-batteryLevelNoteTomlCodec :: TomlCodec BatteryPercentageNoteToml
-batteryLevelNoteTomlCodec =
+batteryPercentageNoteTomlCodec :: TomlCodec BatteryPercentageNoteToml
+batteryPercentageNoteTomlCodec =
   MkBatteryPercentageNoteToml
-    <$> levelCodec .= level
+    <$> percentageCodec .= percentage
     <*> Toml.dioptional NaviNote.urgencyLevelCodec .= urgency
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
 
@@ -92,8 +90,8 @@ programCodec =
     parseBatteryType "upower" = Right (mkSingleApp BatteryUPower)
     parseBatteryType t = Left t
 
-levelCodec :: TomlCodec BatteryPercentage
-levelCodec = boundedNCodec "level"
+percentageCodec :: TomlCodec BatteryPercentage
+percentageCodec = boundedNCodec "percent"
 
 boundedNCodec :: Key -> TomlCodec BatteryPercentage
 boundedNCodec = Toml.match _BoundedN

@@ -1,7 +1,7 @@
 -- | This module provides a service for alerts related to battery statuses.
-module Navi.Services.Battery.ChargeStatus
+module Navi.Services.Battery.Status
   ( BatteryStatusToml,
-    BatteryStatusToml.batteryChargeStatusCodec,
+    BatteryStatusToml.batteryStatusCodec,
     toEvent,
   )
 where
@@ -17,8 +17,8 @@ import Navi.Event.Types
     RepeatEvent (..),
   )
 import Navi.Prelude
-import Navi.Services.Battery.ChargeStatus.Toml (BatteryStatusNoteToml (..), BatteryStatusToml)
-import Navi.Services.Battery.ChargeStatus.Toml qualified as BatteryStatusToml
+import Navi.Services.Battery.Status.Toml (BatteryStatusNoteToml (..), BatteryStatusToml)
+import Navi.Services.Battery.Status.Toml qualified as BatteryStatusToml
 import Navi.Services.Types (ServiceType (..))
 import Optics.Operators ((^.))
 import Pythia.Services.Battery (BatteryConfig, BatteryStatus (..))
@@ -45,7 +45,7 @@ mkStatusEvent ::
   Event ref BatteryStatus
 mkStatusEvent noteToml program repeatEvent errorNote =
   MkEvent
-    { name = "Battery Charge Status",
+    { name = "Battery Status",
       serviceType = BatteryStatus program,
       raiseAlert = toNote noteToml,
       repeatEvent = repeatEvent,

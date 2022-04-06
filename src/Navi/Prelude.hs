@@ -38,7 +38,15 @@ import Control.Applicative as X
     liftA2,
     (<**>),
   )
-import Control.Exception.Safe as X (Exception (..), MonadCatch, MonadThrow, catch, handle, throw)
+import Control.Exception.Safe as X
+  ( Exception (..),
+    MonadCatch,
+    MonadThrow,
+    catch,
+    handle,
+    throw,
+    try,
+  )
 import Control.Monad as X
   ( Monad (..),
     forever,

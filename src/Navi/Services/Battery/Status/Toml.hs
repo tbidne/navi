@@ -3,10 +3,10 @@
 {-# LANGUAGE ViewPatterns #-}
 
 -- | This module provides toml configuration for the battery status service.
-module Navi.Services.Battery.ChargeStatus.Toml
+module Navi.Services.Battery.Status.Toml
   ( BatteryStatusToml (..),
     BatteryStatusNoteToml (..),
-    batteryChargeStatusCodec,
+    batteryStatusCodec,
   )
 where
 
@@ -46,8 +46,8 @@ data BatteryStatusToml = MkBatteryStatusToml
 O.makeFieldLabelsNoPrefix ''BatteryStatusToml
 
 -- | Codec for 'BatteryStatusToml'.
-batteryChargeStatusCodec :: TomlCodec BatteryStatusToml
-batteryChargeStatusCodec =
+batteryStatusCodec :: TomlCodec BatteryStatusToml
+batteryStatusCodec =
   MkBatteryStatusToml
     <$> programCodec .= program
     <*> Toml.dioptional EToml.repeatEvtCodec .= repeatEvent

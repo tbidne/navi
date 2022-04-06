@@ -3,10 +3,10 @@
 
 -- | This module provides toml configuration for the network
 -- connectivity service.
-module Navi.Services.Network.Connectivity.Toml
-  ( NetworkConnectivityToml (..),
+module Navi.Services.Network.NetInterfaces.Toml
+  ( NetInterfacesToml (..),
     ProgramToml (..),
-    networkConnectivityCodec,
+    netInterfacesCodec,
   )
 where
 
@@ -26,7 +26,7 @@ data ProgramToml
   deriving (Show)
 
 -- | TOML for the network connectivity service.
-data NetworkConnectivityToml = MkNetworkConnectivityToml
+data NetInterfacesToml = MkNetInterfacesToml
   { -- | Determines how we should query the system for network information.
     programToml :: ProgramToml,
     -- | The name of the network device, corresponding to the output from
@@ -42,12 +42,12 @@ data NetworkConnectivityToml = MkNetworkConnectivityToml
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''NetworkConnectivityToml
+O.makeFieldLabelsNoPrefix ''NetInterfacesToml
 
 -- | Codec for 'BatteryStatusToml'.
-networkConnectivityCodec :: TomlCodec NetworkConnectivityToml
-networkConnectivityCodec =
-  MkNetworkConnectivityToml
+netInterfacesCodec :: TomlCodec NetInterfacesToml
+netInterfacesCodec =
+  MkNetInterfacesToml
     <$> programTomlCodec .= programToml
     <*> Toml.text "device" .= deviceName
     <*> Toml.dioptional EToml.repeatEvtCodec .= repeatEvent

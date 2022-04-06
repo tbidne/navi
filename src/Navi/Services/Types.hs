@@ -14,6 +14,7 @@ import Pythia.Services.NetInterface (NetInterface, NetInterfaceConfig)
 -- system information (from the @pythia@ package), and then
 -- 'Single' and 'Multiple' for custom services. It is a GADT so
 -- we can link each service with its result type.
+type ServiceType :: Type -> Type
 data ServiceType result where
   BatteryPercentage :: BatteryConfig -> ServiceType Battery
   BatteryStatus :: BatteryConfig -> ServiceType BatteryStatus

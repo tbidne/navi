@@ -120,13 +120,13 @@ Individual services have their own options, but there are a few that are common 
 
 ### Predefined
 
-#### Battery Charging
+#### Battery Status
 
-This service sends notifications based on the current battery charging status. Options include:
+This service sends notifications based on the current battery status. Options include:
 
 ##### Specific Options
 
-* `battery-charging.type`: One of `[upower|<custom command>>`.
+* `battery-status.type`: One of `[upower|<custom command>>`.
   * `upower` requires the `UPower` utility.
   * A custom command allows one to pass an arbitrary shell command. The requirement is that its output contains a line:
     * `state: <charge status>`, where `<charge status>` is one of `[charging|discharging|fully-charged]`.
@@ -134,62 +134,62 @@ This service sends notifications based on the current battery charging status. O
 
 ##### General Options
 
-* `battery-charging.repeat-events`
-* `battery-charging.error-events`
-* `battery-charging.timeout`
+* `battery-status.repeat-events`
+* `battery-status.error-events`
+* `battery-status.timeout`
 
 Example:
 
 ```toml
-[battery-charging]
+[battery-status]
 repeat-events = false
 error-events = "repeats"
 ```
 
-#### Battery State
+#### Battery Percentage
 
-This service sends notifications based on the current battery level when it is discharging. Options include:
+This service sends notifications based on the current battery percentage when it is discharging. Options include:
 
 ##### Specific Options
 
-* `battery-state.alert.level`: integer in `[0, 100]`. Sends a notification once the battery level drops below the level.
+* `battery-percentage.alert.level`: integer in `[0, 100]`. Sends a notification once the battery level drops below the level.
 
-* `battery-state.type`: One of `[upower|<custom command>]`.
+* `battery-percentage.type`: One of `[upower|<custom command>]`.
   * `upower` requires the `UPower` utility.
   * A custom command allows one to pass an arbitrary shell command. The requirement is that its output contains two lines:
-    * `percentage: N%`, where `N` is in `[0, 100]`.
+    * `percent: N%`, where `N` is in `[0, 100]`.
     * `state: <charge status>`, where `<charge status>` is one of `[charging|discharging|fully-charged]`.
 
 ##### General Options
 
-* `battery-state.repeat-events`
-* `battery-state.error-events`
-* `battery-state.alert.urgency`
-* `battery-state.alert.timeout`
+* `battery-percentage.repeat-events`
+* `battery-percentage.error-events`
+* `battery-percentage.alert.urgency`
+* `battery-percentage.alert.timeout`
 
 Example:
 
 ```toml
-[battery-state]
+[battery-percentage]
 repeat-events = false
 error-events = "repeats"
 
-[[battery-state.alert]]
-level = 80
+[[battery-percentage.alert]]
+percent = 80
 
-[[battery-state.alert]]
-level = 20
+[[battery-percentage.alert]]
+percent = 20
 urgency = "critical"
 ```
 
-#### Network Connectivity
+#### Network Interface
 
 This service sends notifications based on the network connectivity for given devices.
 
 ##### Specific Options
 
-* `network-connectivity.device`: The name of the network device to monitor (e.g. `wlp0s20f3`).
-* `network-connectivity.type`: One of `[networkmanager|<custom command>]`.
+* `net-interface.device`: The name of the network device to monitor (e.g. `wlp0s20f3`).
+* `net-interface.type`: One of `[networkmanager|<custom command>]`.
   * `networkmanager` requires the `NetworkManager` utility.
   * A custom command allows one to pass an arbitrary shell command. The requirement is that its output contains the following four lines for each device (i.e., there should be `4n` lines for the number of total network devices, `n`):
     * `DEVICE: <device>`
@@ -199,19 +199,18 @@ This service sends notifications based on the network connectivity for given dev
 
 ##### General Options
 
-* `network-connectivity.repeat-events`
-* `network-connectivity.error-events`
-* `network-connectivity.alert.urgency`
-* `network-connectivity.alert.timeout`
-
+* `net-interface.repeat-events`
+* `net-interface.error-events`
+* `net-interface.alert.urgency`
+* `net-interface.alert.timeout`
 
 ##### Example
 
 ```toml
-[[network-connectivity]]
+[[net-interface]]
 device = "wlp0s20f3"
 
-[[network-connectivity]]
+[[net-interface]]
 device = "enp0s31f6"
 ```
 

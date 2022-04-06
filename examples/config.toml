@@ -1,27 +1,31 @@
 poll-interval = 10
 
-[battery-state]
+[logging]
+severity = "debug"
+location = "stdout"
+
+[battery-percentage]
 repeat-events = false
 error-events = "no-repeats"
 
-[[battery-state.alert]]
-level = 50
+[[battery-percentage.alert]]
+percent = 50
 urgency = "low"
 
-[[battery-state.alert]]
-level = 30
+[[battery-percentage.alert]]
+percent = 30
 urgency = "normal"
 
-[[battery-state.alert]]
-level = 20
+[[battery-percentage.alert]]
+percent = 20
 urgency = "critical"
 
-[[battery-state.alert]]
-level = 10
+[[battery-percentage.alert]]
+percent = 10
 urgency = "critical"
 
-[[battery-state.alert]]
-level = 5
+[[battery-percentage.alert]]
+percent = 5
 urgency = "critical"
 
 # Send alert when the current minute is even
@@ -32,6 +36,7 @@ command = """
     echo -n "true"
   else
     echo -n "false"
+  sdfsdf
 fi
 """
 trigger = "true"

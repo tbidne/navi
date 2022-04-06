@@ -17,7 +17,6 @@ module Navi.Env
   )
 where
 
-import Control.Exception (Exception (..))
 import DBus.Client (Client)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text qualified as T

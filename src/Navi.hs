@@ -5,8 +5,6 @@ module Navi
   )
 where
 
-import Control.Exception (Exception (..))
-import Control.Exception.Safe (MonadCatch, MonadThrow, try)
 import Control.Monad.IO.Class (MonadIO (..))
 import Control.Monad.Reader (MonadReader (..), ReaderT (..), asks)
 import Control.Monad.Trans (MonadTrans (..))

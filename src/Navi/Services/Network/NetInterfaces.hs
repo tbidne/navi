@@ -1,5 +1,5 @@
 -- | This module provides a service for network connectivity.
-module Navi.Services.Network.Connectivity
+module Navi.Services.Network.NetInterfaces
   ( toEvent,
   )
 where
@@ -9,7 +9,7 @@ import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), Event (..))
 import Navi.Prelude
-import Navi.Services.Network.Connectivity.Toml (NetworkConnectivityToml, ProgramToml (..))
+import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml, ProgramToml (..))
 import Navi.Services.Types (ServiceType (..))
 import Optics.Core ((%), (^.))
 import Pythia.Data.RunApp qualified as Pythia
@@ -18,7 +18,7 @@ import Pythia.Services.NetInterface (Device (..), NetInterface (..), NetInterfac
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
   (MonadMutRef m ref) =>
-  NetworkConnectivityToml ->
+  NetInterfacesToml ->
   m (AnyEvent ref)
 toEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
@@ -26,7 +26,7 @@ toEvent toml = do
   pure $
     MkAnyEvent $
       MkEvent
-        { name = "Network Connectivity",
+        { name = "Network Interface",
           serviceType = cmd,
           raiseAlert = toNote toml,
           repeatEvent = repeatEvt,
@@ -40,7 +40,7 @@ toEvent toml = do
 
 -- TODO: remove custom
 
-toNote :: NetworkConnectivityToml -> NetInterface -> Maybe NaviNote
+toNote :: NetInterfacesToml -> NetInterface -> Maybe NaviNote
 toNote noteToml conn =
   Just $
     MkNaviNote
