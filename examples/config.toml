@@ -36,7 +36,6 @@ command = """
     echo -n "true"
   else
     echo -n "false"
-  sdfsdf
 fi
 """
 trigger = "true"

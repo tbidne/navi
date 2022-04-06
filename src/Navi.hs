@@ -127,7 +127,8 @@ processEvent ::
   Client ->
   AnyEvent ref ->
   m ()
-processEvent client (MkAnyEvent event) =
+processEvent client (MkAnyEvent event) = do
+  logText DebugS $ "Checking " <> event ^. #name
   try (Event.runEvent event) >>= handleResult
   where
     name = event ^. #name

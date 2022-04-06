@@ -70,7 +70,7 @@ tomlToConfig toml = do
             logging = logToml
           }
   where
-    mToList = fromMaybe [] . sequenceA
+    mToList = foldl' (\acc x -> maybe acc (: acc) x) []
     pollToml = toml ^. #pollToml
     logToml = toml ^. #logToml
     singleToml = toml ^. #singleToml
