@@ -16,7 +16,6 @@ import Navi.Event (AnyEvent (..))
 import Navi.Prelude
 import Numeric.Data.NonNegative (NonNegative)
 import Toml (TomlDecodeError)
-import UnexceptionalIO (SomeNonPseudoException)
 
 -- | Log location configuration.
 data LogLoc
@@ -63,7 +62,7 @@ instance Show (Config ref) where
 -- | 'ConfigErr' represents the errors we can encounter when attempting to
 -- parse a config file.
 data ConfigErr
-  = FileErr SomeNonPseudoException
+  = FileErr SomeException
   | TomlError [TomlDecodeError]
   | NoEvents
   deriving (Show)

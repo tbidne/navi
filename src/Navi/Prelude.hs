@@ -37,6 +37,7 @@ import Control.Exception.Safe as X
   ( Exception (..),
     MonadCatch,
     MonadThrow,
+    SomeException (..),
     catch,
     handle,
     throw,

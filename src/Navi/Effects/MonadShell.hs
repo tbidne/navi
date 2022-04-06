@@ -11,12 +11,10 @@ import Data.Text qualified as T
 import Navi.Prelude
 import Numeric.Data.NonNegative (NonNegative)
 import Numeric.Data.NonNegative qualified as NonNegative
-import UnexceptionalIO (SomeNonPseudoException)
-import UnexceptionalIO qualified
 
 -- | This class represents effects that a shell can provide.
 class Monad m => MonadShell m where
-  readFile :: FilePath -> m (Either SomeNonPseudoException Text)
+  readFile :: FilePath -> m (Either SomeException Text)
   sleep :: NonNegative Int -> m ()
 
 instance MonadShell IO where
@@ -27,5 +25,5 @@ instance MonadShell m => MonadShell (ReaderT e m) where
   readFile = lift . readFile
   sleep = lift . sleep
 
-readFileIO :: FilePath -> IO (Either SomeNonPseudoException Text)
-readFileIO = (<<$>>) T.pack . UnexceptionalIO.fromIO . readFile'
+readFileIO :: FilePath -> IO (Either SomeException Text)
+readFileIO = (<<$>>) T.pack . try . readFile'

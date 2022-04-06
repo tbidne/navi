@@ -13,18 +13,16 @@ import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Prelude
 import Numeric.Data.NonNegative qualified as NonNegative
-import UnexceptionalIO (SomeNonPseudoException)
-import UnexceptionalIO qualified
 
 -- | This class represents sending desktop notifications. For now it is
 -- implemented in terms of 'DBus.Client', though this may be generalized
 -- to other notification systems.
 class Monad m => MonadNotify m where
-  initConn :: m (Either SomeNonPseudoException Client)
+  initConn :: m (Either SomeException Client)
   sendNote :: Client -> NaviNote -> m ()
 
 instance MonadNotify IO where
-  initConn = UnexceptionalIO.fromIO DBusN.connectSession
+  initConn = try DBusN.connectSession
   sendNote client = void . DBusN.notify client . naviToDBus
 
 instance MonadNotify m => MonadNotify (ReaderT e m) where
