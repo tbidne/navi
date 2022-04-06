@@ -22,7 +22,6 @@ import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml)
 import Navi.Services.Network.NetInterfaces.Toml qualified as NetConnToml
 import Numeric.Data.NonNegative (NonNegative)
 import Numeric.Data.NonNegative qualified as NonNegative
-import Optics.TH qualified as O
 import Toml
   ( AnyValue,
     BiMap (..),
@@ -104,4 +103,4 @@ _NonNegativeInt = BiMap (Right . NonNegative.unNonNegative) parseNN
         Nothing -> Left $ ArbitraryError "Passed negative to mkNonNegative"
         Just n -> Right n
 
-O.makeFieldLabelsNoPrefix ''ConfigToml
+makeFieldLabelsNoPrefix ''ConfigToml

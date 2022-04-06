@@ -27,8 +27,6 @@ import Navi.Config (Config (..), LogLoc (..), Logging (..), readConfig)
 import Navi.Effects (MonadMutRef (..))
 import Navi.Env (mkEnv)
 import Navi.Prelude
-import Optics.Operators ((^.))
-import Optics.Optic ((%))
 import System.Directory qualified as Dir
 import System.Exit qualified as Exit
 import System.IO qualified as IO

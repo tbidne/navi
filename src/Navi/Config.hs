@@ -25,7 +25,6 @@ import Navi.Services.Battery.Status qualified as BattChargeStatus
 import Navi.Services.Custom.Multiple qualified as Multiple
 import Navi.Services.Custom.Single qualified as Single
 import Navi.Services.Network.NetInterfaces qualified as NetConn
-import Optics.Operators ((^.))
 import Toml qualified
 
 -- | Parses the provided toml file into a 'Config'.

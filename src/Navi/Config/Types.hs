@@ -15,8 +15,6 @@ import Katip (Severity (..))
 import Navi.Event (AnyEvent (..))
 import Navi.Prelude
 import Numeric.Data.NonNegative (NonNegative)
-import Optics.Operators ((^.))
-import Optics.TH qualified as O
 import Toml (TomlDecodeError)
 import UnexceptionalIO (SomeNonPseudoException)
 
@@ -26,7 +24,7 @@ data LogLoc
   | File FilePath
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''LogLoc
+makeFieldLabelsNoPrefix ''LogLoc
 
 -- | Logging configuration.
 data Logging = MkLogging
@@ -37,7 +35,7 @@ data Logging = MkLogging
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''Logging
+makeFieldLabelsNoPrefix ''Logging
 
 -- | 'Config' holds the data from 'Navi.Config.Toml.ConfigToml' once it has been processed
 -- (e.g., all user defined Events are parsed).
@@ -50,7 +48,7 @@ data Config ref = MkConfig
     logging :: Logging
   }
 
-O.makeFieldLabelsNoPrefix ''Config
+makeFieldLabelsNoPrefix ''Config
 
 instance Show (Config ref) where
   show config =
@@ -70,4 +68,4 @@ data ConfigErr
   | NoEvents
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''ConfigErr
+makeFieldLabelsNoPrefix ''ConfigErr

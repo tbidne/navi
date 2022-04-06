@@ -11,8 +11,6 @@ import Data.Text qualified as T
 import Navi.Event.Types (EventErr (..))
 import Navi.Prelude
 import Navi.Services.Types (ServiceType (..))
-import Optics.Core ((^.))
-import Optics.Core qualified as O
 import Pythia.Data.Command (Command (..))
 import Pythia.Services.Battery qualified as Pythia
 import Pythia.Services.NetInterface qualified as Pythia
@@ -28,10 +26,10 @@ instance MonadSystemInfo IO where
   query = \case
     BatteryPercentage bp -> Pythia.queryBatteryConfig bp
     BatteryStatus bp ->
-      O.view #status <$> Pythia.queryBatteryConfig bp
+      view #status <$> Pythia.queryBatteryConfig bp
     NetworkInterface cp -> do
       ifs <-
-        O.view #unNetInterfaces <$> Pythia.queryNetInterfacesConfig cp
+        view #unNetInterfaces <$> Pythia.queryNetInterfacesConfig cp
 
       let d = cp ^. #interfaceDevice
           dName = show d

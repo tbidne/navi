@@ -11,7 +11,6 @@ import Navi.Event.Types (AnyEvent (..), Event (..))
 import Navi.Prelude
 import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml, ProgramToml (..))
 import Navi.Services.Types (ServiceType (..))
-import Optics.Core ((%), (^.))
 import Pythia.Data.RunApp qualified as Pythia
 import Pythia.Services.NetInterface (Device (..), NetInterface (..), NetInterfaceApp (..), NetInterfaceConfig (..), NetInterfaceState (..))
 

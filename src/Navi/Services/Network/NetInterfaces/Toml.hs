@@ -15,7 +15,6 @@ import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EToml
 import Navi.Prelude
-import Optics.TH qualified as O
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
@@ -42,7 +41,7 @@ data NetInterfacesToml = MkNetInterfacesToml
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''NetInterfacesToml
+makeFieldLabelsNoPrefix ''NetInterfacesToml
 
 -- | Codec for 'BatteryStatusToml'.
 netInterfacesCodec :: TomlCodec NetInterfacesToml

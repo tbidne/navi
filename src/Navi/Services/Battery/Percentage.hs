@@ -17,7 +17,6 @@ import Navi.Services.Battery.Percentage.Toml (BatteryPercentageNoteToml (..), Ba
 import Navi.Services.Battery.Percentage.Toml qualified as BatteryPercentageToml
 import Navi.Services.Types (ServiceType (..))
 import Numeric.Data.Interval qualified as Interval
-import Optics.Core ((^.))
 import Pythia.Services.Battery
   ( Battery (..),
     BatteryConfig (..),

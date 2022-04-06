@@ -32,12 +32,7 @@ module Navi.Prelude
   )
 where
 
-import Control.Applicative as X
-  ( Alternative (..),
-    Applicative (..),
-    liftA2,
-    (<**>),
-  )
+import Control.Applicative as X (Alternative (..), Applicative (..), (<**>))
 import Control.Exception.Safe as X
   ( Exception (..),
     MonadCatch,
@@ -57,67 +52,38 @@ import Control.Monad as X
     (>=>),
   )
 import Data.Bifunctor as X (Bifunctor (..))
+import Data.Bool as X (Bool (..), not, otherwise, (&&), (||))
 import Data.Either as X (Either (..), either)
-import Data.Foldable as X
-  ( Foldable
-      ( fold,
-        foldMap,
-        foldMap',
-        foldl',
-        foldr
-      ),
-    length,
-    traverse_,
-  )
-import Data.Functor as X
-  ( Functor (..),
-    ($>),
-    (<$>),
-    (<&>),
-  )
+import Data.Eq as X (Eq (..))
+import Data.Foldable as X (Foldable (..), length, traverse_)
+import Data.Function as X (const, flip, ($), (.))
+import Data.Functor as X (Functor (..), ($>), (<$>), (<&>))
 import Data.Kind as X (Constraint, Type)
-import Data.List as X (filter)
+import Data.List as X (filter, replicate)
 import Data.Maybe as X (Maybe (..), fromMaybe, maybe, maybeToList)
 import Data.Monoid as X (Monoid (..))
+import Data.Ord as X (Ord (..))
 import Data.Proxy as X (Proxy (..))
 import Data.Semigroup as X (Semigroup (..))
+import Data.String as X (String)
 import Data.Text as X (Text)
 import Data.Text qualified as T
 import Data.Text.IO as X (putStr, putStrLn)
 import Data.Traversable as X (Traversable (..))
+import Data.Tuple as X (fst, snd)
+import GHC.Enum as X (Bounded (..))
+import GHC.Err as X (undefined)
 import GHC.Generics as X (Generic)
+import GHC.Int as X (Int)
 import GHC.Natural as X (Natural (..))
+import GHC.Num as X (Num (..))
+import GHC.Real as X (Integral (..), fromIntegral)
+import GHC.Show as X (Show (..))
+import Optics.Core as X (over, set, view, (%), (.~), (^.))
+import Optics.TH as X (makeFieldLabelsNoPrefix, makePrismLabels)
+import System.IO as X (FilePath, IO)
 import System.IO qualified as IO
-import Prelude as X
-  ( Bool (..),
-    Bounded (..),
-    Char,
-    Eq (..),
-    FilePath,
-    IO,
-    Int,
-    Integer,
-    Integral (..),
-    Num (..),
-    Ord (..),
-    Show (..),
-    String,
-    const,
-    flip,
-    fromIntegral,
-    fst,
-    not,
-    otherwise,
-    replicate,
-    seq,
-    snd,
-    undefined,
-    ($),
-    (&&),
-    (++),
-    (.),
-    (||),
-  )
+import Prelude as X (Integer, seq)
 import Prelude qualified as P
 
 -- | 'Text' version of 'P.show'.

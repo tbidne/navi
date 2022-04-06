@@ -18,7 +18,6 @@ import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Prelude
 import Numeric.Data.Interval qualified as Interval
-import Optics.TH qualified as O
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..), BatteryConfig (..), BatteryPercentage (..))
 import Toml
@@ -43,7 +42,7 @@ data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''BatteryPercentageNoteToml
+makeFieldLabelsNoPrefix ''BatteryPercentageNoteToml
 
 -- | TOML for the battery percentage service.
 data BatteryPercentageToml = MkBatteryPercentageToml
@@ -58,7 +57,7 @@ data BatteryPercentageToml = MkBatteryPercentageToml
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''BatteryPercentageToml
+makeFieldLabelsNoPrefix ''BatteryPercentageToml
 
 -- | Codec for 'BatteryPercentageToml'.
 batteryPercentageCodec :: TomlCodec BatteryPercentageToml

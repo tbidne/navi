@@ -27,9 +27,6 @@ import Navi.Effects (MonadNotify (..))
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
 import Numeric.Data.NonNegative (NonNegative)
-import Optics.Getter as O
-import Optics.Setter as O
-import Optics.TH qualified as O
 
 -- | Retrieves the poll interval.
 class HasPollInterval env where
@@ -71,31 +68,31 @@ data Env ref = MkEnv
     logNamespace :: Namespace
   }
 
-O.makeFieldLabelsNoPrefix ''Env
+makeFieldLabelsNoPrefix ''Env
 
 instance HasPollInterval (Env ref) where
-  getPollInterval = O.view #pollInterval
+  getPollInterval = view #pollInterval
 
 instance HasEvents ref (Env ref) where
-  getEvents = O.view #events
+  getEvents = view #events
 
 instance HasClient (Env ref) where
-  getClient = O.view #client
+  getClient = view #client
 
 instance HasLogEnv (Env ref) where
-  getLogEnv = O.view #logEnv
-  setLogEnv = O.set #logEnv
-  overLogEnv = O.over #logEnv
+  getLogEnv = view #logEnv
+  setLogEnv = set #logEnv
+  overLogEnv = over #logEnv
 
 instance HasLogContexts (Env ref) where
-  getLogContexts = O.view #logCtx
-  setLogContexts = O.set #logCtx
-  overLogContexts = O.over #logCtx
+  getLogContexts = view #logCtx
+  setLogContexts = set #logCtx
+  overLogContexts = over #logCtx
 
 instance HasLogNamespace (Env ref) where
-  getLogNamespace = O.view #logNamespace
-  setLogNamespace = O.set #logNamespace
-  overLogNamespace = O.over #logNamespace
+  getLogNamespace = view #logNamespace
+  setLogNamespace = set #logNamespace
+  overLogNamespace = over #logNamespace
 
 -- | Creates an 'Env' from the provided log types and configuration data.
 mkEnv ::

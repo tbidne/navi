@@ -13,7 +13,6 @@ import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Prelude
 import Numeric.Data.NonNegative qualified as NonNegative
-import Optics.Operators ((^.))
 import UnexceptionalIO (SomeNonPseudoException)
 import UnexceptionalIO qualified
 

@@ -31,7 +31,6 @@ import Navi.Env
 import Navi.Event qualified as Event
 import Navi.Event.Types (AnyEvent (..), EventErr (..))
 import Navi.Prelude
-import Optics.Operators ((^.))
 
 -- | NaviT is the core type used to run the application.
 type NaviT :: Type -> (Type -> Type) -> Type -> Type
@@ -74,7 +73,7 @@ updateEnvField ::
   (f1 -> f2) ->
   m a ->
   m a
-updateEnvField over modifier = local (over modifier)
+updateEnvField overFn modifier = local (overFn modifier)
 
 instance
   ( HasLogContexts env,

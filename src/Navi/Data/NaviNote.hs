@@ -19,7 +19,6 @@ import Data.Text qualified as T
 import Navi.Prelude
 import Numeric.Data.NonNegative (NonNegative)
 import Numeric.Data.NonNegative qualified as NonNegative
-import Optics.TH qualified as O
 import Text.Read qualified as TR
 import Toml (Key, TomlCodec, (.=))
 import Toml qualified
@@ -30,7 +29,7 @@ data Timeout
   | Seconds (NonNegative Int)
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''Timeout
+makeFieldLabelsNoPrefix ''Timeout
 
 -- | 'NaviNote' represents desktop notifications.
 data NaviNote = MkNaviNote
@@ -45,7 +44,7 @@ data NaviNote = MkNaviNote
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''NaviNote
+makeFieldLabelsNoPrefix ''NaviNote
 
 -- | Codec for 'NaviNote'.
 naviNoteCodec :: TomlCodec NaviNote

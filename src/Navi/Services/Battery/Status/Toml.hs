@@ -15,7 +15,6 @@ import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EToml
 import Navi.Prelude
-import Optics.TH qualified as O
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..), BatteryConfig (..))
 import Toml (TomlCodec, (.=))
@@ -28,7 +27,7 @@ newtype BatteryStatusNoteToml = MkBatteryStatusNoteToml
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''BatteryStatusNoteToml
+makeFieldLabelsNoPrefix ''BatteryStatusNoteToml
 
 -- | TOML for the battery status service.
 data BatteryStatusToml = MkBatteryStatusToml
@@ -43,7 +42,7 @@ data BatteryStatusToml = MkBatteryStatusToml
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''BatteryStatusToml
+makeFieldLabelsNoPrefix ''BatteryStatusToml
 
 -- | Codec for 'BatteryStatusToml'.
 batteryStatusCodec :: TomlCodec BatteryStatusToml

@@ -17,8 +17,6 @@ import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Prelude
 import Navi.Services.Types (ServiceType)
-import Optics.Operators ((^.))
-import Optics.TH qualified as O
 
 -- | Determines if we are allowed to send off duplicate notifications
 -- simultaneously. If we are not, then 'NoRepeats' holds the last trigger
@@ -27,7 +25,7 @@ data RepeatEvent ref a
   = NoRepeats (ref (Maybe a))
   | AllowRepeats
 
-O.makeFieldLabelsNoPrefix ''RepeatEvent
+makeFieldLabelsNoPrefix ''RepeatEvent
 
 instance Show (RepeatEvent ref a) where
   show (NoRepeats _) = "NoRepeats <ref>"
@@ -40,7 +38,7 @@ data ErrorNote ref
   | AllowErrNote (RepeatEvent ref ())
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''ErrorNote
+makeFieldLabelsNoPrefix ''ErrorNote
 
 -- | Represents an error when querying an 'Event'.
 data EventErr = MkEventErr
@@ -54,7 +52,7 @@ data EventErr = MkEventErr
   deriving (Show)
   deriving anyclass (Exception)
 
-O.makeFieldLabelsNoPrefix ''EventErr
+makeFieldLabelsNoPrefix ''EventErr
 
 -- | 'Event' represents sending notifications. An event will:
 --
@@ -74,7 +72,7 @@ data Event ref result = MkEvent
     errorNote :: ErrorNote ref
   }
 
-O.makeFieldLabelsNoPrefix ''Event
+makeFieldLabelsNoPrefix ''Event
 
 instance Show (Event ref result) where
   show event =
@@ -94,4 +92,4 @@ data AnyEvent ref where
 
 deriving instance Show (AnyEvent ref)
 
-O.makeFieldLabelsNoPrefix ''AnyEvent
+makeFieldLabelsNoPrefix ''AnyEvent

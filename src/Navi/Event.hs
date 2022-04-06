@@ -30,7 +30,6 @@ import Navi.Event.Types
     RepeatEvent (..),
   )
 import Navi.Prelude
-import Optics.Operators ((^.))
 
 -- | Runs an event, i.e.,
 --

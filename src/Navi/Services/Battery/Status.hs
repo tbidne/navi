@@ -20,7 +20,6 @@ import Navi.Prelude
 import Navi.Services.Battery.Status.Toml (BatteryStatusNoteToml (..), BatteryStatusToml)
 import Navi.Services.Battery.Status.Toml qualified as BatteryStatusToml
 import Navi.Services.Types (ServiceType (..))
-import Optics.Operators ((^.))
 import Pythia.Services.Battery (BatteryConfig, BatteryStatus (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
