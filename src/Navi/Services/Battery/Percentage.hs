@@ -29,11 +29,11 @@ toEvent :: (MonadMutRef m ref) => BatteryPercentageToml -> m (AnyEvent ref)
 toEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
-  let evt = mkBatteryEvent percentNoteList program repeatEvt errorNote
+  let evt = mkBatteryEvent percentNoteList app repeatEvt errorNote
   pure $ MkAnyEvent evt
   where
     percentNoteList = tomlToNote <$> toml ^. #alerts
-    program = toml ^. #program
+    app = MkBatteryConfig $ toml ^. #app
 
 tomlToNote :: BatteryPercentageNoteToml -> (BatteryPercentage, NaviNote)
 tomlToNote toml =

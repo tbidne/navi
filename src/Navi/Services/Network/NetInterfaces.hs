@@ -9,10 +9,14 @@ import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), Event (..))
 import Navi.Prelude
-import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml, ProgramToml (..))
+import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml)
 import Navi.Services.Types (ServiceType (..))
-import Pythia.Data.RunApp qualified as Pythia
-import Pythia.Services.NetInterface (Device (..), NetInterface (..), NetInterfaceApp (..), NetInterfaceConfig (..), NetInterfaceState (..))
+import Pythia.Services.NetInterface
+  ( Device (..),
+    NetInterface (..),
+    NetInterfaceConfig (..),
+    NetInterfaceState (..),
+  )
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
@@ -33,11 +37,9 @@ toEvent toml = do
         }
   where
     device = MkDevice $ toml ^. #deviceName
-    cmd = NetworkInterface $ case toml ^. #programToml of
-      NetworkManagerToml -> MkNetInterfaceConfig (Pythia.Single NetInterfaceNmCli) (Just device)
-      CustomToml _ -> MkNetInterfaceConfig (Pythia.Single NetInterfaceIp) (Just device)
-
--- TODO: remove custom
+    cmd =
+      NetworkInterface $
+        MkNetInterfaceConfig (toml ^. #app) (Just device)
 
 toNote :: NetInterfacesToml -> NetInterface -> Maybe NaviNote
 toNote noteToml conn =

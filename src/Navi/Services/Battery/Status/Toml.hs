@@ -15,8 +15,8 @@ import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EToml
 import Navi.Prelude
-import Pythia.Data.RunApp (RunApp (..))
-import Pythia.Services.Battery (BatteryApp (..), BatteryConfig (..))
+import Navi.Services.Battery.Common (appCodec)
+import Pythia.Services.Battery (BatteryApp (..), RunApp (..))
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
@@ -32,7 +32,7 @@ makeFieldLabelsNoPrefix ''BatteryStatusNoteToml
 -- | TOML for the battery status service.
 data BatteryStatusToml = MkBatteryStatusToml
   { -- | Determines how we should query the system for battery information.
-    program :: BatteryConfig,
+    app :: RunApp BatteryApp,
     -- | Determines how we treat repeat alerts.
     repeatEvent :: Maybe RepeatEvtToml,
     -- | Determines how we handle errors.
@@ -48,7 +48,7 @@ makeFieldLabelsNoPrefix ''BatteryStatusToml
 batteryStatusCodec :: TomlCodec BatteryStatusToml
 batteryStatusCodec =
   MkBatteryStatusToml
-    <$> programCodec .= program
+    <$> appCodec .= app
     <*> Toml.dioptional EToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EToml.errorNoteCodec .= errorNote
     <*> batteryStatusNoteCodec .= note
@@ -57,25 +57,3 @@ batteryStatusNoteCodec :: TomlCodec BatteryStatusNoteToml
 batteryStatusNoteCodec =
   MkBatteryStatusNoteToml
     <$> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
-
-programCodec :: TomlCodec BatteryConfig
-programCodec =
-  Toml.textBy showBatteryType parseBatteryType "type"
-    <|> pure (MkBatteryConfig $ Single BatterySysFs)
-  where
-    showBatteryType (configToApp -> Single BatteryAcpi) = "acpi"
-    showBatteryType (configToApp -> Single BatterySysFs) = "sysfs"
-    showBatteryType (configToApp -> Single BatteryUPower) = "upower"
-    showBatteryType _ = ""
-    parseBatteryType "acpi" = Right (mkSingleApp BatteryAcpi)
-    parseBatteryType "sysfs" = Right (mkSingleApp BatterySysFs)
-    parseBatteryType "upower" = Right (mkSingleApp BatteryUPower)
-    parseBatteryType t = Left t
-
--- TODO: allow for no option
-
-mkSingleApp :: BatteryApp -> BatteryConfig
-mkSingleApp = MkBatteryConfig . Single
-
-configToApp :: BatteryConfig -> RunApp BatteryApp
-configToApp (MkBatteryConfig app) = app

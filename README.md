@@ -24,9 +24,9 @@
   - [Notification Options](#notification-options)
   - [Service Options](#service-options)
     - [Predefined](#predefined)
-      - [Battery Charging](#battery-charging)
-      - [Battery Level](#battery-state)
-      - [Network Connectivity](#network-connectivity)
+      - [Battery Status](#battery-status)
+      - [Battery Percentage](#battery-percentage)
+      - [Network Interface](#network-interface)
     - [Custom](#custom)
       - [Single](#single)
       - [Multiple](#multiple)
@@ -92,7 +92,7 @@ Navi is configured via a toml file, by default located at `xdgBase/navi/config.t
 * `logging.severity`: Optional. One of `[debug|info|error]`. Controls the logging level. Defaults to `error`.
 * `logging.location`: Optional. Either `stdout` or `<filename>`. Defaults to a file, `xdgBase/navi/navi.log`.
 
-Example:
+##### Example
 
 ```toml
 poll-interval = 30
@@ -115,10 +115,12 @@ The full list of notification options are:
 
 Individual services have their own options, but there are a few that are common to most.
 
-* `repeat-events`: One of `[true|false>`. Determines if we send off the same notification twice in a row. Defaults to `false` (i.e., no repeats) unless stated otherwise.
-* `error-events`: One of `["none"|"repeats"|"no-repeats">`. Determines if we send off notifications for errors, and how we handle repeats. Defaults to `"no-repeats"` unless stated otherwise, i.e., we send error notifications but no repeats.
+* `repeat-events`: One of `[true|false]`. Determines if we send off the same notification twice in a row. Defaults to `false` (i.e. no repeats) unless stated otherwise.
+* `error-events`: One of `["none"|"repeats"|"no-repeats">`. Determines if we send off notifications for errors, and how we handle repeats. Defaults to `"no-repeats"` unless stated otherwise i.e. we send error notifications but no repeats.
 
 ### Predefined
+
+These are services that are built-in, in the sense that no custom script is required.
 
 #### Battery Status
 
@@ -126,10 +128,11 @@ This service sends notifications based on the current battery status. Options in
 
 ##### Specific Options
 
-* `battery-status.type`: One of `[upower|<custom command>>`.
-  * `upower` requires the `UPower` utility.
-  * A custom command allows one to pass an arbitrary shell command. The requirement is that its output contains a line:
-    * `state: <charge status>`, where `<charge status>` is one of `[charging|discharging|fully-charged]`.
+* `battery-status.type`: (Optional). One of `[sysfs | acpi | upower]`.
+  * `sysfs` reads `/sys` or `/sysfs` directly.
+  * `acpi` requires the `acpi` utility.
+  * `upower` requires the `upower` utility.
+  * If no option is given then we will try each of the above in the given order, if they are supported.
 
 
 ##### General Options
@@ -138,7 +141,7 @@ This service sends notifications based on the current battery status. Options in
 * `battery-status.error-events`
 * `battery-status.timeout`
 
-Example:
+##### Example
 
 ```toml
 [battery-status]
@@ -153,12 +156,11 @@ This service sends notifications based on the current battery percentage when it
 ##### Specific Options
 
 * `battery-percentage.alert.level`: integer in `[0, 100]`. Sends a notification once the battery level drops below the level.
-
-* `battery-percentage.type`: One of `[upower|<custom command>]`.
-  * `upower` requires the `UPower` utility.
-  * A custom command allows one to pass an arbitrary shell command. The requirement is that its output contains two lines:
-    * `percent: N%`, where `N` is in `[0, 100]`.
-    * `state: <charge status>`, where `<charge status>` is one of `[charging|discharging|fully-charged]`.
+* `battery-percentage.type`: (Optional). One of `[sysfs | acpi | upower]`.
+  * `sysfs` reads `/sys` or `/sysfs` directly.
+  * `acpi` requires the `acpi` utility.
+  * `upower` requires the `upower` utility.
+  * If no option is given then we will try each of the above in the given order, if they are supported.
 
 ##### General Options
 
@@ -167,7 +169,7 @@ This service sends notifications based on the current battery percentage when it
 * `battery-percentage.alert.urgency`
 * `battery-percentage.alert.timeout`
 
-Example:
+##### Example
 
 ```toml
 [battery-percentage]
@@ -189,13 +191,10 @@ This service sends notifications based on the network connectivity for given dev
 ##### Specific Options
 
 * `net-interface.device`: The name of the network device to monitor (e.g. `wlp0s20f3`).
-* `net-interface.type`: One of `[networkmanager|<custom command>]`.
-  * `networkmanager` requires the `NetworkManager` utility.
-  * A custom command allows one to pass an arbitrary shell command. The requirement is that its output contains the following four lines for each device (i.e., there should be `4n` lines for the number of total network devices, `n`):
-    * `DEVICE: <device>`
-    * `TYPE: <type>`: One of `[wifi|wifi-p2p|ethernet|loopback|tun|<other>]`.
-    * `STATE: <state>`: One of `[connected|disconnected|unavailable|unmanaged|<other>]`.
-    * `CONNECTION: <name>`: One of `[--|<some name>]`.
+* `net-interface.type`: One of `[nmcli | ip]`.
+  * `nmcli` requires the `nmcli` (`NetworkManager cli`) utility.
+  * `ip` requires the `ip` utility.
+  * If no option is given then we will try each of the above in the given order, if they are supported.
 
 ##### General Options
 
@@ -234,9 +233,7 @@ This service allows one to create a single notification based on an arbitrary co
 * `single.note.urgency`
 * `single.note.timeout`
 
-***** Example
-
-
+##### Example
 
 ```toml
 # Send alert when the current minute is even
@@ -274,7 +271,7 @@ This service allows one to create multiple notifications based on an arbitrary c
 * `multiple.trigger-note.urgency`
 * `multiple.trigger-note.timeout`
 
-Example
+##### Example
 
 ```toml
 # Manual battery level alerts

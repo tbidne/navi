@@ -73,6 +73,7 @@ library
     Navi.Event.Toml
     Navi.Event.Types
     Navi.Prelude
+    Navi.Services.Battery.Common
     Navi.Services.Battery.Percentage
     Navi.Services.Battery.Percentage.Toml
     Navi.Services.Battery.Status

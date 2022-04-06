@@ -17,9 +17,13 @@ import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Prelude
+import Navi.Services.Battery.Common (appCodec)
 import Numeric.Data.Interval qualified as Interval
-import Pythia.Data.RunApp (RunApp (..))
-import Pythia.Services.Battery (BatteryApp (..), BatteryConfig (..), BatteryPercentage (..))
+import Pythia.Services.Battery
+  ( BatteryApp (..),
+    BatteryPercentage (..),
+    RunApp (..),
+  )
 import Toml
   ( AnyValue,
     BiMap (..),
@@ -53,7 +57,7 @@ data BatteryPercentageToml = MkBatteryPercentageToml
     -- | Determines how we handle errors.
     errorNote :: Maybe ErrorNoteToml,
     -- | Determines how we should query the system for battery information.
-    program :: BatteryConfig
+    app :: RunApp BatteryApp
   }
   deriving (Show)
 
@@ -66,7 +70,7 @@ batteryPercentageCodec =
     <$> Toml.list batteryPercentageNoteTomlCodec "alert" .= alerts
     <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EventToml.errorNoteCodec .= errorNote
-    <*> programCodec .= program
+    <*> appCodec .= app
 
 batteryPercentageNoteTomlCodec :: TomlCodec BatteryPercentageNoteToml
 batteryPercentageNoteTomlCodec =
@@ -74,20 +78,6 @@ batteryPercentageNoteTomlCodec =
     <$> percentageCodec .= percentage
     <*> Toml.dioptional NaviNote.urgencyLevelCodec .= urgency
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
-
-programCodec :: TomlCodec BatteryConfig
-programCodec =
-  Toml.textBy showBatteryType parseBatteryType "type"
-    <|> pure (MkBatteryConfig $ Single BatterySysFs)
-  where
-    showBatteryType (configToApp -> Single BatteryAcpi) = "acpi"
-    showBatteryType (configToApp -> Single BatterySysFs) = "sysfs"
-    showBatteryType (configToApp -> Single BatteryUPower) = "upower"
-    showBatteryType _ = ""
-    parseBatteryType "acpi" = Right (mkSingleApp BatteryAcpi)
-    parseBatteryType "sysfs" = Right (mkSingleApp BatterySysFs)
-    parseBatteryType "upower" = Right (mkSingleApp BatteryUPower)
-    parseBatteryType t = Left t
 
 percentageCodec :: TomlCodec BatteryPercentage
 percentageCodec = boundedNCodec "percent"
@@ -105,9 +95,3 @@ _BoundedNNatural = BiMap (Right . fromIntegral . Interval.unLRInterval . unBatte
       (fmap MkBatteryPercentage . Interval.mkLRInterval . fromIntegral) >.> \case
         Nothing -> Left $ ArbitraryError "Passed integer outside of bounds"
         Just n -> Right n
-
-mkSingleApp :: BatteryApp -> BatteryConfig
-mkSingleApp = MkBatteryConfig . Single
-
-configToApp :: BatteryConfig -> RunApp BatteryApp
-configToApp (MkBatteryConfig app) = app

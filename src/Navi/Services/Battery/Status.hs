@@ -20,7 +20,7 @@ import Navi.Prelude
 import Navi.Services.Battery.Status.Toml (BatteryStatusNoteToml (..), BatteryStatusToml)
 import Navi.Services.Battery.Status.Toml qualified as BatteryStatusToml
 import Navi.Services.Types (ServiceType (..))
-import Pythia.Services.Battery (BatteryConfig, BatteryStatus (..))
+import Pythia.Services.Battery (BatteryConfig (..), BatteryStatus (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
@@ -30,10 +30,10 @@ toEvent ::
 toEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
-  let evt = mkStatusEvent note program repeatEvt errorNote
+  let evt = mkStatusEvent note cfg repeatEvt errorNote
   pure $ MkAnyEvent evt
   where
-    program = toml ^. #program
+    cfg = MkBatteryConfig $ toml ^. #app
     note = toml ^. #note
 
 mkStatusEvent ::
@@ -42,10 +42,10 @@ mkStatusEvent ::
   RepeatEvent ref BatteryStatus ->
   ErrorNote ref ->
   Event ref BatteryStatus
-mkStatusEvent noteToml program repeatEvent errorNote =
+mkStatusEvent noteToml cfg repeatEvent errorNote =
   MkEvent
     { name = "Battery Status",
-      serviceType = BatteryStatus program,
+      serviceType = BatteryStatus cfg,
       raiseAlert = toNote noteToml,
       repeatEvent = repeatEvent,
       errorNote = errorNote
