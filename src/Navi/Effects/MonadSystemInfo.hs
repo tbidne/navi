@@ -8,69 +8,98 @@ import Control.Monad.Reader (MonadTrans (..), ReaderT)
 import Data.Attoparsec.Text (Parser)
 import Data.Attoparsec.Text qualified as AP
 import Data.Text qualified as T
+import Navi.Event.Types (EventErr (..))
 import Navi.Prelude
 import Navi.Services.Types (ServiceType (..))
-import Pythia.Data (Command (..), QueryError (..))
-import Pythia.Services.Battery.ChargeStatus qualified as Pythia
-import Pythia.Services.Battery.State qualified as Pythia
-import Pythia.Services.Network.Connection qualified as Pythia
-import Pythia.ShellApp (ShellApp (..), SimpleShell (..))
+import Optics.Core ((^.))
+import Optics.Core qualified as O
+import Pythia.Data.Command (Command (..))
+import Pythia.Services.Battery qualified as Pythia
+import Pythia.Services.NetInterface qualified as Pythia
+import Pythia.ShellApp (SimpleShell (..))
 import Pythia.ShellApp qualified as ShellApp
 
 -- | This class represents an effect of querying system information.
 class Monad m => MonadSystemInfo m where
-  query :: ServiceType result -> m (Either [QueryError] result)
+  query :: ServiceType result -> m result
 
 instance MonadSystemInfo IO where
+  query :: ServiceType result -> IO result
   query = \case
-    BatteryState bp -> Pythia.queryBatteryState bp
-    BatteryChargeStatus bp -> Pythia.queryChargeStatus bp
-    NetworkConnection cp -> Pythia.queryConnection cp
+    BatteryPercentage bp -> Pythia.queryBatteryConfig bp
+    BatteryStatus bp ->
+      O.view #status <$> Pythia.queryBatteryConfig bp
+    NetworkInterface cp -> do
+      ifs <-
+        O.view #unNetInterfaces <$> Pythia.queryNetInterfacesConfig cp
+
+      let d = cp ^. #interfaceDevice
+          dName = show d
+      case headMaybe ifs of
+        Nothing ->
+          throw $
+            MkEventErr
+              "NetInterfaces"
+              "Query Error"
+              ("No device found matching: " <> showt dName)
+        Just i -> pure i
     Single cmd -> querySingle cmd
     Multiple cmd -> queryMultiple cmd
 
 instance MonadSystemInfo m => MonadSystemInfo (ReaderT e m) where
   query = lift . query
 
-queryMultiple :: Command -> IO (Either [QueryError] Text)
+queryMultiple :: Command -> IO Text
 queryMultiple cmd =
   let shellApp = multipleShellApp cmd
-   in ShellApp.runShellApp shellApp
+   in ShellApp.runSimple shellApp
 
-multipleShellApp :: Command -> ShellApp Text
+multipleShellApp :: Command -> SimpleShell EventErr Text
 multipleShellApp cmd =
-  SimpleApp $
-    MkSimpleShell
-      { command = cmd,
-        parser = parseMultiple
-      }
+  MkSimpleShell
+    { command = cmd,
+      parser = parseMultiple,
+      liftShellEx = liftEventErr "Multiple"
+    }
 
-parseMultiple :: Text -> Either QueryError Text
-parseMultiple = first toEventErr . AP.parseOnly parseTxt
+parseMultiple :: Text -> Either EventErr Text
+parseMultiple result = first toEventErr $ AP.parseOnly parseTxt result
   where
-    toEventErr = MkQueryError "Multiple" "Parse error" . T.pack
+    toEventErr err =
+      MkEventErr
+        "Multiple"
+        "Parse error"
+        ("Error parsing `" <> result <> "`: <" <> T.pack err <> ">")
     parseTxt = AP.takeText
 
-querySingle :: Command -> IO (Either [QueryError] Text)
+querySingle :: Command -> IO Text
 querySingle cmd = do
   let shellApp = singleShellApp cmd
-   in ShellApp.runShellApp shellApp
+   in ShellApp.runSimple shellApp
 
-singleShellApp :: Command -> ShellApp Text
+singleShellApp :: Command -> SimpleShell EventErr Text
 singleShellApp cmd =
-  SimpleApp $
-    MkSimpleShell
-      { command = cmd,
-        parser = parseSingle
-      }
+  MkSimpleShell
+    { command = cmd,
+      parser = parseSingle,
+      liftShellEx = liftEventErr "Single"
+    }
 
-parseSingle :: Text -> Either QueryError Text
+parseSingle :: Text -> Either EventErr Text
 parseSingle result = first toEventErr $ AP.parseOnly parseTxt result
   where
     toEventErr err =
-      MkQueryError
+      MkEventErr
         "Single"
         "Parse error"
-        ("Error parsing `" <> result <> "`: " <> T.pack err)
+        ("Error parsing `" <> result <> "`: <" <> T.pack err <> ">")
     parseTxt :: Parser Text
     parseTxt = AP.takeText
+
+liftEventErr :: Exception e => Text -> e -> EventErr
+liftEventErr n e =
+  MkEventErr
+    { name = n,
+      short = "Command error",
+      long = T.pack $ displayException e
+    }

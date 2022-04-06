@@ -1,10 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | This module provides toml configuration for the battery level service.
 module Navi.Services.Battery.State.Toml
-  ( BatteryStateToml (..),
-    BatteryStateNoteToml (..),
+  ( BatteryPercentageToml (..),
+    BatteryPercentageNoteToml (..),
     batteryStateCodec,
   )
 where
@@ -18,7 +19,8 @@ import Navi.Event.Toml qualified as EventToml
 import Navi.Prelude
 import Numeric.Data.Interval qualified as Interval
 import Optics.TH qualified as O
-import Pythia.Services.Battery.State (BatteryLevel, BatteryStateApp (..))
+import Pythia.Data.RunApp (RunApp (..))
+import Pythia.Services.Battery (BatteryApp (..), BatteryConfig (..), BatteryPercentage (..))
 import Toml
   ( AnyValue,
     BiMap (..),
@@ -30,10 +32,12 @@ import Toml
   )
 import Toml qualified
 
+-- TODO: Rename module to percentage
+
 -- | TOML for each individual battery level.
-data BatteryStateNoteToml = MkBatteryStateNoteToml
+data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml
   { -- | The level for this alert.
-    level :: BatteryLevel,
+    level :: BatteryPercentage,
     -- | The urgency for this alert.
     urgency :: Maybe UrgencyLevel,
     -- | The timeout for this alert.
@@ -41,62 +45,72 @@ data BatteryStateNoteToml = MkBatteryStateNoteToml
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''BatteryStateNoteToml
+O.makeFieldLabelsNoPrefix ''BatteryPercentageNoteToml
 
 -- | TOML for the battery level service.
-data BatteryStateToml = MkBatteryStateToml
+data BatteryPercentageToml = MkBatteryPercentageToml
   { -- | All alerts for this service.
-    alerts :: [BatteryStateNoteToml],
+    alerts :: [BatteryPercentageNoteToml],
     -- | Determines how we treat repeat alerts.
     repeatEvent :: Maybe RepeatEvtToml,
     -- | Determines how we handle errors.
     errorNote :: Maybe ErrorNoteToml,
     -- | Determines how we should query the system for battery information.
-    program :: BatteryStateApp
+    program :: BatteryConfig
   }
   deriving (Show)
 
-O.makeFieldLabelsNoPrefix ''BatteryStateToml
+O.makeFieldLabelsNoPrefix ''BatteryPercentageToml
 
--- | Codec for 'BatteryStateToml'.
-batteryStateCodec :: TomlCodec BatteryStateToml
+-- | Codec for 'BatteryPercentageToml'.
+batteryStateCodec :: TomlCodec BatteryPercentageToml
 batteryStateCodec =
-  MkBatteryStateToml
+  MkBatteryPercentageToml
     <$> Toml.list batteryLevelNoteTomlCodec "alert" .= alerts
     <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EventToml.errorNoteCodec .= errorNote
     <*> programCodec .= program
 
-batteryLevelNoteTomlCodec :: TomlCodec BatteryStateNoteToml
+batteryLevelNoteTomlCodec :: TomlCodec BatteryPercentageNoteToml
 batteryLevelNoteTomlCodec =
-  MkBatteryStateNoteToml
+  MkBatteryPercentageNoteToml
     <$> levelCodec .= level
     <*> Toml.dioptional NaviNote.urgencyLevelCodec .= urgency
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
 
-programCodec :: TomlCodec BatteryStateApp
+programCodec :: TomlCodec BatteryConfig
 programCodec =
   Toml.textBy showBatteryType parseBatteryType "type"
-    <|> pure BatteryStateUPower
+    <|> pure (MkBatteryConfig $ Single BatterySysFs)
   where
-    showBatteryType BatteryStateUPower = "upower"
-    showBatteryType (BatteryStateCustom t) = t
-    parseBatteryType "upower" = Right BatteryStateUPower
-    parseBatteryType t = Right $ BatteryStateCustom t
+    showBatteryType (configToApp -> Single BatteryAcpi) = "acpi"
+    showBatteryType (configToApp -> Single BatterySysFs) = "sysfs"
+    showBatteryType (configToApp -> Single BatteryUPower) = "upower"
+    showBatteryType _ = ""
+    parseBatteryType "acpi" = Right (mkSingleApp BatteryAcpi)
+    parseBatteryType "sysfs" = Right (mkSingleApp BatterySysFs)
+    parseBatteryType "upower" = Right (mkSingleApp BatteryUPower)
+    parseBatteryType t = Left t
 
-levelCodec :: TomlCodec BatteryLevel
+levelCodec :: TomlCodec BatteryPercentage
 levelCodec = boundedNCodec "level"
 
-boundedNCodec :: Key -> TomlCodec BatteryLevel
+boundedNCodec :: Key -> TomlCodec BatteryPercentage
 boundedNCodec = Toml.match _BoundedN
 
-_BoundedN :: TomlBiMap BatteryLevel AnyValue
+_BoundedN :: TomlBiMap BatteryPercentage AnyValue
 _BoundedN = _BoundedNNatural >>> Toml._Natural
 
-_BoundedNNatural :: TomlBiMap BatteryLevel Natural
-_BoundedNNatural = BiMap (Right . fromIntegral . Interval.unLRInterval) parseBounded
+_BoundedNNatural :: TomlBiMap BatteryPercentage Natural
+_BoundedNNatural = BiMap (Right . fromIntegral . Interval.unLRInterval . unBatteryPercentage) parseBounded
   where
     parseBounded =
-      (Interval.mkLRInterval . fromIntegral) >.> \case
+      (fmap MkBatteryPercentage . Interval.mkLRInterval . fromIntegral) >.> \case
         Nothing -> Left $ ArbitraryError "Passed integer outside of bounds"
         Just n -> Right n
+
+mkSingleApp :: BatteryApp -> BatteryConfig
+mkSingleApp = MkBatteryConfig . Single
+
+configToApp :: BatteryConfig -> RunApp BatteryApp
+configToApp (MkBatteryConfig app) = app

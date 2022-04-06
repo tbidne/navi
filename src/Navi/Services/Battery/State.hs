@@ -1,7 +1,7 @@
 -- | This module provides a service for alerts related to battery levels.
 module Navi.Services.Battery.State
-  ( BatteryStateToml,
-    BatteryStateToml.batteryStateCodec,
+  ( BatteryPercentageToml,
+    BatteryPercentageToml.batteryStateCodec,
     toEvent,
   )
 where
@@ -13,16 +13,20 @@ import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), ErrorNote, Event (..), RepeatEvent)
 import Navi.Prelude
-import Navi.Services.Battery.State.Toml (BatteryStateNoteToml (..), BatteryStateToml)
-import Navi.Services.Battery.State.Toml qualified as BatteryStateToml
+import Navi.Services.Battery.State.Toml (BatteryPercentageNoteToml (..), BatteryPercentageToml)
+import Navi.Services.Battery.State.Toml qualified as BatteryPercentageToml
 import Navi.Services.Types (ServiceType (..))
 import Numeric.Data.Interval qualified as Interval
-import Optics.Operators ((^.))
-import Pythia.Services.Battery.State (BatteryLevel, BatteryStateApp, ChargeStatus (..))
-import Pythia.Services.Battery.Types (BatteryState)
+import Optics.Core ((^.))
+import Pythia.Services.Battery
+  ( Battery (..),
+    BatteryConfig (..),
+    BatteryPercentage (..),
+    BatteryStatus (..),
+  )
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
-toEvent :: (MonadMutRef m ref) => BatteryStateToml -> m (AnyEvent ref)
+toEvent :: (MonadMutRef m ref) => BatteryPercentageToml -> m (AnyEvent ref)
 toEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
@@ -32,7 +36,7 @@ toEvent toml = do
     lvlNoteList = tomlToNote <$> toml ^. #alerts
     program = toml ^. #program
 
-tomlToNote :: BatteryStateNoteToml -> (BatteryLevel, NaviNote)
+tomlToNote :: BatteryPercentageNoteToml -> (BatteryPercentage, NaviNote)
 tomlToNote toml =
   ( level,
     MkNaviNote
@@ -47,19 +51,19 @@ tomlToNote toml =
     body =
       Just $
         "Power is less than "
-          <> showt (Interval.unLRInterval level)
+          <> showt (Interval.unLRInterval $ level ^. #unBatteryPercentage)
           <> "%"
 
 mkBatteryEvent ::
-  [(BatteryLevel, NaviNote)] ->
-  BatteryStateApp ->
-  RepeatEvent ref BatteryState ->
+  [(BatteryPercentage, NaviNote)] ->
+  BatteryConfig ->
+  RepeatEvent ref Battery ->
   ErrorNote ref ->
-  Event ref BatteryState
+  Event ref Battery
 mkBatteryEvent lvlNoteList batteryProgram re en =
   MkEvent
     { name = "Battery",
-      serviceType = BatteryState batteryProgram,
+      serviceType = BatteryPercentage batteryProgram,
       raiseAlert = lookupLevel lvlNoteMap,
       repeatEvent = re,
       errorNote = en
@@ -67,7 +71,7 @@ mkBatteryEvent lvlNoteList batteryProgram re en =
   where
     lvlNoteMap = Map.fromList lvlNoteList
 
-lookupLevel :: Map BatteryLevel NaviNote -> BatteryState -> Maybe NaviNote
+lookupLevel :: Map BatteryPercentage NaviNote -> Battery -> Maybe NaviNote
 lookupLevel lvlNoteMap state = case state ^. #status of
-  Discharging -> Map.lookup (state ^. #level) lvlNoteMap
+  Discharging -> Map.lookup (state ^. #percentage) lvlNoteMap
   _ -> Nothing

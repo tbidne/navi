@@ -5,10 +5,13 @@ module Navi
   )
 where
 
+import Control.Exception (Exception (..))
+import Control.Exception.Safe (MonadCatch, MonadThrow, try)
 import Control.Monad.IO.Class (MonadIO (..))
 import Control.Monad.Reader (MonadReader (..), ReaderT (..), asks)
 import Control.Monad.Trans (MonadTrans (..))
 import DBus.Notify (Client, UrgencyLevel (..))
+import Data.Text qualified as T
 import Data.Text.Lazy.Builder qualified as T
 import Data.Void (Void)
 import Katip (Katip, KatipContext, LogStr (..), Severity (..))
@@ -39,10 +42,12 @@ newtype NaviT e m a = MkNaviT {runNaviT :: ReaderT e m a}
     ( Functor,
       Applicative,
       Monad,
+      MonadCatch,
       MonadIO,
       MonadNotify,
       MonadShell,
       MonadReader e,
+      MonadThrow,
       MonadSystemInfo
     )
     via (ReaderT e m)
@@ -96,6 +101,7 @@ runNavi ::
   ( HasClient env,
     HasEvents ref env,
     HasPollInterval env,
+    MonadCatch m,
     MonadLogger m,
     MonadMutRef m ref,
     MonadNotify m,
@@ -114,7 +120,9 @@ runNavi = do
     traverse (processEvent client) events
 
 processEvent ::
-  ( MonadLogger m,
+  forall m ref.
+  ( MonadCatch m,
+    MonadLogger m,
     MonadMutRef m ref,
     MonadNotify m,
     MonadSystemInfo m
@@ -122,16 +130,16 @@ processEvent ::
   Client ->
   AnyEvent ref ->
   m ()
-processEvent client (MkAnyEvent event) = Event.runEvent event >>= handleResult
+processEvent client (MkAnyEvent event) =
+  try (Event.runEvent event) >>= handleResult
   where
     name = event ^. #name
     repeatEvent = event ^. #repeatEvent
     errorNote = event ^. #errorNote
     raiseAlert = event ^. #raiseAlert
 
-    handleResult (Left errs) =
-      addNamespace "Handling Result" $
-        traverse handleErr errs $> ()
+    handleResult (Left ex) =
+      addNamespace "Handling Result" $ handleErr ex
     handleResult (Right result) = addNamespace "Handling Result" $ do
       case raiseAlert result of
         Nothing -> do
@@ -147,24 +155,22 @@ processEvent client (MkAnyEvent event) = Event.runEvent event >>= handleResult
               Event.updatePrevTrigger repeatEvent result
               sendNote client note
 
-    handleErr err@MkEventErr {short, long} = do
+    handleErr :: EventErr -> m ()
+    handleErr ex = do
       blockErrEvent <- Event.blockErr errorNote
-      logText ErrorS $ mkLog "Event Error" $ short <> ": " <> long
+      logText ErrorS $ T.pack $ displayException ex
       if blockErrEvent
         then logText DebugS "Error note blocked"
-        else sendNote client (serviceErrToNote err)
+        else sendNote client (serviceErrToNote ex)
 
     mkLog :: Show a => Text -> a -> Text
     mkLog msg x = "[" <> name <> "] " <> msg <> ": " <> showt x
 
 serviceErrToNote :: EventErr -> NaviNote
-serviceErrToNote eventErr =
+serviceErrToNote ex =
   MkNaviNote
-    { summary = "Event Error",
-      body = Just $ name <> ": " <> short,
+    { summary = ex ^. #name,
+      body = Just $ ex ^. #short,
       urgency = Just Critical,
       timeout = Nothing
     }
-  where
-    name = eventErr ^. #name
-    short = eventErr ^. #short

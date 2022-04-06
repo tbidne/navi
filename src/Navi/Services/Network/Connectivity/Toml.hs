@@ -44,7 +44,7 @@ data NetworkConnectivityToml = MkNetworkConnectivityToml
 
 O.makeFieldLabelsNoPrefix ''NetworkConnectivityToml
 
--- | Codec for 'BatteryChargeStatusToml'.
+-- | Codec for 'BatteryStatusToml'.
 networkConnectivityCodec :: TomlCodec NetworkConnectivityToml
 networkConnectivityCodec =
   MkNetworkConnectivityToml

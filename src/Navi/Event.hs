@@ -29,7 +29,6 @@ import Navi.Event.Types
     EventErr (..),
     RepeatEvent (..),
   )
-import Navi.Event.Types qualified as ETypes
 import Navi.Prelude
 import Optics.Operators ((^.))
 
@@ -43,11 +42,11 @@ runEvent ::
     Show result
   ) =>
   Event ref result ->
-  m (Either [EventErr] result)
+  m result
 runEvent event = addNamespace "Run Event" $ do
-  eResult <- query $ event ^. #serviceType
-  logEvent event DebugS $ "Shell returned: " <> showt eResult
-  pure $ first (fmap ETypes.fromQueryError) eResult
+  result <- query $ event ^. #serviceType
+  logEvent event DebugS $ "Shell returned: " <> showt result
+  pure result
 
 -- | Determines if we should block the event. The semantics are:
 --

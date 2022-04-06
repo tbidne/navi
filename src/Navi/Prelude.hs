@@ -38,6 +38,7 @@ import Control.Applicative as X
     liftA2,
     (<**>),
   )
+import Control.Exception.Safe as X (Exception (..), MonadCatch, MonadThrow, catch, handle, throw)
 import Control.Monad as X
   ( Monad (..),
     forever,
@@ -70,6 +71,7 @@ import Data.Kind as X (Constraint, Type)
 import Data.List as X (filter)
 import Data.Maybe as X (Maybe (..), fromMaybe, maybe, maybeToList)
 import Data.Monoid as X (Monoid (..))
+import Data.Proxy as X (Proxy (..))
 import Data.Semigroup as X (Semigroup (..))
 import Data.Text as X (Text)
 import Data.Text qualified as T

@@ -40,8 +40,8 @@ data ConfigToml = MkConfigToml
     logToml :: Logging,
     singleToml :: [SingleToml],
     multipleToml :: [MultipleToml],
-    batteryStateToml :: Maybe BatteryStateToml,
-    batteryChargeStatusToml :: Maybe BatteryChargeStatusToml,
+    batteryStateToml :: Maybe BatteryPercentageToml,
+    batteryChargeStatusToml :: Maybe BatteryStatusToml,
     networkConnectivityToml :: [NetworkConnectivityToml]
   }
   deriving (Show)

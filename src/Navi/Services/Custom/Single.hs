@@ -19,7 +19,7 @@ import Navi.Prelude
 import Navi.Services.Custom.Single.Toml (SingleToml (..))
 import Navi.Services.Custom.Single.Toml qualified as SingleToml
 import Navi.Services.Types (ServiceType (..))
-import Pythia.Data (Command)
+import Pythia.Data.Command (Command)
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent :: (MonadMutRef m ref) => SingleToml -> m (AnyEvent ref)

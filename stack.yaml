@@ -6,9 +6,9 @@ extra-deps:
 - fdo-notify-0.3.1@sha256:9cfb75a5a0d5e4b1d40b0b4dbcc6bb29e58f21e4e14c83e2ffe1ca78bdee59d8,734
 - package-version-0.1.0.0@sha256:bb9fc93e905540aa8e1b32f80c2dc82756a4481c63779bd92e3796ed8085ab98,2854
 - git: https://github.com/tbidne/algebra-simple.git
-  commit: 325be17d256d257cedfada4087beddaf5d2ec7c2
+  commit: 7189c69af86bc2d75758a13ae375841fc5084242
 - git: https://github.com/tbidne/pythia.git
-  commit: 7d8082643c0e78c41f35f0d4bab226cb0794550f
+  commit: 25fbd13a3af1db9cccd06ea8321b2f75941cf2a4
 - git: https://github.com/tbidne/refined-extras.git
   commit: bcee9c3c3d838243134166937c74d64c707fa236
 - git: https://github.com/tbidne/smart-math.git

@@ -12,7 +12,8 @@ import Navi.Prelude
 import Navi.Services.Network.Connectivity.Toml (NetworkConnectivityToml, ProgramToml (..))
 import Navi.Services.Types (ServiceType (..))
 import Optics.Core ((%), (^.))
-import Pythia.Services.Network.Connection (ConnState (..), Connection, Device (..), NetConnApp (..))
+import Pythia.Data.RunApp qualified as Pythia
+import Pythia.Services.NetInterface (Device (..), NetInterface (..), NetInterfaceApp (..), NetInterfaceConfig (..), NetInterfaceState (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
@@ -33,11 +34,13 @@ toEvent toml = do
         }
   where
     device = MkDevice $ toml ^. #deviceName
-    cmd = NetworkConnection $ case toml ^. #programToml of
-      NetworkManagerToml -> NetConNmCli device
-      CustomToml t -> NetConCustom device t
+    cmd = NetworkInterface $ case toml ^. #programToml of
+      NetworkManagerToml -> MkNetInterfaceConfig (Pythia.Single NetInterfaceNmCli) (Just device)
+      CustomToml _ -> MkNetInterfaceConfig (Pythia.Single NetInterfaceIp) (Just device)
 
-toNote :: NetworkConnectivityToml -> Connection -> Maybe NaviNote
+-- TODO: remove custom
+
+toNote :: NetworkConnectivityToml -> NetInterface -> Maybe NaviNote
 toNote noteToml conn =
   Just $
     MkNaviNote
@@ -47,12 +50,10 @@ toNote noteToml conn =
         timeout = noteToml ^. #mTimeout
       }
   where
-    deviceTxt = conn ^. (#connDevice % #unDevice)
-    nameTxt = fromMaybe "Unknown" $ conn ^. #connName
+    deviceTxt = conn ^. (#idevice % #unDevice)
+    nameTxt = fromMaybe "Unknown" $ conn ^. #iname
     body = "Device " <> deviceTxt <> stateTxt
-    stateTxt = case conn ^. #connState of
-      Connected -> " is connected to: " <> nameTxt
-      Disconnected -> " is disconnected from: " <> nameTxt
-      Unavailable -> " is unavailable"
-      Unmanaged -> " is unmanaged"
+    stateTxt = case conn ^. #istate of
+      Up -> " is connected to: " <> nameTxt
+      Down -> " is disconnected from: " <> nameTxt
       UnknownState txt -> " is in an unknown state: " <> txt

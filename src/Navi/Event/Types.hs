@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -9,17 +10,16 @@ module Navi.Event.Types
     RepeatEvent (..),
     ErrorNote (..),
     EventErr (..),
-    fromQueryError,
   )
 where
 
+import Control.Exception (Exception)
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Prelude
 import Navi.Services.Types (ServiceType)
 import Optics.Operators ((^.))
 import Optics.TH qualified as O
-import Pythia.Data (QueryError ())
 
 -- | Determines if we are allowed to send off duplicate notifications
 -- simultaneously. If we are not, then 'NoRepeats' holds the last trigger
@@ -53,12 +53,13 @@ data EventErr = MkEventErr
     long :: Text
   }
   deriving (Show)
+  deriving anyclass (Exception)
 
 O.makeFieldLabelsNoPrefix ''EventErr
 
 -- | 'Event' represents sending notifications. An event will:
 --
--- 1. Query for information (i.e., run a shell command).
+-- 1. Query for information (i.e. run a shell command).
 -- 2. Parse the result.
 -- 3. Raise an alert if the result matches some condition.
 data Event ref result = MkEvent
@@ -95,12 +96,3 @@ data AnyEvent ref where
 deriving instance Show (AnyEvent ref)
 
 O.makeFieldLabelsNoPrefix ''AnyEvent
-
--- | Maps 'QueryError' to 'EventErr'.
-fromQueryError :: QueryError -> EventErr
-fromQueryError qe =
-  MkEventErr
-    { name = qe ^. #name,
-      short = qe ^. #short,
-      long = qe ^. #long
-    }

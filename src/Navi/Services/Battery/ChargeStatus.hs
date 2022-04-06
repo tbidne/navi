@@ -1,7 +1,7 @@
 -- | This module provides a service for alerts related to battery statuses.
 module Navi.Services.Battery.ChargeStatus
-  ( BatteryChargeStatusToml,
-    BatteryChargeStatusToml.batteryChargeStatusCodec,
+  ( BatteryStatusToml,
+    BatteryStatusToml.batteryChargeStatusCodec,
     toEvent,
   )
 where
@@ -17,16 +17,16 @@ import Navi.Event.Types
     RepeatEvent (..),
   )
 import Navi.Prelude
-import Navi.Services.Battery.ChargeStatus.Toml (BatteryChargeStatusNoteToml (..), BatteryChargeStatusToml)
-import Navi.Services.Battery.ChargeStatus.Toml qualified as BatteryChargeStatusToml
+import Navi.Services.Battery.ChargeStatus.Toml (BatteryStatusNoteToml (..), BatteryStatusToml)
+import Navi.Services.Battery.ChargeStatus.Toml qualified as BatteryStatusToml
 import Navi.Services.Types (ServiceType (..))
 import Optics.Operators ((^.))
-import Pythia.Services.Battery.ChargeStatus (BatteryChargeStatusApp, ChargeStatus (..))
+import Pythia.Services.Battery (BatteryConfig, BatteryStatus (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
   (MonadMutRef m ref) =>
-  BatteryChargeStatusToml ->
+  BatteryStatusToml ->
   m (AnyEvent ref)
 toEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
@@ -38,21 +38,21 @@ toEvent toml = do
     note = toml ^. #note
 
 mkStatusEvent ::
-  BatteryChargeStatusNoteToml ->
-  BatteryChargeStatusApp ->
-  RepeatEvent ref ChargeStatus ->
+  BatteryStatusNoteToml ->
+  BatteryConfig ->
+  RepeatEvent ref BatteryStatus ->
   ErrorNote ref ->
-  Event ref ChargeStatus
+  Event ref BatteryStatus
 mkStatusEvent noteToml program repeatEvent errorNote =
   MkEvent
     { name = "Battery Charge Status",
-      serviceType = BatteryChargeStatus program,
+      serviceType = BatteryStatus program,
       raiseAlert = toNote noteToml,
       repeatEvent = repeatEvent,
       errorNote = errorNote
     }
 
-toNote :: BatteryChargeStatusNoteToml -> ChargeStatus -> Maybe NaviNote
+toNote :: BatteryStatusNoteToml -> BatteryStatus -> Maybe NaviNote
 toNote noteToml status = toNote' timeout $ fromStatus status
   where
     timeout = noteToml ^. #mTimeout
@@ -60,6 +60,7 @@ toNote noteToml status = toNote' timeout $ fromStatus status
     fromStatus Charging = "Battery charging"
     fromStatus Discharging = "Battery discharging"
     fromStatus Full = "Battery full"
+    fromStatus Pending = "Battery pending"
     fromStatus (Unknown txt) = "Unknown status: " <> txt
 
 toNote' :: Maybe Timeout -> Text -> Maybe NaviNote

@@ -10,12 +10,12 @@ package navi
 source-repository-package
     type: git
     location: https://github.com/tbidne/algebra-simple.git
-    tag: 325be17d256d257cedfada4087beddaf5d2ec7c2
+    tag: 7189c69af86bc2d75758a13ae375841fc5084242
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/pythia.git
-    tag: 7d8082643c0e78c41f35f0d4bab226cb0794550f
+    tag: 25fbd13a3af1db9cccd06ea8321b2f75941cf2a4
 
 source-repository-package
     type: git
