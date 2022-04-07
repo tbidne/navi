@@ -129,16 +129,16 @@ processEvent ::
   m ()
 processEvent client (MkAnyEvent event) = do
   logText DebugS $ "Checking " <> event ^. #name
-  try (Event.runEvent event) >>= handleResult
+  (Event.runEvent event >>= handleSuccess)
+    `catch` handleEventErr
+    `catch` handleSomeException
   where
     name = event ^. #name
     repeatEvent = event ^. #repeatEvent
     errorNote = event ^. #errorNote
     raiseAlert = event ^. #raiseAlert
 
-    handleResult (Left ex) =
-      addNamespace "Handling Result" $ handleErr ex
-    handleResult (Right result) = addNamespace "Handling Result" $ do
+    handleSuccess result = addNamespace "Handling Success" $ do
       case raiseAlert result of
         Nothing -> do
           logText DebugS $ mkLog "No alert to raise" result
@@ -153,22 +153,39 @@ processEvent client (MkAnyEvent event) = do
               Event.updatePrevTrigger repeatEvent result
               sendNote client note
 
-    handleErr :: EventErr -> m ()
-    handleErr ex = do
+    handleEventErr =
+      addNamespace "Handling EventErr"
+        . handleErr eventErrToNote
+
+    handleSomeException =
+      addNamespace "Handling SomeException"
+        . handleErr exToNote
+
+    handleErr :: Exception e => (e -> NaviNote) -> e -> m ()
+    handleErr toNote e = do
       blockErrEvent <- Event.blockErr errorNote
-      logText ErrorS $ T.pack $ displayException ex
+      logText ErrorS $ T.pack $ displayException e
       if blockErrEvent
         then logText DebugS "Error note blocked"
-        else sendNote client (serviceErrToNote ex)
+        else sendNote client (toNote e)
 
     mkLog :: Show a => Text -> a -> Text
     mkLog msg x = "[" <> name <> "] " <> msg <> ": " <> showt x
 
-serviceErrToNote :: EventErr -> NaviNote
-serviceErrToNote ex =
+eventErrToNote :: EventErr -> NaviNote
+eventErrToNote ex =
   MkNaviNote
     { summary = ex ^. #name,
       body = Just $ ex ^. #short,
+      urgency = Just Critical,
+      timeout = Nothing
+    }
+
+exToNote :: SomeException -> NaviNote
+exToNote ex =
+  MkNaviNote
+    { summary = "Exception",
+      body = Just $ T.pack (displayException ex),
       urgency = Just Critical,
       timeout = Nothing
     }

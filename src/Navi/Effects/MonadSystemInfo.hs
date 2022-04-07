@@ -11,9 +11,9 @@ import Data.Text qualified as T
 import Navi.Event.Types (EventErr (..))
 import Navi.Prelude
 import Navi.Services.Types (ServiceType (..))
+import Pythia (PythiaException (..))
+import Pythia qualified
 import Pythia.Data.Command (Command (..))
-import Pythia.Services.Battery qualified as Pythia
-import Pythia.Services.NetInterface qualified as Pythia
 import Pythia.ShellApp (SimpleShell (..))
 import Pythia.ShellApp qualified as ShellApp
 
@@ -24,25 +24,37 @@ class Monad m => MonadSystemInfo m where
 instance MonadSystemInfo IO where
   query :: ServiceType result -> IO result
   query = \case
-    BatteryPercentage bp -> Pythia.queryBatteryConfig bp
+    BatteryPercentage bp ->
+      rethrowPythia "Battery Percentage" $ Pythia.queryBatteryConfig bp
     BatteryStatus bp ->
-      view #status <$> Pythia.queryBatteryConfig bp
-    NetworkInterface cp -> do
+      rethrowPythia "Battery Status" $ view #status <$> Pythia.queryBatteryConfig bp
+    NetworkInterface cp -> rethrowPythia "NetInterface" $ do
       ifs <-
         view #unNetInterfaces <$> Pythia.queryNetInterfacesConfig cp
 
       let d = cp ^. #interfaceDevice
-          dName = show d
+          dName = showt d
+          errMsg = "Did not find device: " <> dName
       case headMaybe ifs of
         Nothing ->
           throw $
             MkEventErr
-              "NetInterfaces"
-              "Query Error"
-              ("No device found matching: " <> showt dName)
+              "NetInterface"
+              errMsg
+              errMsg
         Just i -> pure i
     Single cmd -> querySingle cmd
     Multiple cmd -> queryMultiple cmd
+
+rethrowPythia :: MonadCatch m => Text -> m a -> m a
+rethrowPythia n io =
+  io `catch` \(e :: PythiaException) ->
+    throw $
+      MkEventErr
+        { name = n,
+          short = "PythiaException",
+          long = T.pack $ displayException e
+        }
 
 instance MonadSystemInfo m => MonadSystemInfo (ReaderT e m) where
   query = lift . query

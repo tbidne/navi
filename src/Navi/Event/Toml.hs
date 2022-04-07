@@ -65,8 +65,8 @@ errorNoteCodec = Toml.textBy showErrEvt parseErrEvt "error-events"
     showErrEvt ErrNoteAllowRepeatsToml = "repeats"
     showErrEvt ErrNoteNoRepeatsToml = "no-repeats"
     parseErrEvt "none" = Right NoErrNoteToml
-    parseErrEvt "repeats" = Right NoErrNoteToml
-    parseErrEvt "no-repeats" = Right NoErrNoteToml
+    parseErrEvt "repeats" = Right ErrNoteAllowRepeatsToml
+    parseErrEvt "no-repeats" = Right ErrNoteNoRepeatsToml
     parseErrEvt other = Left $ "Unsupported error event key: " <> other
 
 -- | Constructs a mutable 'ErrorNote' from 'ErrorNoteToml'.

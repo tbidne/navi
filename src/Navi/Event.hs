@@ -76,21 +76,28 @@ blockRepeat repeatEvt newVal = addNamespace "Checking event repeats" $ do
 -- 2. 'AllowErrNote' 'AllowRepeats': never block (returns 'False').
 -- 3. 'AllowErrNote' 'NoRepeats': block only if we have sent a notifcation
 --    for this error before.
-blockErr :: MonadMutRef m ref => ErrorNote ref -> m Bool
+blockErr :: (MonadLogger m, MonadMutRef m ref) => ErrorNote ref -> m Bool
 blockErr errorEvent =
   case errorEvent of
     -- Error events are off, block.
-    NoErrNote -> pure True
+    NoErrNote -> do
+      logText DebugS "Error notes are off"
+      pure True
     -- Error events are on and repeats allowed, do not block.
-    AllowErrNote AllowRepeats -> pure False
+    AllowErrNote AllowRepeats -> do
+      logText DebugS "Error notes are on and repeats allowed"
+      pure False
     -- Error events are on but repeats not allowed, must check.
     AllowErrNote (NoRepeats ref) -> do
       prevErr <- readRef ref
       case prevErr of
         -- Already sent this error, block
-        Just () -> pure True
+        Just () -> do
+          logText DebugS "Already sent error"
+          pure True
         -- Error not send, do not block
         Nothing -> do
+          logText DebugS "Send error"
           writeRef ref $ Just ()
           pure False
 
