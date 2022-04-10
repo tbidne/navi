@@ -12,6 +12,10 @@ module Navi.Prelude
   ( -- * Total versions of partial functions
     headMaybe,
 
+    -- * Text
+    readFileUtf8Lenient,
+    decodeUtf8Lenient,
+
     -- * Strict IO
     hGetContents',
     readFile',
@@ -52,8 +56,11 @@ import Control.Monad as X
     (=<<),
     (>=>),
   )
+import Control.Monad.IO.Class as X (MonadIO (..))
 import Data.Bifunctor as X (Bifunctor (..))
 import Data.Bool as X (Bool (..), not, otherwise, (&&), (||))
+import Data.ByteString (ByteString)
+import Data.ByteString qualified as BS
 import Data.Either as X (Either (..), either)
 import Data.Eq as X (Eq (..))
 import Data.Foldable as X (Foldable (..), length, traverse_)
@@ -69,6 +76,8 @@ import Data.Semigroup as X (Semigroup (..))
 import Data.String as X (String)
 import Data.Text as X (Text)
 import Data.Text qualified as T
+import Data.Text.Encoding qualified as TextEnc
+import Data.Text.Encoding.Error qualified as TextEncErr
 import Data.Text.IO as X (putStr, putStrLn)
 import Data.Traversable as X (Traversable (..))
 import Data.Tuple as X (fst, snd)
@@ -132,3 +141,15 @@ hGetContents' h = IO.hGetContents h >>= \s -> length s `seq` pure s
 -- | Strict version of 'P.readFile', until we can upgrade to GHC 9.0.1
 readFile' :: FilePath -> IO String
 readFile' name = IO.openFile name IO.ReadMode >>= hGetContents'
+
+-- | Strictly reads a file and leniently converts the contents to UTF8.
+--
+-- @since 0.1
+readFileUtf8Lenient :: MonadIO m => FilePath -> m Text
+readFileUtf8Lenient = fmap decodeUtf8Lenient . liftIO . BS.readFile
+
+-- | Lenient UTF8 decode.
+--
+-- @since 0.1
+decodeUtf8Lenient :: ByteString -> Text
+decodeUtf8Lenient = TextEnc.decodeUtf8With TextEncErr.lenientDecode

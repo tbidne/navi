@@ -87,17 +87,20 @@ library
     Navi.Services.Types
 
   build-depends:
-    , attoparsec            >=0.13.2.3 && <0.15
-    , base                  >=4.14.1.0 && <4.17
-    , containers            >=0.5.11.0 && <0.7
+    , attoparsec            >=0.13.2.3  && <0.15
+    , base                  >=4.14.1.0  && <4.17
+    , bytestring            >=0.10.10.0 && <0.12
+    , containers            >=0.5.11.0  && <0.7
     , dbus                  ^>=1.2.14
     , directory             ^>=1.3.5.0
     , fdo-notify            ^>=0.3.1
+    , gitrev                >=1.2.0     && <1.4
     , katip                 ^>=0.8.4.0
     , mtl                   ^>=2.2.2
     , optics-core           ^>=0.4
     , optics-th             ^>=0.4
-    , optparse-applicative  >=0.16.1.0 && <0.18
+    , optparse-applicative  >=0.16.1.0  && <0.18
+    , package-version       ^>=0.1.0.0
     , pythia                ^>=0.1
     , safe-exceptions       ^>=0.1.7.0
     , smart-math            ^>=0.1.0.0
@@ -113,12 +116,11 @@ executable navi
   build-depends:
     , base
     , directory
-    , gitrev           >=1.2.0   && <1.4
+    , filepath
     , katip
     , mtl
     , navi
     , optics-core
-    , package-version  ^>=0.1.0.0
     , text
 
   hs-source-dirs:   app

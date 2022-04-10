@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -11,10 +12,12 @@ module Navi.Config.Types
 where
 
 import Data.List.NonEmpty
+import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Event (AnyEvent (..))
 import Navi.Prelude
 import Numeric.Data.NonNegative (NonNegative)
+import Pythia.Class.Printer qualified as Printer
 import Toml (TomlDecodeError)
 
 -- | Log location configuration.
@@ -65,6 +68,17 @@ data ConfigErr
   = FileErr SomeException
   | TomlError [TomlDecodeError]
   | NoEvents
-  deriving (Show)
+  deriving stock (Show)
+
+instance Exception ConfigErr where
+  displayException (FileErr ex) = "Error reading file: <" <> displayException ex <> ">"
+  displayException NoEvents = "No events found"
+  displayException (TomlError errs) =
+    T.unpack $
+      header <> delim
+        <> Printer.joinX delim (fmap show errs)
+    where
+      delim = "\n - "
+      header = "Tomls errors:"
 
 makeFieldLabelsNoPrefix ''ConfigErr

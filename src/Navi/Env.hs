@@ -19,7 +19,6 @@ where
 
 import DBus.Client (Client)
 import Data.List.NonEmpty (NonEmpty)
-import Data.Text qualified as T
 import Katip (LogContexts, LogEnv, Namespace)
 import Navi.Config (Config)
 import Navi.Config qualified as Config
@@ -101,20 +100,15 @@ mkEnv ::
   LogContexts ->
   Namespace ->
   Config ref ->
-  m (Either Text (Env ref))
+  m (Env ref)
 mkEnv logEnv logContext namespace config = do
-  eClient <- initConn
-  pure $ case eClient of
-    Left err -> Left $ mkErr err
-    Right client ->
-      Right $
-        MkEnv
-          { pollInterval = Config.pollInterval config,
-            events = Config.events config,
-            client = client,
-            logEnv = logEnv,
-            logCtx = logContext,
-            logNamespace = namespace
-          }
-  where
-    mkErr = (<>) "Error initiating notifications: " . T.pack . displayException
+  client <- initConn
+  pure $
+    MkEnv
+      { pollInterval = Config.pollInterval config,
+        events = Config.events config,
+        client = client,
+        logEnv = logEnv,
+        logCtx = logContext,
+        logNamespace = namespace
+      }

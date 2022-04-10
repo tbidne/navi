@@ -27,22 +27,22 @@ import Navi.Services.Custom.Single qualified as Single
 import Navi.Services.Network.NetInterfaces qualified as NetConn
 import Toml qualified
 
--- | Parses the provided toml file into a 'Config'.
-readConfig :: (MonadMutRef m ref, MonadShell m) => FilePath -> m (Either ConfigErr (Config ref))
+-- | Parses the provided toml file into a 'Config'. Throws 'ConfigErr' if
+-- anything goes wrong.
+readConfig ::
+  (MonadCatch m, MonadMutRef m ref, MonadShell m) =>
+  FilePath ->
+  m (Config ref)
 readConfig path = do
-  eContents <- readFile path
+  eContents <- try $ readFile path
   case eContents of
-    Left ex -> pure $ toFileErr ex
+    Left ex -> throw $ FileErr ex
     Right contents -> do
       case Toml.decodeExact ConfigToml.configCodec contents of
-        Left tomlErrs -> pure $ toTomlErr tomlErrs
-        Right cfg -> do
-          maybe (Left NoEvents) Right <$> tomlToConfig cfg
-  where
-    toFileErr = Left . FileErr
-    toTomlErr = Left . TomlError
+        Left tomlErrs -> throw $ TomlError tomlErrs
+        Right cfg -> tomlToConfig cfg
 
-tomlToConfig :: (MonadMutRef m ref) => ConfigToml -> m (Maybe (Config ref))
+tomlToConfig :: (MonadMutRef m ref, MonadThrow m) => ConfigToml -> m (Config ref)
 tomlToConfig toml = do
   singleEvents <- traverse Single.toEvent singleToml
   multipleEvents <- traverse Multiple.toEvent multipleToml
@@ -60,10 +60,10 @@ tomlToConfig toml = do
           ]
       allEvts = maybeEvts <> multipleEvts
 
-  pure $ case allEvts of
-    [] -> Nothing
+  case allEvts of
+    [] -> throw NoEvents
     (e : es) ->
-      Just $
+      pure $
         MkConfig
           { pollInterval = pollToml,
             events = e :| es,

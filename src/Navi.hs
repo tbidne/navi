@@ -5,7 +5,6 @@ module Navi
   )
 where
 
-import Control.Monad.IO.Class (MonadIO (..))
 import Control.Monad.Reader (MonadReader (..), ReaderT (..), asks)
 import Control.Monad.Trans (MonadTrans (..))
 import DBus.Notify (Client, UrgencyLevel (..))

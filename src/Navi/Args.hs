@@ -9,10 +9,13 @@ module Navi.Args
 where
 
 import Control.Applicative qualified as A
-import Control.Monad.IO.Class (MonadIO (..))
 import Data.Functor.Classes (Show1 (..))
 import Data.Functor.Classes qualified as Functor
 import Data.Functor.Identity (Identity (..))
+import Data.List qualified as L
+import Data.Text qualified as T
+import Data.Version.Package qualified as PV
+import Development.GitRev qualified as GitRev
 import Navi.Prelude
 import Options.Applicative (Parser, ParserInfo (..))
 import Options.Applicative qualified as OptApp
@@ -32,9 +35,7 @@ data Args f = MkArgs
     -- | Path to the configuration directory. In addition to informing
     -- on 'configFile', this is used to determine where the log file is
     -- written.
-    configDir :: f FilePath,
-    -- | If true we print the version and exit.
-    displayVersion :: Bool
+    configDir :: f FilePath
   }
 
 makeFieldLabelsNoPrefix ''Args
@@ -52,13 +53,13 @@ instance (Show1 f) => Show (Args f) where
 --
 -- * No arguments provided.
 --
---     * configFile:  xdgBase/config.toml
---     * configDir: xdgBase
+--     * configFile:  xdgBase/navi/config.toml
+--     * configDir: xdgBase/navi
 --
 -- * configFile' provided.
 --
 --     * configFile: configFile'
---     * configDir: xdgBase
+--     * configDir: xdgBase/navi
 --
 -- * configDir' provided.
 --
@@ -93,8 +94,7 @@ fillMissingDefaults args = do
   pure $
     MkArgs
       { configFile = Identity configFile',
-        configDir = Identity configDir',
-        displayVersion = args ^. #displayVersion
+        configDir = Identity configDir'
       }
   where
     configFile = args ^. #configFile
@@ -119,8 +119,31 @@ argsParser =
   MkArgs
     <$> configFileParser
     <*> configDirParser
-    <*> versionParser
       <**> OptApp.helper
+      <**> version
+
+version :: Parser (a -> a)
+version = OptApp.infoOption txt (OptApp.long "version" <> OptApp.short 'v')
+  where
+    txt =
+      L.intercalate
+        "\n"
+        [ "Pythia",
+          "Version: " <> $$(PV.packageVersionStringTH "navi.cabal"),
+          "Revision: " <> $(GitRev.gitHash),
+          "Date: " <> $(GitRev.gitCommitDate)
+        ]
+
+versionTxt :: Text
+versionTxt =
+  T.pack $
+    L.intercalate
+      "\n"
+      [ "Navi",
+        "Version: " <> $$(PV.packageVersionStringTH "navi.cabal"),
+        "Revision: " <> $(GitRev.gitHash),
+        "Date: " <> $(GitRev.gitCommitDate)
+      ]
 
 configFileParser :: Parser (Maybe String)
 configFileParser =
@@ -151,11 +174,3 @@ configDirParser =
     helpTxt =
       "Path to config directory. Determines where we look for "
         <> " config.toml and output log file."
-
-versionParser :: Parser Bool
-versionParser =
-  OptApp.switch
-    ( OptApp.long "version"
-        <> OptApp.short 'v'
-        <> OptApp.help "Displays the version number."
-    )

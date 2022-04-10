@@ -18,11 +18,11 @@ import Numeric.Data.NonNegative qualified as NonNegative
 -- implemented in terms of 'DBus.Client', though this may be generalized
 -- to other notification systems.
 class Monad m => MonadNotify m where
-  initConn :: m (Either SomeException Client)
+  initConn :: m Client
   sendNote :: Client -> NaviNote -> m ()
 
 instance MonadNotify IO where
-  initConn = try DBusN.connectSession
+  initConn = DBusN.connectSession
   sendNote client = void . DBusN.notify client . naviToDBus
 
 instance MonadNotify m => MonadNotify (ReaderT e m) where
