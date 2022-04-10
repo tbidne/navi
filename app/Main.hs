@@ -1,6 +1,5 @@
 module Main (main) where
 
-import Control.Exception qualified as Except
 import Control.Monad.Reader (ReaderT (..))
 import Data.Functor.Identity (Identity (..))
 import Data.IORef (IORef)
@@ -30,7 +29,7 @@ main = do
   config <- tryParseConfig args
 
   let mkLogEnvFn = mkLogEnv (args ^. #configDir % #runIdentity) (config ^. #logging)
-  Except.bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
+  bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
     env <- mkEnv logEnv logCtx namespace config
     absurd <$> runReaderT (runNaviT (runNavi @IORef)) env
 
