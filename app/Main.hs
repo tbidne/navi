@@ -17,6 +17,7 @@ import Navi.Config (Config (..), LogLoc (..), Logging (..), readConfig)
 import Navi.Env (mkEnv)
 import Navi.Prelude
 import System.Directory qualified as Dir
+import System.Exit qualified as Exit
 import System.FilePath ((</>))
 import System.IO qualified as IO
 
@@ -28,7 +29,7 @@ main = do
   let mkLogEnvFn = mkLogEnv (args ^. #configDir % #runIdentity) (config ^. #logging)
   bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
     env <- mkEnv logEnv logCtx namespace config
-    absurd <$> runReaderT (runNaviT (runNavi @IORef)) env
+    absurd <$> runNaviT runNavi env
 
 tryParseConfig :: Args Identity -> IO (Config IORef)
 tryParseConfig =
@@ -43,23 +44,40 @@ mkLogEnv dir MkLogging {severity, location} = do
   scribe <- case location of
     Nothing -> do
       let path = dir </> "navi.log"
-      delIfExist path
+      renameIfExists path
       K.mkFileScribe path severityFn V2
     Just (File f) -> do
-      delIfExist f
+      renameIfExists f
       K.mkFileScribe f severityFn V2
     Just Stdout -> K.mkHandleScribe ColorIfTerminal IO.stdout severityFn V2
   K.registerScribe "logger" scribe K.defaultScribeSettings =<< K.initLogEnv namespace environment
   where
     environment = "production"
-    delIfExist fp = do
-      fileExists <- Dir.doesFileExist fp
-      if fileExists
-        then Dir.removeFile fp
-        else pure ()
 
 namespace :: Namespace
 namespace = "navi"
 
 logCtx :: LogContexts
 logCtx = K.liftPayload ()
+
+renameIfExists :: FilePath -> IO ()
+renameIfExists fp = do
+  fileExists <- Dir.doesFileExist fp
+  if fileExists
+    then do
+      fp' <- uniqName fp
+      Dir.renameFile fp fp'
+    else pure ()
+
+uniqName :: FilePath -> IO FilePath
+uniqName fp = go 1
+  where
+    go :: Word16 -> IO FilePath
+    go !counter
+      | counter == maxBound = Exit.die $ "Failed renaming file: " <> fp
+      | otherwise = do
+          let fp' = fp <> show counter
+          b <- Dir.doesFileExist fp'
+          if b
+            then go (counter + 1)
+            else pure fp'

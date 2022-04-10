@@ -26,6 +26,7 @@ common common-exts
   default-extensions:
     NoImplicitPrelude
     AllowAmbiguousTypes
+    BangPatterns
     ConstraintKinds
     DataKinds
     DeriveFunctor

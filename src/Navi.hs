@@ -1,6 +1,7 @@
 -- | This module provides the core application type and logic.
 module Navi
   ( NaviT (..),
+    runNaviT,
     runNavi,
   )
 where
@@ -30,7 +31,7 @@ import Navi.Prelude
 
 -- | NaviT is the core type used to run the application.
 type NaviT :: Type -> (Type -> Type) -> Type -> Type
-newtype NaviT e m a = MkNaviT {runNaviT :: ReaderT e m a}
+newtype NaviT e m a = MkNaviT (ReaderT e m a)
   deriving
     ( Functor,
       Applicative,
@@ -87,6 +88,9 @@ instance MonadMutRef m ref => MonadMutRef (NaviT e m) ref where
   newRef = lift . newRef
   readRef = lift . readRef
   writeRef ref = lift . writeRef ref
+
+runNaviT :: NaviT env m a -> env -> m a
+runNaviT (MkNaviT rdr) = runReaderT rdr
 
 -- | Entry point for the application.
 runNavi ::
