@@ -60,7 +60,6 @@ toNote noteToml status = toNote' timeout $ fromStatus status
     fromStatus Discharging = "Battery discharging"
     fromStatus Full = "Battery full"
     fromStatus Pending = "Battery pending"
-    fromStatus (Unknown txt) = "Unknown status: " <> txt
 
 toNote' :: Maybe Timeout -> Text -> Maybe NaviNote
 toNote' timeout msg =

@@ -24,33 +24,22 @@ packages:
     git: https://github.com/tbidne/algebra-simple.git
     pantry-tree:
       size: 3564
-      sha256: d2b66c2eb6a05ae6d4228c24685770ef10552a60bd221f2f6d69483c5916b410
-    commit: 325be17d256d257cedfada4087beddaf5d2ec7c2
+      sha256: 2bb4be60733811a7dbe020e2512baf0763b6f2324f743d50ab6c5b3dfb7973f4
+    commit: 7189c69af86bc2d75758a13ae375841fc5084242
   original:
     git: https://github.com/tbidne/algebra-simple.git
-    commit: 325be17d256d257cedfada4087beddaf5d2ec7c2
+    commit: 7189c69af86bc2d75758a13ae375841fc5084242
 - completed:
     name: pythia
-    version: 0.1.0.0
+    version: '0.1'
     git: https://github.com/tbidne/pythia.git
     pantry-tree:
-      size: 3182
-      sha256: b190b8d2f6ca806e6e59b9016f2927edf2baa997f3e51be1f7c5f817da228f68
-    commit: 7d8082643c0e78c41f35f0d4bab226cb0794550f
+      size: 3898
+      sha256: 07266318b77c4b4a13eb78a9766be7d2a0cadfeb31238b9876fe6348bfb265f4
+    commit: 2bd16b9c1a79792a68e1f60c7375adc0ef2cb8dc
   original:
     git: https://github.com/tbidne/pythia.git
-    commit: 7d8082643c0e78c41f35f0d4bab226cb0794550f
-- completed:
-    name: refined-extras
-    version: 0.1.0.0
-    git: https://github.com/tbidne/refined-extras.git
-    pantry-tree:
-      size: 2856
-      sha256: 136aa3e977698370381bfb07b560b81ec53d35029e46e184006af9d900a89aed
-    commit: bcee9c3c3d838243134166937c74d64c707fa236
-  original:
-    git: https://github.com/tbidne/refined-extras.git
-    commit: bcee9c3c3d838243134166937c74d64c707fa236
+    commit: 2bd16b9c1a79792a68e1f60c7375adc0ef2cb8dc
 - completed:
     name: smart-math
     version: 0.1.0.0

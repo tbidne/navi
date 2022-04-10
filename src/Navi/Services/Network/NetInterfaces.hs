@@ -38,8 +38,8 @@ toEvent toml = do
   where
     device = MkDevice $ toml ^. #deviceName
     cmd =
-      NetworkInterface $
-        MkNetInterfaceConfig (toml ^. #app) (Just device)
+      NetworkInterface device $
+        MkNetInterfaceConfig (toml ^. #app)
 
 toNote :: NetInterfacesToml -> NetInterface -> Maybe NaviNote
 toNote noteToml conn =

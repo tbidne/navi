@@ -7,7 +7,7 @@ where
 import Navi.Prelude
 import Pythia.Data.Command (Command)
 import Pythia.Services.Battery (Battery, BatteryConfig, BatteryStatus)
-import Pythia.Services.NetInterface (NetInterface, NetInterfaceConfig)
+import Pythia.Services.NetInterface (Device, NetInterface, NetInterfaceConfig)
 
 -- | 'ServiceType' describes all implemented services.
 -- It provides several built-in services for querying and parsing
@@ -18,7 +18,7 @@ type ServiceType :: Type -> Type
 data ServiceType result where
   BatteryPercentage :: BatteryConfig -> ServiceType Battery
   BatteryStatus :: BatteryConfig -> ServiceType BatteryStatus
-  NetworkInterface :: NetInterfaceConfig -> ServiceType NetInterface
+  NetworkInterface :: Device -> NetInterfaceConfig -> ServiceType NetInterface
   Single :: Command -> ServiceType Text
   Multiple :: Command -> ServiceType Text
 

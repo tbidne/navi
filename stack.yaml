@@ -8,9 +8,7 @@ extra-deps:
 - git: https://github.com/tbidne/algebra-simple.git
   commit: 7189c69af86bc2d75758a13ae375841fc5084242
 - git: https://github.com/tbidne/pythia.git
-  commit: 25fbd13a3af1db9cccd06ea8321b2f75941cf2a4
-- git: https://github.com/tbidne/refined-extras.git
-  commit: bcee9c3c3d838243134166937c74d64c707fa236
+  commit: 138a276beb797e23f0decc5aae8f5360b254a845
 - git: https://github.com/tbidne/smart-math.git
   commit: c76b316979c2f704bb3959d073c1ed0b24034103
 

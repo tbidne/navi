@@ -25,24 +25,11 @@ instance MonadSystemInfo IO where
   query :: ServiceType result -> IO result
   query = \case
     BatteryPercentage bp ->
-      rethrowPythia "Battery Percentage" $ Pythia.queryBatteryConfig bp
+      rethrowPythia "Battery Percentage" $ Pythia.queryBattery bp
     BatteryStatus bp ->
-      rethrowPythia "Battery Status" $ view #status <$> Pythia.queryBatteryConfig bp
-    NetworkInterface cp -> rethrowPythia "NetInterface" $ do
-      ifs <-
-        view #unNetInterfaces <$> Pythia.queryNetInterfacesConfig cp
-
-      let d = cp ^. #interfaceDevice
-          dName = showt d
-          errMsg = "Did not find device: " <> dName
-      case headMaybe ifs of
-        Nothing ->
-          throw $
-            MkEventErr
-              "NetInterface"
-              errMsg
-              errMsg
-        Just i -> pure i
+      rethrowPythia "Battery Status" $ view #status <$> Pythia.queryBattery bp
+    NetworkInterface device cp -> rethrowPythia "NetInterface" $ do
+      rethrowPythia "NetInterface" $ Pythia.queryNetInterface device cp
     Single cmd -> querySingle cmd
     Multiple cmd -> queryMultiple cmd
 
