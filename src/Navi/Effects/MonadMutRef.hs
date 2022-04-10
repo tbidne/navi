@@ -4,9 +4,6 @@ module Navi.Effects.MonadMutRef
   )
 where
 
-import Control.Monad.Reader (ReaderT)
-import Control.Monad.Trans (MonadTrans (..))
-import Data.IORef (IORef)
 import Data.IORef qualified as IORef
 import Navi.Prelude
 

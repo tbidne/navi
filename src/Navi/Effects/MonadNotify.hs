@@ -4,8 +4,6 @@ module Navi.Effects.MonadNotify
   )
 where
 
-import Control.Monad.Reader (ReaderT)
-import Control.Monad.Trans (MonadTrans (..))
 import DBus.Client (Client)
 import DBus.Notify (Note (..))
 import DBus.Notify qualified as DBusN

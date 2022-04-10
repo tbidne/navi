@@ -5,8 +5,6 @@ module Navi.Effects.MonadShell
 where
 
 import Control.Concurrent qualified as CC
-import Control.Monad.Reader (ReaderT)
-import Control.Monad.Trans (MonadTrans (..))
 import Navi.Prelude
 import Numeric.Data.NonNegative (NonNegative)
 import Numeric.Data.NonNegative qualified as NonNegative

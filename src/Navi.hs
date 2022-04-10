@@ -5,12 +5,9 @@ module Navi
   )
 where
 
-import Control.Monad.Reader (MonadReader (..), ReaderT (..), asks)
-import Control.Monad.Trans (MonadTrans (..))
 import DBus.Notify (Client, UrgencyLevel (..))
 import Data.Text qualified as T
 import Data.Text.Lazy.Builder qualified as T
-import Data.Void (Void)
 import Katip (Katip, KatipContext, LogStr (..), Severity (..))
 import Katip qualified as K
 import Navi.Data.NaviNote (NaviNote (..))

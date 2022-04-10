@@ -4,7 +4,6 @@ module Navi.Effects.MonadSystemInfo
   )
 where
 
-import Control.Monad.Reader (MonadTrans (..), ReaderT)
 import Data.Attoparsec.Text (Parser)
 import Data.Attoparsec.Text qualified as AP
 import Data.Text qualified as T

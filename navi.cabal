@@ -118,10 +118,8 @@ executable navi
     , directory
     , filepath
     , katip
-    , mtl
     , navi
     , optics-core
-    , text
 
   hs-source-dirs:   app
   ghc-options:      -threaded -with-rtsopts=-N

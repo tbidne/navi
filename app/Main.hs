@@ -1,9 +1,6 @@
 module Main (main) where
 
-import Control.Monad.Reader (ReaderT (..))
 import Data.Functor.Identity (Identity (..))
-import Data.IORef (IORef)
-import Data.Void (absurd)
 import Katip
   ( ColorStrategy (..),
     Item,
