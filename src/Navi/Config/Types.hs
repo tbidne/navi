@@ -16,7 +16,6 @@ import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Event (AnyEvent (..))
 import Navi.Prelude
-import Numeric.Data.NonNegative (NonNegative)
 import Pythia.Class.Printer qualified as Printer
 import Toml (TomlDecodeError)
 
@@ -43,7 +42,7 @@ makeFieldLabelsNoPrefix ''Logging
 -- (e.g., all user defined Events are parsed).
 data Config ref = MkConfig
   { -- | Determines how often we query for alerts, in seconds.
-    pollInterval :: NonNegative Int,
+    pollInterval :: Word16,
     -- | The notification events.
     events :: NonEmpty (AnyEvent ref),
     -- | Logging configuration.

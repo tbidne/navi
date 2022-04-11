@@ -25,11 +25,10 @@ import Navi.Config qualified as Config
 import Navi.Effects (MonadNotify (..))
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
-import Numeric.Data.NonNegative (NonNegative)
 
 -- | Retrieves the poll interval.
 class HasPollInterval env where
-  getPollInterval :: env -> NonNegative Int
+  getPollInterval :: env -> Word16
 
 -- | Retrieves the events.
 class HasEvents ref env | env -> ref where
@@ -59,7 +58,7 @@ class HasLogNamespace env where
 
 -- | 'Env' holds all of our environment data that is used while running navi.
 data Env ref = MkEnv
-  { pollInterval :: NonNegative Int,
+  { pollInterval :: Word16,
     events :: NonEmpty (AnyEvent ref),
     client :: Client,
     logEnv :: LogEnv,

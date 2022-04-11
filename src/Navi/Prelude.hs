@@ -25,6 +25,7 @@ module Navi.Prelude
     (<<$>>),
     maybeToEither,
     monoBimap,
+    w16ToInt,
 
     -- * 'Text' replacements for 'P.String' functions.
     error,
@@ -70,6 +71,7 @@ import Data.Foldable as X (Foldable (..), length, traverse_)
 import Data.Function as X (const, flip, ($), (.))
 import Data.Functor as X (Functor (..), ($>), (<$>), (<&>))
 import Data.IORef as X (IORef)
+import Data.Int as X (Int32)
 import Data.Kind as X (Constraint, Type)
 import Data.List as X (filter, replicate)
 import Data.Maybe as X (Maybe (..), fromMaybe, maybe, maybeToList)
@@ -159,3 +161,6 @@ readFileUtf8Lenient = fmap decodeUtf8Lenient . liftIO . BS.readFile
 -- @since 0.1
 decodeUtf8Lenient :: ByteString -> Text
 decodeUtf8Lenient = TextEnc.decodeUtf8With TextEncErr.lenientDecode
+
+w16ToInt :: Word16 -> Int
+w16ToInt = fromIntegral

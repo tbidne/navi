@@ -20,8 +20,6 @@ import Navi.Services.Custom.Multiple.Toml as MultipleToml
 import Navi.Services.Custom.Single.Toml as SingleToml
 import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml)
 import Navi.Services.Network.NetInterfaces.Toml qualified as NetConnToml
-import Numeric.Data.NonNegative (NonNegative)
-import Numeric.Data.NonNegative qualified as NonNegative
 import Toml
   ( AnyValue,
     BiMap (..),
@@ -35,7 +33,7 @@ import Toml qualified
 
 -- | 'ConfigToml' holds the data that is defined in the configuration file.
 data ConfigToml = MkConfigToml
-  { pollToml :: NonNegative Int,
+  { pollToml :: Word16,
     logToml :: Logging,
     singleToml :: [SingleToml],
     multipleToml :: [MultipleToml],
@@ -49,7 +47,7 @@ data ConfigToml = MkConfigToml
 configCodec :: TomlCodec ConfigToml
 configCodec =
   MkConfigToml
-    <$> nonNegativeCodec "poll-interval" .= pollToml
+    <$> word16Codec "poll-interval" .= pollToml
     <*> Toml.table logCodec "logging" .= logToml
     <*> Toml.list SingleToml.singleCodec "single" .= singleToml
     <*> Toml.list MultipleToml.multipleCodec "multiple" .= multipleToml
@@ -88,19 +86,22 @@ locationCodec = Toml.textBy showLoc parseLoc "location"
     parseLoc "stdout" = Right Stdout
     parseLoc f = Right $ File $ T.unpack f
 
---- | Parses a TOML 'NonNegative'.
-nonNegativeCodec :: Key -> TomlCodec (NonNegative Int)
-nonNegativeCodec = Toml.match _NonNegative
+--- | Parses a TOML 'Word16'.
+word16Codec :: Key -> TomlCodec Word16
+word16Codec = Toml.match _Word16
 
-_NonNegative :: TomlBiMap (NonNegative Int) AnyValue
-_NonNegative = _NonNegativeInt >>> Toml._Int
+_Word16 :: TomlBiMap Word16 AnyValue
+_Word16 = _Word16Int >>> Toml._Int
 
-_NonNegativeInt :: TomlBiMap (NonNegative Int) Int
-_NonNegativeInt = BiMap (Right . NonNegative.unNonNegative) parseNN
+_Word16Int :: TomlBiMap Word16 Int
+_Word16Int = BiMap (Right . fromIntegral) parseW16
   where
-    parseNN =
-      NonNegative.mkNonNegative >.> \case
-        Nothing -> Left $ ArbitraryError "Passed negative to mkNonNegative"
-        Just n -> Right n
+    parseW16 i
+      | i < 0 = Left $ ArbitraryError $ "Received negative for word16: " <> showt i
+      | i > w16ToInt (maxBound :: Word16) =
+          Left $ ArbitraryError $ "Too large for word16: " <> showt i
+      | otherwise = Right $ intToWord16 i
+    intToWord16 :: Int -> Word16
+    intToWord16 = fromIntegral
 
 makeFieldLabelsNoPrefix ''ConfigToml

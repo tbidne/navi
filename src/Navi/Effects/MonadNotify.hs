@@ -10,7 +10,6 @@ import DBus.Notify qualified as DBusN
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Prelude
-import Numeric.Data.NonNegative qualified as NonNegative
 
 -- | This class represents sending desktop notifications. For now it is
 -- implemented in terms of 'DBus.Client', though this may be generalized
@@ -46,6 +45,7 @@ naviToDBus naviNote =
 
 naviToDBusTimeout :: Timeout -> DBusN.Timeout
 naviToDBusTimeout Never = DBusN.Never
-naviToDBusTimeout (Seconds s) = DBusN.Milliseconds $ fromIntegral $ multNN s
+naviToDBusTimeout (Seconds s) = DBusN.Milliseconds $ (* 1_000) $ w16ToInt32 s
   where
-    multNN = (* 1_000) . NonNegative.unNonNegative
+    w16ToInt32 :: Word16 -> Int32
+    w16ToInt32 = fromIntegral
