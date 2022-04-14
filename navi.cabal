@@ -3,7 +3,7 @@ name:               navi
 version:            0.1
 license:            MIT
 license-file:       LICENSE
-tested-with:        GHC ==8.10.7
+tested-with:        GHC ==8.10.7 || ==9.0.2
 copyright:          2021 Thomas Bidne
 author:             Thomas Bidne
 maintainer:         tbidne@prontonmail.com
@@ -120,7 +120,6 @@ executable navi
     , filepath
     , katip
     , navi
-    , optics-core
 
   hs-source-dirs:   app
   ghc-options:      -threaded -with-rtsopts=-N
