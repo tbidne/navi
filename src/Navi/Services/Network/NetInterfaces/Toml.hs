@@ -22,9 +22,9 @@ import Toml qualified
 data NetInterfacesToml = MkNetInterfacesToml
   { -- | Determines how we should query the system for network information.
     app :: RunApp NetInterfaceApp,
-    -- | The name of the network device, corresponding to the output from
-    -- 'networkCommand'. For \"standard\" formats like ifconfig or
-    -- NetworkManager, this might be something like wlp0s20f3 or enp0s31f6.
+    -- | The name of the network device. For \"standard\" formats like
+    -- ifconfig or NetworkManager, this might be something like
+    -- wlp0s20f3 or enp0s31f6.
     deviceName :: Text,
     -- | Determines how we treat repeat alerts.
     repeatEvent :: Maybe RepeatEvtToml,
@@ -37,7 +37,7 @@ data NetInterfacesToml = MkNetInterfacesToml
 
 makeFieldLabelsNoPrefix ''NetInterfacesToml
 
--- | Codec for 'BatteryStatusToml'.
+-- | Codec for 'NetInterfacesToml'.
 netInterfacesCodec :: TomlCodec NetInterfacesToml
 netInterfacesCodec =
   MkNetInterfacesToml
