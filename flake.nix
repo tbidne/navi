@@ -5,7 +5,6 @@
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     pythia-src.url = "github:tbidne/pythia";
-    refined-extras-src.url = "github:tbidne/refined-extras";
     smart-math-src.url = "github:tbidne/smart-math";
   };
   outputs =
@@ -13,7 +12,6 @@
     , flake-utils
     , nixpkgs
     , pythia-src
-    , refined-extras-src
     , self
     , smart-math-src
     }:
@@ -39,11 +37,11 @@
           overrides = final: prev: with compiler; {
             algebra-simple =
               final.callCabal2nix "algebra-simple" algebra-simple-src { };
+            dbus = final.callHackage "dbus" "1.2.22" { };
+            network = prev.network_3_1_2_7;
             optics-core = final.optics-core_0_4;
             optics-th = final.optics-th_0_4;
             pythia = final.callCabal2nix "pythia" pythia-src { };
-            refined-extras =
-              final.callCabal2nix "refined-extras" refined-extras-src { };
             smart-math =
               final.callCabal2nix "smart-math" smart-math-src { };
           };
