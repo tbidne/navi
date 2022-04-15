@@ -16,10 +16,6 @@ module Navi.Prelude
     readFileUtf8Lenient,
     decodeUtf8Lenient,
 
-    -- * Strict IO
-    hGetContents',
-    readFile',
-
     -- * Misc utilities
     (>.>),
     (<<$>>),
@@ -100,7 +96,6 @@ import GHC.Show as X (Show (..))
 import Optics.Core as X (over, set, view, (%), (.~), (^.))
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrismLabels)
 import System.IO as X (FilePath, IO)
-import System.IO qualified as IO
 import Prelude as X (Integer, seq)
 import Prelude qualified as P
 
@@ -141,14 +136,6 @@ infixr 8 >.>
 (<<$>>) = fmap . fmap
 
 infixl 4 <<$>>
-
--- | Strict version of 'P.hGetContents', until we can upgrade to GHC 9.0.1
-hGetContents' :: IO.Handle -> IO.IO String
-hGetContents' h = IO.hGetContents h >>= \s -> length s `seq` pure s
-
--- | Strict version of 'P.readFile', until we can upgrade to GHC 9.0.1
-readFile' :: FilePath -> IO String
-readFile' name = IO.openFile name IO.ReadMode >>= hGetContents'
 
 -- | Strictly reads a file and leniently converts the contents to UTF8.
 --
