@@ -89,6 +89,7 @@ instance MonadMutRef m ref => MonadMutRef (NaviT e m) ref where
   readRef = lift . readRef
   writeRef ref = lift . writeRef ref
 
+-- | Runs 'NaviT'.
 runNaviT :: NaviT env m a -> env -> m a
 runNaviT (MkNaviT rdr) = runReaderT rdr
 

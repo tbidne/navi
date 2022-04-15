@@ -135,6 +135,7 @@ test-suite unit
     Unit.Navi.Config.Toml
     Unit.Navi.Services.Battery.Percentage.Toml
     Unit.Navi.Services.Battery.Status.Toml
+    Unit.Navi.Services.Network.NetInterfaces.Toml
     Unit.Prelude
 
   build-depends:
