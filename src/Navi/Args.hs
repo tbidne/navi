@@ -23,53 +23,27 @@ import Options.Applicative.Help.Chunk (Chunk (..))
 import Options.Applicative.Types (ArgPolicy (..))
 import System.Directory (XdgDirectory (..))
 import System.Directory qualified as Dir
+import System.FilePath ((</>))
 
 -- | Represents command-line arguments. We use the \"higher-kinded data\"
 -- approach for:
 --
 -- 1. Parsing optional arguments (@'Args' 'Maybe'@).
 -- 2. Filling missing arguments with defaults (@'Args' 'Identity'@).
-data Args f = MkArgs
+newtype Args f = MkArgs
   { -- | Path to the configuration file.
-    configFile :: f FilePath,
-    -- | Path to the configuration directory. In addition to informing
-    -- on 'configFile', this is used to determine where the log file is
-    -- written.
-    configDir :: f FilePath
+    configFile :: f FilePath
   }
 
 makeFieldLabelsNoPrefix ''Args
 
 instance (Show1 f) => Show (Args f) where
-  show MkArgs {configFile, configDir} =
+  show MkArgs {configFile} =
     "MkArgs "
       <> Functor.showsPrec1 9 configFile " "
-      <> Functor.showsPrec1 9 configDir ""
 
--- |
---
--- Parses cli args and fills in defaults. These defaults are based on the
--- detected XDG Base Directory. The semantics are:
---
--- * No arguments provided.
---
---     * configFile:  xdgBase/navi/config.toml
---     * configDir: xdgBase/navi
---
--- * configFile' provided.
---
---     * configFile: configFile'
---     * configDir: xdgBase/navi
---
--- * configDir' provided.
---
---     * configFile: configDir'/config.toml
---     * configDir: configDir'
---
--- * configFile' and configDir' provided.
---
---     * configFile: configFile'
---     * configDir: configDir'
+-- | Parses cli args and fills in defaults. These defaults are based on the
+-- detected XDG Base Directory and default names.
 getArgs :: MonadIO m => m (Args Identity)
 getArgs = liftIO $ do
   args <- OptApp.execParser parserInfoArgs
@@ -77,29 +51,21 @@ getArgs = liftIO $ do
 
 fillMissingDefaults :: Args Maybe -> IO (Args Identity)
 fillMissingDefaults args = do
-  (configFile', configDir') <- case (configFile, configDir) of
-    -- No custom paths provided, use defaults
-    (Nothing, Nothing) -> do
+  configFile' <- case configFile of
+    -- No custom paths provided, use default
+    Nothing -> do
       xdgBase <- defaultXdg
-      pure (xdgBase <> "config.toml", xdgBase)
-    -- Custom file provided, override default file
-    (Just customFile, Nothing) -> do
-      xdgBase <- defaultXdg
-      pure (customFile, xdgBase)
-    -- Custom dir provided, override dir and file location
-    (Nothing, Just customDir) -> pure (customDir <> "config.toml", customDir)
-    -- Custom file and dir provided, override both
-    (Just customFile, Just customDir) -> pure (customFile, customDir)
-
+      pure (xdgBase </> defConfigName)
+    -- Custom config provided, override
+    Just customFile -> pure customFile
   pure $
     MkArgs
-      { configFile = Identity configFile',
-        configDir = Identity configDir'
+      { configFile = Identity configFile'
       }
   where
     configFile = args ^. #configFile
-    configDir = args ^. #configDir
     defaultXdg = Dir.getXdgDirectory XdgConfig "navi/"
+    defConfigName = "config.toml"
 
 -- | 'ParserInfo' type for parsing 'Args'.
 parserInfoArgs :: ParserInfo (Args Maybe)
@@ -118,7 +84,6 @@ argsParser :: Parser (Args Maybe)
 argsParser =
   MkArgs
     <$> configFileParser
-    <*> configDirParser
       <**> OptApp.helper
       <**> version
 
@@ -157,20 +122,4 @@ configFileParser =
     )
   where
     helpTxt =
-      "Path to config file. Overrides default "
-        <> " <config-dir>/config.toml if <config-dir> is specified."
-
-configDirParser :: Parser (Maybe String)
-configDirParser =
-  A.optional
-    ( OptApp.strOption
-        ( OptApp.long "config-dir"
-            <> OptApp.short 'd'
-            <> OptApp.help helpTxt
-            <> OptApp.metavar "PATH"
-        )
-    )
-  where
-    helpTxt =
-      "Path to config directory. Determines where we look for "
-        <> " config.toml and output log file."
+      "Path to config file. Defaults to <xdgConfig>/navi/config.toml."

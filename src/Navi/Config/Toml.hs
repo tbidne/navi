@@ -58,12 +58,13 @@ configCodec =
 logCodec :: TomlCodec Logging
 logCodec =
   MkLogging
-    <$> Toml.dioptional severityCodec .= severity
-    <*> Toml.dioptional locationCodec .= location
+    <$> severityCodec .= severity
+    <*> locationCodec .= location
 
 severityCodec :: TomlCodec Severity
 severityCodec =
   Toml.textBy showSeverity parseSeverity "severity"
+    <|> pure ErrorS
   where
     showSeverity DebugS = "debug"
     showSeverity InfoS = "info"
@@ -79,11 +80,15 @@ severityCodec =
           <> ". Should be one of <info|error>."
 
 locationCodec :: TomlCodec LogLoc
-locationCodec = Toml.textBy showLoc parseLoc "location"
+locationCodec =
+  Toml.textBy showLoc parseLoc "location"
+    <|> pure DefPath
   where
+    showLoc DefPath = "default"
     showLoc Stdout = T.pack "stdout"
     showLoc (File f) = T.pack f
     parseLoc "stdout" = Right Stdout
+    parseLoc "default" = Right DefPath
     parseLoc f = Right $ File $ T.unpack f
 
 --- | Parses a TOML 'Word16'.

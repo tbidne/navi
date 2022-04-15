@@ -56,15 +56,11 @@ There are plans to generalize navi to other notification systems, but for now Na
 Navi has the following usage:
 
 ```
-Usage: navi [-f|--config-file PATH] [-d|--config-dir PATH] [-v|--version]
+Usage: navi [-f|--config-file PATH] [-v|--version]
 
 Available options:
-  -f,--config-file PATH    Path to config file. Overrides default
-                           <config-dir>/config.toml if <config-dir> is
-                           specified.
-  -d,--config-dir PATH     Path to config directory. Determines where we look
-                           for config.toml and output log file.
-  -v,--version             Displays the version number.
+  -f,--config-file PATH    Path to config file. Defaults to
+                           <xdgConfig>/navi/config.toml.
   -h,--help                Show this help text
 ```
 
@@ -72,16 +68,7 @@ Available options:
 
 This argument overrides where Navi searches for the configuration file.
 
-The default path to the config file is based on the [XDG base directory](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html). Given `xdgBase`, by default, Navi will look for `xdgBase/navi/config.toml`, e.g., `~/.config/navi/config.toml`.
-
-## Config Directory
-
-Navi uses `xdgBase` to:
-
-* Search for `config.toml` (unless overridden by `--config-file`).
-* Write to `navi.log`.
-
-Thus overriding `--config-dir` will affect both of the above (again, `--config-file` takes priority over `--config-dir`).
+The default path to the config file is based on the [XDG base directory](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html). Given `xdgBase`, by default, Navi will look for `xdgBase/navi/config.toml` e.g. `~/.config/navi/config.toml`.
 
 # Configuration
 
@@ -91,7 +78,7 @@ Navi is configured via a toml file, by default located at `xdgBase/navi/config.t
 
 * `poll-interval`: Mandatory. Non-negative integer, determines how often we query the system in seconds.
 * `logging.severity`: Optional. One of `[debug|info|error]`. Controls the logging level. Defaults to `error`.
-* `logging.location`: Optional. Either `stdout` or `<filename>`. Defaults to a file, `xdgBase/navi/navi.log`.
+* `logging.location`: Optional. Either `default`, `stdout` or `<filename>`. No option or `default` uses `xdgBase/navi/navi.log`.
 
 ##### Example
 
@@ -324,6 +311,7 @@ You will need one of:
 
 * [cabal-install 2.4+](https://www.haskell.org/cabal/download.html) and one of:
   * [ghc 8.10.7](https://www.haskell.org/ghc/download_ghc_8_10_7.html)
+  * [ghc 9.0.2](https://www.haskell.org/ghc/download_ghc_9_0_2.html)
 * [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
 * [nix](https://nixos.org/download.html)
 

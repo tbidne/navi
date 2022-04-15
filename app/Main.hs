@@ -7,7 +7,6 @@ import Katip
     LogContexts,
     LogEnv (..),
     Namespace (..),
-    Severity (..),
     Verbosity (..),
   )
 import Katip qualified as K
@@ -16,6 +15,7 @@ import Navi.Args (Args (..), getArgs)
 import Navi.Config (Config (..), LogLoc (..), Logging (..), readConfig)
 import Navi.Env (mkEnv)
 import Navi.Prelude
+import System.Directory (XdgDirectory (XdgConfig))
 import System.Directory qualified as Dir
 import System.Exit qualified as Exit
 import System.FilePath ((</>))
@@ -26,7 +26,7 @@ main = do
   args <- getArgs
   config <- tryParseConfig args
 
-  let mkLogEnvFn = mkLogEnv (args ^. #configDir % #runIdentity) (config ^. #logging)
+  let mkLogEnvFn = mkLogEnv (config ^. #logging)
   bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
     env <- mkEnv logEnv logCtx namespace config
     absurd <$> runNaviT runNavi env
@@ -37,19 +37,23 @@ tryParseConfig =
     . runIdentity
     . configFile
 
-mkLogEnv :: FilePath -> Logging -> IO LogEnv
-mkLogEnv dir MkLogging {severity, location} = do
+mkLogEnv :: Logging -> IO LogEnv
+mkLogEnv MkLogging {severity, location} = do
   let severityFn :: forall a. Item a -> IO Bool
-      severityFn = maybe (K.permitItem ErrorS) K.permitItem severity
+      severityFn = K.permitItem severity
   scribe <- case location of
-    Nothing -> do
-      let path = dir </> "navi.log"
-      renameIfExists path
-      K.mkFileScribe path severityFn V2
-    Just (File f) -> do
+    -- Use the default log path: xdgConfig </> navi/navi.log
+    DefPath -> do
+      xdgBase <- Dir.getXdgDirectory XdgConfig "navi/"
+      let logFile = xdgBase </> "navi.log"
+      renameIfExists logFile
+      K.mkFileScribe logFile severityFn V2
+    -- Custom log path.
+    File f -> do
       renameIfExists f
       K.mkFileScribe f severityFn V2
-    Just Stdout -> K.mkHandleScribe ColorIfTerminal IO.stdout severityFn V2
+    -- Log location defined in config file as stdout.
+    Stdout -> K.mkHandleScribe ColorIfTerminal IO.stdout severityFn V2
   K.registerScribe "logger" scribe K.defaultScribeSettings =<< K.initLogEnv namespace environment
   where
     environment = "production"
