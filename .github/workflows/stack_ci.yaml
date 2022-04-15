@@ -26,3 +26,6 @@ jobs:
 
       - name: Compile
         run: stack build --ghc-options="-Werror"
+
+      - name: Unit Tests
+        run: stack test unit
