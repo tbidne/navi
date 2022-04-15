@@ -10,6 +10,7 @@ module Navi.Config
 where
 
 import Data.List.NonEmpty (NonEmpty (..))
+import Data.Maybe (catMaybes)
 import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Toml qualified as ConfigToml
 import Navi.Config.Types
@@ -55,7 +56,7 @@ tomlToConfig toml = do
           <> multipleEvents
           <> mNetInterfacesEvt
       maybeEvts =
-        mToList
+        catMaybes
           [ mBatteryLevelEvt,
             mBatteryStatusEvt
           ]
@@ -71,7 +72,6 @@ tomlToConfig toml = do
             logging = logToml
           }
   where
-    mToList = foldl' (\acc x -> maybe acc (: acc) x) []
     pollToml = toml ^. #pollToml
     logToml = fromMaybe defaultLogging (toml ^. #logToml)
     singleToml = toml ^. #singleToml
