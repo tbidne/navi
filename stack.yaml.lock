@@ -49,11 +49,11 @@ packages:
     git: https://github.com/tbidne/pythia.git
     pantry-tree:
       size: 3898
-      sha256: 6e5444e2cd8542a5deab0c77939e280b0165d05885573bd8156c2daf33831704
-    commit: 69da9cafec51a978829fb51a7ea8c0b6d15e3a0a
+      sha256: 3fcd056583ccac68acefc4cc16b9b011f900506cc07b41727518efd5f4948e64
+    commit: 529c3f2d55351117e71e8f7f29a09b1a72cd283a
   original:
     git: https://github.com/tbidne/pythia.git
-    commit: 69da9cafec51a978829fb51a7ea8c0b6d15e3a0a
+    commit: 529c3f2d55351117e71e8f7f29a09b1a72cd283a
 - completed:
     name: smart-math
     version: '0.1'

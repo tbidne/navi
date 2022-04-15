@@ -15,7 +15,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/pythia.git
-    tag: 69da9cafec51a978829fb51a7ea8c0b6d15e3a0a
+    tag: 529c3f2d55351117e71e8f7f29a09b1a72cd283a
 
 source-repository-package
     type: git

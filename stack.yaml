@@ -10,7 +10,7 @@ extra-deps:
 - git: https://github.com/tbidne/algebra-simple.git
   commit: acc79c140fc3cf3530337a2d4ddc0f2cc6c2ef08
 - git: https://github.com/tbidne/pythia.git
-  commit: 69da9cafec51a978829fb51a7ea8c0b6d15e3a0a
+  commit: 529c3f2d55351117e71e8f7f29a09b1a72cd283a
 - git: https://github.com/tbidne/smart-math.git
   commit: 9dc47335b9483d7fbfcc2e4e110d42c297ec105a
 
