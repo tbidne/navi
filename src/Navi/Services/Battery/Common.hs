@@ -20,7 +20,7 @@ appCodec = Toml.dimap f g mappCodec
 
 mappCodec :: TomlCodec (Maybe BatteryApp)
 mappCodec =
-  Toml.dioptional $ Toml.textBy showBatteryType parseBatteryType "type"
+  Toml.dioptional $ Toml.textBy showBatteryType parseBatteryType "app"
   where
     showBatteryType BatteryAcpi = "acpi"
     showBatteryType BatterySysFs = "sysfs"

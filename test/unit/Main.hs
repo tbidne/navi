@@ -4,18 +4,20 @@
 module Main (main) where
 
 import Test.Tasty qualified as Tasty
-import Unit.Navi.Config qualified as Navi.Config
-import Unit.Navi.Config.Toml qualified as Navi.Config.Toml
+import Unit.Navi.Config qualified as Config
+import Unit.Navi.Config.Toml qualified as Config.Toml
+import Unit.Navi.Services.Battery.Percentage.Toml qualified as S.Battery.Percentage.Toml
+import Unit.Navi.Services.Battery.Status.Toml qualified as S.Battery.Status.Toml
 import Unit.Prelude
 
 -- | Runs unit tests.
---
--- @since 0.1
 main :: IO ()
 main = do
   Tasty.defaultMain $
     Tasty.testGroup
       "Unit tests"
-      [ Navi.Config.tests,
-        Navi.Config.Toml.tests
+      [ Config.tests,
+        Config.Toml.tests,
+        S.Battery.Percentage.Toml.tests,
+        S.Battery.Status.Toml.tests
       ]

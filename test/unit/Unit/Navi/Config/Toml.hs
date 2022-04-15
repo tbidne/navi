@@ -124,7 +124,7 @@ fullConfig =
       "location = \"some-file\"",
       "",
       "[battery-status]",
-      "type = \"acpi\"",
+      "app = \"acpi\"",
       "timeout = \"5\"",
       "",
       "[battery-percentage]",

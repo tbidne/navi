@@ -57,7 +57,7 @@ appCodec = Toml.dimap f g mappCodec
 
 mappCodec :: TomlCodec (Maybe NetInterfaceApp)
 mappCodec =
-  Toml.dioptional $ Toml.textBy showBatteryType parseBatteryType "type"
+  Toml.dioptional $ Toml.textBy showBatteryType parseBatteryType "app"
   where
     showBatteryType NetInterfaceNmCli = "nmcli"
     showBatteryType NetInterfaceIp = "ip"

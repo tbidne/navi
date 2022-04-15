@@ -116,7 +116,7 @@ This service sends notifications based on the current battery status. Options in
 
 ##### Specific Options
 
-* `battery-status.type`: (Optional). One of `[sysfs | acpi | upower]`.
+* `battery-status.app`: (Optional). One of `[sysfs | acpi | upower]`.
   * `sysfs` reads `/sys` or `/sysfs` directly.
   * `acpi` requires the `acpi` utility.
   * `upower` requires the `upower` utility.
@@ -144,7 +144,7 @@ This service sends notifications based on the current battery percentage when it
 ##### Specific Options
 
 * `battery-percentage.alert.level`: integer in `[0, 100]`. Sends a notification once the battery level drops below the level.
-* `battery-percentage.type`: (Optional). One of `[sysfs | acpi | upower]`.
+* `battery-percentage.app`: (Optional). One of `[sysfs | acpi | upower]`.
   * `sysfs` reads `/sys` or `/sysfs` directly.
   * `acpi` requires the `acpi` utility.
   * `upower` requires the `upower` utility.
@@ -179,7 +179,7 @@ This service sends notifications based on the network connectivity for given dev
 ##### Specific Options
 
 * `net-interface.device`: The name of the network device to monitor (e.g. `wlp0s20f3`).
-* `net-interface.type`: One of `[nmcli | ip]`.
+* `net-interface.app`: One of `[nmcli | ip]`.
   * `nmcli` requires the `nmcli` (`NetworkManager cli`) utility.
   * `ip` requires the `ip` utility.
   * If no option is given then we will try each of the above in the given order, if they are supported.
