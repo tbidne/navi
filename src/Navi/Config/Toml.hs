@@ -34,26 +34,26 @@ import Toml qualified
 -- | 'ConfigToml' holds the data that is defined in the configuration file.
 data ConfigToml = MkConfigToml
   { pollToml :: Word16,
-    logToml :: Logging,
+    logToml :: Maybe Logging,
     singleToml :: [SingleToml],
     multipleToml :: [MultipleToml],
-    batteryStateToml :: Maybe BatteryPercentageToml,
-    batteryChargeStatusToml :: Maybe BatteryStatusToml,
-    networkConnectivityToml :: [NetInterfacesToml]
+    batteryPercentageToml :: Maybe BatteryPercentageToml,
+    batteryStatusToml :: Maybe BatteryStatusToml,
+    netInterfacesToml :: [NetInterfacesToml]
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 -- | Toml decoder for 'ConfigToml'.
 configCodec :: TomlCodec ConfigToml
 configCodec =
   MkConfigToml
     <$> word16Codec "poll-interval" .= pollToml
-    <*> Toml.table logCodec "logging" .= logToml
+    <*> Toml.dioptional (Toml.table logCodec "logging") .= logToml
     <*> Toml.list SingleToml.singleCodec "single" .= singleToml
     <*> Toml.list MultipleToml.multipleCodec "multiple" .= multipleToml
-    <*> Toml.dioptional (Toml.table BStateToml.batteryPercentageCodec "battery-percentage") .= batteryStateToml
-    <*> Toml.dioptional (Toml.table BChargeStatusToml.batteryStatusCodec "battery-status") .= batteryChargeStatusToml
-    <*> Toml.list NetConnToml.netInterfacesCodec "net-interface" .= networkConnectivityToml
+    <*> Toml.dioptional (Toml.table BStateToml.batteryPercentageCodec "battery-percentage") .= batteryPercentageToml
+    <*> Toml.dioptional (Toml.table BChargeStatusToml.batteryStatusCodec "battery-status") .= batteryStatusToml
+    <*> Toml.list NetConnToml.netInterfacesCodec "net-interface" .= netInterfacesToml
 
 logCodec :: TomlCodec Logging
 logCodec =

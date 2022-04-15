@@ -25,7 +25,7 @@ newtype BatteryStatusNoteToml = MkBatteryStatusNoteToml
   { -- | The timeout for this alert.
     mTimeout :: Maybe Timeout
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 makeFieldLabelsNoPrefix ''BatteryStatusNoteToml
 
@@ -40,7 +40,7 @@ data BatteryStatusToml = MkBatteryStatusToml
     -- | The alert for this service.
     note :: BatteryStatusNoteToml
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 makeFieldLabelsNoPrefix ''BatteryStatusToml
 

@@ -25,7 +25,7 @@ import Toml qualified
 data Timeout
   = Never
   | Seconds Word16
-  deriving (Show)
+  deriving (Eq, Show)
 
 makeFieldLabelsNoPrefix ''Timeout
 
@@ -40,7 +40,7 @@ data NaviNote = MkNaviNote
     -- | Determines how long the notification stays on-screen.
     timeout :: Maybe Timeout
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 makeFieldLabelsNoPrefix ''NaviNote
 

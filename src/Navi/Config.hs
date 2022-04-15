@@ -17,6 +17,7 @@ import Navi.Config.Types
     ConfigErr (..),
     LogLoc (..),
     Logging (..),
+    defaultLogging,
   )
 import Navi.Effects (MonadMutRef, MonadShell (..))
 import Navi.Prelude
@@ -46,13 +47,13 @@ tomlToConfig :: (MonadMutRef m ref, MonadThrow m) => ConfigToml -> m (Config ref
 tomlToConfig toml = do
   singleEvents <- traverse Single.toEvent singleToml
   multipleEvents <- traverse Multiple.toEvent multipleToml
-  mBatteryLevelEvt <- traverse BattState.toEvent batteryStateToml
+  mBatteryLevelEvt <- traverse BattState.toEvent batteryPercentageToml
   mBatteryStatusEvt <- traverse BattChargeStatus.toEvent batteryStatusToml
-  mNetworkConnectivityEvt <- traverse NetConn.toEvent netConnToml
+  mNetInterfacesEvt <- traverse NetConn.toEvent netInterfacesToml
   let multipleEvts =
         singleEvents
           <> multipleEvents
-          <> mNetworkConnectivityEvt
+          <> mNetInterfacesEvt
       maybeEvts =
         mToList
           [ mBatteryLevelEvt,
@@ -72,9 +73,9 @@ tomlToConfig toml = do
   where
     mToList = foldl' (\acc x -> maybe acc (: acc) x) []
     pollToml = toml ^. #pollToml
-    logToml = toml ^. #logToml
+    logToml = fromMaybe defaultLogging (toml ^. #logToml)
     singleToml = toml ^. #singleToml
     multipleToml = toml ^. #multipleToml
-    batteryStateToml = toml ^. #batteryStateToml
-    batteryStatusToml = toml ^. #batteryChargeStatusToml
-    netConnToml = toml ^. #networkConnectivityToml
+    batteryPercentageToml = toml ^. #batteryPercentageToml
+    batteryStatusToml = toml ^. #batteryStatusToml
+    netInterfacesToml = toml ^. #netInterfacesToml

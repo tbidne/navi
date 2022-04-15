@@ -6,6 +6,7 @@
 module Navi.Config.Types
   ( Config (..),
     Logging (..),
+    defaultLogging,
     LogLoc (..),
     ConfigErr (..),
   )
@@ -24,7 +25,7 @@ data LogLoc
   = DefPath
   | Stdout
   | File FilePath
-  deriving (Show)
+  deriving (Eq, Show)
 
 makeFieldLabelsNoPrefix ''LogLoc
 
@@ -35,9 +36,13 @@ data Logging = MkLogging
     -- | Deterines the log location (i.e. file or stdout).
     location :: LogLoc
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 makeFieldLabelsNoPrefix ''Logging
+
+-- | Default logging i.e. log errors and use the default path.
+defaultLogging :: Logging
+defaultLogging = MkLogging ErrorS DefPath
 
 -- | 'Config' holds the data from 'Navi.Config.Toml.ConfigToml' once it has been processed
 -- (e.g., all user defined Events are parsed).

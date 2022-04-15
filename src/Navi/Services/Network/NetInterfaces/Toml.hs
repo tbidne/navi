@@ -33,7 +33,7 @@ data NetInterfacesToml = MkNetInterfacesToml
     -- | The timeout for this alert.
     mTimeout :: Maybe Timeout
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 makeFieldLabelsNoPrefix ''NetInterfacesToml
 

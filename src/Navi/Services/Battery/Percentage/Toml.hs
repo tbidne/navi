@@ -44,7 +44,7 @@ data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml
     -- | The timeout for this alert.
     mTimeout :: Maybe Timeout
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 makeFieldLabelsNoPrefix ''BatteryPercentageNoteToml
 
@@ -59,7 +59,7 @@ data BatteryPercentageToml = MkBatteryPercentageToml
     -- | Determines how we should query the system for battery information.
     app :: RunApp BatteryApp
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 makeFieldLabelsNoPrefix ''BatteryPercentageToml
 
