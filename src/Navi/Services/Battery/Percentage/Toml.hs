@@ -51,7 +51,7 @@ makeFieldLabelsNoPrefix ''BatteryPercentageNoteToml
 -- | TOML for the battery percentage service.
 data BatteryPercentageToml = MkBatteryPercentageToml
   { -- | All alerts for this service.
-    alerts :: [BatteryPercentageNoteToml],
+    alerts :: NonEmpty BatteryPercentageNoteToml,
     -- | Determines how we treat repeat alerts.
     repeatEvent :: Maybe RepeatEvtToml,
     -- | Determines how we handle errors.
@@ -67,7 +67,7 @@ makeFieldLabelsNoPrefix ''BatteryPercentageToml
 batteryPercentageCodec :: TomlCodec BatteryPercentageToml
 batteryPercentageCodec =
   MkBatteryPercentageToml
-    <$> Toml.list batteryPercentageNoteTomlCodec "alert" .= alerts
+    <$> Toml.nonEmpty batteryPercentageNoteTomlCodec "alert" .= alerts
     <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EventToml.errorNoteCodec .= errorNote
     <*> appCodec .= app

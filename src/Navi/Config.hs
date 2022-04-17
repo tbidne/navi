@@ -9,7 +9,6 @@ module Navi.Config
   )
 where
 
-import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (catMaybes)
 import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Toml qualified as ConfigToml

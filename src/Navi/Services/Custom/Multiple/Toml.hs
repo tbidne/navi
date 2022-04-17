@@ -30,7 +30,7 @@ data MultipleToml = MkMultipleToml
   { -- | The command to run.
     command :: Command,
     -- | The alert triggers.
-    triggerNotes :: [TriggerNoteToml],
+    triggerNotes :: NonEmpty TriggerNoteToml,
     -- | Determines how we treat repeat alerts.
     repeatEvtCfg :: Maybe RepeatEvtToml,
     -- | Determines how we handle errors.
@@ -47,8 +47,8 @@ data TriggerNoteToml = MkTriggerNoteToml
   }
   deriving (Eq, Show)
 
-triggerNotesCodec :: TomlCodec [TriggerNoteToml]
-triggerNotesCodec = Toml.list triggerNoteCodec "trigger-note"
+triggerNotesCodec :: TomlCodec (NonEmpty TriggerNoteToml)
+triggerNotesCodec = Toml.nonEmpty triggerNoteCodec "trigger-note"
 
 triggerNoteCodec :: TomlCodec TriggerNoteToml
 triggerNoteCodec =

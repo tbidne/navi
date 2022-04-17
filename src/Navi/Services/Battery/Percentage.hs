@@ -6,6 +6,7 @@ module Navi.Services.Battery.Percentage
   )
 where
 
+import Data.List.NonEmpty qualified as NE
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Navi.Data.NaviNote (NaviNote (..))
@@ -54,7 +55,7 @@ tomlToNote toml =
           <> "%"
 
 mkBatteryEvent ::
-  [(BatteryPercentage, NaviNote)] ->
+  NonEmpty (BatteryPercentage, NaviNote) ->
   BatteryConfig ->
   RepeatEvent ref Battery ->
   ErrorNote ref ->
@@ -68,7 +69,7 @@ mkBatteryEvent percentNoteList batteryProgram re en =
       errorNote = en
     }
   where
-    percentNoteMap = Map.fromList percentNoteList
+    percentNoteMap = Map.fromList $ NE.toList percentNoteList
 
 lookupPercent :: Map BatteryPercentage NaviNote -> Battery -> Maybe NaviNote
 lookupPercent percentNoteMap state = case state ^. #status of

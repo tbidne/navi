@@ -33,7 +33,7 @@ parsesAlerts =
   parsesExpected
     "Parses alerts"
     alertTxt
-    [alert1, alert2, alert3]
+    (alert1 :| [alert2, alert3])
     (view #alerts)
   where
     alertTxt =
@@ -74,16 +74,23 @@ appTests =
     [ parsesApp "acpi" BatteryAcpi,
       parsesApp "sysfs" BatterySysFs,
       parsesApp "upower" BatteryUPower,
-      parsesExpected "<none>" "" Many (view #app)
+      parsesExpected "<none>" "[[alert]]\npercent=50" Many (view #app)
     ]
 
 parsesApp :: Text -> BatteryApp -> TestTree
 parsesApp appName app =
   parsesExpected
     (T.unpack appName)
-    ("app = \"" <> appName <> "\"")
+    txt
     (Single app)
     (view #app)
+  where
+    txt =
+      T.unlines
+        [ "app = \"" <> appName <> "\"",
+          "[[alert]]",
+          "percent = 50"
+        ]
 
 repeatEventTests :: TestTree
 repeatEventTests =
@@ -91,16 +98,23 @@ repeatEventTests =
     "Parses repeat event"
     [ parsesRepeatEvent "off" "false" NoRepeatsToml,
       parsesRepeatEvent "on" "true" AllowRepeatsToml,
-      parsesExpected "<none>" "" Nothing (view #repeatEvent)
+      parsesExpected "<none>" "[[alert]]\npercent=50" Nothing (view #repeatEvent)
     ]
 
 parsesRepeatEvent :: String -> Text -> RepeatEvtToml -> TestTree
 parsesRepeatEvent desc flag ret =
   parsesExpected
     desc
-    ("repeat-events = " <> flag)
+    txt
     (Just ret)
     (view #repeatEvent)
+  where
+    txt =
+      T.unlines
+        [ "repeat-events = " <> flag,
+          "[[alert]]",
+          "percent = 50"
+        ]
 
 errorNoteTests :: TestTree
 errorNoteTests =
@@ -109,16 +123,23 @@ errorNoteTests =
     [ parsesErrorEvent "off" "none" NoErrNoteToml,
       parsesErrorEvent "on" "repeats" ErrNoteAllowRepeatsToml,
       parsesErrorEvent "on" "no-repeats" ErrNoteNoRepeatsToml,
-      parsesExpected "<none>" "" Nothing (view #errorNote)
+      parsesExpected "<none>" "[[alert]]\npercent=50" Nothing (view #errorNote)
     ]
 
 parsesErrorEvent :: String -> Text -> ErrorNoteToml -> TestTree
 parsesErrorEvent desc flag ret =
   parsesExpected
     desc
-    ("error-events = \"" <> flag <> "\"")
+    txt
     (Just ret)
     (view #errorNote)
+  where
+    txt =
+      T.unlines
+        [ "error-events = \"" <> flag <> "\"",
+          "[[alert]]",
+          "percent = 50"
+        ]
 
 parsesExpected :: (Eq a, Show a) => String -> Text -> a -> (BatteryPercentageToml -> a) -> TestTree
 parsesExpected desc txt expected tomlFn = testCase desc $ do

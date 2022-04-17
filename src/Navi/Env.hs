@@ -18,7 +18,6 @@ module Navi.Env
 where
 
 import DBus.Client (Client)
-import Data.List.NonEmpty (NonEmpty)
 import Katip (LogContexts, LogEnv, Namespace)
 import Navi.Config (Config)
 import Navi.Config qualified as Config

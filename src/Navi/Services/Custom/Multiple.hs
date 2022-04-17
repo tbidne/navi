@@ -6,6 +6,7 @@ module Navi.Services.Custom.Multiple
   )
 where
 
+import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict qualified as Map
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Effects (MonadMutRef)
@@ -40,7 +41,7 @@ toEvent
 
 mkMultipleEvent ::
   Command ->
-  [(Text, NaviNote)] ->
+  NonEmpty (Text, NaviNote) ->
   RepeatEvent ref Text ->
   ErrorNote ref ->
   Event ref Text
@@ -53,4 +54,4 @@ mkMultipleEvent cmd noteList re en =
       errorNote = en
     }
   where
-    noteMap = Map.fromList noteList
+    noteMap = Map.fromList $ NE.toList noteList

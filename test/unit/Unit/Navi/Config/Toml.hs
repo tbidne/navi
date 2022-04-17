@@ -77,7 +77,7 @@ expectedBatteryPercentage =
       { Battery.Percentage.app = Many,
         Battery.Percentage.repeatEvent = Nothing,
         Battery.Percentage.errorNote = Nothing,
-        Battery.Percentage.alerts = [alert1, alert2]
+        Battery.Percentage.alerts = alert1 :| [alert2]
       }
   where
     alert1 =
