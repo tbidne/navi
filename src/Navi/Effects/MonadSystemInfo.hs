@@ -4,8 +4,6 @@ module Navi.Effects.MonadSystemInfo
   )
 where
 
-import Data.Attoparsec.Text (Parser)
-import Data.Attoparsec.Text qualified as AP
 import Data.Text qualified as T
 import Navi.Event.Types (EventErr (..))
 import Navi.Prelude
@@ -59,14 +57,7 @@ multipleShellApp cmd =
     }
 
 parseMultiple :: Text -> Either EventErr Text
-parseMultiple result = first toEventErr $ AP.parseOnly parseTxt result
-  where
-    toEventErr err =
-      MkEventErr
-        "Multiple"
-        "Parse error"
-        ("Error parsing `" <> result <> "`: <" <> T.pack err <> ">")
-    parseTxt = AP.takeText
+parseMultiple = Right
 
 querySingle :: Command -> IO Text
 querySingle cmd = do
@@ -82,15 +73,7 @@ singleShellApp cmd =
     }
 
 parseSingle :: Text -> Either EventErr Text
-parseSingle result = first toEventErr $ AP.parseOnly parseTxt result
-  where
-    toEventErr err =
-      MkEventErr
-        "Single"
-        "Parse error"
-        ("Error parsing `" <> result <> "`: <" <> T.pack err <> ">")
-    parseTxt :: Parser Text
-    parseTxt = AP.takeText
+parseSingle = Right
 
 liftEventErr :: Exception e => Text -> e -> EventErr
 liftEventErr n e =
