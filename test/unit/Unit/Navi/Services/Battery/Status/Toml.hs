@@ -13,7 +13,6 @@ import Navi.Services.Battery.Status.Toml
 import Navi.Services.Battery.Status.Toml qualified as Status.Toml
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..))
-import Toml qualified
 import Unit.Prelude
 
 tests :: TestTree
@@ -91,8 +90,4 @@ parsesErrorEvent desc flag ret =
     (view #errorNote)
 
 parsesExpected :: (Eq a, Show a) => String -> Text -> a -> (BatteryStatusToml -> a) -> TestTree
-parsesExpected desc txt expected tomlFn = testCase desc $ do
-  let eResult = Toml.decodeExact Status.Toml.batteryStatusCodec txt
-  case eResult of
-    Left err -> assertFailure $ "Parsing config fails: " <> show err
-    Right result -> expected @=? tomlFn result
+parsesExpected = decodeExpected Status.Toml.batteryStatusCodec

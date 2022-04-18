@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | This module provides toml configuration for the custom single service.
 module Navi.Services.Custom.Single.Toml
   ( SingleToml (..),
@@ -29,6 +32,8 @@ data SingleToml = MkSingleToml
     errEvtCfg :: Maybe ErrorNoteToml
   }
   deriving (Eq, Show)
+
+makeFieldLabelsNoPrefix ''SingleToml
 
 -- | Codec for 'SingleToml'.
 singleCodec :: TomlCodec SingleToml

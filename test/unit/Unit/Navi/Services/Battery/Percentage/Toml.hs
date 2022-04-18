@@ -15,7 +15,6 @@ import Navi.Services.Battery.Percentage.Toml qualified as Percentage.Toml
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..), BatteryPercentage (..))
-import Toml qualified
 import Unit.Prelude
 
 tests :: TestTree
@@ -142,8 +141,4 @@ parsesErrorEvent desc flag ret =
         ]
 
 parsesExpected :: (Eq a, Show a) => String -> Text -> a -> (BatteryPercentageToml -> a) -> TestTree
-parsesExpected desc txt expected tomlFn = testCase desc $ do
-  let eResult = Toml.decodeExact Percentage.Toml.batteryPercentageCodec txt
-  case eResult of
-    Left err -> assertFailure $ "Parsing config fails: " <> show err
-    Right result -> expected @=? tomlFn result
+parsesExpected = decodeExpected Percentage.Toml.batteryPercentageCodec

@@ -10,7 +10,6 @@ import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..))
 import Navi.Services.Network.NetInterfaces.Toml qualified as NetInterfaces.Toml
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.NetInterface (NetInterfaceApp (..))
-import Toml qualified
 import Unit.Prelude
 
 tests :: TestTree
@@ -110,8 +109,4 @@ parsesErrorEvent desc flag ret =
         ]
 
 parsesExpected :: (Eq a, Show a) => String -> Text -> a -> (NetInterfacesToml -> a) -> TestTree
-parsesExpected desc txt expected tomlFn = testCase desc $ do
-  let eResult = Toml.decodeExact NetInterfaces.Toml.netInterfacesCodec txt
-  case eResult of
-    Left err -> assertFailure $ "Parsing config fails: " <> show err
-    Right result -> expected @=? tomlFn result
+parsesExpected = decodeExpected NetInterfaces.Toml.netInterfacesCodec

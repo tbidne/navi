@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | This module provides toml configuration for the custom multiple service.
 module Navi.Services.Custom.Multiple.Toml
   ( MultipleToml (..),
@@ -16,14 +19,16 @@ import Pythia.Data.Command (Command (..))
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
--- | Codec for 'MultipleToml'.
-multipleCodec :: TomlCodec MultipleToml
-multipleCodec =
-  MkMultipleToml
-    <$> commandCodec .= command
-    <*> triggerNotesCodec .= triggerNotes
-    <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvtCfg
-    <*> Toml.dioptional EventToml.errorNoteCodec .= errEvtCfg
+-- | TOML for alerts.
+data TriggerNoteToml = MkTriggerNoteToml
+  { -- | The text that triggers an alert.
+    trigger :: Text,
+    -- | The notification to send when triggered.
+    note :: NaviNote
+  }
+  deriving (Eq, Show)
+
+makeFieldLabelsNoPrefix ''TriggerNoteToml
 
 -- | TOML for the custom multiple service.
 data MultipleToml = MkMultipleToml
@@ -38,14 +43,16 @@ data MultipleToml = MkMultipleToml
   }
   deriving (Eq, Show)
 
--- | TOML for alerts.
-data TriggerNoteToml = MkTriggerNoteToml
-  { -- | The text that triggers an alert.
-    trigger :: Text,
-    -- | The notification to send when triggered.
-    note :: NaviNote
-  }
-  deriving (Eq, Show)
+makeFieldLabelsNoPrefix ''MultipleToml
+
+-- | Codec for 'MultipleToml'.
+multipleCodec :: TomlCodec MultipleToml
+multipleCodec =
+  MkMultipleToml
+    <$> commandCodec .= command
+    <*> triggerNotesCodec .= triggerNotes
+    <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvtCfg
+    <*> Toml.dioptional EventToml.errorNoteCodec .= errEvtCfg
 
 triggerNotesCodec :: TomlCodec (NonEmpty TriggerNoteToml)
 triggerNotesCodec = Toml.nonEmpty triggerNoteCodec "trigger-note"
