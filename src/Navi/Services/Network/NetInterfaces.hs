@@ -20,7 +20,7 @@ import Pythia.Services.NetInterface
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
-  (MonadMutRef m ref) =>
+  (MonadMutRef ref m) =>
   NetInterfacesToml ->
   m (AnyEvent ref)
 toEvent toml = do

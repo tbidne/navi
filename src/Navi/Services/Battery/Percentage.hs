@@ -26,7 +26,7 @@ import Pythia.Services.Battery
   )
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
-toEvent :: (MonadMutRef m ref) => BatteryPercentageToml -> m (AnyEvent ref)
+toEvent :: (MonadMutRef ref m) => BatteryPercentageToml -> m (AnyEvent ref)
 toEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote

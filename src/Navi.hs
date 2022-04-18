@@ -32,7 +32,7 @@ runNavi ::
     HasPollInterval env,
     MonadCatch m,
     MonadLogger m,
-    MonadMutRef m ref,
+    MonadMutRef ref m,
     MonadNotify m,
     MonadShell m,
     MonadSystemInfo m,
@@ -51,7 +51,7 @@ processEvent ::
   forall m ref.
   ( MonadCatch m,
     MonadLogger m,
-    MonadMutRef m ref,
+    MonadMutRef ref m,
     MonadNotify m,
     MonadSystemInfo m
   ) =>

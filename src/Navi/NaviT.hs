@@ -86,7 +86,7 @@ instance
   logText s = logFm s . LogStr . T.fromText
   addNamespace = K.katipAddNamespace
 
-instance MonadMutRef m ref => MonadMutRef (NaviT n e m) ref where
+instance MonadMutRef ref m => MonadMutRef ref (NaviT n e m) where
   newRef = lift . newRef
   readRef = lift . readRef
   writeRef ref = lift . writeRef ref

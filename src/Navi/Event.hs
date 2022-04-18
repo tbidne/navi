@@ -52,7 +52,7 @@ runEvent event = addNamespace "Run Event" $ do
 -- 1. 'AllowRepeats': never block (returns 'False').
 -- 2. 'NoRepeats': block only if the parameter @a@ equals the previous @a@
 --    stored in our @ref@.
-blockRepeat :: (Eq a, MonadLogger m, MonadMutRef m ref, Show a) => RepeatEvent ref a -> a -> m Bool
+blockRepeat :: (Eq a, MonadLogger m, MonadMutRef ref m, Show a) => RepeatEvent ref a -> a -> m Bool
 blockRepeat repeatEvt newVal = addNamespace "Checking event repeats" $ do
   case repeatEvt of
     -- Repeat events are allowed, so do not block.
@@ -76,7 +76,7 @@ blockRepeat repeatEvt newVal = addNamespace "Checking event repeats" $ do
 -- 2. 'AllowErrNote' 'AllowRepeats': never block (returns 'False').
 -- 3. 'AllowErrNote' 'NoRepeats': block only if we have sent a notifcation
 --    for this error before.
-blockErr :: (MonadLogger m, MonadMutRef m ref) => ErrorNote ref -> m Bool
+blockErr :: (MonadLogger m, MonadMutRef ref m) => ErrorNote ref -> m Bool
 blockErr errorEvent =
   case errorEvent of
     -- Error events are off, block.
@@ -103,7 +103,7 @@ blockErr errorEvent =
 
 -- | If the reference is 'NoRepeats' then we overwrite the previous reference
 -- with the new parameter. Otherwise we do nothing.
-updatePrevTrigger :: (Eq a, MonadMutRef m ref) => RepeatEvent ref a -> a -> m ()
+updatePrevTrigger :: (Eq a, MonadMutRef ref m) => RepeatEvent ref a -> a -> m ()
 updatePrevTrigger repeatEvt newVal =
   -- Only overwrite value if it's new
   case repeatEvt of

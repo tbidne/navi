@@ -31,7 +31,7 @@ import Toml qualified
 -- | Parses the provided toml file into a 'Config'. Throws 'ConfigErr' if
 -- anything goes wrong.
 readConfig ::
-  (MonadCatch m, MonadMutRef m ref, MonadShell m) =>
+  (MonadCatch m, MonadMutRef ref m, MonadShell m) =>
   FilePath ->
   m (Config ref)
 readConfig path = do
@@ -43,7 +43,7 @@ readConfig path = do
         Left tomlErrs -> throw $ TomlError tomlErrs
         Right cfg -> tomlToConfig cfg
 
-tomlToConfig :: (MonadMutRef m ref, MonadThrow m) => ConfigToml -> m (Config ref)
+tomlToConfig :: (MonadMutRef ref m, MonadThrow m) => ConfigToml -> m (Config ref)
 tomlToConfig toml = do
   singleEvents <- traverse Single.toEvent singleToml
   multipleEvents <- traverse Multiple.toEvent multipleToml

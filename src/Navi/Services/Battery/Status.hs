@@ -24,7 +24,7 @@ import Pythia.Services.Battery (BatteryConfig (..), BatteryStatus (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
-  (MonadMutRef m ref) =>
+  (MonadMutRef ref m) =>
   BatteryStatusToml ->
   m (AnyEvent ref)
 toEvent toml = do

@@ -40,13 +40,13 @@ repeatEvtCodec = Toml.dimap toBool fromBool $ Toml.bool "repeat-events"
     toBool NoRepeatsToml = False
 
 -- | Constructs a mutable 'RepeatEvent' from 'RepeatEvtToml'.
-repeatEvtTomlToVal :: MonadMutRef m ref => RepeatEvtToml -> m (RepeatEvent ref a)
+repeatEvtTomlToVal :: MonadMutRef ref m => RepeatEvtToml -> m (RepeatEvent ref a)
 repeatEvtTomlToVal AllowRepeatsToml = pure AllowRepeats
 repeatEvtTomlToVal NoRepeatsToml = NoRepeats <$> newRef Nothing
 
 -- | Constructs a mutable 'RepeatEvent' from 'RepeatEvtToml'. If none is
 -- provided, defaults to 'NoRepeatsToml', i.e., no repeats.
-mRepeatEvtTomlToVal :: MonadMutRef m ref => Maybe RepeatEvtToml -> m (RepeatEvent ref a)
+mRepeatEvtTomlToVal :: MonadMutRef ref m => Maybe RepeatEvtToml -> m (RepeatEvent ref a)
 mRepeatEvtTomlToVal Nothing = repeatEvtTomlToVal NoRepeatsToml
 mRepeatEvtTomlToVal (Just t) = repeatEvtTomlToVal t
 
@@ -70,7 +70,7 @@ errorNoteCodec = Toml.textBy showErrEvt parseErrEvt "error-events"
     parseErrEvt other = Left $ "Unsupported error event key: " <> other
 
 -- | Constructs a mutable 'ErrorNote' from 'ErrorNoteToml'.
-errorNoteTomlToVal :: MonadMutRef m ref => ErrorNoteToml -> m (ErrorNote ref)
+errorNoteTomlToVal :: MonadMutRef ref m => ErrorNoteToml -> m (ErrorNote ref)
 errorNoteTomlToVal NoErrNoteToml = pure NoErrNote
 errorNoteTomlToVal ErrNoteAllowRepeatsToml = pure $ AllowErrNote AllowRepeats
 errorNoteTomlToVal ErrNoteNoRepeatsToml = AllowErrNote . NoRepeats <$> newRef Nothing
@@ -78,6 +78,6 @@ errorNoteTomlToVal ErrNoteNoRepeatsToml = AllowErrNote . NoRepeats <$> newRef No
 -- | Constructs a mutable 'ErrorNote' from 'ErrorNoteToml'. If none is
 -- provided, defaults to 'ErrNoteNoRepeatsToml', i.e., we /do/ send
 -- notifications for errors, but we do not send repeats.
-mErrorNoteTomlToVal :: MonadMutRef m ref => Maybe ErrorNoteToml -> m (ErrorNote ref)
+mErrorNoteTomlToVal :: MonadMutRef ref m => Maybe ErrorNoteToml -> m (ErrorNote ref)
 mErrorNoteTomlToVal Nothing = errorNoteTomlToVal ErrNoteNoRepeatsToml
 mErrorNoteTomlToVal (Just t) = errorNoteTomlToVal t

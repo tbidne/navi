@@ -24,7 +24,7 @@ import Navi.Services.Types (ServiceType (..))
 import Pythia.Data.Command (Command)
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
-toEvent :: (MonadMutRef m ref) => MultipleToml -> m (AnyEvent ref)
+toEvent :: (MonadMutRef ref m) => MultipleToml -> m (AnyEvent ref)
 toEvent
   MkMultipleToml
     { command,
