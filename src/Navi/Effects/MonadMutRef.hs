@@ -17,7 +17,7 @@ class Monad m => MonadMutRef m ref where
 instance MonadMutRef IO IORef where
   newRef = IORef.newIORef
   readRef = IORef.readIORef
-  writeRef ref = IORef.writeIORef ref
+  writeRef = IORef.writeIORef
 
 instance MonadMutRef m ref => MonadMutRef (ReaderT e m) ref where
   newRef = lift . newRef

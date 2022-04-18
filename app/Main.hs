@@ -10,10 +10,10 @@ import Katip
     Verbosity (..),
   )
 import Katip qualified as K
-import Navi (runNavi, runNaviT)
+import Navi (NotifySystem (..), runNavi, runNaviT)
 import Navi.Args (Args (..), getArgs)
 import Navi.Config (Config (..), LogLoc (..), Logging (..), readConfig)
-import Navi.Env (mkEnv)
+import Navi.Env.DBus (mkDBusEnv)
 import Navi.Prelude
 import System.Directory (XdgDirectory (XdgConfig))
 import System.Directory qualified as Dir
@@ -28,8 +28,8 @@ main = do
 
   let mkLogEnvFn = mkLogEnv (config ^. #logging)
   bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
-    env <- mkEnv logEnv logCtx namespace config
-    absurd <$> runNaviT runNavi env
+    env <- mkDBusEnv logEnv logCtx namespace config
+    absurd <$> (runNaviT @'DBus) runNavi env
 
 tryParseConfig :: Args Identity -> IO (Config IORef)
 tryParseConfig =

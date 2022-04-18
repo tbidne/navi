@@ -69,10 +69,12 @@ library
     Navi.Effects.MonadNotify
     Navi.Effects.MonadShell
     Navi.Effects.MonadSystemInfo
-    Navi.Env
+    Navi.Env.Core
+    Navi.Env.DBus
     Navi.Event
     Navi.Event.Toml
     Navi.Event.Types
+    Navi.NaviT
     Navi.Prelude
     Navi.Services.Battery.Common
     Navi.Services.Battery.Percentage

@@ -1,27 +1,21 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | This module provides the 'Env' type.
-module Navi.Env
-  ( -- * HasX-style typeclasses
+-- | This module provides the core 'Env' type for Navi.
+module Navi.Env.Core
+  ( -- * HasX-style Typeclasses
     HasPollInterval (..),
     HasEvents (..),
-    HasClient (..),
     HasLogEnv (..),
     HasLogContexts (..),
     HasLogNamespace (..),
 
-    -- * Concrete env for running Navi.
+    -- * Concrete Env
     Env (..),
-    mkEnv,
   )
 where
 
-import DBus.Client (Client)
 import Katip (LogContexts, LogEnv, Namespace)
-import Navi.Config (Config)
-import Navi.Config qualified as Config
-import Navi.Effects (MonadNotify (..))
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
 
@@ -32,10 +26,6 @@ class HasPollInterval env where
 -- | Retrieves the events.
 class HasEvents ref env | env -> ref where
   getEvents :: env -> NonEmpty (AnyEvent ref)
-
--- | Retrieves the notification client.
-class HasClient env where
-  getClient :: env -> Client
 
 -- | Retrieves the log environment.
 class HasLogEnv env where
@@ -59,7 +49,6 @@ class HasLogNamespace env where
 data Env ref = MkEnv
   { pollInterval :: Word16,
     events :: NonEmpty (AnyEvent ref),
-    client :: Client,
     logEnv :: LogEnv,
     logCtx :: LogContexts,
     logNamespace :: Namespace
@@ -72,9 +61,6 @@ instance HasPollInterval (Env ref) where
 
 instance HasEvents ref (Env ref) where
   getEvents = view #events
-
-instance HasClient (Env ref) where
-  getClient = view #client
 
 instance HasLogEnv (Env ref) where
   getLogEnv = view #logEnv
@@ -90,23 +76,3 @@ instance HasLogNamespace (Env ref) where
   getLogNamespace = view #logNamespace
   setLogNamespace = set #logNamespace
   overLogNamespace = over #logNamespace
-
--- | Creates an 'Env' from the provided log types and configuration data.
-mkEnv ::
-  MonadNotify m =>
-  LogEnv ->
-  LogContexts ->
-  Namespace ->
-  Config ref ->
-  m (Env ref)
-mkEnv logEnv logContext namespace config = do
-  client <- initConn
-  pure $
-    MkEnv
-      { pollInterval = Config.pollInterval config,
-        events = Config.events config,
-        client = client,
-        logEnv = logEnv,
-        logCtx = logContext,
-        logNamespace = namespace
-      }

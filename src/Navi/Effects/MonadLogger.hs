@@ -8,7 +8,7 @@ import Katip (LogStr, Namespace, Severity)
 import Navi.Prelude
 
 -- | 'MonadLogger' allows us to use 'Katip.Katip' with a pure interface
--- ( 'Katip.Katip' has a 'Control.Monad.IO.Class.MonadIO' constraint).
+-- ('Katip.Katip' has a 'Control.Monad.IO.Class.MonadIO' constraint).
 class Monad m => MonadLogger m where
   logFm :: Severity -> LogStr -> m ()
   logText :: Severity -> Text -> m ()

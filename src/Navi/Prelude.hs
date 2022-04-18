@@ -43,6 +43,7 @@ import Control.Exception.Safe as X
     catch,
     handle,
     throw,
+    throwM,
     try,
   )
 import Control.Monad as X
