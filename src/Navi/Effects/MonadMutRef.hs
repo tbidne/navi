@@ -23,8 +23,3 @@ instance MonadMutRef ref m => MonadMutRef ref (ReaderT e m) where
   newRef = lift . newRef
   readRef = lift . readRef
   writeRef ref = lift . writeRef ref
-
-instance (MonadMutRef ref m, Monoid s) => MonadMutRef ref (WriterT s m) where
-  newRef = lift . newRef
-  readRef = lift . readRef
-  writeRef ref = lift . writeRef ref

@@ -34,3 +34,10 @@ jobs:
             "cabal update && \
              cabal build --write-ghc-environment-files=always && \
              cabal test unit --test-show-details=direct"
+
+      - name: Integration Tests
+        run: |
+          nix-shell nix/ghc_8-10-7.nix --command \
+            "cabal update && \
+             cabal build --write-ghc-environment-files=always && \
+             cabal test integration --test-show-details=direct"

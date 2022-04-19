@@ -29,3 +29,6 @@ jobs:
 
       - name: Unit Tests
         run: stack test unit
+
+      - name: Integration Tests
+        run: stack test integration

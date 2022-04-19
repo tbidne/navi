@@ -50,8 +50,7 @@ tomlToNote toml =
     summary = "Battery Percentage"
     body =
       Just $
-        "Power is less than "
-          <> showt (Interval.unLRInterval $ percentage ^. #unBatteryPercentage)
+        showt (Interval.unLRInterval $ percentage ^. #unBatteryPercentage)
           <> "%"
 
 mkBatteryEvent ::

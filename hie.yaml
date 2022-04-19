@@ -8,3 +8,6 @@ cradle:
 
     - path: "./test/unit"
       component: "navi:test:unit"
+
+    - path: "./test/integration"
+      component: "navi:test:integration"

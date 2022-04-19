@@ -4,7 +4,6 @@ module Navi
     runNavi,
 
     -- * Application Types
-    NotifySystem (..),
     NaviT (..),
     runNaviT,
   )
@@ -16,7 +15,7 @@ import Katip (Severity (..))
 import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Effects.MonadLogger (MonadLogger (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
-import Navi.Effects.MonadNotify (MonadNotify (..), NotifySystem (..))
+import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core (HasEvents (..), HasPollInterval (..))

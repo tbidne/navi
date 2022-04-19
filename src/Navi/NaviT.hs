@@ -14,7 +14,7 @@ import Katip qualified as K
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Effects.MonadLogger (MonadLogger (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
-import Navi.Effects.MonadNotify (MonadNotify (..), NotifySystem (..))
+import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
@@ -22,12 +22,12 @@ import Navi.Env.Core
     HasLogEnv (..),
     HasLogNamespace (..),
   )
-import Navi.Env.DBus (HasDBusClient (..))
+import Navi.Env.DBus (DBusEnv, HasDBusClient (..))
 import Navi.Prelude
 
 -- | NaviT is the core type used to run the application.
-type NaviT :: NotifySystem -> Type -> (Type -> Type) -> Type -> Type
-newtype NaviT n e m a = MkNaviT (ReaderT e m a)
+type NaviT :: Type -> (Type -> Type) -> Type -> Type
+newtype NaviT e m a = MkNaviT (ReaderT e m a)
   deriving
     ( Functor,
       Applicative,
@@ -36,20 +36,26 @@ newtype NaviT n e m a = MkNaviT (ReaderT e m a)
       MonadIO,
       MonadShell,
       MonadReader e,
-      MonadThrow,
-      MonadSystemInfo
+      MonadThrow
     )
     via (ReaderT e m)
   deriving (MonadTrans) via (ReaderT e)
 
-instance (HasDBusClient env, MonadIO m) => MonadNotify (NaviT 'DBus env m) where
+-- Concrete IO rather than MonadIO so that we can write instances over
+-- other MonadIOs (i.e. in tests)
+instance MonadSystemInfo (NaviT env IO) where
+  query = liftIO . query
+
+-- Concrete IO rather than MonadIO so that we can write instances over
+-- other MonadIOs (i.e. in tests)
+instance MonadNotify (NaviT DBusEnv IO) where
   sendNote naviNote = do
     client <- asks getClient
     liftIO $ sendDbus client naviNote
     where
       sendDbus c = void . DBusN.notify c . naviToDBus
 
-instance (HasLogEnv env, MonadIO m) => Katip (NaviT n env m) where
+instance (HasLogEnv env, MonadIO m) => Katip (NaviT env m) where
   getLogEnv = asks getLogEnv
   localLogEnv = updateEnvField overLogEnv
 
@@ -59,7 +65,7 @@ instance
     HasLogNamespace env,
     MonadIO m
   ) =>
-  KatipContext (NaviT n env m)
+  KatipContext (NaviT env m)
   where
   getKatipContext = asks getLogContexts
   localKatipContext = updateEnvField overLogContexts
@@ -74,25 +80,26 @@ updateEnvField ::
   m a
 updateEnvField overFn modifier = local (overFn modifier)
 
+-- Concrete IO rather than MonadIO so that we can write instances over
+-- other MonadIOs (i.e. in tests)
 instance
   ( HasLogContexts env,
     HasLogEnv env,
-    HasLogNamespace env,
-    MonadIO m
+    HasLogNamespace env
   ) =>
-  MonadLogger (NaviT n env m)
+  MonadLogger (NaviT env IO)
   where
   logFm = K.logFM
   logText s = logFm s . LogStr . T.fromText
   addNamespace = K.katipAddNamespace
 
-instance MonadMutRef ref m => MonadMutRef ref (NaviT n e m) where
+instance MonadMutRef ref m => MonadMutRef ref (NaviT e m) where
   newRef = lift . newRef
   readRef = lift . readRef
   writeRef ref = lift . writeRef ref
 
 -- | Runs 'NaviT'.
-runNaviT :: NaviT n env m a -> env -> m a
+runNaviT :: NaviT env m a -> env -> m a
 runNaviT (MkNaviT rdr) = runReaderT rdr
 
 naviToDBus :: NaviNote -> Note

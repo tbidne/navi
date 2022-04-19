@@ -50,6 +50,7 @@ common common-exts
     ScopedTypeVariables
     StandaloneDeriving
     StandaloneKindSignatures
+    TupleSections
     TypeApplications
     TypeFamilyDependencies
     TypeOperators
@@ -153,4 +154,24 @@ test-suite unit
     , tomland
 
   hs-source-dirs:   test/unit
+  default-language: Haskell2010
+
+test-suite integration
+  import:           common-exts
+  type:             exitcode-stdio-1.0
+  main-is:          Main.hs
+  other-modules:
+    Integration.MockApp
+    Integration.Prelude
+
+  build-depends:
+    , async        ^>=2.2.4
+    , base
+    , navi
+    , pythia
+    , smart-math
+    , tasty
+    , tasty-hunit
+
+  hs-source-dirs:   test/integration
   default-language: Haskell2010

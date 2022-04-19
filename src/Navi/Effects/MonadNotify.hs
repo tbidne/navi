@@ -1,7 +1,6 @@
 -- | Provides an effect for sending system notifications.
 module Navi.Effects.MonadNotify
-  ( NotifySystem (..),
-    MonadNotify (..),
+  ( MonadNotify (..),
   )
 where
 
@@ -14,9 +13,3 @@ class Monad m => MonadNotify m where
 
 instance MonadNotify m => MonadNotify (ReaderT e m) where
   sendNote = lift . sendNote
-
--- | Describes the possible notification systems. This type is intended to be
--- used phantom to allow for different typeclass dispatch.
-data NotifySystem
-  = -- | DBus notifcation system.
-    DBus
