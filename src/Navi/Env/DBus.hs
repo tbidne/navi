@@ -25,6 +25,7 @@ import Navi.Env.Core
     HasLogNamespace (..),
     HasLogQueue (..),
     HasNoteQueue (..),
+    HasPollInterval (..),
   )
 import Navi.Prelude
 
@@ -39,6 +40,9 @@ data DBusEnv = MkDBusEnv
   }
 
 makeFieldLabelsNoPrefix ''DBusEnv
+
+instance HasPollInterval DBusEnv where
+  getPollInterval = view (#coreEnv % #pollInterval)
 
 instance HasEvents IORef DBusEnv where
   getEvents = view (#coreEnv % #events)
@@ -83,6 +87,7 @@ mkDBusEnv logEnv logContext namespace config = do
     MkDBusEnv
       { coreEnv =
           MkEnv
+            (config ^. #pollInterval)
             (Config.events config)
             logEnv
             logContext

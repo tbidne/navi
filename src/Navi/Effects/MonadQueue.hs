@@ -8,6 +8,7 @@ where
 
 import Navi.Data.NaviQueue (NaviQueue)
 import Navi.Data.NaviQueue qualified as Queue
+import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Prelude
 
 -- | Interface for queue operations.
@@ -33,9 +34,15 @@ instance MonadQueue m => MonadQueue (ReaderT e m) where
 
 -- | Infinite loop that continuously reads from the queue and applies
 -- the given action.
-pollQueueAction :: MonadQueue m => (a -> m ()) -> NaviQueue a -> m Void
-pollQueueAction action queue =
+pollQueueAction ::
+  (MonadQueue m, MonadShell m) =>
+  Word16 ->
+  (a -> m ()) ->
+  NaviQueue a ->
+  m Void
+pollQueueAction delay action queue =
   forever $ do
+    sleep delay
     maybeX <- readQueue queue
     case maybeX of
       Nothing -> pure ()

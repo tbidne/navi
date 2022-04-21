@@ -8,22 +8,13 @@ module Navi.Event.Toml
     errorNoteCodec,
     errorNoteTomlToVal,
     mErrorNoteTomlToVal,
-    word16Codec,
   )
 where
 
-import Control.Category ((>>>))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Event.Types (ErrorNote (..), RepeatEvent (..))
 import Navi.Prelude
-import Toml
-  ( AnyValue,
-    BiMap (..),
-    Key,
-    TomlBiMap,
-    TomlBiMapError (..),
-    TomlCodec,
-  )
+import Toml (TomlCodec)
 import Toml qualified
 
 -- | TOML for 'Event.Event'.
@@ -90,21 +81,3 @@ errorNoteTomlToVal ErrNoteNoRepeatsToml = AllowErrNote . NoRepeats <$> newRef No
 mErrorNoteTomlToVal :: MonadMutRef ref m => Maybe ErrorNoteToml -> m (ErrorNote ref)
 mErrorNoteTomlToVal Nothing = errorNoteTomlToVal ErrNoteNoRepeatsToml
 mErrorNoteTomlToVal (Just t) = errorNoteTomlToVal t
-
--- | Parses a TOML 'Word16'.
-word16Codec :: Key -> TomlCodec Word16
-word16Codec = Toml.match _Word16
-
-_Word16 :: TomlBiMap Word16 AnyValue
-_Word16 = _Word16Int >>> Toml._Int
-
-_Word16Int :: TomlBiMap Word16 Int
-_Word16Int = BiMap (Right . fromIntegral) parseW16
-  where
-    parseW16 i
-      | i < 0 = Left $ ArbitraryError $ "Received negative for word16: " <> showt i
-      | i > w16ToInt (maxBound :: Word16) =
-          Left $ ArbitraryError $ "Too large for word16: " <> showt i
-      | otherwise = Right $ intToWord16 i
-    intToWord16 :: Int -> Word16
-    intToWord16 = fromIntegral

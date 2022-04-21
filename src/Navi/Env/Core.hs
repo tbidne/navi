@@ -4,6 +4,7 @@
 -- | This module provides the core 'Env' type for Navi.
 module Navi.Env.Core
   ( -- * HasX-style Typeclasses
+    HasPollInterval (..),
     HasEvents (..),
     HasLogEnv (..),
     HasLogContexts (..),
@@ -22,6 +23,9 @@ import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.NaviQueue (NaviQueue)
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
+
+class HasPollInterval env where
+  getPollInterval :: env -> Word16
 
 -- | Retrieves the events.
 class HasEvents ref env | env -> ref where
@@ -55,7 +59,8 @@ class HasNoteQueue env where
 
 -- | 'Env' holds all of our environment data that is used while running navi.
 data Env ref = MkEnv
-  { events :: !(NonEmpty (AnyEvent ref)),
+  { pollInterval :: !Word16,
+    events :: !(NonEmpty (AnyEvent ref)),
     logEnv :: !LogEnv,
     logCtx :: !LogContexts,
     logNamespace :: !Namespace,
@@ -64,6 +69,9 @@ data Env ref = MkEnv
   }
 
 makeFieldLabelsNoPrefix ''Env
+
+instance HasPollInterval (Env ref) where
+  getPollInterval = view #pollInterval
 
 instance HasEvents ref (Env ref) where
   getEvents = view #events

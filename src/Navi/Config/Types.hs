@@ -47,7 +47,12 @@ defaultLogging = MkLogging ErrorS DefPath
 -- | 'Config' holds the data from 'Navi.Config.Toml.ConfigToml' once it has been processed
 -- (e.g., all user defined Events are parsed).
 data Config ref = MkConfig
-  { -- | The notification events.
+  { -- | This value determines how often we check for pending
+    -- notifications/logs, and if there are any, send them. This is separate
+    -- from individual service pollIntervals, which determine how often we
+    -- query that particular service.
+    pollInterval :: Word16,
+    -- | The notification events.
     events :: !(NonEmpty (AnyEvent ref)),
     -- | Logging configuration.
     logging :: !Logging
@@ -57,7 +62,9 @@ makeFieldLabelsNoPrefix ''Config
 
 instance Show (Config ref) where
   show config =
-    "MkConfig {events = "
+    "MkConfig {pollInterval = "
+      <> show (config ^. #pollInterval)
+      <> ", events = "
       <> show (config ^. #events)
       <> ", logging = "
       <> show (config ^. #logging)

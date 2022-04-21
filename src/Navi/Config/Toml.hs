@@ -13,18 +13,24 @@ import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Config.Types (LogLoc (..), Logging (..))
 import Navi.Prelude
-import Navi.Services.Battery.Percentage.Toml as BStateToml
-import Navi.Services.Battery.Status.Toml as BChargeStatusToml
-import Navi.Services.Custom.Multiple.Toml as MultipleToml
-import Navi.Services.Custom.Single.Toml as SingleToml
+import Navi.Services.Battery.Percentage.Toml (BatteryPercentageToml)
+import Navi.Services.Battery.Percentage.Toml qualified as BStateToml
+import Navi.Services.Battery.Status.Toml (BatteryStatusToml)
+import Navi.Services.Battery.Status.Toml qualified as BChargeStatusToml
+import Navi.Services.Custom.Multiple.Toml (MultipleToml)
+import Navi.Services.Custom.Multiple.Toml qualified as MultipleToml
+import Navi.Services.Custom.Single.Toml (SingleToml)
+import Navi.Services.Custom.Single.Toml qualified as SingleToml
 import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml)
 import Navi.Services.Network.NetInterfaces.Toml qualified as NetConnToml
+import Navi.Utils qualified as U
 import Toml (TomlCodec, (.=))
 import Toml qualified
 
 -- | 'ConfigToml' holds the data that is defined in the configuration file.
 data ConfigToml = MkConfigToml
-  { logToml :: Maybe Logging,
+  { pollInterval :: Maybe Word16,
+    logToml :: Maybe Logging,
     singleToml :: [SingleToml],
     multipleToml :: [MultipleToml],
     batteryPercentageToml :: Maybe BatteryPercentageToml,
@@ -37,7 +43,8 @@ data ConfigToml = MkConfigToml
 configCodec :: TomlCodec ConfigToml
 configCodec =
   MkConfigToml
-    <$> Toml.dioptional (Toml.table logCodec "logging") .= logToml
+    <$> Toml.dioptional U.word16Codec .= pollInterval
+    <*> Toml.dioptional (Toml.table logCodec "logging") .= logToml
     <*> Toml.list SingleToml.singleCodec "single" .= singleToml
     <*> Toml.list MultipleToml.multipleCodec "multiple" .= multipleToml
     <*> Toml.dioptional (Toml.table BStateToml.batteryPercentageCodec "battery-percentage") .= batteryPercentageToml

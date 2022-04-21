@@ -12,10 +12,11 @@ where
 
 import Navi.Data.NaviNote (Timeout)
 import Navi.Data.NaviNote qualified as NaviNote
-import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml, word16Codec)
+import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EToml
 import Navi.Prelude
 import Navi.Services.Battery.Common (appCodec)
+import Navi.Utils qualified as U
 import Pythia.Services.Battery (BatteryApp (..), RunApp (..))
 import Toml (TomlCodec, (.=))
 import Toml qualified
@@ -51,7 +52,7 @@ batteryStatusCodec :: TomlCodec BatteryStatusToml
 batteryStatusCodec =
   MkBatteryStatusToml
     <$> appCodec .= app
-    <*> Toml.dioptional (word16Codec "poll-interval") .= pollInterval
+    <*> Toml.dioptional U.word16Codec .= pollInterval
     <*> Toml.dioptional EToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EToml.errorNoteCodec .= errorNote
     <*> batteryStatusNoteCodec .= note

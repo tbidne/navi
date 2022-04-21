@@ -18,7 +18,8 @@ import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
-import Navi.Env.Core (HasEvents (..), HasLogQueue (..), HasNoteQueue (..))
+import Navi.Env.Core (HasEvents (..), HasLogQueue (..), HasNoteQueue (..),
+  HasPollInterval (..))
 import Navi.Event.Types (AnyEvent)
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Services.Types (ServiceType (..))
@@ -40,6 +41,10 @@ data MockEnv = MkMockEnv
   }
 
 makeFieldLabelsNoPrefix ''MockEnv
+
+instance HasPollInterval MockEnv where
+  -- no need to make this configurable for now
+  getPollInterval = const 1
 
 instance HasEvents IORef MockEnv where
   getEvents = events
