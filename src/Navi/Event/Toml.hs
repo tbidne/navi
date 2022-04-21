@@ -31,13 +31,13 @@ data EventConfig = MkEventConfig
   { repeatEvt :: Maybe RepeatEvtToml,
     errEvt :: Maybe ErrorNoteToml
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 -- | TOML for 'RepeatEvent'.
 data RepeatEvtToml
   = NoRepeatsToml
   | AllowRepeatsToml
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 -- | Codec for 'RepeatEvtToml'.
 repeatEvtCodec :: TomlCodec RepeatEvtToml
@@ -64,7 +64,7 @@ data ErrorNoteToml
   = NoErrNoteToml
   | ErrNoteAllowRepeatsToml
   | ErrNoteNoRepeatsToml
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 -- | Codec for 'ErrorNoteToml'.
 errorNoteCodec :: TomlCodec ErrorNoteToml

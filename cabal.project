@@ -2,10 +2,9 @@ packages: .
 
 package navi
   ghc-options:
-    -Wall -Wcompat -Werror -Widentities
-    -Wincomplete-record-updates -Wincomplete-uni-patterns
-    -Wmissing-home-modules -Wmissing-export-lists -Wpartial-fields
-    -Wredundant-constraints -Wunused-packages
+    -Weverything -Werror -Wno-unsafe -Wno-missing-safe-haskell-mode
+    -Wno-missing-import-lists -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
 
 optimization: 2
 

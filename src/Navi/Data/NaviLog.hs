@@ -15,6 +15,6 @@ data NaviLog = MkNaviLog
   { severity :: !Severity,
     text :: !Text
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 makeFieldLabelsNoPrefix ''NaviLog

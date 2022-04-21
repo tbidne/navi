@@ -22,6 +22,6 @@ data ServiceType result where
   Single :: !Command -> ServiceType Text
   Multiple :: !Command -> ServiceType Text
 
-deriving instance Show (ServiceType result)
+deriving stock instance Show (ServiceType result)
 
-deriving instance Eq (ServiceType result)
+deriving stock instance Eq (ServiceType result)

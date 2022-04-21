@@ -36,7 +36,7 @@ instance Show (RepeatEvent ref a) where
 data ErrorNote ref
   = NoErrNote
   | AllowErrNote !(RepeatEvent ref ())
-  deriving (Show)
+  deriving stock (Show)
 
 makeFieldLabelsNoPrefix ''ErrorNote
 
@@ -49,7 +49,7 @@ data EventErr = MkEventErr
     -- | Long description of the error.
     long :: !Text
   }
-  deriving (Show)
+  deriving stock (Show)
   deriving anyclass (Exception)
 
 makeFieldLabelsNoPrefix ''EventErr
@@ -92,6 +92,6 @@ type AnyEvent :: (Type -> Type) -> Type
 data AnyEvent ref where
   MkAnyEvent :: (Eq result, Show result) => Event ref result -> AnyEvent ref
 
-deriving instance Show (AnyEvent ref)
+deriving stock instance Show (AnyEvent ref)
 
 makeFieldLabelsNoPrefix ''AnyEvent

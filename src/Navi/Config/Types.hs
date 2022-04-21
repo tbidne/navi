@@ -24,19 +24,19 @@ import Toml (TomlDecodeError)
 data LogLoc
   = DefPath
   | Stdout
-  | File FilePath
-  deriving (Eq, Show)
+  | File !FilePath
+  deriving stock (Eq, Show)
 
 makeFieldLabelsNoPrefix ''LogLoc
 
 -- | Logging configuration.
 data Logging = MkLogging
   { -- | Determines the log level.
-    severity :: Severity,
+    severity :: !Severity,
     -- | Deterines the log location (i.e. file or stdout).
-    location :: LogLoc
+    location :: !LogLoc
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 makeFieldLabelsNoPrefix ''Logging
 

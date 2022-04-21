@@ -24,14 +24,14 @@ import Toml qualified
 
 -- | 'ConfigToml' holds the data that is defined in the configuration file.
 data ConfigToml = MkConfigToml
-  { logToml :: Maybe Logging,
-    singleToml :: [SingleToml],
-    multipleToml :: [MultipleToml],
-    batteryPercentageToml :: Maybe BatteryPercentageToml,
-    batteryStatusToml :: Maybe BatteryStatusToml,
-    netInterfacesToml :: [NetInterfacesToml]
+  { logToml :: !(Maybe Logging),
+    singleToml :: ![SingleToml],
+    multipleToml :: ![MultipleToml],
+    batteryPercentageToml :: !(Maybe BatteryPercentageToml),
+    batteryStatusToml :: !(Maybe BatteryStatusToml),
+    netInterfacesToml :: ![NetInterfacesToml]
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 -- | Toml decoder for 'ConfigToml'.
 configCodec :: TomlCodec ConfigToml

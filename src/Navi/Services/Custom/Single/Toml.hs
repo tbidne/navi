@@ -33,7 +33,7 @@ data SingleToml = MkSingleToml
     -- | Determines how we handle errors.
     errEvtCfg :: Maybe ErrorNoteToml
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 makeFieldLabelsNoPrefix ''SingleToml
 

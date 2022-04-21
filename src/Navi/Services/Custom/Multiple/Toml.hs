@@ -26,7 +26,7 @@ data TriggerNoteToml = MkTriggerNoteToml
     -- | The notification to send when triggered.
     note :: NaviNote
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 makeFieldLabelsNoPrefix ''TriggerNoteToml
 
@@ -43,7 +43,7 @@ data MultipleToml = MkMultipleToml
     -- | Determines how we handle errors.
     errEvtCfg :: Maybe ErrorNoteToml
   }
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 makeFieldLabelsNoPrefix ''MultipleToml
 
