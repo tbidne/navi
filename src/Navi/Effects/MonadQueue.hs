@@ -13,7 +13,7 @@ import Navi.Prelude
 -- | Interface for queue operations.
 class Monad m => MonadQueue m where
   -- | Attempts to read from a queue.
-  readQueue :: NaviQueue a -> m (Maybe a)
+  readQueue :: NaviQueue a -> m a
 
   -- | Writes to a queue.
   writeQueue :: NaviQueue a -> a -> m ()
@@ -34,12 +34,7 @@ instance MonadQueue m => MonadQueue (ReaderT e m) where
 -- | Infinite loop that continuously reads from the queue and applies
 -- the given action.
 pollQueueAction :: MonadQueue m => (a -> m ()) -> NaviQueue a -> m Void
-pollQueueAction action queue =
-  forever $ do
-    maybeX <- readQueue queue
-    case maybeX of
-      Nothing -> pure ()
-      Just n -> action n
+pollQueueAction action queue = forever $ readQueue queue >>= action
 
 -- | Flushes the queue and applies the action to every item that is flushed.
 flushQueueAction :: MonadQueue m => (a -> m ()) -> NaviQueue a -> m ()

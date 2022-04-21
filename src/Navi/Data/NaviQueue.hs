@@ -21,9 +21,9 @@ newtype NaviQueue a = MkNaviQueue {unNaviQueue :: TBQueue a}
 
 makeFieldLabelsNoPrefix ''NaviQueue
 
--- | Atomically reads from the queue. Does not retry.
-readQueueIO :: MonadIO m => NaviQueue a -> m (Maybe a)
-readQueueIO = liftIO . STM.atomically . TBQueue.tryReadTBQueue . view #unNaviQueue
+-- | Atomically reads from the queue. Blocks until a value is available.
+readQueueIO :: MonadIO m => NaviQueue a -> m a
+readQueueIO = liftIO . STM.atomically . TBQueue.readTBQueue . view #unNaviQueue
 
 -- | Atomically writes to the queue.
 writeQueueIO :: MonadIO m => NaviQueue a -> a -> m ()
