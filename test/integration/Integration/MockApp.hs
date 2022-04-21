@@ -9,13 +9,16 @@ module Integration.MockApp
 where
 
 import Integration.Prelude
+import Navi.Data.NaviLog (NaviLog)
 import Navi.Data.NaviNote (NaviNote (..))
+import Navi.Data.NaviQueue (NaviQueue)
 import Navi.Effects.MonadLogger (MonadLogger (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
+import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
-import Navi.Env.Core (HasEvents (..), HasPollInterval (..))
+import Navi.Env.Core (HasEvents (..), HasLogQueue (..), HasNoteQueue (..))
 import Navi.Event.Types (AnyEvent)
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Services.Types (ServiceType (..))
@@ -25,14 +28,15 @@ import Pythia.Services.Battery (Battery (..), BatteryPercentage (..), BatterySta
 
 -- | Mock configuration.
 data MockEnv = MkMockEnv
-  { pollInterval :: Word16,
-    events :: NonEmpty (AnyEvent IORef),
+  { events :: !(NonEmpty (AnyEvent IORef)),
+    logQueue :: !(NaviQueue NaviLog),
+    noteQueue :: !(NaviQueue NaviNote),
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
-    sentNotes :: IORef [NaviNote],
+    sentNotes :: !(IORef [NaviNote]),
     -- | caches the last battery percentage "reading". This way we can
     -- ensure we have a new percentage every time.
-    lastPercentage :: IORef BatteryPercentage
+    lastPercentage :: !(IORef BatteryPercentage)
   }
 
 makeFieldLabelsNoPrefix ''MockEnv
@@ -40,28 +44,29 @@ makeFieldLabelsNoPrefix ''MockEnv
 instance HasEvents IORef MockEnv where
   getEvents = events
 
-instance HasPollInterval MockEnv where
-  getPollInterval = pollInterval
+instance HasLogQueue MockEnv where
+  getLogQueue = logQueue
+
+instance HasNoteQueue MockEnv where
+  getNoteQueue = noteQueue
 
 newtype IntTestIO a = MkIntTestIO {runIntTestIO :: IO a}
   deriving
     ( Functor,
       Applicative,
       Monad,
-      MonadCatch,
       MonadIO,
+      MonadQueue,
       MonadMutRef IORef,
       MonadShell,
-      MonadThrow
+      MonadUnliftIO
     )
     via IO
 
 instance MonadLogger (NaviT MockEnv IntTestIO) where
-  logFm _ _ = pure ()
-
   -- if we ever decide to test logs, we can capture them similar to the
   -- MonadNotify instance.
-  logText _ _ = pure ()
+  logText _ = pure ()
   addNamespace _ mx = mx
 
 instance MonadNotify (NaviT MockEnv IntTestIO) where
@@ -86,7 +91,7 @@ instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
   query (BatteryStatus _) = pure Charging
   -- Service error. Can test error behavior.
   query (NetworkInterface _ _) =
-    throw $ MkCommandException "nmcli" "Nmcli error"
+    throwIO $ MkCommandException "nmcli" "Nmcli error"
   -- Constant service. Can test duplicate behavior.
   query (Single _) = pure "single trigger"
   -- Constant service. Can test duplicate behavior.

@@ -47,21 +47,17 @@ defaultLogging = MkLogging ErrorS DefPath
 -- | 'Config' holds the data from 'Navi.Config.Toml.ConfigToml' once it has been processed
 -- (e.g., all user defined Events are parsed).
 data Config ref = MkConfig
-  { -- | Determines how often we query for alerts, in seconds.
-    pollInterval :: Word16,
-    -- | The notification events.
-    events :: NonEmpty (AnyEvent ref),
+  { -- | The notification events.
+    events :: !(NonEmpty (AnyEvent ref)),
     -- | Logging configuration.
-    logging :: Logging
+    logging :: !Logging
   }
 
 makeFieldLabelsNoPrefix ''Config
 
 instance Show (Config ref) where
   show config =
-    "MkConfig {pollInterval = "
-      <> show (config ^. #pollInterval)
-      <> ", events = "
+    "MkConfig {events = "
       <> show (config ^. #events)
       <> ", logging = "
       <> show (config ^. #logging)
@@ -70,8 +66,8 @@ instance Show (Config ref) where
 -- | 'ConfigErr' represents the errors we can encounter when attempting to
 -- parse a config file.
 data ConfigErr
-  = FileErr SomeException
-  | TomlError [TomlDecodeError]
+  = FileErr !SomeException
+  | TomlError ![TomlDecodeError]
   | NoEvents
   deriving stock (Show)
 

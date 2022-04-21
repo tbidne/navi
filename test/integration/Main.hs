@@ -12,10 +12,13 @@ module Main (main) where
 
 import Control.Concurrent qualified as CC
 import Control.Concurrent.Async qualified as Async
+import Control.Concurrent.STM qualified as STM
+import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import Integration.MockApp (MockEnv (..), runMockApp)
 import Integration.Prelude
 import Navi (runNavi)
 import Navi.Data.NaviNote (NaviNote (..))
+import Navi.Data.NaviQueue (NaviQueue (..))
 import Navi.Event.Toml (ErrorNoteToml (..), RepeatEvtToml (..))
 import Navi.Event.Types (AnyEvent)
 import Navi.Services.Battery.Percentage qualified as Percentage
@@ -67,7 +70,7 @@ testDuplicates = testCase "Send duplicate notifications" $ do
   runMock 3 mockEnv
 
   sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  3 @=? length sentNotes
+  assertBool "Should send at least 3 notifs" $ length sentNotes >= 3
   assertBool desc $ all ((==) "Single" . view #summary) sentNotes
   where
     desc = "Summary should be 'Single'"
@@ -117,7 +120,7 @@ testSendsMultipleErrs = testCase "Sends multiple errors" $ do
   runMock 3 mockEnv
 
   sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  3 @=? length sentNotes
+  assertBool "Should send at least 3 notifs" $ length sentNotes >= 3
   assertBool desc $ all ((==) "Exception" . view #summary) sentNotes
   where
     desc = "Summary should be 'Exception'"
@@ -137,12 +140,15 @@ mkEnv events = do
   sentNotesRef <- newIORef []
 
   lastPercentageRef <- newIORef $ MkBatteryPercentage $ Interval.unsafeLRInterval 6
+  logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
+  noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
 
   let mockEnv =
         MkMockEnv
-          { pollInterval = 1,
-            events = events,
+          { events = events,
             sentNotes = sentNotesRef,
+            logQueue = MkNaviQueue logQueue,
+            noteQueue = MkNaviQueue noteQueue,
             lastPercentage = lastPercentageRef
           }
   pure mockEnv
@@ -159,6 +165,7 @@ mkPercentageEvent = do
       percentageToml =
         MkBatteryPercentageToml
           (toAlert 5 :| alerts)
+          (Just 1)
           Nothing
           Nothing
           Many
@@ -176,13 +183,12 @@ mkSingleEvent repeatEventToml = do
 
       singleToml =
         MkSingleToml
-          { command = "cmd",
-            -- matches trigger in MockApp
-            triggerVal = "single trigger",
-            note = note,
-            repeatEvtCfg = repeatEventToml,
-            errEvtCfg = Nothing
-          }
+          "cmd"
+          "single trigger" -- matches trigger in MockApp
+          (Just 1)
+          note
+          repeatEventToml
+          Nothing
 
   Single.toEvent singleToml
 
@@ -192,6 +198,7 @@ mkNetInterfaceEvent errNoteToml = do
         MkNetInterfacesToml
           Many
           "device"
+          (Just 1)
           Nothing
           errNoteToml
           Nothing

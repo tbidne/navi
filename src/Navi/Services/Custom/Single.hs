@@ -16,34 +16,38 @@ import Navi.Event.Types
     RepeatEvent (..),
   )
 import Navi.Prelude
-import Navi.Services.Custom.Single.Toml (SingleToml (..))
+import Navi.Services.Custom.Single.Toml (SingleToml)
 import Navi.Services.Custom.Single.Toml qualified as SingleToml
 import Navi.Services.Types (ServiceType (..))
 import Pythia.Data.Command (Command)
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent :: (MonadMutRef ref m) => SingleToml -> m (AnyEvent ref)
-toEvent
-  MkSingleToml
-    { command,
-      triggerVal,
-      note,
-      repeatEvtCfg,
-      errEvtCfg
-    } = do
-    repeatEvt <- EventToml.mRepeatEvtTomlToVal repeatEvtCfg
-    errorNote <- EventToml.mErrorNoteTomlToVal errEvtCfg
-    pure $ MkAnyEvent $ mkSingleEvent command (triggerVal, note) repeatEvt errorNote
+toEvent toml = do
+  repeatEvt <- EventToml.mRepeatEvtTomlToVal (toml ^. #repeatEvtCfg)
+  errorNote <- EventToml.mErrorNoteTomlToVal (toml ^. #errEvtCfg)
+  pure $
+    MkAnyEvent $
+      mkSingleEvent
+        (toml ^. #command)
+        pi
+        (toml ^. #triggerVal, toml ^. #note)
+        repeatEvt
+        errorNote
+  where
+    pi = fromMaybe 30 (toml ^. #pollInterval)
 
 mkSingleEvent ::
   Command ->
+  Word16 ->
   (Text, NaviNote) ->
   RepeatEvent ref Text ->
   ErrorNote ref ->
   Event ref Text
-mkSingleEvent cmd (triggerVal, note) re en =
+mkSingleEvent cmd pi (triggerVal, note) re en =
   MkEvent
     { name = "Single",
+      pollInterval = pi,
       serviceType = Single cmd,
       raiseAlert = \b -> if b == triggerVal then Just note else Nothing,
       repeatEvent = re,

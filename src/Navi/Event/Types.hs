@@ -22,7 +22,7 @@ import Navi.Services.Types (ServiceType)
 -- simultaneously. If we are not, then 'NoRepeats' holds the last trigger
 -- so that we can detect duplicates.
 data RepeatEvent ref a
-  = NoRepeats (ref (Maybe a))
+  = NoRepeats !(ref (Maybe a))
   | AllowRepeats
 
 makeFieldLabelsNoPrefix ''RepeatEvent
@@ -35,7 +35,7 @@ instance Show (RepeatEvent ref a) where
 -- allow repeats.
 data ErrorNote ref
   = NoErrNote
-  | AllowErrNote (RepeatEvent ref ())
+  | AllowErrNote !(RepeatEvent ref ())
   deriving (Show)
 
 makeFieldLabelsNoPrefix ''ErrorNote
@@ -43,11 +43,11 @@ makeFieldLabelsNoPrefix ''ErrorNote
 -- | Represents an error when querying an 'Event'.
 data EventErr = MkEventErr
   { -- | The name of the event.
-    name :: Text,
+    name :: !Text,
     -- | Short description of the error.
-    short :: Text,
+    short :: !Text,
     -- | Long description of the error.
-    long :: Text
+    long :: !Text
   }
   deriving (Show)
   deriving anyclass (Exception)
@@ -61,15 +61,17 @@ makeFieldLabelsNoPrefix ''EventErr
 -- 3. Raise an alert if the result matches some condition.
 data Event ref result = MkEvent
   { -- | The name of this event.
-    name :: Text,
+    name :: !Text,
     -- | The service to run.
-    serviceType :: ServiceType result,
+    serviceType :: !(ServiceType result),
+    -- | How often to poll for this event, in seconds.
+    pollInterval :: !Word16,
     -- | Conditionally raises an alert based on the result.
     raiseAlert :: result -> Maybe NaviNote,
     -- | Determines how we handle repeat alerts.
-    repeatEvent :: RepeatEvent ref result,
+    repeatEvent :: !(RepeatEvent ref result),
     -- | Determines how we handle errors.
-    errorNote :: ErrorNote ref
+    errorNote :: !(ErrorNote ref)
   }
 
 makeFieldLabelsNoPrefix ''Event

@@ -31,12 +31,14 @@ toEvent toml = do
       MkEvent
         { name = "Network Interface",
           serviceType = cmd,
+          pollInterval = pi,
           raiseAlert = toNote toml,
           repeatEvent = repeatEvt,
           errorNote = errorNote
         }
   where
     device = MkDevice $ toml ^. #deviceName
+    pi = fromMaybe 30 (toml ^. #pollInterval)
     cmd =
       NetworkInterface device $
         MkNetInterfaceConfig (toml ^. #app)

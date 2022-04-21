@@ -32,13 +32,13 @@ makeFieldLabelsNoPrefix ''Timeout
 -- | 'NaviNote' represents desktop notifications.
 data NaviNote = MkNaviNote
   { -- | Text summary.
-    summary :: Text,
+    summary :: !Text,
     -- | Text body.
-    body :: Maybe Text,
+    body :: !(Maybe Text),
     -- | Urgency (e.g. low, critical)
-    urgency :: Maybe UrgencyLevel,
+    urgency :: !(Maybe UrgencyLevel),
     -- | Determines how long the notification stays on-screen.
-    timeout :: Maybe Timeout
+    timeout :: !(Maybe Timeout)
   }
   deriving (Eq, Show)
 

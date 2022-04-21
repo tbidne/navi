@@ -30,22 +30,25 @@ toEvent ::
 toEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
-  let evt = mkStatusEvent note cfg repeatEvt errorNote
+  let evt = mkStatusEvent note cfg pi repeatEvt errorNote
   pure $ MkAnyEvent evt
   where
     cfg = MkBatteryConfig $ toml ^. #app
     note = toml ^. #note
+    pi = fromMaybe 30 (toml ^. #pollInterval)
 
 mkStatusEvent ::
   BatteryStatusNoteToml ->
   BatteryConfig ->
+  Word16 ->
   RepeatEvent ref BatteryStatus ->
   ErrorNote ref ->
   Event ref BatteryStatus
-mkStatusEvent noteToml cfg repeatEvent errorNote =
+mkStatusEvent noteToml cfg pi repeatEvent errorNote =
   MkEvent
     { name = "Battery Status",
       serviceType = BatteryStatus cfg,
+      pollInterval = pi,
       raiseAlert = toNote noteToml,
       repeatEvent = repeatEvent,
       errorNote = errorNote

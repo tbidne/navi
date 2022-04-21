@@ -15,6 +15,7 @@ import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Effects.MonadLogger (MonadLogger (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
+import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
@@ -32,11 +33,11 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
     ( Functor,
       Applicative,
       Monad,
-      MonadCatch,
       MonadIO,
-      MonadShell,
+      MonadQueue,
       MonadReader e,
-      MonadThrow
+      MonadShell,
+      MonadUnliftIO
     )
     via (ReaderT e m)
   deriving (MonadTrans) via (ReaderT e)
@@ -89,8 +90,10 @@ instance
   ) =>
   MonadLogger (NaviT env IO)
   where
-  logFm = K.logFM
-  logText s = logFm s . LogStr . T.fromText
+  logText naviLog = do
+    let log = LogStr $ T.fromText (naviLog ^. #text)
+    K.logFM (naviLog ^. #severity) log
+
   addNamespace = K.katipAddNamespace
 
 instance MonadMutRef ref m => MonadMutRef ref (NaviT e m) where

@@ -37,8 +37,7 @@ parsesConfig = testCase "Parses config" $ do
 expected :: ConfigToml
 expected =
   MkConfigToml
-    { pollToml = 10,
-      logToml =
+    { logToml =
         Just $
           MkLogging
             { severity = DebugS,
@@ -56,6 +55,7 @@ expectedSingle =
   [ Single.MkSingleToml
       { Single.command = "  some multiline cmd\n  end cmd\n",
         Single.triggerVal = "true",
+        Single.pollInterval = Just 5,
         Single.note = note,
         Single.repeatEvtCfg = Nothing,
         Single.errEvtCfg = Nothing
@@ -75,6 +75,7 @@ expectedBatteryPercentage =
   Just $
     Battery.Percentage.MkBatteryPercentageToml
       { Battery.Percentage.app = Many,
+        Battery.Percentage.pollInterval = Just 15,
         Battery.Percentage.repeatEvent = Nothing,
         Battery.Percentage.errorNote = Nothing,
         Battery.Percentage.alerts = alert1 :| [alert2]
@@ -98,6 +99,7 @@ expectedBatteryStatus =
   Just $
     Battery.Status.MkBatteryStatusToml
       { Battery.Status.app = Single BatteryAcpi,
+        Battery.Status.pollInterval = Nothing,
         Battery.Status.repeatEvent = Nothing,
         Battery.Status.errorNote = Nothing,
         Battery.Status.note = Battery.Status.MkBatteryStatusNoteToml (Just $ Seconds 5)
@@ -108,6 +110,7 @@ expectedNetInterfaces =
   [ NetInterfaces.MkNetInterfacesToml
       { NetInterfaces.app = Many,
         NetInterfaces.deviceName = "my-device",
+        NetInterfaces.pollInterval = Nothing,
         NetInterfaces.repeatEvent = Nothing,
         NetInterfaces.errorNote = Nothing,
         NetInterfaces.mTimeout = Nothing
@@ -117,9 +120,7 @@ expectedNetInterfaces =
 fullConfig :: Text
 fullConfig =
   T.unlines
-    [ "poll-interval = 10",
-      "",
-      "[logging]",
+    [ "[logging]",
       "severity = \"debug\"",
       "location = \"some-file\"",
       "",
@@ -128,6 +129,7 @@ fullConfig =
       "timeout = \"5\"",
       "",
       "[battery-percentage]",
+      "poll-interval = 15",
       "",
       "[[battery-percentage.alert]]",
       "percent = 50",
@@ -144,6 +146,7 @@ fullConfig =
       "  end cmd",
       "\"\"\"",
       "trigger = \"true\"",
+      "poll-interval = 5",
       "",
       "[single.note]",
       "summary = \"Some single\"",

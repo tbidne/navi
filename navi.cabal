@@ -63,11 +63,14 @@ library
     Navi.Config
     Navi.Config.Toml
     Navi.Config.Types
+    Navi.Data.NaviLog
     Navi.Data.NaviNote
+    Navi.Data.NaviQueue
     Navi.Effects
     Navi.Effects.MonadLogger
     Navi.Effects.MonadMutRef
     Navi.Effects.MonadNotify
+    Navi.Effects.MonadQueue
     Navi.Effects.MonadShell
     Navi.Effects.MonadSystemInfo
     Navi.Env.Core
@@ -106,10 +109,11 @@ library
     , optparse-applicative  >=0.16.1.0  && <0.18
     , package-version       ^>=0.1.0.0
     , pythia                ^>=0.1
-    , safe-exceptions       ^>=0.1.7.0
     , smart-math            ^>=0.1
+    , stm                   ^>=2.5.0
     , text                  ^>=1.2.3.2
     , tomland               ^>=1.3.0.0
+    , unliftio              ^>=0.2.0.0
 
   hs-source-dirs:   src
   default-language: Haskell2010
@@ -167,9 +171,11 @@ test-suite integration
   build-depends:
     , async        ^>=2.2.4
     , base
+    , katip
     , navi
     , pythia
     , smart-math
+    , stm
     , tasty
     , tasty-hunit
 

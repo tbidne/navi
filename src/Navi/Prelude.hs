@@ -34,18 +34,6 @@ module Navi.Prelude
 where
 
 import Control.Applicative as X (Alternative (..), Applicative (..), (<**>))
-import Control.Exception.Safe as X
-  ( Exception (..),
-    MonadCatch,
-    MonadThrow,
-    SomeException (..),
-    bracket,
-    catch,
-    handle,
-    throw,
-    throwM,
-    try,
-  )
 import Control.Monad as X
   ( Monad (..),
     forever,
@@ -64,7 +52,7 @@ import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
 import Data.Either as X (Either (..), either)
 import Data.Eq as X (Eq (..))
-import Data.Foldable as X (Foldable (..), length, traverse_)
+import Data.Foldable as X (Foldable (..), for_, length, traverse_)
 import Data.Function as X (const, flip, ($), (.))
 import Data.Functor as X (Functor (..), ($>), (<$>), (<&>))
 import Data.IORef as X (IORef, modifyIORef', newIORef, readIORef, writeIORef)
@@ -84,7 +72,7 @@ import Data.Text.Encoding qualified as TextEnc
 import Data.Text.Encoding.Error qualified as TextEncErr
 import Data.Text.IO as X (putStr, putStrLn)
 import Data.Traversable as X (Traversable (..))
-import Data.Tuple as X (fst, snd)
+import Data.Tuple as X (fst, snd, uncurry)
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word16, Word8)
 import GHC.Enum as X (Bounded (..))
@@ -98,6 +86,17 @@ import GHC.Show as X (Show (..))
 import Optics.Core as X (over, set, view, (%), (.~), (^.))
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrismLabels)
 import System.IO as X (FilePath, IO)
+import UnliftIO as X (MonadUnliftIO)
+import UnliftIO.Exception as X
+  ( Exception (..),
+    SomeException (..),
+    bracket,
+    catch,
+    finally,
+    handle,
+    throwIO,
+    try,
+  )
 import Prelude as X (Integer, seq)
 import Prelude qualified as P
 

@@ -21,7 +21,11 @@ module Navi.Event
 where
 
 import Katip (Severity (..))
+import Navi.Data.NaviLog (NaviLog (..))
 import Navi.Effects (MonadLogger (..), MonadMutRef (..), MonadSystemInfo (..))
+import Navi.Effects.MonadLogger (sendLogQueue)
+import Navi.Effects.MonadQueue (MonadQueue)
+import Navi.Env.Core (HasLogQueue)
 import Navi.Event.Types
   ( AnyEvent (..),
     ErrorNote (..),
@@ -36,7 +40,10 @@ import Navi.Prelude
 -- 1. Queries the system via 'MonadSystemInfo'.
 -- 2. Returns the parsed result.
 runEvent ::
-  ( MonadLogger m,
+  ( HasLogQueue env,
+    MonadLogger m,
+    MonadQueue m,
+    MonadReader env m,
     MonadSystemInfo m,
     Show result
   ) =>
@@ -52,7 +59,18 @@ runEvent event = addNamespace "Run Event" $ do
 -- 1. 'AllowRepeats': never block (returns 'False').
 -- 2. 'NoRepeats': block only if the parameter @a@ equals the previous @a@
 --    stored in our @ref@.
-blockRepeat :: (Eq a, MonadLogger m, MonadMutRef ref m, Show a) => RepeatEvent ref a -> a -> m Bool
+blockRepeat ::
+  ( Eq a,
+    HasLogQueue env,
+    MonadLogger m,
+    MonadMutRef ref m,
+    MonadQueue m,
+    MonadReader env m,
+    Show a
+  ) =>
+  RepeatEvent ref a ->
+  a ->
+  m Bool
 blockRepeat repeatEvt newVal = addNamespace "Checking event repeats" $ do
   case repeatEvt of
     -- Repeat events are allowed, so do not block.
@@ -60,8 +78,8 @@ blockRepeat repeatEvt newVal = addNamespace "Checking event repeats" $ do
     -- Repeat events are not allowed, must check.
     NoRepeats prevRef -> do
       prevVal <- readRef prevRef
-      logText DebugS $ "Previous value: " <> showt prevVal
-      logText DebugS $ "New value: " <> showt newVal
+      sendLogQueue $ MkNaviLog DebugS ("Previous value: " <> showt prevVal)
+      sendLogQueue $ MkNaviLog DebugS ("New value: " <> showt newVal)
       if prevVal == Just newVal
         then -- Already sent this alert, block.
           pure True
@@ -76,16 +94,23 @@ blockRepeat repeatEvt newVal = addNamespace "Checking event repeats" $ do
 -- 2. 'AllowErrNote' 'AllowRepeats': never block (returns 'False').
 -- 3. 'AllowErrNote' 'NoRepeats': block only if we have sent a notifcation
 --    for this error before.
-blockErr :: (MonadLogger m, MonadMutRef ref m) => ErrorNote ref -> m Bool
+blockErr ::
+  ( HasLogQueue env,
+    MonadMutRef ref m,
+    MonadQueue m,
+    MonadReader env m
+  ) =>
+  ErrorNote ref ->
+  m Bool
 blockErr errorEvent =
   case errorEvent of
     -- Error events are off, block.
     NoErrNote -> do
-      logText DebugS "Error notes are off"
+      sendLogQueue $ MkNaviLog DebugS "Error notes are off"
       pure True
     -- Error events are on and repeats allowed, do not block.
     AllowErrNote AllowRepeats -> do
-      logText DebugS "Error notes are on and repeats allowed"
+      sendLogQueue $ MkNaviLog DebugS "Error notes are on and repeats allowed"
       pure False
     -- Error events are on but repeats not allowed, must check.
     AllowErrNote (NoRepeats ref) -> do
@@ -93,11 +118,11 @@ blockErr errorEvent =
       case prevErr of
         -- Already sent this error, block
         Just () -> do
-          logText DebugS "Already sent error"
+          sendLogQueue $ MkNaviLog DebugS "Already sent error"
           pure True
         -- Error not send, do not block
         Nothing -> do
-          logText DebugS "Send error"
+          sendLogQueue $ MkNaviLog DebugS "Send error"
           writeRef ref $ Just ()
           pure False
 
@@ -115,5 +140,13 @@ updatePrevTrigger repeatEvt newVal =
     _ -> pure ()
 
 -- | Helper function for logging events.
-logEvent :: MonadLogger m => Event ref a -> Severity -> Text -> m ()
-logEvent event s t = logText s $ "[" <> event ^. #name <> "] " <> t
+logEvent ::
+  ( HasLogQueue env,
+    MonadQueue m,
+    MonadReader env m
+  ) =>
+  Event ref a ->
+  Severity ->
+  Text ->
+  m ()
+logEvent event s t = sendLogQueue $ MkNaviLog s ("[" <> event ^. #name <> "] " <> t)

@@ -17,20 +17,18 @@ tests =
     ]
   where
     verifyConfig cfg =
-      cfg ^. #pollInterval == 10
-        && cfg ^. #logging % #severity == DebugS
+      cfg ^. #logging % #severity == DebugS
         && cfg ^. #logging % #location == Stdout
         && length (cfg ^. #events) == 2
 
     verifyMultiple cfg =
-      cfg ^. #pollInterval == 10
-        && cfg ^. #logging % #severity == ErrorS
+      cfg ^. #logging % #severity == ErrorS
         && cfg ^. #logging % #location == DefPath
         && length (cfg ^. #events) == 1
 
 readsExample :: (Config IORef -> Bool) -> FilePath -> TestTree
 readsExample verifyCfg fp = testCase ("Reads " <> fp) $ do
-  eResult <- try @_ @SomeException $ Config.readConfig @_ @IORef fp
+  eResult <- try @_ @SomeException $ Config.readConfig @IORef fp
   case eResult of
     Left ex -> assertFailure $ "Reading config failed: " <> displayException ex
     Right cfg -> assertBool "Config verification failed" $ verifyCfg cfg

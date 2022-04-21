@@ -31,19 +31,19 @@ import Toml qualified
 -- | Parses the provided toml file into a 'Config'. Throws 'ConfigErr' if
 -- anything goes wrong.
 readConfig ::
-  (MonadCatch m, MonadMutRef ref m, MonadShell m) =>
+  (MonadMutRef ref m, MonadShell m, MonadUnliftIO m) =>
   FilePath ->
   m (Config ref)
 readConfig path = do
   eContents <- try $ readFile path
   case eContents of
-    Left ex -> throw $ FileErr ex
+    Left ex -> throwIO $ FileErr ex
     Right contents -> do
       case Toml.decodeExact ConfigToml.configCodec contents of
-        Left tomlErrs -> throw $ TomlError tomlErrs
+        Left tomlErrs -> throwIO $ TomlError tomlErrs
         Right cfg -> tomlToConfig cfg
 
-tomlToConfig :: (MonadMutRef ref m, MonadThrow m) => ConfigToml -> m (Config ref)
+tomlToConfig :: (MonadMutRef ref m, MonadIO m) => ConfigToml -> m (Config ref)
 tomlToConfig toml = do
   singleEvents <- traverse Single.toEvent singleToml
   multipleEvents <- traverse Multiple.toEvent multipleToml
@@ -62,16 +62,14 @@ tomlToConfig toml = do
       allEvts = maybeEvts <> multipleEvts
 
   case allEvts of
-    [] -> throw NoEvents
+    [] -> throwIO NoEvents
     (e : es) ->
       pure $
         MkConfig
-          { pollInterval = pollToml,
-            events = e :| es,
+          { events = e :| es,
             logging = logToml
           }
   where
-    pollToml = toml ^. #pollToml
     logToml = fromMaybe defaultLogging (toml ^. #logToml)
     singleToml = toml ^. #singleToml
     multipleToml = toml ^. #multipleToml

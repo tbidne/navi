@@ -30,11 +30,12 @@ toEvent :: (MonadMutRef ref m) => BatteryPercentageToml -> m (AnyEvent ref)
 toEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
-  let evt = mkBatteryEvent percentNoteList app repeatEvt errorNote
+  let evt = mkBatteryEvent percentNoteList app pi repeatEvt errorNote
   pure $ MkAnyEvent evt
   where
     percentNoteList = tomlToNote <$> toml ^. #alerts
     app = MkBatteryConfig $ toml ^. #app
+    pi = fromMaybe 30 (toml ^. #pollInterval)
 
 tomlToNote :: BatteryPercentageNoteToml -> (BatteryPercentage, NaviNote)
 tomlToNote toml =
@@ -56,13 +57,15 @@ tomlToNote toml =
 mkBatteryEvent ::
   NonEmpty (BatteryPercentage, NaviNote) ->
   BatteryConfig ->
+  Word16 ->
   RepeatEvent ref Battery ->
   ErrorNote ref ->
   Event ref Battery
-mkBatteryEvent percentNoteList batteryProgram re en =
+mkBatteryEvent percentNoteList batteryProgram pi re en =
   MkEvent
     { name = "Battery Percentage",
       serviceType = BatteryPercentage batteryProgram,
+      pollInterval = pi,
       raiseAlert = lookupPercent percentNoteMap,
       repeatEvent = re,
       errorNote = en
