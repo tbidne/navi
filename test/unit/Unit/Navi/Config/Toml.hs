@@ -37,8 +37,7 @@ parsesConfig = testCase "Parses config" $ do
 expected :: ConfigToml
 expected =
   MkConfigToml
-    { pollInterval = Just 10,
-      logToml =
+    { logToml =
         Just $
           MkLogging
             { severity = DebugS,
@@ -121,8 +120,7 @@ expectedNetInterfaces =
 fullConfig :: Text
 fullConfig =
   T.unlines
-    [ "poll-interval = 10",
-      "[logging]",
+    [ "[logging]",
       "severity = \"debug\"",
       "location = \"some-file\"",
       "",

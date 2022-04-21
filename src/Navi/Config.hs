@@ -10,7 +10,7 @@ module Navi.Config
 where
 
 import Data.Maybe (catMaybes)
-import Navi.Config.Toml (ConfigToml)
+import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Toml qualified as ConfigToml
 import Navi.Config.Types
   ( Config (..),
@@ -66,8 +66,7 @@ tomlToConfig toml = do
     (e : es) ->
       pure $
         MkConfig
-          { pollInterval = pi,
-            events = e :| es,
+          { events = e :| es,
             logging = logToml
           }
   where
@@ -77,4 +76,3 @@ tomlToConfig toml = do
     batteryPercentageToml = toml ^. #batteryPercentageToml
     batteryStatusToml = toml ^. #batteryStatusToml
     netInterfacesToml = toml ^. #netInterfacesToml
-    pi = fromMaybe 30 (toml ^. #pollInterval)

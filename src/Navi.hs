@@ -22,12 +22,7 @@ import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Effects.MonadQueue qualified as Queue
 import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
-import Navi.Env.Core
-  ( HasEvents (..),
-    HasLogQueue (..),
-    HasNoteQueue (..),
-    HasPollInterval (..),
-  )
+import Navi.Env.Core (HasEvents (..), HasLogQueue (..), HasNoteQueue (..))
 import Navi.Event qualified as Event
 import Navi.Event.Types (AnyEvent (..), EventErr (..))
 import Navi.NaviT (NaviT (..), runNaviT)
@@ -40,7 +35,6 @@ runNavi ::
   ( HasEvents ref env,
     HasLogQueue env,
     HasNoteQueue env,
-    HasPollInterval env,
     MonadLogger m,
     MonadMutRef ref m,
     MonadNotify m,
@@ -144,17 +138,10 @@ exToNote ex =
     }
 
 pollNoteQueue ::
-  ( HasNoteQueue env,
-    HasPollInterval env,
-    MonadNotify m,
-    MonadQueue m,
-    MonadReader env m,
-    MonadShell m
-  ) =>
+  (HasNoteQueue env, MonadNotify m, MonadQueue m, MonadReader env m) =>
   m Void
-pollNoteQueue = do
-  pi <- asks getPollInterval
-  asks getNoteQueue >>= Queue.pollQueueAction pi sendNote
+pollNoteQueue =
+  asks getNoteQueue >>= Queue.pollQueueAction sendNote
 
 flushNoteQueue ::
   (HasNoteQueue env, MonadNotify m, MonadQueue m, MonadReader env m) =>
@@ -163,17 +150,10 @@ flushNoteQueue =
   asks getNoteQueue >>= Queue.flushQueueAction sendNote
 
 pollLogQueue ::
-  ( HasLogQueue env,
-    HasPollInterval env,
-    MonadLogger m,
-    MonadQueue m,
-    MonadReader env m,
-    MonadShell m
-  ) =>
+  (HasLogQueue env, MonadLogger m, MonadQueue m, MonadReader env m) =>
   m Void
 pollLogQueue = do
-  pi <- asks getPollInterval
-  asks getLogQueue >>= Queue.pollQueueAction pi logText
+  asks getLogQueue >>= Queue.pollQueueAction logText
 
 flushLogQueue ::
   (HasLogQueue env, MonadLogger m, MonadQueue m, MonadReader env m) =>

@@ -92,7 +92,6 @@ library
     Navi.Services.Network.NetInterfaces
     Navi.Services.Network.NetInterfaces.Toml
     Navi.Services.Types
-    Navi.Utils
 
   build-depends:
     , base                  >=4.14.1.0  && <4.17
@@ -172,6 +171,7 @@ test-suite integration
   build-depends:
     , async        ^>=2.2.4
     , base
+    , katip
     , navi
     , pythia
     , smart-math

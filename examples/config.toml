@@ -1,5 +1,3 @@
-poll-interval = 10
-
 [logging]
 severity = "debug"
 location = "stdout"

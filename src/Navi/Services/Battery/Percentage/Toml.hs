@@ -14,11 +14,10 @@ import Control.Category ((>>>))
 import DBus.Notify (UrgencyLevel)
 import Navi.Data.NaviNote (Timeout)
 import Navi.Data.NaviNote qualified as NaviNote
-import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
+import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml, word16Codec)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Prelude
 import Navi.Services.Battery.Common (appCodec)
-import Navi.Utils qualified as U
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Services.Battery
   ( BatteryApp (..),
@@ -71,7 +70,7 @@ batteryPercentageCodec :: TomlCodec BatteryPercentageToml
 batteryPercentageCodec =
   MkBatteryPercentageToml
     <$> Toml.nonEmpty batteryPercentageNoteTomlCodec "alert" .= alerts
-    <*> Toml.dioptional U.word16Codec .= pollInterval
+    <*> Toml.dioptional (word16Codec "poll-interval") .= pollInterval
     <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EventToml.errorNoteCodec .= errorNote
     <*> appCodec .= app
