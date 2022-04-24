@@ -10,6 +10,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Navi.Data.NaviNote (NaviNote (..))
+import Navi.Data.PollInterval (PollInterval (..))
 import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), ErrorNote, Event (..), RepeatEvent)
@@ -35,7 +36,7 @@ toEvent toml = do
   where
     percentNoteList = tomlToNote <$> toml ^. #alerts
     app = MkBatteryConfig $ toml ^. #app
-    pi = fromMaybe 30 (toml ^. #pollInterval)
+    pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 
 tomlToNote :: BatteryPercentageNoteToml -> (BatteryPercentage, NaviNote)
 tomlToNote toml =
@@ -57,7 +58,7 @@ tomlToNote toml =
 mkBatteryEvent ::
   NonEmpty (BatteryPercentage, NaviNote) ->
   BatteryConfig ->
-  Word16 ->
+  PollInterval ->
   RepeatEvent ref Battery ->
   ErrorNote ref ->
   Event ref Battery

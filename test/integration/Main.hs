@@ -19,6 +19,7 @@ import Integration.Prelude
 import Navi (runNavi)
 import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Data.NaviQueue (NaviQueue (..))
+import Navi.Data.PollInterval (PollInterval (..))
 import Navi.Event.Toml (ErrorNoteToml (..), RepeatEvtToml (..))
 import Navi.Event.Types (AnyEvent)
 import Navi.Services.Battery.Percentage qualified as Percentage
@@ -165,7 +166,7 @@ mkPercentageEvent = do
       percentageToml =
         MkBatteryPercentageToml
           (toAlert 5 :| alerts)
-          (Just 1)
+          (Just $ MkPollInterval 1)
           Nothing
           Nothing
           Many
@@ -185,7 +186,7 @@ mkSingleEvent repeatEventToml = do
         MkSingleToml
           "cmd"
           "single trigger" -- matches trigger in MockApp
-          (Just 1)
+          (Just (MkPollInterval 1))
           note
           repeatEventToml
           Nothing
@@ -198,7 +199,7 @@ mkNetInterfaceEvent errNoteToml = do
         MkNetInterfacesToml
           Many
           "device"
-          (Just 1)
+          (Just (MkPollInterval 1))
           Nothing
           errNoteToml
           Nothing

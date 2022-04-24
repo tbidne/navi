@@ -28,7 +28,7 @@ urgency = "critical"
 
 # Send alert when the current minute is even
 [[single]]
-poll-interval = 10
+poll-interval = "10"
 command = """
   min=`date +%M`;
   if [[ \"$min % 2\" -eq 0 ]]; then

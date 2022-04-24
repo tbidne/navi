@@ -15,6 +15,7 @@ where
 
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
+import Navi.Data.PollInterval (PollInterval)
 import Navi.Prelude
 import Navi.Services.Types (ServiceType)
 
@@ -65,7 +66,7 @@ data Event ref result = MkEvent
     -- | The service to run.
     serviceType :: !(ServiceType result),
     -- | How often to poll for this event, in seconds.
-    pollInterval :: !Word16,
+    pollInterval :: !PollInterval,
     -- | Conditionally raises an alert based on the result.
     raiseAlert :: result -> Maybe NaviNote,
     -- | Determines how we handle repeat alerts.

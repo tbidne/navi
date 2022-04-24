@@ -66,6 +66,7 @@ library
     Navi.Data.NaviLog
     Navi.Data.NaviNote
     Navi.Data.NaviQueue
+    Navi.Data.PollInterval
     Navi.Effects
     Navi.Effects.MonadLogger
     Navi.Effects.MonadMutRef
@@ -109,6 +110,7 @@ library
     , optparse-applicative  >=0.16.1.0  && <0.18
     , package-version       ^>=0.1.0.0
     , pythia                ^>=0.1
+    , relative-time         ^>=0.1
     , smart-math            ^>=0.1
     , stm                   ^>=2.5.0
     , text                  ^>=1.2.3.2

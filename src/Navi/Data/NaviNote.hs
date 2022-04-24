@@ -24,7 +24,7 @@ import Toml qualified
 -- | Determines how long a notification persists.
 data Timeout
   = Never
-  | Seconds Word16
+  | Seconds !Word16
   deriving stock (Eq, Show)
 
 makeFieldLabelsNoPrefix ''Timeout

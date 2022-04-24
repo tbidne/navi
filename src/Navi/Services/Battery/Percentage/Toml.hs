@@ -14,7 +14,8 @@ import Control.Category ((>>>))
 import DBus.Notify (UrgencyLevel)
 import Navi.Data.NaviNote (Timeout)
 import Navi.Data.NaviNote qualified as NaviNote
-import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml, word16Codec)
+import Navi.Data.PollInterval (PollInterval, pollIntervalCodec)
+import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Prelude
 import Navi.Services.Battery.Common (appCodec)
@@ -53,7 +54,7 @@ data BatteryPercentageToml = MkBatteryPercentageToml
   { -- | All alerts for this service.
     alerts :: NonEmpty BatteryPercentageNoteToml,
     -- | The poll interval.
-    pollInterval :: Maybe Word16,
+    pollInterval :: Maybe PollInterval,
     -- | Determines how we treat repeat alerts.
     repeatEvent :: Maybe RepeatEvtToml,
     -- | Determines how we handle errors.
@@ -70,7 +71,7 @@ batteryPercentageCodec :: TomlCodec BatteryPercentageToml
 batteryPercentageCodec =
   MkBatteryPercentageToml
     <$> Toml.nonEmpty batteryPercentageNoteTomlCodec "alert" .= alerts
-    <*> Toml.dioptional (word16Codec "poll-interval") .= pollInterval
+    <*> Toml.dioptional pollIntervalCodec .= pollInterval
     <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EventToml.errorNoteCodec .= errorNote
     <*> appCodec .= app

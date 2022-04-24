@@ -21,7 +21,6 @@ module Navi.Prelude
     (<<$>>),
     maybeToEither,
     monoBimap,
-    w16ToInt,
 
     -- * 'Text' replacements for 'P.String' functions.
     error,
@@ -50,6 +49,7 @@ import Data.Bifunctor as X (Bifunctor (..))
 import Data.Bool as X (Bool (..), not, otherwise, (&&), (||))
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
+import Data.Char as X (Char)
 import Data.Either as X (Either (..), either)
 import Data.Eq as X (Eq (..))
 import Data.Foldable as X (Foldable (..), for_, length, traverse_)
@@ -149,6 +149,3 @@ readFileUtf8Lenient = fmap decodeUtf8Lenient . liftIO . BS.readFile
 -- @since 0.1
 decodeUtf8Lenient :: ByteString -> Text
 decodeUtf8Lenient = TextEnc.decodeUtf8With TextEncErr.lenientDecode
-
-w16ToInt :: Word16 -> Int
-w16ToInt = fromIntegral

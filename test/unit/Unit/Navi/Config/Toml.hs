@@ -10,6 +10,7 @@ import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Toml qualified as Config.Toml
 import Navi.Config.Types (LogLoc (..), Logging (..))
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
+import Navi.Data.PollInterval (PollInterval (..))
 import Navi.Services.Battery.Percentage.Toml qualified as Battery.Percentage
 import Navi.Services.Battery.Status.Toml qualified as Battery.Status
 import Navi.Services.Custom.Single.Toml qualified as Single
@@ -55,7 +56,7 @@ expectedSingle =
   [ Single.MkSingleToml
       { Single.command = "  some multiline cmd\n  end cmd\n",
         Single.triggerVal = "true",
-        Single.pollInterval = Just 5,
+        Single.pollInterval = Just $ MkPollInterval 121,
         Single.note = note,
         Single.repeatEvtCfg = Nothing,
         Single.errEvtCfg = Nothing
@@ -75,7 +76,7 @@ expectedBatteryPercentage =
   Just $
     Battery.Percentage.MkBatteryPercentageToml
       { Battery.Percentage.app = Many,
-        Battery.Percentage.pollInterval = Just 15,
+        Battery.Percentage.pollInterval = Just $ MkPollInterval 15,
         Battery.Percentage.repeatEvent = Nothing,
         Battery.Percentage.errorNote = Nothing,
         Battery.Percentage.alerts = alert1 :| [alert2]
@@ -129,7 +130,7 @@ fullConfig =
       "timeout = \"5\"",
       "",
       "[battery-percentage]",
-      "poll-interval = 15",
+      "poll-interval = \"15\"",
       "",
       "[[battery-percentage.alert]]",
       "percent = 50",
@@ -146,7 +147,7 @@ fullConfig =
       "  end cmd",
       "\"\"\"",
       "trigger = \"true\"",
-      "poll-interval = 5",
+      "poll-interval = \"1m61s\"",
       "",
       "[single.note]",
       "summary = \"Some single\"",

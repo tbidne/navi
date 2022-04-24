@@ -5,6 +5,7 @@ module Navi.Services.Network.NetInterfaces
 where
 
 import Navi.Data.NaviNote (NaviNote (..))
+import Navi.Data.PollInterval (PollInterval (..))
 import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), Event (..))
@@ -38,7 +39,7 @@ toEvent toml = do
         }
   where
     device = MkDevice $ toml ^. #deviceName
-    pi = fromMaybe 30 (toml ^. #pollInterval)
+    pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
     cmd =
       NetworkInterface device $
         MkNetInterfaceConfig (toml ^. #app)

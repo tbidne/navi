@@ -11,7 +11,8 @@ where
 
 import Navi.Data.NaviNote (Timeout)
 import Navi.Data.NaviNote qualified as NaviNote
-import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml, word16Codec)
+import Navi.Data.PollInterval (PollInterval (..), pollIntervalCodec)
+import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
 import Navi.Event.Toml qualified as EToml
 import Navi.Prelude
 import Pythia.Services.NetInterface (NetInterfaceApp (..), RunApp (..))
@@ -27,7 +28,7 @@ data NetInterfacesToml = MkNetInterfacesToml
     -- wlp0s20f3 or enp0s31f6.
     deviceName :: Text,
     -- | The poll interval.
-    pollInterval :: Maybe Word16,
+    pollInterval :: Maybe PollInterval,
     -- | Determines how we treat repeat alerts.
     repeatEvent :: Maybe RepeatEvtToml,
     -- | Determines how we handle errors.
@@ -45,7 +46,7 @@ netInterfacesCodec =
   MkNetInterfacesToml
     <$> appCodec .= app
     <*> Toml.text "device" .= deviceName
-    <*> Toml.dioptional (word16Codec "poll-interval") .= pollInterval
+    <*> Toml.dioptional pollIntervalCodec .= pollInterval
     <*> Toml.dioptional EToml.repeatEvtCodec .= repeatEvent
     <*> Toml.dioptional EToml.errorNoteCodec .= errorNote
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout

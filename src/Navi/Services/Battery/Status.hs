@@ -8,6 +8,7 @@ where
 
 import Navi.Data.NaviNote (NaviNote, Timeout)
 import Navi.Data.NaviNote qualified as NNote
+import Navi.Data.PollInterval (PollInterval (..))
 import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -35,12 +36,12 @@ toEvent toml = do
   where
     cfg = MkBatteryConfig $ toml ^. #app
     note = toml ^. #note
-    pi = fromMaybe 30 (toml ^. #pollInterval)
+    pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 
 mkStatusEvent ::
   BatteryStatusNoteToml ->
   BatteryConfig ->
-  Word16 ->
+  PollInterval ->
   RepeatEvent ref BatteryStatus ->
   ErrorNote ref ->
   Event ref BatteryStatus

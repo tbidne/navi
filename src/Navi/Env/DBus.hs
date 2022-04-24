@@ -91,5 +91,4 @@ mkDBusEnv logEnv logContext namespace config = do
             (MkNaviQueue noteQueue),
         dbusClient = client
       }
-
-{-# INLINABLE mkDBusEnv #-}
+{-# INLINEABLE mkDBusEnv #-}

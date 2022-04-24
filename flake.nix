@@ -3,8 +3,9 @@
   inputs = {
     algebra-simple-src.url = "github:tbidne/algebra-simple";
     flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs?rev=1ffba9f2f683063c2b14c9f4d12c55ad5f4ed887";
     pythia-src.url = "github:tbidne/pythia";
+    relative-time-src.url = "github:tbidne/relative-time";
     smart-math-src.url = "github:tbidne/smart-math";
   };
   outputs =
@@ -12,6 +13,7 @@
     , flake-utils
     , nixpkgs
     , pythia-src
+    , relative-time-src
     , self
     , smart-math-src
     }:
@@ -37,13 +39,12 @@
           overrides = final: prev: with compiler; {
             algebra-simple =
               final.callCabal2nix "algebra-simple" algebra-simple-src { };
-            dbus = final.callHackage "dbus" "1.2.22" { };
-            network = prev.network_3_1_2_7;
-            optics-core = final.optics-core_0_4;
-            optics-th = final.optics-th_0_4;
+            package-version = pkgs.haskell.lib.doJailbreak prev.package-version;
             pythia = final.callCabal2nix "pythia" pythia-src { };
+            relative-time = final.callCabal2nix "relative-time" relative-time-src { };
             smart-math =
               final.callCabal2nix "smart-math" smart-math-src { };
+            tasty-hedgehog = prev.tasty-hedgehog_1_2_0_0;
           };
         };
     in

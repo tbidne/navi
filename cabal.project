@@ -2,16 +2,17 @@ packages: .
 
 package navi
   ghc-options:
-    -Weverything -Werror -Wno-unsafe -Wno-missing-safe-haskell-mode
-    -Wno-missing-import-lists -Wno-missing-local-signatures
-    -Wno-monomorphism-restriction
+    -Wall -Wcompat -Werror -Widentities -Wunused-binds
+    -Wincomplete-record-updates -Wincomplete-uni-patterns
+    -Wmissing-home-modules -Wmissing-export-lists -Wpartial-fields
+    -Wredundant-constraints -Wunused-packages -Wmissing-deriving-strategies
 
 optimization: 2
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/algebra-simple.git
-    tag: acc79c140fc3cf3530337a2d4ddc0f2cc6c2ef08
+    tag: 227394af1a0fbeb75c33f9694d44deeb4d34dc9f
 
 source-repository-package
     type: git
@@ -22,3 +23,8 @@ source-repository-package
     type: git
     location: https://github.com/tbidne/smart-math.git
     tag: 9dc47335b9483d7fbfcc2e4e110d42c297ec105a
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/relative-time.git
+    tag: 1b5d0eadab3e571cd8acaeb1f0266dd8ff6a68ac

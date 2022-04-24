@@ -7,6 +7,7 @@ module Navi.Services.Custom.Single
 where
 
 import Navi.Data.NaviNote (NaviNote)
+import Navi.Data.PollInterval (PollInterval (..))
 import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -35,11 +36,11 @@ toEvent toml = do
         repeatEvt
         errorNote
   where
-    pi = fromMaybe 30 (toml ^. #pollInterval)
+    pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 
 mkSingleEvent ::
   Command ->
-  Word16 ->
+  PollInterval ->
   (Text, NaviNote) ->
   RepeatEvent ref Text ->
   ErrorNote ref ->
