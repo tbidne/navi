@@ -76,15 +76,12 @@ Navi is configured via a toml file, by default located at `xdgBase/navi/config.t
 
 ## General Options
 
-* `poll-interval`: Mandatory. Non-negative integer, determines how often we query the system in seconds.
 * `logging.severity`: Optional. One of `[debug|info|error]`. Controls the logging level. Defaults to `error`.
 * `logging.location`: Optional. Either `default`, `stdout` or `<filename>`. No option or `default` uses `xdgBase/navi/navi.log`.
 
 ##### Example
 
 ```toml
-poll-interval = 30
-
 [logging]
 severity = "debug"
 location = "stdout"
@@ -103,6 +100,7 @@ The full list of notification options are:
 
 Individual services have their own options, but there are a few that are common to most.
 
+* `poll-interval`: Optional. Non-negative integer, determines how often we query the system for the particular service, in seconds. Each service defines its own default.
 * `repeat-events`: One of `[true|false]`. Determines if we send off the same notification twice in a row. Defaults to `false` (i.e. no repeats) unless stated otherwise.
 * `error-events`: One of `["none"|"repeats"|"no-repeats">`. Determines if we send off notifications for errors, and how we handle repeats. Defaults to `"no-repeats"` unless stated otherwise i.e. we send error notifications but no repeats.
 
@@ -125,6 +123,7 @@ This service sends notifications based on the current battery status. Options in
 
 ##### General Options
 
+* `battery-status.poll-interval`: Defaults to 30 seconds.
 * `battery-status.repeat-events`
 * `battery-status.error-events`
 * `battery-status.timeout`
@@ -152,6 +151,7 @@ This service sends notifications based on the current battery percentage when it
 
 ##### General Options
 
+* `battery-percentage.poll-interval`: Defaults to 30 seconds.
 * `battery-percentage.repeat-events`
 * `battery-percentage.error-events`
 * `battery-percentage.alert.urgency`
@@ -186,6 +186,7 @@ This service sends notifications based on the network connectivity for given dev
 
 ##### General Options
 
+* `net-interface.poll-interval`: Defaults to 30 seconds.
 * `net-interface.repeat-events`
 * `net-interface.error-events`
 * `net-interface.alert.urgency`
@@ -214,6 +215,7 @@ This service allows one to create a single notification based on an arbitrary co
 
 ##### General Options
 
+* `single.poll-interval`: Defaults to 30 seconds.
 * `single.repeat-events`
 * `single.error-events`
 * `single.note.summary`
@@ -252,6 +254,7 @@ This service allows one to create multiple notifications based on an arbitrary c
 
 ##### General Options
 
+* `multiple.poll-interval`: Defaults to 30 seconds.
 * `multiple.repeat-events`
 * `multiple.error-events`
 * `multiple.trigger-note.summary`
