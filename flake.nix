@@ -1,12 +1,12 @@
 {
   description = "navi flake";
   inputs = {
-    algebra-simple-src.url = "github:tbidne/algebra-simple";
+    algebra-simple-src.url = "github:tbidne/algebra-simple?rev=1b2bd9fd21ecf5ed6635cc5c14d06ab533950df3";
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "github:nixos/nixpkgs?rev=1ffba9f2f683063c2b14c9f4d12c55ad5f4ed887";
-    pythia-src.url = "github:tbidne/pythia";
-    relative-time-src.url = "github:tbidne/relative-time";
-    smart-math-src.url = "github:tbidne/smart-math";
+    pythia-src.url = "github:tbidne/pythia?rev=e4c6eb1cb22d9b6de7113d5d465898066dc4d7b2";
+    relative-time-src.url = "github:tbidne/relative-time?rev=cd139ec454eb91f454e49d1ec7fb8b984e7e663b";
+    smart-math-src.url = "github:tbidne/smart-math?rev=35e508b0e4272e32ba2841dccbcbb8294d4d546c";
   };
   outputs =
     { algebra-simple-src

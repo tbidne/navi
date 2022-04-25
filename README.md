@@ -5,12 +5,12 @@
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/tbidne/navi?include_prereleases&sort=semver)](https://github.com/tbidne/navi/releases/)
 [![MIT](https://img.shields.io/github/license/tbidne/navi?color=blue)](https://opensource.org/licenses/MIT)
 
-[![nix](https://img.shields.io/github/workflow/status/tbidne/navi/nix/main?label=nix&logo=nixos&logoColor=85c5e7&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/nix_ci.yaml)
-[![stack](https://img.shields.io/github/workflow/status/tbidne/navi/stack/main?label=stack%20lts-19.0&logoColor=white&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/stack_ci.yaml)
+[![nix](https://img.shields.io/github/workflow/status/tbidne/navi/nix/main?label=nix%209.0.2&logo=nixos&logoColor=85c5e7&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/nix_ci.yaml)
+[![stack](https://img.shields.io/github/workflow/status/tbidne/navi/stack/main?label=stack%2019.4&logoColor=white&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/stack_ci.yaml)
 [![style](https://img.shields.io/github/workflow/status/tbidne/navi/style/main?label=style&logoColor=white&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/style_ci.yaml)
 
-[![8.10.7](https://img.shields.io/github/workflow/status/tbidne/navi/8.10.7/main?label=8.10.7&logo=haskell&logoColor=904d8c&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/ghc_8-10-7.yaml)
-[![9.0.2](https://img.shields.io/github/workflow/status/tbidne/navi/9.0.2/main?label=9.0.2&logo=haskell&logoColor=904d8c&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/ghc_9-0-2.yaml)
+[![8.10.7](https://img.shields.io/github/workflow/status/tbidne/navi/8.10.7/main?label=8.10.7&logo=haskell&logoColor=904d8c&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/ghc_8-10.yaml)
+[![9.0.2](https://img.shields.io/github/workflow/status/tbidne/navi/9.0.2/main?label=9.0.2&logo=haskell&logoColor=904d8c&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/ghc_9-0.yaml)
 
 </div>
 

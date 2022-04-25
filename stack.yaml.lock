@@ -5,69 +5,80 @@
 
 packages:
 - completed:
-    hackage: fdo-notify-0.3.1@sha256:9cfb75a5a0d5e4b1d40b0b4dbcc6bb29e58f21e4e14c83e2ffe1ca78bdee59d8,734
     pantry-tree:
-      size: 264
       sha256: 9b555f4b4c61a3a92680bba864c95ce428cce2715399c12b27669abb6cdbd479
+      size: 264
+    hackage: fdo-notify-0.3.1@sha256:9cfb75a5a0d5e4b1d40b0b4dbcc6bb29e58f21e4e14c83e2ffe1ca78bdee59d8,734
   original:
     hackage: fdo-notify-0.3.1@sha256:9cfb75a5a0d5e4b1d40b0b4dbcc6bb29e58f21e4e14c83e2ffe1ca78bdee59d8,734
 - completed:
-    hackage: package-version-0.1.0.0@sha256:bb9fc93e905540aa8e1b32f80c2dc82756a4481c63779bd92e3796ed8085ab98,2854
     pantry-tree:
-      size: 981
       sha256: 8e33ac2f8d2db754cf11d1439fa970dbf14c6756746426ba89f54a7183a9d2d7
+      size: 981
+    hackage: package-version-0.1.0.0@sha256:bb9fc93e905540aa8e1b32f80c2dc82756a4481c63779bd92e3796ed8085ab98,2854
   original:
     hackage: package-version-0.1.0.0@sha256:bb9fc93e905540aa8e1b32f80c2dc82756a4481c63779bd92e3796ed8085ab98,2854
 - completed:
-    hackage: tomland-1.3.3.1@sha256:83a8fd26a97164100541f7b26aa40ffdc6f230b21e94cbb3eae1fb7093c4356e,8924
     pantry-tree:
-      size: 6430
       sha256: 0e3bdbd32955944c3ee9ff0f47dc765d25ab6be4a336c6d735eed8eb9bc8ce27
+      size: 6430
+    hackage: tomland-1.3.3.1@sha256:83a8fd26a97164100541f7b26aa40ffdc6f230b21e94cbb3eae1fb7093c4356e,8924
   original:
     hackage: tomland-1.3.3.1@sha256:83a8fd26a97164100541f7b26aa40ffdc6f230b21e94cbb3eae1fb7093c4356e,8924
 - completed:
-    hackage: validation-selective-0.1.0.1@sha256:9a5aa8b801efc6a4ffb120e1b28e80c5f7d090043be56bba11222cd20c393044,3621
     pantry-tree:
-      size: 696
       sha256: bf72fe4304690da4b5bc6e5218b0f90b5613e7d658f3ce31731816a423fcbca6
+      size: 696
+    hackage: validation-selective-0.1.0.1@sha256:9a5aa8b801efc6a4ffb120e1b28e80c5f7d090043be56bba11222cd20c393044,3621
   original:
     hackage: validation-selective-0.1.0.1@sha256:9a5aa8b801efc6a4ffb120e1b28e80c5f7d090043be56bba11222cd20c393044,3621
 - completed:
     name: algebra-simple
-    version: '0.1'
-    git: https://github.com/tbidne/algebra-simple.git
     pantry-tree:
-      size: 3703
-      sha256: 34817ba1dab73ed31e9f3241108adcf9b94a4c41add3df3d1e41487cbb700e42
-    commit: acc79c140fc3cf3530337a2d4ddc0f2cc6c2ef08
-  original:
+      sha256: 7f0f0d9cb0901ea1cceb599ee0862f11a246228e8557d0ca318f650aa7dd8741
+      size: 3764
+    commit: 1b2bd9fd21ecf5ed6635cc5c14d06ab533950df3
     git: https://github.com/tbidne/algebra-simple.git
-    commit: acc79c140fc3cf3530337a2d4ddc0f2cc6c2ef08
+    version: '0.1'
+  original:
+    commit: 1b2bd9fd21ecf5ed6635cc5c14d06ab533950df3
+    git: https://github.com/tbidne/algebra-simple.git
 - completed:
     name: pythia
-    version: '0.1'
-    git: https://github.com/tbidne/pythia.git
     pantry-tree:
-      size: 3898
-      sha256: 3fcd056583ccac68acefc4cc16b9b011f900506cc07b41727518efd5f4948e64
-    commit: 529c3f2d55351117e71e8f7f29a09b1a72cd283a
-  original:
+      sha256: de3782b89ae4581af3eb1fb1ed84fb12456572f6bf23a28fd496508167f2144e
+      size: 3886
+    commit: e4c6eb1cb22d9b6de7113d5d465898066dc4d7b2
     git: https://github.com/tbidne/pythia.git
-    commit: 529c3f2d55351117e71e8f7f29a09b1a72cd283a
+    version: '0.1'
+  original:
+    commit: e4c6eb1cb22d9b6de7113d5d465898066dc4d7b2
+    git: https://github.com/tbidne/pythia.git
+- completed:
+    name: relative-time
+    pantry-tree:
+      sha256: 2fab82ae04af678aff604036414039ebbeec8713ee9b8faf809fd6adde21abbd
+      size: 1591
+    commit: cd139ec454eb91f454e49d1ec7fb8b984e7e663b
+    git: https://github.com/tbidne/relative-time.git
+    version: '0.1'
+  original:
+    commit: cd139ec454eb91f454e49d1ec7fb8b984e7e663b
+    git: https://github.com/tbidne/relative-time.git
 - completed:
     name: smart-math
-    version: '0.1'
-    git: https://github.com/tbidne/smart-math.git
     pantry-tree:
-      size: 3287
-      sha256: eab5716d2410ea9d5f3e07dc8cbcd6b48f9514a3313d7661f9e83f0fad61aa32
-    commit: 9dc47335b9483d7fbfcc2e4e110d42c297ec105a
-  original:
+      sha256: c203da2d37f671ca71342df601789463073527576643c5f6092d91da861ea664
+      size: 3275
+    commit: 35e508b0e4272e32ba2841dccbcbb8294d4d546c
     git: https://github.com/tbidne/smart-math.git
-    commit: 9dc47335b9483d7fbfcc2e4e110d42c297ec105a
+    version: '0.1'
+  original:
+    commit: 35e508b0e4272e32ba2841dccbcbb8294d4d546c
+    git: https://github.com/tbidne/smart-math.git
 snapshots:
 - completed:
-    size: 616897
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/0.yaml
-    sha256: bbf2be02f17940bac1f87cb462d4fb0c3355de6dcfc53d84f4f9ad3ee2164f65
-  original: lts-19.0
+    sha256: d4ee004c46ba878d2f304f5d748d493057be579192a8d148527f3ba55c9df57f
+    size: 618683
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/4.yaml
+  original: lts-19.4
