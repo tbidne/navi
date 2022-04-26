@@ -103,7 +103,7 @@ expectedBatteryStatus =
         Battery.Status.pollInterval = Nothing,
         Battery.Status.repeatEvent = Nothing,
         Battery.Status.errorNote = Nothing,
-        Battery.Status.note = Battery.Status.MkBatteryStatusNoteToml (Just $ Seconds 5)
+        Battery.Status.mTimeout = Just $ Seconds 5
       }
 
 expectedNetInterfaces :: [NetInterfaces.NetInterfacesToml]

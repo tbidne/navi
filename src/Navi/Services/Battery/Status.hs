@@ -18,7 +18,7 @@ import Navi.Event.Types
     RepeatEvent (..),
   )
 import Navi.Prelude
-import Navi.Services.Battery.Status.Toml (BatteryStatusNoteToml (..), BatteryStatusToml)
+import Navi.Services.Battery.Status.Toml (BatteryStatusToml)
 import Navi.Services.Battery.Status.Toml qualified as BatteryStatusToml
 import Navi.Services.Types (ServiceType (..))
 import Pythia.Services.Battery (BatteryConfig (..), BatteryStatus (..))
@@ -31,35 +31,33 @@ toEvent ::
 toEvent toml = do
   repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
-  let evt = mkStatusEvent note cfg pi repeatEvt errorNote
+  let evt = mkStatusEvent to cfg pi repeatEvt errorNote
   pure $ MkAnyEvent evt
   where
     cfg = MkBatteryConfig $ toml ^. #app
-    note = toml ^. #note
+    to = toml ^. #mTimeout
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 
 mkStatusEvent ::
-  BatteryStatusNoteToml ->
+  Maybe Timeout ->
   BatteryConfig ->
   PollInterval ->
   RepeatEvent ref BatteryStatus ->
   ErrorNote ref ->
   Event ref BatteryStatus
-mkStatusEvent noteToml cfg pi repeatEvent errorNote =
+mkStatusEvent to cfg pi repeatEvent errorNote =
   MkEvent
     { name = "Battery Status",
       serviceType = BatteryStatus cfg,
       pollInterval = pi,
-      raiseAlert = toNote noteToml,
+      raiseAlert = toNote to,
       repeatEvent = repeatEvent,
       errorNote = errorNote
     }
 
-toNote :: BatteryStatusNoteToml -> BatteryStatus -> Maybe NaviNote
-toNote noteToml status = toNote' timeout $ fromStatus status
+toNote :: Maybe Timeout -> BatteryStatus -> Maybe NaviNote
+toNote timeout status = toNote' timeout $ fromStatus status
   where
-    timeout = noteToml ^. #mTimeout
-
     fromStatus Charging = "Battery charging"
     fromStatus Discharging = "Battery discharging"
     fromStatus Full = "Battery full"

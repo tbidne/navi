@@ -6,10 +6,7 @@ where
 import Data.Text qualified as T
 import Navi.Data.NaviNote (Timeout (..))
 import Navi.Event.Toml (ErrorNoteToml (..), RepeatEvtToml (..))
-import Navi.Services.Battery.Status.Toml
-  ( BatteryStatusNoteToml (..),
-    BatteryStatusToml (..),
-  )
+import Navi.Services.Battery.Status.Toml (BatteryStatusToml (..))
 import Navi.Services.Battery.Status.Toml qualified as Status.Toml
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..))
@@ -29,12 +26,12 @@ noteTests :: TestTree
 noteTests =
   testGroup
     "Parses note"
-    [ parsesExpected "with timeout" "timeout = \"5\"" timeout (view #note),
-      parsesExpected "no timeout" "" noTimeout (view #note)
+    [ parsesExpected "with timeout" "timeout = \"5\"" timeout (view #mTimeout),
+      parsesExpected "no timeout" "" noTimeout (view #mTimeout)
     ]
   where
-    timeout = MkBatteryStatusNoteToml $ Just $ Seconds 5
-    noTimeout = MkBatteryStatusNoteToml Nothing
+    timeout = Just $ Seconds 5
+    noTimeout = Nothing
 
 appTests :: TestTree
 appTests =

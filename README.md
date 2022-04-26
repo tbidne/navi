@@ -142,7 +142,7 @@ This service sends notifications based on the current battery percentage when it
 
 ##### Specific Options
 
-* `battery-percentage.alert.level`: integer in `[0, 100]`. Sends a notification once the battery level drops below the level.
+* `battery-percentage.alert.percent`: integer in `[0, 100]`. Sends a notification once the battery level drops to this level.
 * `battery-percentage.app`: (Optional). One of `[sysfs | acpi | upower]`.
   * `sysfs` reads `/sys` or `/sysfs` directly.
   * `acpi` requires the `acpi` utility.
