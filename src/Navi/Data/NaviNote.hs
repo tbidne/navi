@@ -27,7 +27,7 @@ data Timeout
   | Seconds !Word16
   deriving stock (Eq, Show)
 
-makeFieldLabelsNoPrefix ''Timeout
+makePrismLabels ''Timeout
 
 -- | 'NaviNote' represents desktop notifications.
 data NaviNote = MkNaviNote
