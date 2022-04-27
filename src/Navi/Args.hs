@@ -13,7 +13,7 @@ import Data.Functor.Classes (Show1 (..))
 import Data.Functor.Classes qualified as Functor
 import Data.Functor.Identity (Identity (..))
 import Data.List qualified as L
-import Data.Text qualified as T
+import Data.String (fromString)
 import Data.Version.Package qualified as PV
 import Development.GitRev qualified as GitRev
 import Navi.Prelude
@@ -65,7 +65,7 @@ fillMissingDefaults args = do
   where
     configFile = args ^. #configFile
     defaultXdg = Dir.getXdgDirectory XdgConfig "navi/"
-    defConfigName = "config.toml"
+    defConfigName = "navi-config.toml"
 
 -- | 'ParserInfo' type for parsing 'Args'.
 parserInfoArgs :: ParserInfo (Args Maybe)
@@ -73,12 +73,27 @@ parserInfoArgs =
   ParserInfo
     { infoParser = argsParser,
       infoFullDesc = True,
-      infoProgDesc = Chunk Nothing,
-      infoHeader = Chunk Nothing,
-      infoFooter = Chunk Nothing,
+      infoProgDesc = Chunk desc,
+      infoHeader = Chunk header,
+      infoFooter = Chunk footer,
       infoFailureCode = 1,
       infoPolicy = Intersperse
     }
+  where
+    header =
+      Just $
+        "Navi: A program for monitoring system status via "
+          <> "desktop notifications."
+    footer = Just $ fromString versNum
+    desc =
+      Just $
+        "\nNavi allows one to easily define custom notification 'services'"
+          <> " that hook into a running notification server. For example, one"
+          <> " can provide a bash script that, say, queries the connection"
+          <> " status of a given network device. Navi will periodically run"
+          <> " this query and send a desktop notification if the status has"
+          <> " changed. See github.com/tbidne/navi#README for full"
+          <> " documentation."
 
 argsParser :: Parser (Args Maybe)
 argsParser =
@@ -94,21 +109,13 @@ version = OptApp.infoOption txt (OptApp.long "version" <> OptApp.short 'v')
       L.intercalate
         "\n"
         [ "Pythia",
-          "Version: " <> $$(PV.packageVersionStringTH "navi.cabal"),
+          "Version: " <> versNum,
           "Revision: " <> $(GitRev.gitHash),
           "Date: " <> $(GitRev.gitCommitDate)
         ]
 
-versionTxt :: Text
-versionTxt =
-  T.pack $
-    L.intercalate
-      "\n"
-      [ "Navi",
-        "Version: " <> $$(PV.packageVersionStringTH "navi.cabal"),
-        "Revision: " <> $(GitRev.gitHash),
-        "Date: " <> $(GitRev.gitCommitDate)
-      ]
+versNum :: [Char]
+versNum = "Version: " <> $$(PV.packageVersionStringTH "navi.cabal")
 
 configFileParser :: Parser (Maybe String)
 configFileParser =
@@ -122,4 +129,4 @@ configFileParser =
     )
   where
     helpTxt =
-      "Path to config file. Defaults to <xdgConfig>/navi/config.toml."
+      "Path to config file. Defaults to <xdgConfig>/navi/navi-config.toml."
