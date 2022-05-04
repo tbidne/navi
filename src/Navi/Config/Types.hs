@@ -17,8 +17,8 @@ import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Event (AnyEvent (..))
 import Navi.Prelude
-import Pythia.Class.Printer qualified as Printer
 import Toml (TomlDecodeError)
+import Toml qualified
 
 -- | Log location configuration.
 data LogLoc
@@ -74,12 +74,6 @@ data ConfigErr
 instance Exception ConfigErr where
   displayException (FileErr ex) = "Error reading file: <" <> displayException ex <> ">"
   displayException NoEvents = "No events found"
-  displayException (TomlError errs) =
-    T.unpack $
-      header <> delim
-        <> Printer.joinX delim (fmap show errs)
-    where
-      delim = "\n - "
-      header = "Tomls errors:"
+  displayException (TomlError errs) = T.unpack $ Toml.prettyTomlDecodeErrors errs
 
 makeFieldLabelsNoPrefix ''ConfigErr

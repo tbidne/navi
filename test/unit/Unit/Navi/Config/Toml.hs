@@ -17,7 +17,7 @@ import Navi.Services.Custom.Single.Toml qualified as Single
 import Navi.Services.Network.NetInterfaces.Toml qualified as NetInterfaces
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Data.RunApp (RunApp (..))
-import Pythia.Services.Battery (BatteryApp (..), BatteryPercentage (..))
+import Pythia.Services.Battery (BatteryApp (..), Percentage (..))
 import Toml qualified
 import Unit.Prelude
 
@@ -84,13 +84,13 @@ expectedBatteryPercentage =
   where
     alert1 =
       Battery.Percentage.MkBatteryPercentageNoteToml
-        { Battery.Percentage.percentage = MkBatteryPercentage $ Interval.unsafeLRInterval 50,
+        { Battery.Percentage.percentage = MkPercentage $ Interval.unsafeLRInterval 50,
           Battery.Percentage.urgency = Nothing,
           Battery.Percentage.mTimeout = Nothing
         }
     alert2 =
       Battery.Percentage.MkBatteryPercentageNoteToml
-        { Battery.Percentage.percentage = MkBatteryPercentage $ Interval.unsafeLRInterval 20,
+        { Battery.Percentage.percentage = MkPercentage $ Interval.unsafeLRInterval 20,
           Battery.Percentage.urgency = Just Critical,
           Battery.Percentage.mTimeout = Nothing
         }

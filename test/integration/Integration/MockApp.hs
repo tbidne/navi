@@ -24,7 +24,7 @@ import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Services.Types (ServiceType (..))
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Control.Exception (CommandException (..))
-import Pythia.Services.Battery (Battery (..), BatteryPercentage (..), BatteryStatus (..))
+import Pythia.Services.Battery (Battery (..), BatteryStatus (..), Percentage (..))
 
 -- | Mock configuration.
 data MockEnv = MkMockEnv
@@ -36,7 +36,7 @@ data MockEnv = MkMockEnv
     sentNotes :: !(IORef [NaviNote]),
     -- | caches the last battery percentage "reading". This way we can
     -- ensure we have a new percentage every time.
-    lastPercentage :: !(IORef BatteryPercentage)
+    lastPercentage :: !(IORef Percentage)
   }
 
 makeFieldLabelsNoPrefix ''MockEnv
@@ -79,12 +79,12 @@ instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
   -- notifications are sent.
   query (BatteryPercentage _) = do
     bpRef <- asks (view #lastPercentage)
-    oldVal <- liftIO $ Interval.unLRInterval . unBatteryPercentage <$> readIORef bpRef
+    oldVal <- liftIO $ Interval.unLRInterval . unPercentage <$> readIORef bpRef
     let !newVal =
           if oldVal == 0
             then 100
             else oldVal - 1
-        newBp = MkBatteryPercentage $ Interval.unsafeLRInterval newVal
+        newBp = MkPercentage $ Interval.unsafeLRInterval newVal
     liftIO $ writeIORef bpRef newBp
     pure $ MkBattery newBp Discharging
   -- Constant service. Can test duplicate behavior.

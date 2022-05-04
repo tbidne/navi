@@ -22,7 +22,7 @@ import Navi.Services.Battery.Common (appCodec)
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Services.Battery
   ( BatteryApp (..),
-    BatteryPercentage (..),
+    Percentage (..),
     RunApp (..),
   )
 import Toml
@@ -39,7 +39,7 @@ import Toml qualified
 -- | TOML for each individual battery percentage.
 data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml
   { -- | The percentage for this alert.
-    percentage :: BatteryPercentage,
+    percentage :: Percentage,
     -- | The urgency for this alert.
     urgency :: Maybe UrgencyLevel,
     -- | The timeout for this alert.
@@ -83,19 +83,19 @@ batteryPercentageNoteTomlCodec =
     <*> Toml.dioptional NaviNote.urgencyLevelCodec .= urgency
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
 
-percentageCodec :: TomlCodec BatteryPercentage
+percentageCodec :: TomlCodec Percentage
 percentageCodec = boundedNCodec "percent"
 
-boundedNCodec :: Key -> TomlCodec BatteryPercentage
+boundedNCodec :: Key -> TomlCodec Percentage
 boundedNCodec = Toml.match _BoundedN
 
-_BoundedN :: TomlBiMap BatteryPercentage AnyValue
+_BoundedN :: TomlBiMap Percentage AnyValue
 _BoundedN = _BoundedNNatural >>> Toml._Natural
 
-_BoundedNNatural :: TomlBiMap BatteryPercentage Natural
-_BoundedNNatural = BiMap (Right . fromIntegral . Interval.unLRInterval . unBatteryPercentage) parseBounded
+_BoundedNNatural :: TomlBiMap Percentage Natural
+_BoundedNNatural = BiMap (Right . fromIntegral . Interval.unLRInterval . unPercentage) parseBounded
   where
     parseBounded =
-      (fmap MkBatteryPercentage . Interval.mkLRInterval . fromIntegral) >.> \case
+      (fmap MkPercentage . Interval.mkLRInterval . fromIntegral) >.> \case
         Nothing -> Left $ ArbitraryError "Passed integer outside of bounds"
         Just n -> Right n

@@ -22,8 +22,8 @@ import Numeric.Data.Interval qualified as Interval
 import Pythia.Services.Battery
   ( Battery (..),
     BatteryConfig (..),
-    BatteryPercentage (..),
     BatteryStatus (..),
+    Percentage (..),
   )
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
@@ -38,7 +38,7 @@ toEvent toml = do
     app = MkBatteryConfig $ toml ^. #app
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 
-tomlToNote :: BatteryPercentageNoteToml -> (BatteryPercentage, NaviNote)
+tomlToNote :: BatteryPercentageNoteToml -> (Percentage, NaviNote)
 tomlToNote toml =
   ( percentage,
     MkNaviNote
@@ -52,11 +52,11 @@ tomlToNote toml =
     summary = "Battery Percentage"
     body =
       Just $
-        showt (Interval.unLRInterval $ percentage ^. #unBatteryPercentage)
+        showt (Interval.unLRInterval $ percentage ^. #unPercentage)
           <> "%"
 
 mkBatteryEvent ::
-  NonEmpty (BatteryPercentage, NaviNote) ->
+  NonEmpty (Percentage, NaviNote) ->
   BatteryConfig ->
   PollInterval ->
   RepeatEvent ref Battery ->
@@ -74,7 +74,7 @@ mkBatteryEvent percentNoteList batteryProgram pi re en =
   where
     percentNoteMap = Map.fromList $ NE.toList percentNoteList
 
-lookupPercent :: Map BatteryPercentage NaviNote -> Battery -> Maybe NaviNote
+lookupPercent :: Map Percentage NaviNote -> Battery -> Maybe NaviNote
 lookupPercent percentNoteMap state = case state ^. #status of
   Discharging -> Map.lookup (state ^. #percentage) percentNoteMap
   _ -> Nothing

@@ -33,7 +33,7 @@ import Navi.Services.Network.NetInterfaces qualified as NetInterfaces
 import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..))
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Data.RunApp (RunApp (..))
-import Pythia.Services.Battery (BatteryPercentage (..))
+import Pythia.Services.Battery (Percentage (..))
 import Test.Tasty qualified as Tasty
 
 -- | Runs integration tests.
@@ -140,7 +140,7 @@ mkEnv :: NonEmpty (AnyEvent IORef) -> IO MockEnv
 mkEnv events = do
   sentNotesRef <- newIORef []
 
-  lastPercentageRef <- newIORef $ MkBatteryPercentage $ Interval.unsafeLRInterval 6
+  lastPercentageRef <- newIORef $ MkPercentage $ Interval.unsafeLRInterval 6
   logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
   noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
 
@@ -158,7 +158,7 @@ mkPercentageEvent :: IO (AnyEvent IORef)
 mkPercentageEvent = do
   let toAlert i =
         MkBatteryPercentageNoteToml
-          (MkBatteryPercentage (Interval.unsafeLRInterval i))
+          (MkPercentage (Interval.unsafeLRInterval i))
           Nothing
           Nothing
       alerts = toAlert <$> [1 .. 4]

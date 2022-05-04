@@ -14,7 +14,7 @@ import Navi.Services.Battery.Percentage.Toml
 import Navi.Services.Battery.Percentage.Toml qualified as Percentage.Toml
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Data.RunApp (RunApp (..))
-import Pythia.Services.Battery (BatteryApp (..), BatteryPercentage (..))
+import Pythia.Services.Battery (BatteryApp (..), Percentage (..))
 import Unit.Prelude
 
 tests :: TestTree
@@ -49,19 +49,19 @@ parsesAlerts =
         ]
     alert1 =
       MkBatteryPercentageNoteToml
-        { percentage = MkBatteryPercentage $ Interval.unsafeLRInterval 50,
+        { percentage = MkPercentage $ Interval.unsafeLRInterval 50,
           urgency = Nothing,
           mTimeout = Nothing
         }
     alert2 =
       MkBatteryPercentageNoteToml
-        { percentage = MkBatteryPercentage $ Interval.unsafeLRInterval 20,
+        { percentage = MkPercentage $ Interval.unsafeLRInterval 20,
           urgency = Just Critical,
           mTimeout = Nothing
         }
     alert3 =
       MkBatteryPercentageNoteToml
-        { percentage = MkBatteryPercentage $ Interval.unsafeLRInterval 10,
+        { percentage = MkPercentage $ Interval.unsafeLRInterval 10,
           urgency = Just Critical,
           mTimeout = Just (Seconds 15)
         }
