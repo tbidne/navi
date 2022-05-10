@@ -54,10 +54,10 @@ toNote noteToml conn =
         timeout = noteToml ^. #mTimeout
       }
   where
-    deviceTxt = conn ^. (#idevice % #unDevice)
-    nameTxt = fromMaybe "Unknown" $ conn ^. #iname
+    deviceTxt = conn ^. (#device % #unDevice)
+    nameTxt = fromMaybe "Unknown" $ conn ^. #name
     body = "Device " <> deviceTxt <> stateTxt
-    stateTxt = case conn ^. #istate of
+    stateTxt = case conn ^. #state of
       Up -> " is connected to: " <> nameTxt
       Down -> " is disconnected from: " <> nameTxt
       UnknownState txt -> " is in an unknown state: " <> txt

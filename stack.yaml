@@ -8,15 +8,15 @@ extra-deps:
 - tomland-1.3.3.1@sha256:83a8fd26a97164100541f7b26aa40ffdc6f230b21e94cbb3eae1fb7093c4356e,8924
 - validation-selective-0.1.0.1@sha256:9a5aa8b801efc6a4ffb120e1b28e80c5f7d090043be56bba11222cd20c393044,3621
 - git: https://github.com/tbidne/algebra-simple.git
-  commit: 0f0c1879fc1717e39a4ae7bec22d316868c74366
+  commit: 2a020dbe0290abe57af31c5011a3a18ff17dcec9
 - git: https://github.com/tbidne/byte-types.git
-  commit: 451ae6b83879501637344d59043561021c68aff0
+  commit: e1f2f889ede098b8c7682db1504a831f81c98c3d
 - git: https://github.com/tbidne/pythia.git
-  commit: eae267633c6c828f54dd026376227822e8e49907
+  commit: 0dd761db6154162bb45ac9e9f22ab5df8bc3e77d
 - git: https://github.com/tbidne/relative-time.git
-  commit: 2eaddb574d64e342a1407b6d368992ec93adf71e
+  commit: b3bb2f7d3fe9f4c245e34f9fe77aa1576c4c5f37
 - git: https://github.com/tbidne/smart-math.git
-  commit: e484d2b2c7aa2edb37799d1a952e27cf777d6a9f
+  commit: f33aabe5eb9f6f5ae4d51607d7159086bcb9899d
 
 allow-newer: true
 

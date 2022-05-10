@@ -35,57 +35,57 @@ packages:
 - completed:
     name: algebra-simple
     pantry-tree:
-      sha256: c683d34d1c03581e377824a43bd539c5fe8674949cdb4c75849e0c01a55813ef
-      size: 4235
-    commit: 0f0c1879fc1717e39a4ae7bec22d316868c74366
+      sha256: 41fdd98e4113036a3d5a18ce78f3144f0c27bae962d1a9abc70ef309c3376d48
+      size: 4237
+    commit: 2a020dbe0290abe57af31c5011a3a18ff17dcec9
     git: https://github.com/tbidne/algebra-simple.git
     version: '0.1'
   original:
-    commit: 0f0c1879fc1717e39a4ae7bec22d316868c74366
+    commit: 2a020dbe0290abe57af31c5011a3a18ff17dcec9
     git: https://github.com/tbidne/algebra-simple.git
 - completed:
     name: byte-types
     pantry-tree:
-      sha256: 55a6791c707d8855a5d9a36fbb25c4c4dba055720b2d0ce63e05cb6ccdf16472
+      sha256: ca85fbb4346966301f65917ca3ed39e5b8f34423f6820d0cde45313a5eb8e6cd
       size: 3229
-    commit: 451ae6b83879501637344d59043561021c68aff0
+    commit: e1f2f889ede098b8c7682db1504a831f81c98c3d
     git: https://github.com/tbidne/byte-types.git
     version: '0.1'
   original:
-    commit: 451ae6b83879501637344d59043561021c68aff0
+    commit: e1f2f889ede098b8c7682db1504a831f81c98c3d
     git: https://github.com/tbidne/byte-types.git
 - completed:
     name: pythia
     pantry-tree:
-      sha256: 33b5f5e0240fa9e01725526c5006236db904b2bffdf7cea0f66eabad7327a760
+      sha256: c5cb939633b6f478cb499f239bedfe459ede0b218e5c2a952ef9cbbe196d9c81
       size: 4472
-    commit: eae267633c6c828f54dd026376227822e8e49907
+    commit: 0dd761db6154162bb45ac9e9f22ab5df8bc3e77d
     git: https://github.com/tbidne/pythia.git
     version: '0.1'
   original:
-    commit: eae267633c6c828f54dd026376227822e8e49907
+    commit: 0dd761db6154162bb45ac9e9f22ab5df8bc3e77d
     git: https://github.com/tbidne/pythia.git
 - completed:
     name: relative-time
     pantry-tree:
-      sha256: b9423fec642779b4a4195b16bbc3a3cc2c2cd53f58a9620c5a39937d3cc7f7e2
-      size: 1591
-    commit: 2eaddb574d64e342a1407b6d368992ec93adf71e
+      sha256: 34af1fd33ad98d828ffd277976687bb2ebd60842e184154852cb510a1a4a1c60
+      size: 1592
+    commit: b3bb2f7d3fe9f4c245e34f9fe77aa1576c4c5f37
     git: https://github.com/tbidne/relative-time.git
     version: '0.1'
   original:
-    commit: 2eaddb574d64e342a1407b6d368992ec93adf71e
+    commit: b3bb2f7d3fe9f4c245e34f9fe77aa1576c4c5f37
     git: https://github.com/tbidne/relative-time.git
 - completed:
     name: smart-math
     pantry-tree:
-      sha256: 1c9025fd33eccf88ad9f3a78f529dca099e6ca7d0f54a3b29c34890a145d3e53
-      size: 3276
-    commit: e484d2b2c7aa2edb37799d1a952e27cf777d6a9f
+      sha256: 64cb8f0abb2e917ddbd419fd5e25b60478e1b25d03969891125e458770d61201
+      size: 3217
+    commit: f33aabe5eb9f6f5ae4d51607d7159086bcb9899d
     git: https://github.com/tbidne/smart-math.git
     version: '0.1'
   original:
-    commit: e484d2b2c7aa2edb37799d1a952e27cf777d6a9f
+    commit: f33aabe5eb9f6f5ae4d51607d7159086bcb9899d
     git: https://github.com/tbidne/smart-math.git
 snapshots:
 - completed:
