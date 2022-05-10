@@ -1,9 +1,9 @@
 -- | This modules provides toml configuration related to events.
 module Navi.Event.Toml
-  ( RepeatEvtToml (..),
-    repeatEvtCodec,
-    repeatEvtTomlToVal,
-    mRepeatEvtTomlToVal,
+  ( RepeatEventToml (..),
+    repeatEventCodec,
+    repeatEventTomlToVal,
+    mRepeatEventTomlToVal,
     ErrorNoteToml (..),
     errorNoteCodec,
     errorNoteTomlToVal,
@@ -19,36 +19,36 @@ import Toml qualified
 
 -- | TOML for 'Event.Event'.
 data EventConfig = MkEventConfig
-  { repeatEvt :: Maybe RepeatEvtToml,
-    errEvt :: Maybe ErrorNoteToml
+  { repeatEvent :: Maybe RepeatEventToml,
+    errEvent :: Maybe ErrorNoteToml
   }
   deriving stock (Eq, Show)
 
 -- | TOML for 'RepeatEvent'.
-data RepeatEvtToml
+data RepeatEventToml
   = NoRepeatsToml
   | AllowRepeatsToml
   deriving stock (Eq, Show)
 
--- | Codec for 'RepeatEvtToml'.
-repeatEvtCodec :: TomlCodec RepeatEvtToml
-repeatEvtCodec = Toml.dimap toBool fromBool $ Toml.bool "repeat-events"
+-- | Codec for 'RepeatEventToml'.
+repeatEventCodec :: TomlCodec RepeatEventToml
+repeatEventCodec = Toml.dimap toBool fromBool $ Toml.bool "repeat-events"
   where
     fromBool True = AllowRepeatsToml
     fromBool False = NoRepeatsToml
     toBool AllowRepeatsToml = True
     toBool NoRepeatsToml = False
 
--- | Constructs a mutable 'RepeatEvent' from 'RepeatEvtToml'.
-repeatEvtTomlToVal :: MonadMutRef ref m => RepeatEvtToml -> m (RepeatEvent ref a)
-repeatEvtTomlToVal AllowRepeatsToml = pure AllowRepeats
-repeatEvtTomlToVal NoRepeatsToml = NoRepeats <$> newRef Nothing
+-- | Constructs a mutable 'RepeatEvent' from 'RepeatEventToml'.
+repeatEventTomlToVal :: MonadMutRef ref m => RepeatEventToml -> m (RepeatEvent ref a)
+repeatEventTomlToVal AllowRepeatsToml = pure AllowRepeats
+repeatEventTomlToVal NoRepeatsToml = NoRepeats <$> newRef Nothing
 
--- | Constructs a mutable 'RepeatEvent' from 'RepeatEvtToml'. If none is
+-- | Constructs a mutable 'RepeatEvent' from 'RepeatEventToml'. If none is
 -- provided, defaults to 'NoRepeatsToml', i.e., no repeats.
-mRepeatEvtTomlToVal :: MonadMutRef ref m => Maybe RepeatEvtToml -> m (RepeatEvent ref a)
-mRepeatEvtTomlToVal Nothing = repeatEvtTomlToVal NoRepeatsToml
-mRepeatEvtTomlToVal (Just t) = repeatEvtTomlToVal t
+mRepeatEventTomlToVal :: MonadMutRef ref m => Maybe RepeatEventToml -> m (RepeatEvent ref a)
+mRepeatEventTomlToVal Nothing = repeatEventTomlToVal NoRepeatsToml
+mRepeatEventTomlToVal (Just t) = repeatEventTomlToVal t
 
 -- | TOML for 'ErrorNote'.
 data ErrorNoteToml

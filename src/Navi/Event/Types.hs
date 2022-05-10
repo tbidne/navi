@@ -9,7 +9,7 @@ module Navi.Event.Types
     AnyEvent (..),
     RepeatEvent (..),
     ErrorNote (..),
-    EventErr (..),
+    EventError (..),
   )
 where
 
@@ -42,7 +42,7 @@ data ErrorNote ref
 makeFieldLabelsNoPrefix ''ErrorNote
 
 -- | Represents an error when querying an 'Event'.
-data EventErr = MkEventErr
+data EventError = MkEventError
   { -- | The name of the event.
     name :: !Text,
     -- | Short description of the error.
@@ -53,7 +53,7 @@ data EventErr = MkEventErr
   deriving stock (Show)
   deriving anyclass (Exception)
 
-makeFieldLabelsNoPrefix ''EventErr
+makeFieldLabelsNoPrefix ''EventError
 
 -- | 'Event' represents sending notifications. An event will:
 --

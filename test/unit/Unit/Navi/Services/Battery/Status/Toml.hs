@@ -5,9 +5,8 @@ where
 
 import Data.Text qualified as T
 import Navi.Data.NaviNote (Timeout (..))
-import Navi.Event.Toml (ErrorNoteToml (..), RepeatEvtToml (..))
-import Navi.Services.Battery.Status.Toml (BatteryStatusToml (..))
-import Navi.Services.Battery.Status.Toml qualified as Status.Toml
+import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
+import Navi.Services.Battery.Status.Toml (BatteryStatusToml (..), batteryStatusCodec)
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..))
 import Unit.Prelude
@@ -60,7 +59,7 @@ repeatEventTests =
       parsesExpected "<none>" "" Nothing (view #repeatEvent)
     ]
 
-parsesRepeatEvent :: String -> Text -> RepeatEvtToml -> TestTree
+parsesRepeatEvent :: String -> Text -> RepeatEventToml -> TestTree
 parsesRepeatEvent desc flag ret =
   parsesExpected
     desc
@@ -87,4 +86,4 @@ parsesErrorEvent desc flag ret =
     (view #errorNote)
 
 parsesExpected :: (Eq a, Show a) => String -> Text -> a -> (BatteryStatusToml -> a) -> TestTree
-parsesExpected = decodeExpected Status.Toml.batteryStatusCodec
+parsesExpected = decodeExpected batteryStatusCodec

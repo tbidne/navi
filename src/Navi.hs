@@ -24,7 +24,7 @@ import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core (HasEvents (..), HasLogQueue (..), HasNoteQueue (..))
 import Navi.Event qualified as Event
-import Navi.Event.Types (AnyEvent (..), EventErr (..))
+import Navi.Event.Types (AnyEvent (..), EventError (..))
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Prelude
 import UnliftIO.Async qualified as Async
@@ -76,7 +76,7 @@ processEvent (MkAnyEvent event) = do
   forever $ do
     sendLogQueue $ MkNaviLog DebugS ("Checking " <> event ^. #name)
     (Event.runEvent event >>= handleSuccess)
-      `catch` handleEventErr
+      `catch` handleEventError
       `catch` handleSomeException
     sleep pi
   where
@@ -100,8 +100,8 @@ processEvent (MkAnyEvent event) = do
               Event.updatePrevTrigger repeatEvent result
               sendNoteQueue note
 
-    handleEventErr =
-      addNamespace "Handling EventErr"
+    handleEventError =
+      addNamespace "Handling EventError"
         . handleErr eventErrToNote
 
     handleSomeException =
@@ -119,7 +119,7 @@ processEvent (MkAnyEvent event) = do
     mkLog :: Show a => Text -> a -> Text
     mkLog msg x = "[" <> name <> "] " <> msg <> ": " <> showt x
 
-eventErrToNote :: EventErr -> NaviNote
+eventErrToNote :: EventError -> NaviNote
 eventErrToNote ex =
   MkNaviNote
     { summary = ex ^. #name,

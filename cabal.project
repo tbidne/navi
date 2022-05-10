@@ -5,7 +5,7 @@ package navi
     -Wall -Wcompat -Werror -Widentities -Wunused-binds
     -Wincomplete-record-updates -Wincomplete-uni-patterns
     -Wmissing-home-modules -Wmissing-export-lists -Wpartial-fields
-    -Wredundant-constraints -Wunused-packages -Wmissing-deriving-strategies
+    -Wredundant-constraints -Wmissing-deriving-strategies
 
 optimization: 2
 

@@ -25,15 +25,15 @@ import Pythia.Data.Command (Command)
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent :: (MonadMutRef ref m) => SingleToml -> m (AnyEvent ref)
 toEvent toml = do
-  repeatEvt <- EventToml.mRepeatEvtTomlToVal (toml ^. #repeatEvtCfg)
-  errorNote <- EventToml.mErrorNoteTomlToVal (toml ^. #errEvtCfg)
+  repeatEvent <- EventToml.mRepeatEventTomlToVal (toml ^. #repeatEventCfg)
+  errorNote <- EventToml.mErrorNoteTomlToVal (toml ^. #errEventCfg)
   pure $
     MkAnyEvent $
       mkSingleEvent
         (toml ^. #command)
         pi
         (toml ^. #triggerVal, toml ^. #note)
-        repeatEvt
+        repeatEvent
         errorNote
   where
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)

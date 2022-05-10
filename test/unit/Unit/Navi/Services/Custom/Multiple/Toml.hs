@@ -3,9 +3,12 @@ module Unit.Navi.Services.Custom.Multiple.Toml (tests) where
 import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
-import Navi.Event.Toml (ErrorNoteToml (..), RepeatEvtToml (..))
-import Navi.Services.Custom.Multiple.Toml (MultipleToml (..), TriggerNoteToml (..))
-import Navi.Services.Custom.Multiple.Toml qualified as Multiple.Toml
+import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
+import Navi.Services.Custom.Multiple.Toml
+  ( MultipleToml (..),
+    TriggerNoteToml (..),
+    multipleCodec,
+  )
 import Unit.Prelude
 
 tests :: TestTree
@@ -78,7 +81,7 @@ repeatEventTests =
     "Parses repeat event"
     [ parsesRepeatEvent "off" "false" NoRepeatsToml,
       parsesRepeatEvent "on" "true" AllowRepeatsToml,
-      parsesExpected "<none>" txt Nothing (view #repeatEvtCfg)
+      parsesExpected "<none>" txt Nothing (view #repeatEventCfg)
     ]
   where
     txt =
@@ -90,13 +93,13 @@ repeatEventTests =
           "summary = \"a summary\""
         ]
 
-parsesRepeatEvent :: String -> Text -> RepeatEvtToml -> TestTree
+parsesRepeatEvent :: String -> Text -> RepeatEventToml -> TestTree
 parsesRepeatEvent desc flag ret =
   parsesExpected
     desc
     txt
     (Just ret)
-    (view #repeatEvtCfg)
+    (view #repeatEventCfg)
   where
     txt =
       T.unlines
@@ -115,7 +118,7 @@ errorNoteTests =
     [ parsesErrorEvent "off" "none" NoErrNoteToml,
       parsesErrorEvent "on" "repeats" ErrNoteAllowRepeatsToml,
       parsesErrorEvent "on" "no-repeats" ErrNoteNoRepeatsToml,
-      parsesExpected "<none>" txt Nothing (view #errEvtCfg)
+      parsesExpected "<none>" txt Nothing (view #errEventCfg)
     ]
   where
     txt =
@@ -133,7 +136,7 @@ parsesErrorEvent desc flag ret =
     desc
     txt
     (Just ret)
-    (view #errEvtCfg)
+    (view #errEventCfg)
   where
     txt =
       T.unlines
@@ -152,4 +155,4 @@ parsesExpected ::
   a ->
   (MultipleToml -> a) ->
   TestTree
-parsesExpected = decodeExpected Multiple.Toml.multipleCodec
+parsesExpected = decodeExpected multipleCodec

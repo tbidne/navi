@@ -6,7 +6,7 @@ module Navi.Event
     runEvent,
 
     -- * Results
-    EventErr (..),
+    EventError (..),
 
     -- * Caching previous events/errors
     RepeatEvent (..),
@@ -30,7 +30,7 @@ import Navi.Event.Types
   ( AnyEvent (..),
     ErrorNote (..),
     Event (..),
-    EventErr (..),
+    EventError (..),
     RepeatEvent (..),
   )
 import Navi.Prelude
@@ -71,8 +71,8 @@ blockRepeat ::
   RepeatEvent ref a ->
   a ->
   m Bool
-blockRepeat repeatEvt newVal = addNamespace "Checking event repeats" $ do
-  case repeatEvt of
+blockRepeat repeatEvent newVal = addNamespace "Checking event repeats" $ do
+  case repeatEvent of
     -- Repeat events are allowed, so do not block.
     AllowRepeats -> pure False
     -- Repeat events are not allowed, must check.
@@ -129,9 +129,9 @@ blockErr errorEvent =
 -- | If the reference is 'NoRepeats' then we overwrite the previous reference
 -- with the new parameter. Otherwise we do nothing.
 updatePrevTrigger :: (Eq a, MonadMutRef ref m) => RepeatEvent ref a -> a -> m ()
-updatePrevTrigger repeatEvt newVal =
+updatePrevTrigger repeatEvent newVal =
   -- Only overwrite value if it's new
-  case repeatEvt of
+  case repeatEvent of
     NoRepeats ref -> do
       val <- readRef ref
       if val /= Just newVal

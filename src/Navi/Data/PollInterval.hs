@@ -60,7 +60,7 @@ maxPollInterval :: PollInterval
 maxPollInterval = MkPollInterval (fromIntegral mx)
   where
     -- PollInterval represents seconds, and we eventually want to use it in
-    -- threadDelay (which requires an Int). This means we have to multiplt iy
+    -- threadDelay (which requires an Int). This means we have to multiply
     -- by 1_000_000, thus the maximum value we can safely store is
     -- (maxInt / 1_000_000).
     mx = (maxBound :: Int) `div` 1_000_000

@@ -6,15 +6,17 @@ where
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
 import Katip (Severity (..))
-import Navi.Config.Toml (ConfigToml (..))
-import Navi.Config.Toml qualified as Config.Toml
+import Navi.Config.Toml (ConfigToml (..), configCodec)
 import Navi.Config.Types (LogLoc (..), Logging (..))
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Data.PollInterval (PollInterval (..))
-import Navi.Services.Battery.Percentage.Toml qualified as Battery.Percentage
-import Navi.Services.Battery.Status.Toml qualified as Battery.Status
-import Navi.Services.Custom.Single.Toml qualified as Single
-import Navi.Services.Network.NetInterfaces.Toml qualified as NetInterfaces
+import Navi.Services.Battery.Percentage.Toml
+  ( BatteryPercentageNoteToml (..),
+    BatteryPercentageToml (..),
+  )
+import Navi.Services.Battery.Status.Toml (BatteryStatusToml (..))
+import Navi.Services.Custom.Single.Toml (SingleToml (..))
+import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..))
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..), Percentage (..))
@@ -30,7 +32,7 @@ tests =
 
 parsesConfig :: TestTree
 parsesConfig = testCase "Parses config" $ do
-  let eResult = Toml.decodeExact Config.Toml.configCodec fullConfig
+  let eResult = Toml.decodeExact configCodec fullConfig
   case eResult of
     Left err -> assertFailure $ "Parsing config fails: " <> show err
     Right result -> expected @=? result
@@ -51,15 +53,15 @@ expected =
       netInterfacesToml = expectedNetInterfaces
     }
 
-expectedSingle :: [Single.SingleToml]
+expectedSingle :: [SingleToml]
 expectedSingle =
-  [ Single.MkSingleToml
-      { Single.command = "  some multiline cmd\n  end cmd\n",
-        Single.triggerVal = "true",
-        Single.pollInterval = Just $ MkPollInterval 121,
-        Single.note = note,
-        Single.repeatEvtCfg = Nothing,
-        Single.errEvtCfg = Nothing
+  [ MkSingleToml
+      { command = "  some multiline cmd\n  end cmd\n",
+        triggerVal = "true",
+        pollInterval = Just $ MkPollInterval 121,
+        note = note,
+        repeatEventCfg = Nothing,
+        errEventCfg = Nothing
       }
   ]
   where
@@ -71,50 +73,50 @@ expectedSingle =
           timeout = Just $ Seconds 15
         }
 
-expectedBatteryPercentage :: Maybe Battery.Percentage.BatteryPercentageToml
+expectedBatteryPercentage :: Maybe BatteryPercentageToml
 expectedBatteryPercentage =
   Just $
-    Battery.Percentage.MkBatteryPercentageToml
-      { Battery.Percentage.app = Many,
-        Battery.Percentage.pollInterval = Just $ MkPollInterval 15,
-        Battery.Percentage.repeatEvent = Nothing,
-        Battery.Percentage.errorNote = Nothing,
-        Battery.Percentage.alerts = alert1 :| [alert2]
+    MkBatteryPercentageToml
+      { app = Many,
+        pollInterval = Just $ MkPollInterval 15,
+        repeatEvent = Nothing,
+        errorNote = Nothing,
+        alerts = alert1 :| [alert2]
       }
   where
     alert1 =
-      Battery.Percentage.MkBatteryPercentageNoteToml
-        { Battery.Percentage.percentage = MkPercentage $ Interval.unsafeLRInterval 50,
-          Battery.Percentage.urgency = Nothing,
-          Battery.Percentage.mTimeout = Nothing
+      MkBatteryPercentageNoteToml
+        { percentage = MkPercentage $ Interval.unsafeLRInterval 50,
+          urgency = Nothing,
+          mTimeout = Nothing
         }
     alert2 =
-      Battery.Percentage.MkBatteryPercentageNoteToml
-        { Battery.Percentage.percentage = MkPercentage $ Interval.unsafeLRInterval 20,
-          Battery.Percentage.urgency = Just Critical,
-          Battery.Percentage.mTimeout = Nothing
+      MkBatteryPercentageNoteToml
+        { percentage = MkPercentage $ Interval.unsafeLRInterval 20,
+          urgency = Just Critical,
+          mTimeout = Nothing
         }
 
-expectedBatteryStatus :: Maybe Battery.Status.BatteryStatusToml
+expectedBatteryStatus :: Maybe BatteryStatusToml
 expectedBatteryStatus =
   Just $
-    Battery.Status.MkBatteryStatusToml
-      { Battery.Status.app = Single BatteryAcpi,
-        Battery.Status.pollInterval = Nothing,
-        Battery.Status.repeatEvent = Nothing,
-        Battery.Status.errorNote = Nothing,
-        Battery.Status.mTimeout = Just $ Seconds 5
+    MkBatteryStatusToml
+      { app = Single BatteryAcpi,
+        pollInterval = Nothing,
+        repeatEvent = Nothing,
+        errorNote = Nothing,
+        mTimeout = Just $ Seconds 5
       }
 
-expectedNetInterfaces :: [NetInterfaces.NetInterfacesToml]
+expectedNetInterfaces :: [NetInterfacesToml]
 expectedNetInterfaces =
-  [ NetInterfaces.MkNetInterfacesToml
-      { NetInterfaces.app = Many,
-        NetInterfaces.deviceName = "my-device",
-        NetInterfaces.pollInterval = Nothing,
-        NetInterfaces.repeatEvent = Nothing,
-        NetInterfaces.errorNote = Nothing,
-        NetInterfaces.mTimeout = Nothing
+  [ MkNetInterfacesToml
+      { app = Many,
+        deviceName = "my-device",
+        pollInterval = Nothing,
+        repeatEvent = Nothing,
+        errorNote = Nothing,
+        mTimeout = Nothing
       }
   ]
 

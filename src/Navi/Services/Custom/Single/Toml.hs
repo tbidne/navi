@@ -12,7 +12,7 @@ import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Data.PollInterval (PollInterval (..), pollIntervalCodec)
-import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
+import Navi.Event.Toml (ErrorNoteToml, RepeatEventToml)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Prelude
 import Pythia.Data.Command (Command (..))
@@ -30,9 +30,9 @@ data SingleToml = MkSingleToml
     -- | The notification to send.
     note :: NaviNote,
     -- | Determines how we treat repeat alerts.
-    repeatEvtCfg :: Maybe RepeatEvtToml,
+    repeatEventCfg :: Maybe RepeatEventToml,
     -- | Determines how we handle errors.
-    errEvtCfg :: Maybe ErrorNoteToml
+    errEventCfg :: Maybe ErrorNoteToml
   }
   deriving stock (Eq, Show)
 
@@ -46,8 +46,8 @@ singleCodec =
       <*> Toml.text "trigger" .= triggerVal
       <*> Toml.dioptional pollIntervalCodec .= pollInterval
       <*> Toml.table NaviNote.naviNoteCodec "note" .= note
-      <*> Toml.dioptional EventToml.repeatEvtCodec .= repeatEvtCfg
-      <*> Toml.dioptional EventToml.errorNoteCodec .= errEvtCfg
+      <*> Toml.dioptional EventToml.repeatEventCodec .= repeatEventCfg
+      <*> Toml.dioptional EventToml.errorNoteCodec .= errEventCfg
 
 commandCodec :: TomlCodec Command
 commandCodec = Toml.textBy (T.pack . show) (Right . MkCommand) "command"

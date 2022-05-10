@@ -6,12 +6,12 @@ where
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
 import Navi.Data.NaviNote (Timeout (..))
-import Navi.Event.Toml (ErrorNoteToml (..), RepeatEvtToml (..))
+import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
 import Navi.Services.Battery.Percentage.Toml
   ( BatteryPercentageNoteToml (..),
     BatteryPercentageToml (..),
+    batteryPercentageCodec,
   )
-import Navi.Services.Battery.Percentage.Toml qualified as Percentage.Toml
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..), Percentage (..))
@@ -100,7 +100,7 @@ repeatEventTests =
       parsesExpected "<none>" "[[alert]]\npercent=50" Nothing (view #repeatEvent)
     ]
 
-parsesRepeatEvent :: String -> Text -> RepeatEvtToml -> TestTree
+parsesRepeatEvent :: String -> Text -> RepeatEventToml -> TestTree
 parsesRepeatEvent desc flag ret =
   parsesExpected
     desc
@@ -141,4 +141,4 @@ parsesErrorEvent desc flag ret =
         ]
 
 parsesExpected :: (Eq a, Show a) => String -> Text -> a -> (BatteryPercentageToml -> a) -> TestTree
-parsesExpected = decodeExpected Percentage.Toml.batteryPercentageCodec
+parsesExpected = decodeExpected batteryPercentageCodec

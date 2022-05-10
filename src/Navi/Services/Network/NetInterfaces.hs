@@ -25,7 +25,7 @@ toEvent ::
   NetInterfacesToml ->
   m (AnyEvent ref)
 toEvent toml = do
-  repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
+  repeatEvent <- EventToml.mRepeatEventTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
   pure $
     MkAnyEvent $
@@ -34,7 +34,7 @@ toEvent toml = do
           serviceType = cmd,
           pollInterval = pi,
           raiseAlert = toNote toml,
-          repeatEvent = repeatEvt,
+          repeatEvent = repeatEvent,
           errorNote = errorNote
         }
   where

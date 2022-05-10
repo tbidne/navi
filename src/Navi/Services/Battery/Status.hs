@@ -29,9 +29,9 @@ toEvent ::
   BatteryStatusToml ->
   m (AnyEvent ref)
 toEvent toml = do
-  repeatEvt <- EventToml.mRepeatEvtTomlToVal $ toml ^. #repeatEvent
+  repeatEvent <- EventToml.mRepeatEventTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
-  let evt = mkStatusEvent to cfg pi repeatEvt errorNote
+  let evt = mkStatusEvent to cfg pi repeatEvent errorNote
   pure $ MkAnyEvent evt
   where
     cfg = MkBatteryConfig $ toml ^. #app

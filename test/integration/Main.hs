@@ -20,7 +20,7 @@ import Navi (runNavi)
 import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Data.NaviQueue (NaviQueue (..))
 import Navi.Data.PollInterval (PollInterval (..))
-import Navi.Event.Toml (ErrorNoteToml (..), RepeatEvtToml (..))
+import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
 import Navi.Event.Types (AnyEvent)
 import Navi.Services.Battery.Percentage qualified as Percentage
 import Navi.Services.Battery.Percentage.Toml
@@ -173,7 +173,7 @@ mkPercentageEvent = do
 
   Percentage.toEvent percentageToml
 
-mkSingleEvent :: Maybe RepeatEvtToml -> IO (AnyEvent IORef)
+mkSingleEvent :: Maybe RepeatEventToml -> IO (AnyEvent IORef)
 mkSingleEvent repeatEventToml = do
   let note =
         MkNaviNote

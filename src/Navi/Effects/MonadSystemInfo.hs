@@ -5,7 +5,7 @@ module Navi.Effects.MonadSystemInfo
 where
 
 import Data.Text qualified as T
-import Navi.Event.Types (EventErr (..))
+import Navi.Event.Types (EventError (..))
 import Navi.Prelude
 import Navi.Services.Types (ServiceType (..))
 import Pythia (PythiaException (..))
@@ -34,7 +34,7 @@ rethrowPythia :: MonadUnliftIO m => Text -> m a -> m a
 rethrowPythia n io =
   io `catch` \(e :: PythiaException) ->
     throwIO $
-      MkEventErr
+      MkEventError
         { name = n,
           short = "PythiaException",
           long = T.pack $ displayException e
@@ -48,15 +48,15 @@ queryMultiple cmd =
   let shellApp = multipleShellApp cmd
    in ShellApp.runSimple shellApp
 
-multipleShellApp :: Command -> SimpleShell EventErr Text
+multipleShellApp :: Command -> SimpleShell EventError Text
 multipleShellApp cmd =
   MkSimpleShell
     { command = cmd,
       parser = parseMultiple,
-      liftShellEx = liftEventErr "Multiple"
+      liftShellEx = liftEventError "Multiple"
     }
 
-parseMultiple :: Text -> Either EventErr Text
+parseMultiple :: Text -> Either EventError Text
 parseMultiple = Right
 
 querySingle :: Command -> IO Text
@@ -64,20 +64,20 @@ querySingle cmd = do
   let shellApp = singleShellApp cmd
    in ShellApp.runSimple shellApp
 
-singleShellApp :: Command -> SimpleShell EventErr Text
+singleShellApp :: Command -> SimpleShell EventError Text
 singleShellApp cmd =
   MkSimpleShell
     { command = cmd,
       parser = parseSingle,
-      liftShellEx = liftEventErr "Single"
+      liftShellEx = liftEventError "Single"
     }
 
-parseSingle :: Text -> Either EventErr Text
+parseSingle :: Text -> Either EventError Text
 parseSingle = Right
 
-liftEventErr :: Exception e => Text -> e -> EventErr
-liftEventErr n e =
-  MkEventErr
+liftEventError :: Exception e => Text -> e -> EventError
+liftEventError n e =
+  MkEventError
     { name = n,
       short = "Command error",
       long = T.pack $ displayException e

@@ -12,7 +12,7 @@ where
 import Navi.Data.NaviNote (Timeout)
 import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Data.PollInterval (PollInterval (..), pollIntervalCodec)
-import Navi.Event.Toml (ErrorNoteToml, RepeatEvtToml)
+import Navi.Event.Toml (ErrorNoteToml, RepeatEventToml)
 import Navi.Event.Toml qualified as EToml
 import Navi.Prelude
 import Navi.Services.Battery.Common (appCodec)
@@ -27,7 +27,7 @@ data BatteryStatusToml = MkBatteryStatusToml
     -- | The poll interval.
     pollInterval :: Maybe PollInterval,
     -- | Determines how we treat repeat alerts.
-    repeatEvent :: Maybe RepeatEvtToml,
+    repeatEvent :: Maybe RepeatEventToml,
     -- | Determines how we handle errors.
     errorNote :: Maybe ErrorNoteToml,
     -- | The timeout for this alert.
@@ -43,6 +43,6 @@ batteryStatusCodec =
   MkBatteryStatusToml
     <$> appCodec .= app
     <*> Toml.dioptional pollIntervalCodec .= pollInterval
-    <*> Toml.dioptional EToml.repeatEvtCodec .= repeatEvent
+    <*> Toml.dioptional EToml.repeatEventCodec .= repeatEvent
     <*> Toml.dioptional EToml.errorNoteCodec .= errorNote
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout

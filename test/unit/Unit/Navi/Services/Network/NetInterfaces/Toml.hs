@@ -5,9 +5,8 @@ where
 
 import Data.Text qualified as T
 import Navi.Data.NaviNote (Timeout (..))
-import Navi.Event.Toml (ErrorNoteToml (..), RepeatEvtToml (..))
-import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..))
-import Navi.Services.Network.NetInterfaces.Toml qualified as NetInterfaces.Toml
+import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
+import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..), netInterfacesCodec)
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.NetInterface (NetInterfaceApp (..))
 import Unit.Prelude
@@ -70,7 +69,7 @@ repeatEventTests =
       parsesExpected "<none>" "device = \"my-device\"" Nothing (view #repeatEvent)
     ]
 
-parsesRepeatEvent :: String -> Text -> RepeatEvtToml -> TestTree
+parsesRepeatEvent :: String -> Text -> RepeatEventToml -> TestTree
 parsesRepeatEvent desc flag ret =
   parsesExpected
     desc
@@ -109,4 +108,4 @@ parsesErrorEvent desc flag ret =
         ]
 
 parsesExpected :: (Eq a, Show a) => String -> Text -> a -> (NetInterfacesToml -> a) -> TestTree
-parsesExpected = decodeExpected NetInterfaces.Toml.netInterfacesCodec
+parsesExpected = decodeExpected netInterfacesCodec

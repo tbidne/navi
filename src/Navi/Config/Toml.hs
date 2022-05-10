@@ -33,6 +33,8 @@ data ConfigToml = MkConfigToml
   }
   deriving stock (Eq, Show)
 
+makeFieldLabelsNoPrefix ''ConfigToml
+
 -- | Toml decoder for 'ConfigToml'.
 configCodec :: TomlCodec ConfigToml
 configCodec =
@@ -79,5 +81,3 @@ locationCodec =
     parseLoc "stdout" = Right Stdout
     parseLoc "default" = Right DefPath
     parseLoc f = Right $ File $ T.unpack f
-
-makeFieldLabelsNoPrefix ''ConfigToml
