@@ -68,13 +68,13 @@ packages:
 - completed:
     name: relative-time
     pantry-tree:
-      sha256: 34af1fd33ad98d828ffd277976687bb2ebd60842e184154852cb510a1a4a1c60
-      size: 1592
-    commit: b3bb2f7d3fe9f4c245e34f9fe77aa1576c4c5f37
+      sha256: 4d14ff9460f1efca9be76e83f3fd45c7f08a1cddb6f6d07cafa947d918bc7847
+      size: 1591
+    commit: 1b0a14bee427e7401247fd3d8279a54e0b5bd5ea
     git: https://github.com/tbidne/relative-time.git
     version: '0.1'
   original:
-    commit: b3bb2f7d3fe9f4c245e34f9fe77aa1576c4c5f37
+    commit: 1b0a14bee427e7401247fd3d8279a54e0b5bd5ea
     git: https://github.com/tbidne/relative-time.git
 - completed:
     name: smart-math

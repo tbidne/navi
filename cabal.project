@@ -27,7 +27,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/relative-time.git
-    tag: b3bb2f7d3fe9f4c245e34f9fe77aa1576c4c5f37
+    tag: 1b0a14bee427e7401247fd3d8279a54e0b5bd5ea
 
 source-repository-package
     type: git

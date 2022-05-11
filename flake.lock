@@ -636,11 +636,11 @@
         "nixpkgs": "nixpkgs_12"
       },
       "locked": {
-        "lastModified": 1652096127,
-        "narHash": "sha256-qG8MNUQMqYYhZ5yZseG1JdcCQowGObvQ1HVOHtP0WuI=",
+        "lastModified": 1652243932,
+        "narHash": "sha256-I5nt7yvwEnMZAyt+D1p059GVAcFlmE7l6KOG8ZCYtSA=",
         "owner": "tbidne",
         "repo": "relative-time",
-        "rev": "b3bb2f7d3fe9f4c245e34f9fe77aa1576c4c5f37",
+        "rev": "1b0a14bee427e7401247fd3d8279a54e0b5bd5ea",
         "type": "github"
       },
       "original": {
