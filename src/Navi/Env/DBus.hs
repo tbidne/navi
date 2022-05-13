@@ -6,16 +6,20 @@ module Navi.Env.DBus
   ( HasDBusClient (..),
     DBusEnv (..),
     mkDBusEnv,
+    naviToDBus,
   )
 where
 
 import Control.Concurrent.STM qualified as STM
 import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import DBus.Client (Client)
+import DBus.Notify (Hint (Urgency), Note)
 import DBus.Notify qualified as DBusN
+import Data.Text qualified as T
 import Katip (LogContexts, LogEnv, Namespace)
 import Navi.Config (Config)
 import Navi.Config qualified as Config
+import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Data.NaviQueue (NaviQueue (..))
 import Navi.Env.Core
   ( Env (MkEnv),
@@ -92,3 +96,28 @@ mkDBusEnv logEnv logContext namespace config = do
         dbusClient = client
       }
 {-# INLINEABLE mkDBusEnv #-}
+
+-- | Turns a 'NaviNote' into a DBus 'Note'.
+naviToDBus :: NaviNote -> Note
+naviToDBus naviNote =
+  DBusN.Note
+    { appName = "Navi",
+      summary = T.unpack $ naviNote ^. #summary,
+      body = body,
+      appImage = Nothing,
+      hints = hints,
+      expiry = timeout,
+      actions = []
+    }
+  where
+    body = DBusN.Text . T.unpack <$> naviNote ^. #body
+    hints = maybeToList $ Urgency <$> naviNote ^. #urgency
+    timeout = maybe defTimeout naviToDBusTimeout $ naviNote ^. #timeout
+    defTimeout = DBusN.Milliseconds 10_000
+
+naviToDBusTimeout :: Timeout -> DBusN.Timeout
+naviToDBusTimeout Never = DBusN.Never
+naviToDBusTimeout (Seconds s) = DBusN.Milliseconds $ (* 1_000) $ w16ToInt32 s
+  where
+    w16ToInt32 :: Word16 -> Int32
+    w16ToInt32 = fromIntegral

@@ -46,6 +46,7 @@ expected =
             { severity = DebugS,
               location = File "some-file"
             },
+      noteSystemToml = Nothing,
       singleToml = expectedSingle,
       multipleToml = [],
       batteryPercentageToml = expectedBatteryPercentage,

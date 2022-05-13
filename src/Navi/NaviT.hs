@@ -5,13 +5,11 @@ module Navi.NaviT
   )
 where
 
-import DBus.Notify (Note)
 import DBus.Notify qualified as DBusN
 import Data.Text qualified as T
 import Data.Text.Lazy.Builder qualified as T
 import Katip (Katip, KatipContext, LogStr (..))
 import Katip qualified as K
-import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Effects.MonadLogger (MonadLogger (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
@@ -23,8 +21,10 @@ import Navi.Env.Core
     HasLogEnv (..),
     HasLogNamespace (..),
   )
-import Navi.Env.DBus (DBusEnv, HasDBusClient (..))
+import Navi.Env.DBus (DBusEnv, HasDBusClient (..), naviToDBus)
+import Navi.Env.NotifySend (NotifySendEnv, naviToNotifySend)
 import Navi.Prelude
+import System.Process qualified as Proc
 
 -- | NaviT is the core type used to run the application.
 type NaviT :: Type -> (Type -> Type) -> Type -> Type
@@ -55,6 +55,13 @@ instance MonadNotify (NaviT DBusEnv IO) where
     liftIO $ sendDbus client naviNote
     where
       sendDbus c = void . DBusN.notify c . naviToDBus
+
+-- Concrete IO rather than MonadIO so that we can write instances over
+-- other MonadIOs (i.e. in tests)
+instance MonadNotify (NaviT NotifySendEnv IO) where
+  sendNote naviNote = liftIO $ void $ Proc.readCreateProcess cp "notify-send"
+    where
+      cp = Proc.shell $ T.unpack $ naviToNotifySend naviNote
 
 instance (HasLogEnv env, MonadIO m) => Katip (NaviT env m) where
   getLogEnv = asks getLogEnv
@@ -104,27 +111,3 @@ instance MonadMutRef ref m => MonadMutRef ref (NaviT e m) where
 -- | Runs 'NaviT'.
 runNaviT :: NaviT env m a -> env -> m a
 runNaviT (MkNaviT rdr) = runReaderT rdr
-
-naviToDBus :: NaviNote -> Note
-naviToDBus naviNote =
-  DBusN.Note
-    { DBusN.appName = "Navi",
-      DBusN.summary = T.unpack $ naviNote ^. #summary,
-      DBusN.body = body,
-      DBusN.appImage = Nothing,
-      DBusN.hints = hints,
-      DBusN.expiry = timeout,
-      DBusN.actions = []
-    }
-  where
-    body = DBusN.Text . T.unpack <$> naviNote ^. #body
-    hints = maybeToList $ DBusN.Urgency <$> naviNote ^. #urgency
-    timeout = maybe defTimeout naviToDBusTimeout $ naviNote ^. #timeout
-    defTimeout = DBusN.Milliseconds 10_000
-
-naviToDBusTimeout :: Timeout -> DBusN.Timeout
-naviToDBusTimeout Never = DBusN.Never
-naviToDBusTimeout (Seconds s) = DBusN.Milliseconds $ (* 1_000) $ w16ToInt32 s
-  where
-    w16ToInt32 :: Word16 -> Int32
-    w16ToInt32 = fromIntegral

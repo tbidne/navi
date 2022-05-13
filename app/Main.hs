@@ -1,3 +1,6 @@
+{-# LANGUAGE PartialTypeSignatures #-}
+{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
+
 module Main (main) where
 
 import Data.Functor.Identity (Identity (..))
@@ -12,8 +15,9 @@ import Katip
 import Katip qualified as K
 import Navi (runNavi, runNaviT)
 import Navi.Args (Args (..), getArgs)
-import Navi.Config (Config (..), LogLoc (..), Logging (..), readConfig)
+import Navi.Config (Config (..), LogLoc (..), Logging (..), NoteSystem (..), readConfig)
 import Navi.Env.DBus (mkDBusEnv)
+import Navi.Env.NotifySend (mkNotifySendEnv)
 import Navi.Prelude
 import System.Directory (XdgDirectory (XdgConfig))
 import System.Directory qualified as Dir
@@ -28,8 +32,13 @@ main = do
 
   let mkLogEnvFn = mkLogEnv (config ^. #logging)
   bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
-    env <- mkDBusEnv logEnv logCtx namespace config
-    absurd <$> runNaviT runNavi env
+    let mkNaviEnv :: forall env. _ -> IO env
+        mkNaviEnv envFn = envFn logEnv logCtx namespace config
+    case config ^. #noteSystem of
+      DBus -> mkNaviEnv mkDBusEnv >>= runWithEnv
+      NotifySend -> mkNaviEnv mkNotifySendEnv >>= runWithEnv
+  where
+    runWithEnv env = absurd <$> runNaviT runNavi env
 
 tryParseConfig :: Args Identity -> IO (Config IORef)
 tryParseConfig =

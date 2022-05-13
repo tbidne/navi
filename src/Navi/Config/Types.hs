@@ -4,11 +4,18 @@
 
 -- | Provides configuration types.
 module Navi.Config.Types
-  ( Config (..),
-    Logging (..),
-    defaultLogging,
-    LogLoc (..),
+  ( -- * Config
+    Config (..),
     ConfigErr (..),
+
+    -- * Logging
+    Logging (..),
+    LogLoc (..),
+    defaultLogging,
+
+    -- * Note System
+    NoteSystem (..),
+    defaultNoteSystem,
   )
 where
 
@@ -40,6 +47,21 @@ data Logging = MkLogging
 
 makeFieldLabelsNoPrefix ''Logging
 
+-- | Configuration for notification systems.
+data NoteSystem
+  = -- | For use with a running notification server that receives messages
+    -- via DBus.
+    DBus
+  | -- | For use with the notify-send tool.
+    NotifySend
+  deriving stock (Eq, Show)
+
+makePrismLabels ''NoteSystem
+
+-- | Default notification system i.e. DBus.
+defaultNoteSystem :: NoteSystem
+defaultNoteSystem = DBus
+
 -- | Default logging i.e. log errors and use the default path.
 defaultLogging :: Logging
 defaultLogging = MkLogging ErrorS DefPath
@@ -50,7 +72,9 @@ data Config ref = MkConfig
   { -- | The notification events.
     events :: !(NonEmpty (AnyEvent ref)),
     -- | Logging configuration.
-    logging :: !Logging
+    logging :: !Logging,
+    -- | The notification system to use.
+    noteSystem :: !NoteSystem
   }
 
 makeFieldLabelsNoPrefix ''Config

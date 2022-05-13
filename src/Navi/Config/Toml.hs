@@ -11,7 +11,7 @@ where
 
 import Data.Text qualified as T
 import Katip (Severity (..))
-import Navi.Config.Types (LogLoc (..), Logging (..))
+import Navi.Config.Types (LogLoc (..), Logging (..), NoteSystem (..))
 import Navi.Prelude
 import Navi.Services.Battery.Percentage.Toml as BStateToml
 import Navi.Services.Battery.Status.Toml as BChargeStatusToml
@@ -25,6 +25,7 @@ import Toml qualified
 -- | 'ConfigToml' holds the data that is defined in the configuration file.
 data ConfigToml = MkConfigToml
   { logToml :: !(Maybe Logging),
+    noteSystemToml :: !(Maybe NoteSystem),
     singleToml :: ![SingleToml],
     multipleToml :: ![MultipleToml],
     batteryPercentageToml :: !(Maybe BatteryPercentageToml),
@@ -40,6 +41,7 @@ configCodec :: TomlCodec ConfigToml
 configCodec =
   MkConfigToml
     <$> Toml.dioptional (Toml.table logCodec "logging") .= logToml
+    <*> Toml.dioptional noteSystemCodec .= noteSystemToml
     <*> Toml.list SingleToml.singleCodec "single" .= singleToml
     <*> Toml.list MultipleToml.multipleCodec "multiple" .= multipleToml
     <*> Toml.dioptional (Toml.table BStateToml.batteryPercentageCodec "battery-percentage") .= batteryPercentageToml
@@ -71,9 +73,7 @@ severityCodec =
           <> ". Should be one of <info|error>."
 
 locationCodec :: TomlCodec LogLoc
-locationCodec =
-  Toml.textBy showLoc parseLoc "location"
-    <|> pure DefPath
+locationCodec = Toml.textBy showLoc parseLoc "location"
   where
     showLoc DefPath = "default"
     showLoc Stdout = T.pack "stdout"
@@ -81,3 +81,12 @@ locationCodec =
     parseLoc "stdout" = Right Stdout
     parseLoc "default" = Right DefPath
     parseLoc f = Right $ File $ T.unpack f
+
+noteSystemCodec :: TomlCodec NoteSystem
+noteSystemCodec = Toml.textBy showSys parseSys "note-system"
+  where
+    showSys DBus = "dbus"
+    showSys NotifySend = "notify-send"
+    parseSys "dbus" = Right DBus
+    parseSys "notify-send" = Right NotifySend
+    parseSys x = Left x

@@ -77,6 +77,7 @@ library
     Navi.Effects.MonadSystemInfo
     Navi.Env.Core
     Navi.Env.DBus
+    Navi.Env.NotifySend
     Navi.Event
     Navi.Event.Toml
     Navi.Event.Types
@@ -110,6 +111,7 @@ library
     , optics-th             ^>=0.4
     , optparse-applicative  >=0.16.1.0  && <0.18
     , package-version       ^>=0.1.0.0
+    , process               ^>=1.6.9.0
     , pythia                ^>=0.1
     , relative-time         ^>=0.1
     , smart-math            ^>=0.1

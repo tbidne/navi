@@ -1,11 +1,17 @@
 -- | This modules provides functionality for parsing configuration data
 -- from a toml file.
 module Navi.Config
-  ( Config (..),
+  ( -- * Config
+    readConfig,
+    ConfigErr (..),
+    Config (..),
+
+    -- * Logging
     Logging (..),
     LogLoc (..),
-    ConfigErr (..),
-    readConfig,
+
+    -- * Note System
+    NoteSystem (..),
   )
 where
 
@@ -17,7 +23,9 @@ import Navi.Config.Types
     ConfigErr (..),
     LogLoc (..),
     Logging (..),
+    NoteSystem (..),
     defaultLogging,
+    defaultNoteSystem,
   )
 import Navi.Effects (MonadMutRef, MonadShell (..))
 import Navi.Prelude
@@ -67,10 +75,12 @@ tomlToConfig toml = do
       pure $
         MkConfig
           { events = e :| es,
-            logging = logToml
+            logging = logCfg,
+            noteSystem = noteSysCfg
           }
   where
-    logToml = fromMaybe defaultLogging (toml ^. #logToml)
+    logCfg = fromMaybe defaultLogging (toml ^. #logToml)
+    noteSysCfg = fromMaybe defaultNoteSystem (toml ^. #noteSystemToml)
     singleToml = toml ^. #singleToml
     multipleToml = toml ^. #multipleToml
     batteryPercentageToml = toml ^. #batteryPercentageToml

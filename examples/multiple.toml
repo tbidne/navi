@@ -1,3 +1,5 @@
+note-system = "dbus"
+
 # Manual battery level alerts
 [[multiple]]
 command = """

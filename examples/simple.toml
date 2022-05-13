@@ -1,0 +1,17 @@
+note-system = "notify-send"
+
+[logging]
+severity = "debug"
+location = "stdout"
+
+[[single]]
+poll-interval = "5"
+repeat-events = true
+command = ""
+trigger = ""
+
+[single.note]
+summary = "Trivial"
+body = "We did nothing, yay!"
+timeout = "2"
+
