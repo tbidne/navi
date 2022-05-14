@@ -8,9 +8,10 @@ where
 import DBus.Notify qualified as DBusN
 import Data.Text qualified as T
 import Data.Text.Lazy.Builder qualified as T
-import Katip (Katip, KatipContext, LogStr (..))
+import Katip (Katip, KatipContext, LogStr (..), Severity (..))
 import Katip qualified as K
-import Navi.Effects.MonadLogger (MonadLogger (..))
+import Navi.Data.NaviLog (NaviLog (MkNaviLog))
+import Navi.Effects.MonadLogger (MonadLogger (..), sendLogQueue)
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadQueue (MonadQueue (..))
@@ -51,17 +52,22 @@ instance MonadSystemInfo (NaviT env IO) where
 -- other MonadIOs (i.e. in tests)
 instance MonadNotify (NaviT DBusEnv IO) where
   sendNote naviNote = do
+    sendLogQueue $ MkNaviLog DebugS $ "DBus: " <> T.pack (show note)
     client <- asks getClient
-    liftIO $ sendDbus client naviNote
+    liftIO $ sendDbus client note
     where
-      sendDbus c = void . DBusN.notify c . naviToDBus
+      note = naviToDBus naviNote
+      sendDbus c = void . DBusN.notify c
 
 -- Concrete IO rather than MonadIO so that we can write instances over
 -- other MonadIOs (i.e. in tests)
 instance MonadNotify (NaviT NotifySendEnv IO) where
-  sendNote naviNote = liftIO $ void $ Proc.readCreateProcess cp "notify-send"
+  sendNote naviNote = do
+    sendLogQueue $ MkNaviLog DebugS $ "NotifySend: " <> noteTxt
+    liftIO $ void $ Proc.readCreateProcess cp "notify-send"
     where
-      cp = Proc.shell $ T.unpack $ naviToNotifySend naviNote
+      noteTxt = naviToNotifySend naviNote
+      cp = Proc.shell $ T.unpack noteTxt
 
 instance (HasLogEnv env, MonadIO m) => Katip (NaviT env m) where
   getLogEnv = asks getLogEnv

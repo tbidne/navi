@@ -19,7 +19,6 @@ import Navi.Effects.MonadLogger (MonadLogger (..), sendLogQueue)
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..), sendNoteQueue)
 import Navi.Effects.MonadQueue (MonadQueue (..))
-import Navi.Effects.MonadQueue qualified as Queue
 import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core (HasEvents (..), HasLogQueue (..), HasNoteQueue (..))
@@ -47,14 +46,18 @@ runNavi ::
   m Void
 runNavi = do
   events <- asks (getEvents @ref)
-  Async.withAsync pollLogQueue $ \logThread ->
-    Async.withAsync pollNoteQueue $ \noteThread ->
-      NE.head <$> Async.mapConcurrently processEvent events
-        `finally` finishNotify noteThread
-        `finally` finishLogging logThread
+  res <- runAllAsync events
+  pure $ either (either id id) NE.head res
   where
-    finishLogging t = Async.cancel t *> flushLogQueue
-    finishNotify t = Async.cancel t *> flushNoteQueue
+    -- We use race so that we do not swallow exceptions. If any of these
+    -- throw an exception we want to die:
+    -- 1. If logging throws an exception then something is really wrong.
+    -- 2. pollNoteQueue should be catching and logging its own exceptions.
+    -- 3. processEvent should be catching and logging its own exceptions.
+    runAllAsync evts =
+      pollLogQueue
+        `Async.race` pollNoteQueue
+        `Async.race` Async.mapConcurrently processEvent evts
 
 processEvent ::
   forall m ref env.
@@ -70,11 +73,11 @@ processEvent ::
   ) =>
   AnyEvent ref ->
   m Void
-processEvent (MkAnyEvent event) = do
+processEvent (MkAnyEvent event) = addNamespace (fromString $ T.unpack name) $ do
   let pi = event ^. #pollInterval
 
   forever $ do
-    sendLogQueue $ MkNaviLog DebugS ("Checking " <> event ^. #name)
+    sendLogQueue $ MkNaviLog DebugS ("Checking " <> name)
     (Event.runEvent event >>= handleSuccess)
       `catch` handleEventError
       `catch` handleSomeException
@@ -85,7 +88,7 @@ processEvent (MkAnyEvent event) = do
     errorNote = event ^. #errorNote
     raiseAlert = event ^. #raiseAlert
 
-    handleSuccess result = addNamespace "Handling Success" $ do
+    handleSuccess result = addNamespace "success" $ do
       case raiseAlert result of
         Nothing -> do
           sendLogQueue $ MkNaviLog DebugS (mkLog "No alert to raise" result)
@@ -96,7 +99,6 @@ processEvent (MkAnyEvent event) = do
             then sendLogQueue $ MkNaviLog DebugS (mkLog "Alert blocked" result)
             else do
               sendLogQueue $ MkNaviLog InfoS (mkLog "Sending note" note)
-              sendLogQueue $ MkNaviLog InfoS (mkLog "Sending alert" result)
               Event.updatePrevTrigger repeatEvent result
               sendNoteQueue note
 
@@ -138,25 +140,33 @@ exToNote ex =
     }
 
 pollNoteQueue ::
-  (HasNoteQueue env, MonadNotify m, MonadQueue m, MonadReader env m) =>
+  ( HasLogQueue env,
+    HasNoteQueue env,
+    MonadLogger m,
+    MonadNotify m,
+    MonadQueue m,
+    MonadReader env m,
+    MonadUnliftIO m
+  ) =>
   m Void
-pollNoteQueue =
-  asks getNoteQueue >>= Queue.pollQueueAction sendNote
-
-flushNoteQueue ::
-  (HasNoteQueue env, MonadNotify m, MonadQueue m, MonadReader env m) =>
-  m ()
-flushNoteQueue =
-  asks getNoteQueue >>= Queue.flushQueueAction sendNote
+pollNoteQueue = addNamespace "Note Poller" $ do
+  queue <- asks getNoteQueue
+  forever $ do
+    (readQueue queue >>= sendNote)
+      `catchAny` \ex ->
+        sendLogQueue $
+          MkNaviLog ErrorS $
+            pack $
+              "Notification exception: "
+                <> displayException ex
 
 pollLogQueue ::
-  (HasLogQueue env, MonadLogger m, MonadQueue m, MonadReader env m) =>
+  ( HasLogQueue env,
+    MonadLogger m,
+    MonadQueue m,
+    MonadReader env m
+  ) =>
   m Void
 pollLogQueue = do
-  asks getLogQueue >>= Queue.pollQueueAction logText
-
-flushLogQueue ::
-  (HasLogQueue env, MonadLogger m, MonadQueue m, MonadReader env m) =>
-  m ()
-flushLogQueue =
-  asks getLogQueue >>= Queue.flushQueueAction logText
+  queue <- asks getLogQueue
+  forever $ readQueue queue >>= logText

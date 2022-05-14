@@ -53,7 +53,7 @@ import Data.Char as X (Char)
 import Data.Either as X (Either (..), either)
 import Data.Eq as X (Eq (..))
 import Data.Foldable as X (Foldable (..), for_, length, traverse_)
-import Data.Function as X (const, flip, ($), (.))
+import Data.Function as X (const, flip, id, ($), (.))
 import Data.Functor as X (Functor (..), ($>), (<$>), (<&>))
 import Data.IORef as X (IORef, modifyIORef', newIORef, readIORef, writeIORef)
 import Data.Int as X (Int32)
@@ -65,8 +65,8 @@ import Data.Monoid as X (Monoid (..))
 import Data.Ord as X (Ord (..))
 import Data.Proxy as X (Proxy (..))
 import Data.Semigroup as X (Semigroup (..))
-import Data.String as X (String)
-import Data.Text as X (Text)
+import Data.String as X (IsString (fromString), String)
+import Data.Text as X (Text, pack, unpack)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TextEnc
 import Data.Text.Encoding.Error qualified as TextEncErr
@@ -92,8 +92,10 @@ import UnliftIO.Exception as X
     SomeException (..),
     bracket,
     catch,
+    catchAny,
     finally,
     handle,
+    onException,
     throwIO,
     try,
   )

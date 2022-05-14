@@ -1,8 +1,6 @@
 -- | Provides the 'MonadQueue' effect.
 module Navi.Effects.MonadQueue
   ( MonadQueue (..),
-    pollQueueAction,
-    flushQueueAction,
   )
 where
 
@@ -30,12 +28,3 @@ instance MonadQueue m => MonadQueue (ReaderT e m) where
   readQueue = lift . readQueue
   writeQueue q = lift . writeQueue q
   flushQueue = lift . flushQueue
-
--- | Infinite loop that continuously reads from the queue and applies
--- the given action.
-pollQueueAction :: MonadQueue m => (a -> m ()) -> NaviQueue a -> m Void
-pollQueueAction action queue = forever $ readQueue queue >>= action
-
--- | Flushes the queue and applies the action to every item that is flushed.
-flushQueueAction :: MonadQueue m => (a -> m ()) -> NaviQueue a -> m ()
-flushQueueAction action queue = flushQueue queue >>= traverse_ action
