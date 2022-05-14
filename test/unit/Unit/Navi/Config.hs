@@ -5,7 +5,7 @@ where
 
 import Katip (Severity (..))
 import Navi.Config qualified as Config
-import Navi.Config.Types (Config (..), LogLoc (..))
+import Navi.Config.Types (Config (..), LogLoc (..), NoteSystem (..))
 import Unit.Prelude
 
 tests :: TestTree
@@ -13,15 +13,24 @@ tests =
   testGroup
     "Navi.Config"
     [ readsExample verifyConfig "examples/config.toml",
+      readsExample verifySimple "examples/simple.toml",
       readsExample verifyMultiple "examples/multiple.toml"
     ]
   where
     verifyConfig cfg = do
+      DBus @=? cfg ^. #noteSystem
       DebugS @=? cfg ^. #logging % #severity
       Stdout @=? cfg ^. #logging % #location
       3 @=? length (cfg ^. #events)
 
+    verifySimple cfg = do
+      NotifySend @=? cfg ^. #noteSystem
+      DebugS @=? cfg ^. #logging % #severity
+      Stdout @=? cfg ^. #logging % #location
+      1 @=? length (cfg ^. #events)
+
     verifyMultiple cfg = do
+      DBus @=? cfg ^. #noteSystem
       ErrorS @=? cfg ^. #logging % #severity
       DefPath @=? cfg ^. #logging % #location
       1 @=? length (cfg ^. #events)

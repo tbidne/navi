@@ -284,12 +284,13 @@ This service allows one to create a single notification based on an arbitrary co
 ```toml
 # Send alert when the current minute is even
 [[single]]
+poll-interval = "10"
 command = """
   min=`date +%M`;
   if [[ \"$min % 2\" -eq 0 ]]; then
-    echo true
+    echo -n "true"
   else
-    echo false
+    echo -n "false"
   fi
 """
 trigger = "true"
@@ -297,6 +298,7 @@ trigger = "true"
 [single.note]
 summary = "Even/Odd"
 body = "We're even, yay!"
+timeout = "10"
 ```
 
 #### Multiple
@@ -323,6 +325,7 @@ This service allows one to create multiple notifications based on an arbitrary c
 ```toml
 # Manual battery level alerts
 [[multiple]]
+name = "battery-manual"
 command = """
   regex="([0-9]{1,3})%"
   power=$(upower -i `upower -e | grep 'BAT'` | grep percentage | awk '{print $2}')
@@ -345,19 +348,27 @@ command = """
 """
 
 [[multiple.trigger-note]]
+trigger = "100"
+
+[multiple.trigger-note.note]
+summary = "Battery Percentage"
+body = "Full"
+timeout = "10"
+
+[[multiple.trigger-note]]
 trigger = "80"
 
 [multiple.trigger-note.note]
-summary = "Multi"
-body = "Battery < 80"
+summary = "Battery Percentage"
+body = "< 80"
 timeout = "10"
 
 [[multiple.trigger-note]]
 trigger = "40"
 
 [multiple.trigger-note.note]
-summary = "Multi"
-body = "Battery < 40"
+summary = "Battery Percentage"
+body = "< 40"
 urgency = "critical"
 timeout = "10"
 ```
