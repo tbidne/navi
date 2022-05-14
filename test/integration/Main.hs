@@ -58,10 +58,12 @@ testMultiNotifs = testCase "Sends multiple new notifications" $ do
   runMock 6 mockEnv
 
   sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  5 @=? length sentNotes
-  assertBool desc $ all ((==) "Battery Percentage" . view #summary) sentNotes
-  where
-    desc = "Summary should be 'Battery Percentage'"
+  let desc = "Summaries should be 'Battery Percentage': " <> show sentNotes
+  6 @=? length sentNotes
+  assertBool desc $
+    all
+      ((==) "Battery Percentage" . view #summary)
+      (filter ((/=) "Navi" . view #summary) sentNotes)
 
 testDuplicates :: TestTree
 testDuplicates = testCase "Send duplicate notifications" $ do
@@ -71,10 +73,12 @@ testDuplicates = testCase "Send duplicate notifications" $ do
   runMock 3 mockEnv
 
   sentNotes <- readIORef $ mockEnv ^. #sentNotes
+  let desc = "Summaries should be 'Single': " <> show sentNotes
   assertBool "Should send at least 3 notifs" $ length sentNotes >= 3
-  assertBool desc $ all ((==) "Single" . view #summary) sentNotes
-  where
-    desc = "Summary should be 'Single'"
+  assertBool desc $
+    all
+      ((==) "Single" . view #summary)
+      (filter ((/=) "Navi" . view #summary) sentNotes)
 
 testNoDuplicates :: TestTree
 testNoDuplicates = testCase "Does not send duplicate notifications" $ do
@@ -84,10 +88,12 @@ testNoDuplicates = testCase "Does not send duplicate notifications" $ do
   runMock 3 mockEnv
 
   sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  1 @=? length sentNotes
-  assertBool desc $ all ((==) "Single" . view #summary) sentNotes
-  where
-    desc = "Summary should be 'Single'"
+  let desc = "Summaries should be 'Single': " <> show sentNotes
+  2 @=? length sentNotes
+  assertBool desc $
+    all
+      ((==) "Single" . view #summary)
+      (filter ((/=) "Navi" . view #summary) sentNotes)
 
 testNoDuplicateErrs :: TestTree
 testNoDuplicateErrs = testCase "Does not send duplicate errors" $ do
@@ -98,10 +104,12 @@ testNoDuplicateErrs = testCase "Does not send duplicate errors" $ do
   runMock 3 mockEnv
 
   sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  1 @=? length sentNotes
-  assertBool desc $ all ((==) "Exception" . view #summary) sentNotes
-  where
-    desc = "Summary should be 'Exception'"
+  let desc = "Summaries should be 'Single': " <> show sentNotes
+  2 @=? length sentNotes
+  assertBool desc $
+    all
+      ((==) "Exception" . view #summary)
+      (filter ((/=) "Navi" . view #summary) sentNotes)
 
 testSwallowErrs :: TestTree
 testSwallowErrs = testCase "Does not send any errors" $ do
@@ -111,7 +119,7 @@ testSwallowErrs = testCase "Does not send any errors" $ do
   runMock 3 mockEnv
 
   sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  0 @=? length sentNotes
+  1 @=? length sentNotes
 
 testSendsMultipleErrs :: TestTree
 testSendsMultipleErrs = testCase "Sends multiple errors" $ do
@@ -121,10 +129,12 @@ testSendsMultipleErrs = testCase "Sends multiple errors" $ do
   runMock 3 mockEnv
 
   sentNotes <- readIORef $ mockEnv ^. #sentNotes
+  let desc = "Summaries should be 'Exception': " <> show sentNotes
   assertBool "Should send at least 3 notifs" $ length sentNotes >= 3
-  assertBool desc $ all ((==) "Exception" . view #summary) sentNotes
-  where
-    desc = "Summary should be 'Exception'"
+  assertBool desc $
+    all
+      ((==) "Exception" . view #summary)
+      (filter ((/=) "Navi" . view #summary) sentNotes)
 
 runMock :: Word8 -> MockEnv -> IO ()
 runMock maxSeconds env = do

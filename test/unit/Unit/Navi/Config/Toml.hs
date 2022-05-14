@@ -43,8 +43,8 @@ expected =
     { logToml =
         Just $
           MkLogging
-            { severity = DebugS,
-              location = File "some-file"
+            { severity = Just DebugS,
+              location = Just $ File "some-file"
             },
       noteSystemToml = Nothing,
       singleToml = expectedSingle,

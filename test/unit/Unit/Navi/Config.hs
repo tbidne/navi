@@ -19,20 +19,20 @@ tests =
   where
     verifyConfig cfg = do
       DBus @=? cfg ^. #noteSystem
-      DebugS @=? cfg ^. #logging % #severity
-      Stdout @=? cfg ^. #logging % #location
+      Just DebugS @=? cfg ^. #logging % #severity
+      Nothing @=? cfg ^. #logging % #location
       3 @=? length (cfg ^. #events)
 
     verifySimple cfg = do
       NotifySend @=? cfg ^. #noteSystem
-      DebugS @=? cfg ^. #logging % #severity
-      Stdout @=? cfg ^. #logging % #location
+      Just DebugS @=? cfg ^. #logging % #severity
+      Just Stdout @=? cfg ^. #logging % #location
       1 @=? length (cfg ^. #events)
 
     verifyMultiple cfg = do
       DBus @=? cfg ^. #noteSystem
-      ErrorS @=? cfg ^. #logging % #severity
-      DefPath @=? cfg ^. #logging % #location
+      Just ErrorS @=? cfg ^. #logging % #severity
+      Just DefPath @=? cfg ^. #logging % #location
       1 @=? length (cfg ^. #events)
 
 readsExample :: (Config IORef -> IO ()) -> FilePath -> TestTree
