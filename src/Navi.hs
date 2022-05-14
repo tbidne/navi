@@ -20,7 +20,12 @@ import Navi.Effects.MonadNotify (MonadNotify (..), sendNoteQueue)
 import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
-import Navi.Env.Core (HasEvents (..), HasLogQueue (..), HasNoteQueue (..))
+import Navi.Env.Core
+  ( HasEvents (..),
+    HasLogNamespace,
+    HasLogQueue (..),
+    HasNoteQueue (..),
+  )
 import Navi.Event qualified as Event
 import Navi.Event.Types (AnyEvent (..), EventError (..))
 import Navi.NaviT (NaviT (..), runNaviT)
@@ -31,6 +36,7 @@ import UnliftIO.Async qualified as Async
 runNavi ::
   forall ref env m.
   ( HasEvents ref env,
+    HasLogNamespace env,
     HasLogQueue env,
     HasNoteQueue env,
     MonadLogger m,
@@ -60,7 +66,8 @@ runNavi = do
 
 processEvent ::
   forall m ref env.
-  ( HasLogQueue env,
+  ( HasLogNamespace env,
+    HasLogQueue env,
     HasNoteQueue env,
     MonadLogger m,
     MonadMutRef ref m,
@@ -87,26 +94,26 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
     errorNote = event ^. #errorNote
     raiseAlert = event ^. #raiseAlert
 
-    handleSuccess result = addNamespace "success" $ do
+    handleSuccess result = addNamespace "handleSuccess" $ do
       case raiseAlert result of
         Nothing -> do
-          sendLogQueue $ MkNaviLog DebugS (mkLog "No alert to raise" result)
+          sendLogQueue $ MkNaviLog DebugS ("No alert to raise " <> showt result)
           Event.updatePrevTrigger repeatEvent result
         Just note -> do
           blocked <- Event.blockRepeat repeatEvent result
           if blocked
-            then sendLogQueue $ MkNaviLog DebugS (mkLog "Alert blocked" result)
+            then sendLogQueue $ MkNaviLog DebugS ("Alert blocked " <> showt result)
             else do
-              sendLogQueue $ MkNaviLog InfoS (mkLog "Sending note" note)
+              sendLogQueue $ MkNaviLog InfoS ("Sending note " <> showt note)
               Event.updatePrevTrigger repeatEvent result
               sendNoteQueue note
 
     handleEventError =
-      addNamespace "Handling EventError"
+      addNamespace "handleEventError"
         . handleErr eventErrToNote
 
     handleSomeException =
-      addNamespace "Handling SomeException"
+      addNamespace "handleSomeException"
         . handleErr exToNote
 
     handleErr :: Exception e => (e -> NaviNote) -> e -> m ()
@@ -116,9 +123,6 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
       if blockErrEvent
         then sendLogQueue $ MkNaviLog DebugS "Error note blocked"
         else sendNoteQueue (toNote e)
-
-    mkLog :: Show a => Text -> a -> Text
-    mkLog msg x = "[" <> name <> "] " <> msg <> ": " <> showt x
 
 eventErrToNote :: EventError -> NaviNote
 eventErrToNote ex =
@@ -139,7 +143,8 @@ exToNote ex =
     }
 
 pollNoteQueue ::
-  ( HasLogQueue env,
+  ( HasLogNamespace env,
+    HasLogQueue env,
     HasNoteQueue env,
     MonadLogger m,
     MonadNotify m,
@@ -148,16 +153,18 @@ pollNoteQueue ::
     MonadUnliftIO m
   ) =>
   m Void
-pollNoteQueue = addNamespace "Note Poller" $ do
+pollNoteQueue = addNamespace "note-poller" $ do
   queue <- asks getNoteQueue
   forever $ do
     (readQueue queue >>= sendNote)
       `catchAny` \ex ->
         sendLogQueue $
-          MkNaviLog ErrorS $
-            pack $
-              "Notification exception: "
-                <> displayException ex
+          MkNaviLog
+            ErrorS
+            ( pack $
+                "Notification exception: "
+                  <> displayException ex
+            )
 
 pollLogQueue ::
   ( HasLogQueue env,
@@ -166,6 +173,6 @@ pollLogQueue ::
     MonadReader env m
   ) =>
   m Void
-pollLogQueue = do
+pollLogQueue = addNamespace "logger" $ do
   queue <- asks getLogQueue
-  forever $ readQueue queue >>= logText
+  forever $ readQueue queue >>= uncurry logText

@@ -8,7 +8,6 @@ module Navi.Services.Custom.Single.Toml
   )
 where
 
-import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.NaviNote qualified as NaviNote
 import Navi.Data.PollInterval (PollInterval (..), pollIntervalCodec)
@@ -50,4 +49,4 @@ singleCodec =
       <*> Toml.dioptional EventToml.errorNoteCodec .= errEventCfg
 
 commandCodec :: TomlCodec Command
-commandCodec = Toml.textBy (pack . show) (Right . MkCommand) "command"
+commandCodec = Toml.textBy showt (Right . MkCommand) "command"

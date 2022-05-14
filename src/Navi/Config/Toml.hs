@@ -9,7 +9,6 @@ module Navi.Config.Toml
   )
 where
 
-import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Config.Types (LogLoc (..), Logging (..), NoteSystem (..))
 import Navi.Prelude

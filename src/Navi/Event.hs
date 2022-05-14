@@ -14,9 +14,6 @@ module Navi.Event
     blockRepeat,
     blockErr,
     updatePrevTrigger,
-
-    -- * Helper functions
-    logEvent,
   )
 where
 
@@ -25,7 +22,7 @@ import Navi.Data.NaviLog (NaviLog (..))
 import Navi.Effects (MonadLogger (..), MonadMutRef (..), MonadSystemInfo (..))
 import Navi.Effects.MonadLogger (sendLogQueue)
 import Navi.Effects.MonadQueue (MonadQueue)
-import Navi.Env.Core (HasLogQueue)
+import Navi.Env.Core (HasLogNamespace (..), HasLogQueue)
 import Navi.Event.Types
   ( AnyEvent (..),
     ErrorNote (..),
@@ -40,7 +37,8 @@ import Navi.Prelude
 -- 1. Queries the system via 'MonadSystemInfo'.
 -- 2. Returns the parsed result.
 runEvent ::
-  ( HasLogQueue env,
+  ( HasLogNamespace env,
+    HasLogQueue env,
     MonadLogger m,
     MonadQueue m,
     MonadReader env m,
@@ -49,9 +47,9 @@ runEvent ::
   ) =>
   Event ref result ->
   m result
-runEvent event = addNamespace "Run Event" $ do
+runEvent event = addNamespace "runEvent" $ do
   result <- query $ event ^. #serviceType
-  logEvent event DebugS $ "Shell returned: " <> showt result
+  sendLogQueue $ MkNaviLog DebugS ("Shell returned: " <> showt result)
   pure result
 
 -- | Determines if we should block the event. The semantics are:
@@ -62,6 +60,7 @@ runEvent event = addNamespace "Run Event" $ do
 blockRepeat ::
   ( Eq a,
     HasLogQueue env,
+    HasLogNamespace env,
     MonadLogger m,
     MonadMutRef ref m,
     MonadQueue m,
@@ -71,7 +70,7 @@ blockRepeat ::
   RepeatEvent ref a ->
   a ->
   m Bool
-blockRepeat repeatEvent newVal = addNamespace "Checking event repeats" $ do
+blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
   case repeatEvent of
     -- Repeat events are allowed, so do not block.
     AllowRepeats -> pure False
@@ -95,14 +94,16 @@ blockRepeat repeatEvent newVal = addNamespace "Checking event repeats" $ do
 -- 3. 'AllowErrNote' 'NoRepeats': block only if we have sent a notifcation
 --    for this error before.
 blockErr ::
-  ( HasLogQueue env,
+  ( HasLogNamespace env,
+    HasLogQueue env,
+    MonadLogger m,
     MonadMutRef ref m,
     MonadQueue m,
     MonadReader env m
   ) =>
   ErrorNote ref ->
   m Bool
-blockErr errorEvent =
+blockErr errorEvent = addNamespace "blockErr" $ do
   case errorEvent of
     -- Error events are off, block.
     NoErrNote -> do
@@ -138,15 +139,3 @@ updatePrevTrigger repeatEvent newVal =
         then writeRef ref $ Just newVal
         else pure ()
     _ -> pure ()
-
--- | Helper function for logging events.
-logEvent ::
-  ( HasLogQueue env,
-    MonadQueue m,
-    MonadReader env m
-  ) =>
-  Event ref a ->
-  Severity ->
-  Text ->
-  m ()
-logEvent event s t = sendLogQueue $ MkNaviLog s ("[" <> event ^. #name <> "] " <> t)

@@ -20,7 +20,6 @@ module Navi.Config.Types
 where
 
 import Data.List.NonEmpty
-import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Event (AnyEvent (..))
 import Navi.Prelude

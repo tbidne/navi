@@ -13,7 +13,6 @@ import Data.Functor.Classes (Show1 (..))
 import Data.Functor.Classes qualified as Functor
 import Data.Functor.Identity (Identity (..))
 import Data.List qualified as L
-import Data.String (fromString)
 import Data.Version.Package qualified as PV
 import Development.GitRev qualified as GitRev
 import Navi.Prelude

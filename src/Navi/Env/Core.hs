@@ -47,7 +47,7 @@ class HasLogNamespace env where
 
 -- | Retrieves the log queue.
 class HasLogQueue env where
-  getLogQueue :: env -> NaviQueue NaviLog
+  getLogQueue :: env -> NaviQueue (NaviLog, Namespace)
 
 -- | Retrieves the note queue.
 class HasNoteQueue env where
@@ -59,7 +59,7 @@ data Env ref = MkEnv
     logEnv :: !LogEnv,
     logCtx :: !LogContexts,
     logNamespace :: !Namespace,
-    logQueue :: !(NaviQueue NaviLog),
+    logQueue :: !(NaviQueue (NaviLog, Namespace)),
     noteQueue :: !(NaviQueue NaviNote)
   }
 

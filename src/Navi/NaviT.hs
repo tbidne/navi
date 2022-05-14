@@ -6,7 +6,6 @@ module Navi.NaviT
 where
 
 import DBus.Notify qualified as DBusN
-import Data.Text qualified as T
 import Data.Text.Lazy.Builder qualified as T
 import Katip (Katip, KatipContext, LogStr (..), Severity (..))
 import Katip qualified as K
@@ -51,8 +50,8 @@ instance MonadSystemInfo (NaviT env IO) where
 -- Concrete IO rather than MonadIO so that we can write instances over
 -- other MonadIOs (i.e. in tests)
 instance MonadNotify (NaviT DBusEnv IO) where
-  sendNote naviNote = do
-    sendLogQueue $ MkNaviLog DebugS $ "DBus: " <> pack (show note)
+  sendNote naviNote = addNamespace "dbus" $ do
+    sendLogQueue $ MkNaviLog DebugS (showt note)
     client <- asks getClient
     liftIO $ sendDbus client note
     where
@@ -62,8 +61,8 @@ instance MonadNotify (NaviT DBusEnv IO) where
 -- Concrete IO rather than MonadIO so that we can write instances over
 -- other MonadIOs (i.e. in tests)
 instance MonadNotify (NaviT NotifySendEnv IO) where
-  sendNote naviNote = do
-    sendLogQueue $ MkNaviLog DebugS $ "NotifySend: " <> noteTxt
+  sendNote naviNote = addNamespace "notify-send" $ do
+    sendLogQueue $ MkNaviLog DebugS noteTxt
     liftIO $ void $ Proc.readCreateProcess cp "notify-send"
     where
       noteTxt = naviToNotifySend naviNote
@@ -103,7 +102,7 @@ instance
   ) =>
   MonadLogger (NaviT env IO)
   where
-  logText naviLog = do
+  logText naviLog ns = addNamespace ns $ do
     let log = LogStr $ T.fromText (naviLog ^. #text)
     K.logFM (naviLog ^. #severity) log
 

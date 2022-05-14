@@ -82,7 +82,7 @@ timeoutCodec =
   Toml.textBy showTimeout parseTimeout "timeout"
   where
     showTimeout Never = "never"
-    showTimeout (Seconds s) = pack $ show s
+    showTimeout (Seconds s) = showt s
     parseTimeout "never" = Right Never
     parseTimeout other =
       case readNN (unpack other) of

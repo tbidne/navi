@@ -9,7 +9,6 @@ import Katip
     Item,
     LogContexts,
     LogEnv (..),
-    Namespace (..),
     Verbosity (..),
   )
 import Katip qualified as K
@@ -33,7 +32,7 @@ main = do
   let mkLogEnvFn = mkLogEnv (config ^. #logging)
   bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
     let mkNaviEnv :: forall env. _ -> IO env
-        mkNaviEnv envFn = envFn logEnv logCtx namespace config
+        mkNaviEnv envFn = envFn logEnv logCtx "main" config
     case config ^. #noteSystem of
       DBus -> mkNaviEnv mkDBusEnv >>= runWithEnv
       NotifySend -> mkNaviEnv mkNotifySendEnv >>= runWithEnv
@@ -63,12 +62,9 @@ mkLogEnv MkLogging {severity, location} = do
       K.mkFileScribe f severityFn V2
     -- Log location defined in config file as stdout.
     Stdout -> K.mkHandleScribe ColorIfTerminal IO.stdout severityFn V2
-  K.registerScribe "logger" scribe K.defaultScribeSettings =<< K.initLogEnv namespace environment
+  K.registerScribe "logger" scribe K.defaultScribeSettings =<< K.initLogEnv "navi" environment
   where
     environment = "production"
-
-namespace :: Namespace
-namespace = "navi"
 
 logCtx :: LogContexts
 logCtx = K.liftPayload ()

@@ -38,14 +38,19 @@ pollIntervalCodec =
   Toml.textBy showPollInterval parsePollInterval "poll-interval"
   where
     showPollInterval :: PollInterval -> Text
-    showPollInterval (MkPollInterval x) = pack $ show x
+    showPollInterval (MkPollInterval x) = showt x
     parsePollInterval :: Text -> Either Text PollInterval
     parsePollInterval t = case Rel.fromString (unpack t) of
       Left err -> Left $ "Could not parse poll-interval: " <> pack err
       Right relTime ->
         let relTimeSec = Rel.toSeconds relTime
          in if MkPollInterval relTimeSec > maxBound
-              then Left $ pack $ "Poll interval too large: " <> show relTimeSec <> ". Maximum seconds is " <> show (maxBound :: PollInterval)
+              then
+                Left $
+                  "Poll interval too large: "
+                    <> showt relTimeSec
+                    <> ". Maximum seconds is "
+                    <> showt (maxBound :: PollInterval)
               else Right $ MkPollInterval relTimeSec
 
 -- | Converts a 'PollInterval' into an 'Int' suitable to be used with
