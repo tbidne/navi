@@ -76,11 +76,11 @@ locationCodec :: TomlCodec LogLoc
 locationCodec = Toml.textBy showLoc parseLoc "location"
   where
     showLoc DefPath = "default"
-    showLoc Stdout = T.pack "stdout"
-    showLoc (File f) = T.pack f
+    showLoc Stdout = pack "stdout"
+    showLoc (File f) = pack f
     parseLoc "stdout" = Right Stdout
     parseLoc "default" = Right DefPath
-    parseLoc f = Right $ File $ T.unpack f
+    parseLoc f = Right $ File $ unpack f
 
 noteSystemCodec :: TomlCodec NoteSystem
 noteSystemCodec = Toml.textBy showSys parseSys "note-system"

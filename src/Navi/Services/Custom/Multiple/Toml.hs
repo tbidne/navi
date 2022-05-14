@@ -70,4 +70,4 @@ triggerNoteCodec =
     triggerCodec = Toml.text "trigger"
 
 commandCodec :: TomlCodec Command
-commandCodec = Toml.textBy (T.pack . show) (Right . MkCommand) "command"
+commandCodec = Toml.textBy (pack . show) (Right . MkCommand) "command"

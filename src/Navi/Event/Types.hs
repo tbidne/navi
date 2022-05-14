@@ -13,7 +13,6 @@ module Navi.Event.Types
   )
 where
 
-import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.PollInterval (PollInterval)
 import Navi.Prelude
@@ -80,7 +79,7 @@ makeFieldLabelsNoPrefix ''Event
 instance Show (Event ref result) where
   show event =
     "MkEvent {name = "
-      <> T.unpack (event ^. #name)
+      <> unpack (event ^. #name)
       <> ", parser = <func>, raiseAlert = <func>, repeatEvent = "
       <> show (event ^. #repeatEvent)
       <> ", errorNote = "

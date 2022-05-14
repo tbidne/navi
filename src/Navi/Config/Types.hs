@@ -98,6 +98,6 @@ data ConfigErr
 instance Exception ConfigErr where
   displayException (FileErr ex) = "Error reading file: <" <> displayException ex <> ">"
   displayException NoEvents = "No events found"
-  displayException (TomlError errs) = T.unpack $ Toml.prettyTomlDecodeErrors errs
+  displayException (TomlError errs) = unpack $ Toml.prettyTomlDecodeErrors errs
 
 makeFieldLabelsNoPrefix ''ConfigErr

@@ -4,7 +4,6 @@ module Navi.Effects.MonadSystemInfo
   )
 where
 
-import Data.Text qualified as T
 import Navi.Event.Types (EventError (..))
 import Navi.Prelude
 import Navi.Services.Types (ServiceType (..))
@@ -37,7 +36,7 @@ rethrowPythia n io =
       MkEventError
         { name = n,
           short = "PythiaException",
-          long = T.pack $ displayException e
+          long = pack $ displayException e
         }
 
 instance MonadSystemInfo m => MonadSystemInfo (ReaderT e m) where
@@ -80,5 +79,5 @@ liftEventError n e =
   MkEventError
     { name = n,
       short = "Command error",
-      long = T.pack $ displayException e
+      long = pack $ displayException e
     }

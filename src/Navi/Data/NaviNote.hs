@@ -15,7 +15,6 @@ module Navi.Data.NaviNote
 where
 
 import DBus.Notify (UrgencyLevel (..))
-import Data.Text qualified as T
 import Navi.Prelude
 import Text.Read qualified as TR
 import Toml (Key, TomlCodec, (.=))
@@ -83,10 +82,10 @@ timeoutCodec =
   Toml.textBy showTimeout parseTimeout "timeout"
   where
     showTimeout Never = "never"
-    showTimeout (Seconds s) = T.pack $ show s
+    showTimeout (Seconds s) = pack $ show s
     parseTimeout "never" = Right Never
     parseTimeout other =
-      case readNN (T.unpack other) of
+      case readNN (unpack other) of
         Just s -> Right $ Seconds s
         Nothing -> Left $ "Unsupported timeout: " <> other
     readNN = TR.readMaybe

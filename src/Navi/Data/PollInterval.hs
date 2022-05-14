@@ -11,7 +11,6 @@ module Navi.Data.PollInterval
   )
 where
 
-import Data.Text qualified as T
 import Data.Time.Relative qualified as Rel
 import Navi.Prelude
 import Toml (TomlCodec)
@@ -39,14 +38,14 @@ pollIntervalCodec =
   Toml.textBy showPollInterval parsePollInterval "poll-interval"
   where
     showPollInterval :: PollInterval -> Text
-    showPollInterval (MkPollInterval x) = T.pack $ show x
+    showPollInterval (MkPollInterval x) = pack $ show x
     parsePollInterval :: Text -> Either Text PollInterval
-    parsePollInterval t = case Rel.fromString (T.unpack t) of
-      Left err -> Left $ "Could not parse poll-interval: " <> T.pack err
+    parsePollInterval t = case Rel.fromString (unpack t) of
+      Left err -> Left $ "Could not parse poll-interval: " <> pack err
       Right relTime ->
         let relTimeSec = Rel.toSeconds relTime
          in if MkPollInterval relTimeSec > maxBound
-              then Left $ T.pack $ "Poll interval too large: " <> show relTimeSec <> ". Maximum seconds is " <> show (maxBound :: PollInterval)
+              then Left $ pack $ "Poll interval too large: " <> show relTimeSec <> ". Maximum seconds is " <> show (maxBound :: PollInterval)
               else Right $ MkPollInterval relTimeSec
 
 -- | Converts a 'PollInterval' into an 'Int' suitable to be used with

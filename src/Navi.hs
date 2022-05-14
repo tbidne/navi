@@ -11,7 +11,6 @@ where
 
 import DBus.Notify (UrgencyLevel (..))
 import Data.List.NonEmpty qualified as NE
-import Data.Text qualified as T
 import Katip (Severity (..))
 import Navi.Data.NaviLog (NaviLog (..))
 import Navi.Data.NaviNote (NaviNote (..))
@@ -73,7 +72,7 @@ processEvent ::
   ) =>
   AnyEvent ref ->
   m Void
-processEvent (MkAnyEvent event) = addNamespace (fromString $ T.unpack name) $ do
+processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
   let pi = event ^. #pollInterval
 
   forever $ do
@@ -113,7 +112,7 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ T.unpack name) $ do
     handleErr :: Exception e => (e -> NaviNote) -> e -> m ()
     handleErr toNote e = do
       blockErrEvent <- Event.blockErr errorNote
-      sendLogQueue $ MkNaviLog ErrorS (T.pack $ displayException e)
+      sendLogQueue $ MkNaviLog ErrorS (pack $ displayException e)
       if blockErrEvent
         then sendLogQueue $ MkNaviLog DebugS "Error note blocked"
         else sendNoteQueue (toNote e)
@@ -134,7 +133,7 @@ exToNote :: SomeException -> NaviNote
 exToNote ex =
   MkNaviNote
     { summary = "Exception",
-      body = Just $ T.pack (displayException ex),
+      body = Just $ pack (displayException ex),
       urgency = Just Critical,
       timeout = Nothing
     }

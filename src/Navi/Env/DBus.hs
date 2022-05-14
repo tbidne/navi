@@ -15,7 +15,6 @@ import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import DBus.Client (Client)
 import DBus.Notify (Hint (Urgency), Note)
 import DBus.Notify qualified as DBusN
-import Data.Text qualified as T
 import Katip (LogContexts, LogEnv, Namespace)
 import Navi.Config (Config)
 import Navi.Config qualified as Config
@@ -102,7 +101,7 @@ naviToDBus :: NaviNote -> Note
 naviToDBus naviNote =
   DBusN.Note
     { appName = "Navi",
-      summary = T.unpack $ naviNote ^. #summary,
+      summary = unpack $ naviNote ^. #summary,
       body = body,
       appImage = Nothing,
       hints = hints,
@@ -110,7 +109,7 @@ naviToDBus naviNote =
       actions = []
     }
   where
-    body = DBusN.Text . T.unpack <$> naviNote ^. #body
+    body = DBusN.Text . unpack <$> naviNote ^. #body
     hints = maybeToList $ Urgency <$> naviNote ^. #urgency
     timeout = maybe defTimeout naviToDBusTimeout $ naviNote ^. #timeout
     defTimeout = DBusN.Milliseconds 10_000

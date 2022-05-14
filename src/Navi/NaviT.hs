@@ -52,7 +52,7 @@ instance MonadSystemInfo (NaviT env IO) where
 -- other MonadIOs (i.e. in tests)
 instance MonadNotify (NaviT DBusEnv IO) where
   sendNote naviNote = do
-    sendLogQueue $ MkNaviLog DebugS $ "DBus: " <> T.pack (show note)
+    sendLogQueue $ MkNaviLog DebugS $ "DBus: " <> pack (show note)
     client <- asks getClient
     liftIO $ sendDbus client note
     where
@@ -67,7 +67,7 @@ instance MonadNotify (NaviT NotifySendEnv IO) where
     liftIO $ void $ Proc.readCreateProcess cp "notify-send"
     where
       noteTxt = naviToNotifySend naviNote
-      cp = Proc.shell $ T.unpack noteTxt
+      cp = Proc.shell $ unpack noteTxt
 
 instance (HasLogEnv env, MonadIO m) => Katip (NaviT env m) where
   getLogEnv = asks getLogEnv

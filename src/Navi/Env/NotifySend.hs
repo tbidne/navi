@@ -12,7 +12,6 @@ where
 import Control.Concurrent.STM qualified as STM
 import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import DBus.Notify (UrgencyLevel (..))
-import Data.Text qualified as T
 import Katip (LogContexts, LogEnv, Namespace)
 import Navi.Config (Config)
 import Navi.Config qualified as Config
@@ -103,7 +102,7 @@ naviToNotifySend naviNote = txt
 
     timeoutToNS Never = ""
     timeoutToNS (Seconds s) =
-      T.pack $
+      pack $
         " --expire-time "
           <> show (s * 1_000)
           <> " "

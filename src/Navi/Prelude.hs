@@ -67,7 +67,6 @@ import Data.Proxy as X (Proxy (..))
 import Data.Semigroup as X (Semigroup (..))
 import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text, pack, unpack)
-import Data.Text qualified as T
 import Data.Text.Encoding qualified as TextEnc
 import Data.Text.Encoding.Error qualified as TextEncErr
 import Data.Text.IO as X (putStr, putStrLn)
@@ -104,11 +103,11 @@ import Prelude qualified as P
 
 -- | 'Text' version of 'P.show'.
 showt :: P.Show a => a -> Text
-showt = T.pack . P.show
+showt = pack . P.show
 
 -- | 'Text' version of 'error'.
 error :: Text -> a
-error = P.error . T.unpack
+error = P.error . unpack
 
 -- | 'Text' version of 'P.print'.
 print :: P.Show a => a -> IO ()
