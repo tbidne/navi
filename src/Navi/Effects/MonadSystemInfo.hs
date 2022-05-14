@@ -25,7 +25,7 @@ instance MonadSystemInfo IO where
       rethrowPythia "Battery Percentage" $ Pythia.queryBattery bp
     BatteryStatus bp ->
       rethrowPythia "Battery Status" $ view #status <$> Pythia.queryBattery bp
-    NetworkInterface device cp -> rethrowPythia "NetInterface" $ do
+    NetworkInterface device cp ->
       rethrowPythia "NetInterface" $ Pythia.queryNetInterface device cp
     Single cmd -> querySingle cmd
     Multiple cmd -> queryMultiple cmd

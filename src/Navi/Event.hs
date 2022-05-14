@@ -49,7 +49,7 @@ runEvent ::
   m result
 runEvent event = addNamespace "runEvent" $ do
   result <- query $ event ^. #serviceType
-  sendLogQueue $ MkNaviLog DebugS ("Shell returned: " <> showt result)
+  sendLogQueue $ MkNaviLog InfoS ("Shell returned: " <> showt result)
   pure result
 
 -- | Determines if we should block the event. The semantics are:
