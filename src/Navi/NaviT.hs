@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Provides 'NaviT', the main type that runs the application.
 module Navi.NaviT
   ( NaviT (..),
@@ -104,7 +106,7 @@ instance
   where
   logText naviLog ns = addNamespace ns $ do
     let log = LogStr $ T.fromText (naviLog ^. #text)
-    K.logFM (naviLog ^. #severity) log
+    $(K.logTM) (naviLog ^. #severity) log
 
   addNamespace = K.katipAddNamespace
 
