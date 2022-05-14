@@ -53,10 +53,9 @@ logCodec =
     <$> severityCodec .= severity
     <*> locationCodec .= location
 
-severityCodec :: TomlCodec Severity
+severityCodec :: TomlCodec (Maybe Severity)
 severityCodec =
-  Toml.textBy showSeverity parseSeverity "severity"
-    <|> pure ErrorS
+  Toml.dioptional (Toml.textBy showSeverity parseSeverity "severity")
   where
     showSeverity DebugS = "debug"
     showSeverity InfoS = "info"
@@ -71,8 +70,8 @@ severityCodec =
           <> other
           <> ". Should be one of <info|error>."
 
-locationCodec :: TomlCodec LogLoc
-locationCodec = Toml.textBy showLoc parseLoc "location"
+locationCodec :: TomlCodec (Maybe LogLoc)
+locationCodec = Toml.dioptional $ Toml.textBy showLoc parseLoc "location"
   where
     showLoc DefPath = "default"
     showLoc Stdout = pack "stdout"

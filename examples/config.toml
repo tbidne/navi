@@ -2,7 +2,6 @@ note-system = "dbus"
 
 [logging]
 severity = "debug"
-location = "stdout"
 
 [battery-percentage]
 repeat-events = false

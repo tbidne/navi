@@ -9,6 +9,7 @@ import Katip
     Item,
     LogContexts,
     LogEnv (..),
+    Severity (..),
     Verbosity (..),
   )
 import Katip qualified as K
@@ -46,10 +47,10 @@ tryParseConfig =
     . configFile
 
 mkLogEnv :: Logging -> IO LogEnv
-mkLogEnv MkLogging {severity, location} = do
+mkLogEnv logging = do
   let severityFn :: forall a. Item a -> IO Bool
-      severityFn = K.permitItem severity
-  scribe <- case location of
+      severityFn = K.permitItem severity'
+  scribe <- case logLoc' of
     -- Use the default log path: xdgConfig </> navi/navi.log
     DefPath -> do
       xdgBase <- Dir.getXdgDirectory XdgConfig "navi/"
@@ -65,6 +66,8 @@ mkLogEnv MkLogging {severity, location} = do
   K.registerScribe "logger" scribe K.defaultScribeSettings =<< K.initLogEnv "navi" environment
   where
     environment = "production"
+    severity' = fromMaybe ErrorS (logging ^. #severity)
+    logLoc' = fromMaybe DefPath (logging ^. #location)
 
 logCtx :: LogContexts
 logCtx = K.liftPayload ()

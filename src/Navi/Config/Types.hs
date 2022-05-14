@@ -38,9 +38,9 @@ makeFieldLabelsNoPrefix ''LogLoc
 -- | Logging configuration.
 data Logging = MkLogging
   { -- | Determines the log level.
-    severity :: !Severity,
+    severity :: !(Maybe Severity),
     -- | Deterines the log location (i.e. file or stdout).
-    location :: !LogLoc
+    location :: !(Maybe LogLoc)
   }
   deriving stock (Eq, Show)
 
@@ -63,7 +63,7 @@ defaultNoteSystem = DBus
 
 -- | Default logging i.e. log errors and use the default path.
 defaultLogging :: Logging
-defaultLogging = MkLogging ErrorS DefPath
+defaultLogging = MkLogging (Just ErrorS) (Just DefPath)
 
 -- | 'Config' holds the data from 'Navi.Config.Toml.ConfigToml' once it has been processed
 -- (e.g., all user defined Events are parsed).
