@@ -14,6 +14,7 @@ module Navi.Prelude
 
     -- * Text
     readFileUtf8Lenient,
+    writeFileUtf8,
     decodeUtf8Lenient,
 
     -- * Misc utilities
@@ -138,6 +139,12 @@ infixr 8 >.>
 (<<$>>) = fmap . fmap
 
 infixl 4 <<$>>
+
+-- | Strictly reads a file and leniently converts the contents to UTF8.
+--
+-- @since 0.1
+writeFileUtf8 :: FilePath -> Text -> IO ()
+writeFileUtf8 fp = BS.writeFile fp . TextEnc.encodeUtf8
 
 -- | Strictly reads a file and leniently converts the contents to UTF8.
 --

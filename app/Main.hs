@@ -28,7 +28,9 @@ import System.IO qualified as IO
 main :: IO ()
 main = do
   args <- getArgs
-  config <- tryParseConfig args
+  config <-
+    tryParseConfig args
+      `catchAny` writeConfigErr
 
   let mkLogEnvFn = mkLogEnv (config ^. #logging)
   bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
@@ -71,6 +73,14 @@ mkLogEnv logging = do
 
 logCtx :: LogContexts
 logCtx = K.liftPayload ()
+
+writeConfigErr :: SomeException -> IO void
+writeConfigErr ex = do
+  xdgBase <- Dir.getXdgDirectory XdgConfig "navi/"
+  let logFile = xdgBase </> "config_fatal.log"
+  renameIfExists logFile
+  writeFileUtf8 logFile $ "Couldn't read config: " <> pack (displayException ex)
+  throwIO ex
 
 renameIfExists :: FilePath -> IO ()
 renameIfExists fp = do

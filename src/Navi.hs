@@ -13,7 +13,7 @@ import DBus.Notify (UrgencyLevel (..))
 import Data.List.NonEmpty qualified as NE
 import Katip (Severity (..))
 import Navi.Data.NaviLog (NaviLog (..))
-import Navi.Data.NaviNote (NaviNote (..))
+import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Effects.MonadLogger (MonadLogger (..), sendLogQueue)
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..), sendNoteQueue)
@@ -50,6 +50,14 @@ runNavi ::
   ) =>
   m Void
 runNavi = do
+  let welcome =
+        MkNaviNote
+          { summary = "Navi",
+            body = Just "Navi is up :-)",
+            urgency = Just Normal,
+            timeout = Just $ Seconds 10
+          }
+  sendNoteQueue welcome
   events <- asks (getEvents @ref)
   res <- runAllAsync events
   pure $ either (either id id) NE.head res
@@ -85,7 +93,7 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
     sendLogQueue $ MkNaviLog InfoS ("Checking " <> name)
     (Event.runEvent event >>= handleSuccess)
       `catch` handleEventError
-      `catch` handleSomeException
+      `catchAny` handleSomeException
     sleep pi
   where
     name = event ^. #name
