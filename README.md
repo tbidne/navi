@@ -267,6 +267,7 @@ This service allows one to create a single notification based on an arbitrary co
 ##### Specific Options
 
 * `single.command`: Command literal or path to a script.
+* `single.name`: Optional name to be used in logging.
 * `single.trigger`: Result that triggers the notification.
 
 ##### General Options
@@ -308,6 +309,7 @@ This service allows one to create multiple notifications based on an arbitrary c
 ##### Specific Options
 
 * `multiple.command`: Command literal or path to a script.
+* `multiple.name`: Optional name to be used in logging.
 * `multiple.trigger-note.trigger`: Result that triggers the notification.
 
 ##### General Options
