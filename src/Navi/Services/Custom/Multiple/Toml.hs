@@ -34,6 +34,8 @@ makeFieldLabelsNoPrefix ''TriggerNoteToml
 data MultipleToml = MkMultipleToml
   { -- | The command to run.
     command :: Command,
+    -- | An optional name to be used with logging.
+    name :: Maybe Text,
     -- | The alert triggers.
     triggerNotes :: NonEmpty TriggerNoteToml,
     -- | The poll interval.
@@ -52,6 +54,7 @@ multipleCodec :: TomlCodec MultipleToml
 multipleCodec =
   MkMultipleToml
     <$> commandCodec .= command
+    <*> Toml.dioptional (Toml.text "name") .= name
     <*> triggerNotesCodec .= triggerNotes
     <*> Toml.dioptional pollIntervalCodec .= pollInterval
     <*> Toml.dioptional EventToml.repeatEventCodec .= repeatEventCfg

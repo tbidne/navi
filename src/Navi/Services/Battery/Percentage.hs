@@ -64,7 +64,7 @@ mkBatteryEvent ::
   Event ref Battery
 mkBatteryEvent percentNoteList batteryProgram pi re en =
   MkEvent
-    { name = "Battery Percentage",
+    { name = "battery-percentage",
       serviceType = BatteryPercentage batteryProgram,
       pollInterval = pi,
       raiseAlert = lookupPercent percentNoteMap,

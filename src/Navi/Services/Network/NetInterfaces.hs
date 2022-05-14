@@ -30,7 +30,7 @@ toEvent toml = do
   pure $
     MkAnyEvent $
       MkEvent
-        { name = "Network Interface",
+        { name = "network-interface",
           serviceType = cmd,
           pollInterval = pi,
           raiseAlert = toNote toml,

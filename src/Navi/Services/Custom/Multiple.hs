@@ -32,6 +32,7 @@ toEvent toml = do
   pure $
     MkAnyEvent $
       mkMultipleEvent
+        (toml ^. #name)
         (toml ^. #command)
         triggerNotePairs
         pi
@@ -43,15 +44,16 @@ toEvent toml = do
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 
 mkMultipleEvent ::
+  Maybe Text ->
   Command ->
   NonEmpty (Text, NaviNote) ->
   PollInterval ->
   RepeatEvent ref Text ->
   ErrorNote ref ->
   Event ref Text
-mkMultipleEvent cmd noteList pi re en =
+mkMultipleEvent mname cmd noteList pi re en =
   MkEvent
-    { name = "Multiple",
+    { name = name',
       serviceType = Multiple cmd,
       pollInterval = pi,
       raiseAlert = flip Map.lookup noteMap,
@@ -60,3 +62,4 @@ mkMultipleEvent cmd noteList pi re en =
     }
   where
     noteMap = Map.fromList $ NE.toList noteList
+    name' = fromMaybe "multiple" mname

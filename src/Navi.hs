@@ -81,7 +81,6 @@ processEvent ::
   m Void
 processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
   let pi = event ^. #pollInterval
-
   forever $ do
     sendLogQueue $ MkNaviLog DebugS ("Checking " <> name)
     (Event.runEvent event >>= handleSuccess)

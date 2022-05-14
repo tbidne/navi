@@ -47,7 +47,7 @@ mkStatusEvent ::
   Event ref BatteryStatus
 mkStatusEvent to cfg pi repeatEvent errorNote =
   MkEvent
-    { name = "Battery Status",
+    { name = "battery-status",
       serviceType = BatteryStatus cfg,
       pollInterval = pi,
       raiseAlert = toNote to,

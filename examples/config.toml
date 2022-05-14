@@ -37,7 +37,7 @@ command = """
     echo -n "true"
   else
     echo -n "false"
-fi
+  fi
 """
 trigger = "true"
 

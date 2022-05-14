@@ -30,6 +30,7 @@ toEvent toml = do
   pure $
     MkAnyEvent $
       mkSingleEvent
+        (toml ^. #name)
         (toml ^. #command)
         pi
         (toml ^. #triggerVal, toml ^. #note)
@@ -39,18 +40,21 @@ toEvent toml = do
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 
 mkSingleEvent ::
+  Maybe Text ->
   Command ->
   PollInterval ->
   (Text, NaviNote) ->
   RepeatEvent ref Text ->
   ErrorNote ref ->
   Event ref Text
-mkSingleEvent cmd pi (triggerVal, note) re en =
+mkSingleEvent mname cmd pi (triggerVal, note) re en =
   MkEvent
-    { name = "Single",
+    { name = name',
       pollInterval = pi,
       serviceType = Single cmd,
       raiseAlert = \b -> if b == triggerVal then Just note else Nothing,
       repeatEvent = re,
       errorNote = en
     }
+    where
+      name' = fromMaybe "single" mname

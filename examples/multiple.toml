@@ -2,6 +2,7 @@ note-system = "dbus"
 
 # Manual battery level alerts
 [[multiple]]
+name = "battery-manual"
 command = """
   regex="([0-9]{1,3})%"
   power=$(upower -i `upower -e | grep 'BAT'` | grep percentage | awk '{print $2}')

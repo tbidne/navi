@@ -5,6 +5,7 @@ severity = "debug"
 location = "stdout"
 
 [[single]]
+name = "trivial-service"
 poll-interval = "5"
 repeat-events = true
 command = ""
