@@ -16,19 +16,19 @@ tests =
       readsExample verifyMultiple "examples/multiple.toml"
     ]
   where
-    verifyConfig cfg =
-      cfg ^. #logging % #severity == DebugS
-        && cfg ^. #logging % #location == Stdout
-        && length (cfg ^. #events) == 2
+    verifyConfig cfg = do
+      DebugS @=? cfg ^. #logging % #severity
+      Stdout @=? cfg ^. #logging % #location
+      3 @=? length (cfg ^. #events)
 
-    verifyMultiple cfg =
-      cfg ^. #logging % #severity == ErrorS
-        && cfg ^. #logging % #location == DefPath
-        && length (cfg ^. #events) == 1
+    verifyMultiple cfg = do
+      ErrorS @=? cfg ^. #logging % #severity
+      DefPath @=? cfg ^. #logging % #location
+      1 @=? length (cfg ^. #events)
 
-readsExample :: (Config IORef -> Bool) -> FilePath -> TestTree
+readsExample :: (Config IORef -> IO ()) -> FilePath -> TestTree
 readsExample verifyCfg fp = testCase ("Reads " <> fp) $ do
   eResult <- try @_ @SomeException $ Config.readConfig @IORef fp
   case eResult of
     Left ex -> assertFailure $ "Reading config failed: " <> displayException ex
-    Right cfg -> assertBool "Config verification failed" $ verifyCfg cfg
+    Right cfg -> verifyCfg cfg

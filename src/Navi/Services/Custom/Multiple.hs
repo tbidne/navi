@@ -8,6 +8,7 @@ where
 
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict qualified as Map
+import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.PollInterval (PollInterval (..))
 import Navi.Effects (MonadMutRef)
@@ -40,7 +41,7 @@ toEvent toml = do
         errorNote
   where
     triggerNotePairs = fmap toPair (toml ^. #triggerNotes)
-    toPair (MkTriggerNoteToml t n) = (t, n)
+    toPair (MkTriggerNoteToml t n) = (T.strip t, n)
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 
 mkMultipleEvent ::

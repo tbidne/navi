@@ -185,6 +185,7 @@ mkSingleEvent repeatEventToml = do
       singleToml =
         MkSingleToml
           "cmd"
+          Nothing
           "single trigger" -- matches trigger in MockApp
           (Just (MkPollInterval 1))
           note

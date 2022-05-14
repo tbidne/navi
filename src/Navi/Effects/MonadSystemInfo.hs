@@ -4,6 +4,7 @@ module Navi.Effects.MonadSystemInfo
   )
 where
 
+import Data.Text qualified as T
 import Navi.Event.Types (EventError (..))
 import Navi.Prelude
 import Navi.Services.Types (ServiceType (..))
@@ -45,7 +46,7 @@ instance MonadSystemInfo m => MonadSystemInfo (ReaderT e m) where
 queryMultiple :: Command -> IO Text
 queryMultiple cmd =
   let shellApp = multipleShellApp cmd
-   in ShellApp.runSimple shellApp
+   in T.strip <$> ShellApp.runSimple shellApp
 
 multipleShellApp :: Command -> SimpleShell EventError Text
 multipleShellApp cmd =
@@ -61,7 +62,7 @@ parseMultiple = Right
 querySingle :: Command -> IO Text
 querySingle cmd = do
   let shellApp = singleShellApp cmd
-   in ShellApp.runSimple shellApp
+   in T.strip <$> ShellApp.runSimple shellApp
 
 singleShellApp :: Command -> SimpleShell EventError Text
 singleShellApp cmd =

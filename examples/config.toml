@@ -46,3 +46,29 @@ summary = "Even/Odd"
 body = "We're even, yay!"
 timeout = "10"
 
+# requires lm-sensors
+[[single]]
+command = """
+  temp_res=$(sensors | head -n 3 | tail -n 1)
+  regex="temp1:\\s*\\+([0-9]+)\\.[0-9]{0,2}°[C|F]"
+
+  if [[ $temp_res =~ $regex ]]; then
+    temp="${BASH_REMATCH[1]}"
+    # not actually that hot...
+    if [[ $temp -gt 20 ]]; then
+      echo "true"
+    else
+      echo "false"
+    fi
+  else
+    echo "couldn't parse: ${temp_res}"
+    exit 1
+  fi
+"""
+trigger = "true"
+
+[single.note]
+summary = "Temperature"
+body = "We're hot!"
+urgency = "critical"
+timeout = "10"

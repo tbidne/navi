@@ -6,6 +6,7 @@ module Navi.Services.Custom.Single
   )
 where
 
+import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.PollInterval (PollInterval (..))
 import Navi.Effects (MonadMutRef)
@@ -33,7 +34,7 @@ toEvent toml = do
         (toml ^. #name)
         (toml ^. #command)
         pi
-        (toml ^. #triggerVal, toml ^. #note)
+        (T.strip (toml ^. #triggerVal), toml ^. #note)
         repeatEvent
         errorNote
   where
@@ -56,5 +57,5 @@ mkSingleEvent mname cmd pi (triggerVal, note) re en =
       repeatEvent = re,
       errorNote = en
     }
-    where
-      name' = fromMaybe "single" mname
+  where
+    name' = fromMaybe "single" mname

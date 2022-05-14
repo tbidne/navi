@@ -16,6 +16,7 @@
 
 ### Table of Contents
 - [Introduction](#introduction)
+- [Motivation](#motivation)
 - [Requirements](#requirements)
 - [Command-Line Args](#command-line-args)
   - [Config File](#config-file)
@@ -43,13 +44,59 @@ Navi is an application for defining desktop notifications in terms of a **runnin
 
 There are built-in services for sending specific notifications, along with functionality to send custom notifications.
 
+# Motivation
+
+Navi is useful for when one has a notification server running and wants to define custom notification events. For example, one may want a notification for cpu temperature. One can define a "service" that includes:
+
+* The command to run.
+* The command output that should trigger a notification.
+* The notification to send.
+
+```toml
+# requires lm-sensors
+[[single]]
+command = """
+  temp_res=$(sensors | head -n 3 | tail -n 1)
+  regex="temp1:\\s*\\+([0-9]+)\\.[0-9]{0,2}°[C|F]"
+
+  if [[ $temp_res =~ $regex ]]; then
+    temp="${BASH_REMATCH[1]}"
+    # not actually that hot...
+    if [[ $temp -gt 20 ]]; then
+      echo "true"
+    else
+      echo "false"
+    fi
+  else
+    echo "couldn't parse: ${temp_res}"
+    exit 1
+  fi
+"""
+trigger = "true"
+
+[single.note]
+summary = "Temperature"
+body = "We're hot!"
+urgency = "critical"
+timeout = "10"
+```
+
+This allows one to define arbitrary notification services based on one's system. In other words, as long as you can query for a particular bit of information (e.g. bash code), then navi will take care of the rest: running this query every N seconds, sending notifications, caching previous values to avoid repeats, and error handling.
+
 # Requirements
 
-Navi sends [freedesktop.org](https://specifications.freedesktop.org/notification-spec/notification-spec-latest.html)-compatible notifications via [D-Bus](https://en.wikipedia.org/wiki/D-Bus).
+Navi currently supports:
 
-There are plans to generalize navi to other notification systems, but for now Navi requires a running notification service compatible with freedesktop.org. For example, Navi has been tested with:
+* DBus
 
-- [deadd-notification-center](https://github.com/phuhl/linux_notification_center)
+  If there is a DBus-compatible notification server running, navi can hook in directly. This has been tested with:
+
+    * [deadd-notification-center](https://github.com/phuhl/linux_notification_center)
+    * [dunst](https://dunst-project.org/)
+
+* Libnotify
+
+  Navi can also use the `notify-send` tool directly. This is largely redundant since `notify-send` itself requires a running DBus notification server, but this option is provided as an alternative.
 
 # Command-Line Args
 
@@ -82,12 +129,15 @@ Navi is configured via a toml file, by default located at `xdgBase/navi/config.t
 
 ## General Options
 
-* `logging.severity`: Optional. One of `[debug|info|error]`. Controls the logging level. Defaults to `error`.
-* `logging.location`: Optional. Either `default`, `stdout` or `<filename>`. No option or `default` uses `xdgBase/navi/navi.log`.
+* `note-system`: Optional. One of `["dbus"|"notify-send"]`.
+* `logging.severity`: Optional. One of `["debug"|"info"|"error"]`. Controls the logging level. Defaults to `error`.
+* `logging.location`: Optional. Either `"default"`, `"stdout"` or `"<filename>"`. No option or `default` uses `xdgBase/navi/navi.log`.
 
 ##### Example
 
 ```toml
+note-system = "dbus"
+
 [logging]
 severity = "debug"
 location = "stdout"
@@ -99,14 +149,14 @@ The full list of notification options are:
 
 * `summary`: Text summary.
 * `body`: (Optional). Text body.
-* `urgency`: (Optional). One of `[low|normal|critical]`.
-* `timeout`: (Optional). One of `[never|<seconds>]`. Determines how long notifications persist. Defaults to 10 seconds.
+* `urgency`: (Optional). One of `["low"|"normal"|"critical"]`.
+* `timeout`: (Optional). One of `["never"|"<seconds>"]`. Determines how long notifications persist. Defaults to 10 seconds.
 
 ## Service Options
 
 Individual services have their own options, but there are a few that are common to most.
 
-* `poll-interval`: Optional. Non-negative integer, determines how often we query the system for the particular service, in seconds. Each service defines its own default.
+* `poll-interval`: Optional. One of `["never"|"<seconds>"]`. Determines how often we query the system for the particular service, in seconds. Each service defines its own default.
 * `repeat-events`: One of `[true|false]`. Determines if we send off the same notification twice in a row. Defaults to `false` (i.e. no repeats) unless stated otherwise.
 * `error-events`: One of `["none"|"repeats"|"no-repeats">`. Determines if we send off notifications for errors, and how we handle repeats. Defaults to `"no-repeats"` unless stated otherwise i.e. we send error notifications but no repeats.
 

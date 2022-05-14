@@ -58,6 +58,7 @@ expectedSingle :: [SingleToml]
 expectedSingle =
   [ MkSingleToml
       { command = "  some multiline cmd\n  end cmd\n",
+        name = Just "a-single",
         triggerVal = "true",
         pollInterval = Just $ MkPollInterval 121,
         note = note,
@@ -145,6 +146,7 @@ fullConfig =
       "device = \"my-device\"",
       "",
       "[[single]]",
+      "name = \"a-single\"",
       "command = \"\"\"",
       "  some multiline cmd",
       "  end cmd",
