@@ -9,6 +9,7 @@ module Integration.MockApp
 where
 
 import Integration.Prelude
+import Katip.Core (Namespace)
 import Navi.Data.NaviLog (NaviLog)
 import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Data.NaviQueue (NaviQueue)
@@ -18,7 +19,12 @@ import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
-import Navi.Env.Core (HasEvents (..), HasLogQueue (..), HasNoteQueue (..))
+import Navi.Env.Core
+  ( HasEvents (..),
+    HasLogNamespace (..),
+    HasLogQueue (..),
+    HasNoteQueue (..),
+  )
 import Navi.Event.Types (AnyEvent)
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Services.Types (ServiceType (..))
@@ -29,7 +35,7 @@ import Pythia.Services.Battery (Battery (..), BatteryStatus (..), Percentage (..
 -- | Mock configuration.
 data MockEnv = MkMockEnv
   { events :: !(NonEmpty (AnyEvent IORef)),
-    logQueue :: !(NaviQueue NaviLog),
+    logQueue :: !(NaviQueue (NaviLog, Namespace)),
     noteQueue :: !(NaviQueue NaviNote),
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
@@ -43,6 +49,11 @@ makeFieldLabelsNoPrefix ''MockEnv
 
 instance HasEvents IORef MockEnv where
   getEvents = events
+
+instance HasLogNamespace MockEnv where
+  getLogNamespace _ = ""
+  setLogNamespace _ = id
+  overLogNamespace _ = id
 
 instance HasLogQueue MockEnv where
   getLogQueue = logQueue
@@ -66,7 +77,7 @@ newtype IntTestIO a = MkIntTestIO {runIntTestIO :: IO a}
 instance MonadLogger (NaviT MockEnv IntTestIO) where
   -- if we ever decide to test logs, we can capture them similar to the
   -- MonadNotify instance.
-  logText _ = pure ()
+  logText _ _ = pure ()
   addNamespace _ mx = mx
 
 instance MonadNotify (NaviT MockEnv IntTestIO) where

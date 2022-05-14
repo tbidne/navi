@@ -3,7 +3,6 @@ module Unit.Navi.Services.Battery.Status.Toml
   )
 where
 
-import Data.Text qualified as T
 import Navi.Data.NaviNote (Timeout (..))
 import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
 import Navi.Services.Battery.Status.Toml (BatteryStatusToml (..), batteryStatusCodec)

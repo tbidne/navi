@@ -178,6 +178,7 @@ test-suite integration
   build-depends:
     , async        ^>=2.2.4
     , base
+    , katip
     , navi
     , pythia
     , smart-math
