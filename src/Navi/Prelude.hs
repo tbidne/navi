@@ -140,7 +140,7 @@ infixr 8 >.>
 
 infixl 4 <<$>>
 
--- | Strictly reads a file and leniently converts the contents to UTF8.
+-- | Writes the text to the file.
 --
 -- @since 0.1
 writeFileUtf8 :: FilePath -> Text -> IO ()

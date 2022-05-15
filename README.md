@@ -170,7 +170,7 @@ This service sends notifications based on the current battery status. Options in
 
 ##### Specific Options
 
-* `battery-status.app`: (Optional). One of `[sysfs | acpi | upower]`.
+* `battery-status.app`: (Optional). One of `["sysfs" | "acpi" | "upower"]`.
   * `sysfs` reads `/sys` or `/sysfs` directly.
   * `acpi` requires the `acpi` utility.
   * `upower` requires the `upower` utility.
@@ -199,7 +199,7 @@ This service sends notifications based on the current battery percentage when it
 ##### Specific Options
 
 * `battery-percentage.alert.percent`: integer in `[0, 100]`. Sends a notification once the battery level drops to this level.
-* `battery-percentage.app`: (Optional). One of `[sysfs | acpi | upower]`.
+* `battery-percentage.app`: (Optional). One of `["sysfs" | "acpi" | "upower"]`.
   * `sysfs` reads `/sys` or `/sysfs` directly.
   * `acpi` requires the `acpi` utility.
   * `upower` requires the `upower` utility.
@@ -235,7 +235,7 @@ This service sends notifications based on the network connectivity for given dev
 ##### Specific Options
 
 * `net-interface.device`: The name of the network device to monitor (e.g. `wlp0s20f3`).
-* `net-interface.app`: One of `[nmcli | ip]`.
+* `net-interface.app`: One of `["nmcli" | "ip"]`.
   * `nmcli` requires the `nmcli` (`NetworkManager cli`) utility.
   * `ip` requires the `ip` utility.
   * If no option is given then we will try each of the above in the given order, if they are supported.
@@ -393,8 +393,6 @@ If you have never built a haskell program before, `stack` is probably the best c
 
 You will need `ghc` and `cabal-install`. From there Navi can be built with `cabal build` or installed globally (i.e. `~/.cabal/bin/`) with `cabal install`.
 
-The project is set to build with `-Werror` in `cabal.project`, so if for some reason that's a problem, you can disable this with `cabal build --ghc-options="-Wwarn"`.
-
 ## Stack
 
 
@@ -411,7 +409,6 @@ Because Navi is a flake, it can be built as part of a nix expression. For instan
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
     navi-src.url= "github:tbidne/navi/main";
-    navi-src.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, nixpkgs, navi-src, ... }:
