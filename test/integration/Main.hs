@@ -19,6 +19,7 @@ import Integration.Prelude
 import Navi (runNavi)
 import Navi.Config (readConfig)
 import Navi.Data.NaviNote (NaviNote (..))
+import Navi.Event (EventError (MkEventError))
 import System.Directory qualified as Dir
 import System.FilePath ((</>))
 import Test.Tasty qualified as Tasty
@@ -34,7 +35,8 @@ main = do
         testNoDuplicates,
         testNoDuplicateErrs,
         testSwallowErrs,
-        testSendsMultipleErrs
+        testSendsMultipleErrs,
+        testSendExceptionDies
       ]
 
 testMultiNotifs :: TestTree
@@ -99,6 +101,16 @@ testSendsMultipleErrs = testCase "Sends multiple errors" $ do
     expected = replicate 4 $ MkNaviNote "Exception" (Just body) (Just Critical) Nothing
     body = "Command exception. Command: <nmcli>. Error: <Nmcli error>"
 
+testSendExceptionDies :: TestTree
+testSendExceptionDies = testCase "Exception in send kills program" $ do
+  result <-
+    (runMock 3 sendExceptionConfig $> Nothing)
+      `catch` (pure . Just)
+
+  expected @=? result
+  where
+    expected = Just $ MkEventError "SentException" "sending mock exception" ""
+
 runMock :: Word8 -> Text -> IO MockEnv
 runMock maxSeconds config = do
   -- setup file
@@ -159,6 +171,20 @@ netInterfaceEventConfig errorEvents =
       "poll-interval = \"1\"",
       "device = \"device\"",
       errorEvents,
+      ""
+    ]
+
+sendExceptionConfig :: Text
+sendExceptionConfig =
+  T.unlines
+    [ "[[single]]",
+      "poll-interval = \"1\"",
+      "name = \"Single\"",
+      "command = \"cmd\"",
+      "trigger = \"single trigger\"", -- needs to be triggered to be sent
+      "",
+      "[single.note]",
+      "summary = \"SentException\"", -- matches MockApp's MonadNotify instance
       ""
     ]
 

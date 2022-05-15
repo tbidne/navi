@@ -49,7 +49,7 @@ data EventError = MkEventError
     -- | Long description of the error.
     long :: !Text
   }
-  deriving stock (Show)
+  deriving stock (Eq, Show)
   deriving anyclass (Exception)
 
 makeFieldLabelsNoPrefix ''EventError

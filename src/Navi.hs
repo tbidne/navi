@@ -162,9 +162,9 @@ pollNoteQueue ::
   m Void
 pollNoteQueue = addNamespace "note-poller" $ do
   queue <- asks getNoteQueue
-  forever $ do
+  forever $
     (readQueue queue >>= sendNote)
-      `catchAny` \ex ->
+      `catchAny` \ex -> do
         sendLogQueue $
           MkNaviLog
             ErrorS
@@ -172,6 +172,8 @@ pollNoteQueue = addNamespace "note-poller" $ do
                 "Notification exception: "
                   <> displayException ex
             )
+        -- we want an exception when sending notification to take down navi.
+        throwIO ex
 
 pollLogQueue ::
   ( HasLogQueue env,

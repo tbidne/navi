@@ -29,7 +29,7 @@ import Navi.Env.Core
     HasLogQueue (..),
     HasNoteQueue (..),
   )
-import Navi.Event.Types (AnyEvent)
+import Navi.Event.Types (AnyEvent, EventError (MkEventError))
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Services.Types (ServiceType (..))
 import Numeric.Data.Interval qualified as Interval
@@ -85,9 +85,12 @@ instance MonadLogger (NaviT MockEnv IntTestIO) where
   addNamespace _ mx = mx
 
 instance MonadNotify (NaviT MockEnv IntTestIO) where
-  sendNote note = do
-    notes <- asks (view #sentNotes)
-    liftIO $ modifyIORef' notes (note :)
+  sendNote note =
+    if note ^. #summary == "SentException"
+      then throwIO $ MkEventError "SentException" "sending mock exception" ""
+      else do
+        notes <- asks (view #sentNotes)
+        liftIO $ modifyIORef' notes (note :)
 
 instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
   -- Service that changes every time: can be used to test multiple
