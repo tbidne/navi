@@ -64,13 +64,25 @@ runNavi = do
   where
     -- We use race so that we do not swallow exceptions. If any of these
     -- throw an exception we want to die:
-    -- 1. If logging throws an exception then something is really wrong.
-    -- 2. pollNoteQueue should be catching and logging its own exceptions.
-    -- 3. processEvent should be catching and logging its own exceptions.
+    --
+    -- 1. Logging: something is really wrong.
+    -- 2. Notify: something is really wrong.
+    -- 3. processEvent: should be catching and logging its own exceptions,
+    --    so if an exception escapes then something is really wrong.
     runAllAsync evts =
+      -- no logging here since logging itself is broken
       pollLogQueue
-        `Async.race` pollNoteQueue
-        `Async.race` Async.mapConcurrently processEvent evts
+        -- log and rethrow notify exceptions
+        `Async.race` (logExAndRethrow "Notify: " pollNoteQueue)
+        -- log and rethrow anything that escaped the exception handling in
+        -- processEvent
+        `Async.race` ( logExAndRethrow "Event processing: " $
+                         Async.mapConcurrently processEvent evts
+                     )
+
+    logExAndRethrow prefix io = catchAny io $ \ex -> do
+      sendLogQueue $ MkNaviLog CriticalS (prefix <> pack (displayException ex))
+      throwIO ex
 
 processEvent ::
   forall m ref env.
@@ -150,30 +162,16 @@ exToNote ex =
     }
 
 pollNoteQueue ::
-  ( HasLogNamespace env,
-    HasLogQueue env,
-    HasNoteQueue env,
+  ( HasNoteQueue env,
     MonadLogger m,
     MonadNotify m,
     MonadQueue m,
-    MonadReader env m,
-    MonadUnliftIO m
+    MonadReader env m
   ) =>
   m Void
 pollNoteQueue = addNamespace "note-poller" $ do
   queue <- asks getNoteQueue
-  forever $
-    (readQueue queue >>= sendNote)
-      `catchAny` \ex -> do
-        sendLogQueue $
-          MkNaviLog
-            ErrorS
-            ( pack $
-                "Notification exception: "
-                  <> displayException ex
-            )
-        -- we want an exception when sending notification to take down navi.
-        throwIO ex
+  forever $ readQueue queue >>= sendNote
 
 pollLogQueue ::
   ( HasLogQueue env,
