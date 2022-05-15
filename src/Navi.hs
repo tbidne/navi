@@ -9,6 +9,7 @@ module Navi
   )
 where
 
+import Control.Concurrent.Async.Lifted qualified as Async
 import DBus.Notify (UrgencyLevel (..))
 import Data.List.NonEmpty qualified as NE
 import Katip (Severity (..))
@@ -30,7 +31,6 @@ import Navi.Event qualified as Event
 import Navi.Event.Types (AnyEvent (..), EventError (..))
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Prelude
-import UnliftIO.Async qualified as Async
 
 -- | Entry point for the application.
 runNavi ::
@@ -39,6 +39,7 @@ runNavi ::
     HasLogNamespace env,
     HasLogQueue env,
     HasNoteQueue env,
+    MonadBaseControl IO m,
     MonadLogger m,
     MonadMutRef ref m,
     MonadNotify m,
@@ -46,7 +47,7 @@ runNavi ::
     MonadShell m,
     MonadSystemInfo m,
     MonadReader env m,
-    MonadUnliftIO m
+    MonadCatch m
   ) =>
   m Void
 runNavi = do
@@ -73,16 +74,17 @@ runNavi = do
       -- no logging here since logging itself is broken
       pollLogQueue
         -- log and rethrow notify exceptions
-        `Async.race` (logExAndRethrow "Notify: " pollNoteQueue)
+        `Async.race` logExAndRethrow "Notify: " pollNoteQueue
         -- log and rethrow anything that escaped the exception handling in
         -- processEvent
-        `Async.race` ( logExAndRethrow "Event processing: " $
-                         Async.mapConcurrently processEvent evts
-                     )
+        `Async.race` logExAndRethrow
+          "Event processing: "
+          ( Async.mapConcurrently processEvent evts
+          )
 
-    logExAndRethrow prefix io = catchAny io $ \ex -> do
+    logExAndRethrow prefix io = catchAll io $ \ex -> do
       sendLogQueue $ MkNaviLog CriticalS (prefix <> pack (displayException ex))
-      throwIO ex
+      throwM ex
 
 processEvent ::
   forall m ref env.
@@ -95,7 +97,7 @@ processEvent ::
     MonadReader env m,
     MonadShell m,
     MonadSystemInfo m,
-    MonadUnliftIO m
+    MonadCatch m
   ) =>
   AnyEvent ref ->
   m Void
@@ -105,7 +107,7 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
     sendLogQueue $ MkNaviLog InfoS ("Checking " <> name)
     (Event.runEvent event >>= handleSuccess)
       `catch` handleEventError
-      `catchAny` handleSomeException
+      `catchAll` handleSomeException
     sleep pi
   where
     name = event ^. #name

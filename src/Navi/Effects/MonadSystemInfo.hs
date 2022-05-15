@@ -30,10 +30,10 @@ instance MonadSystemInfo IO where
     Single cmd -> querySingle cmd
     Multiple cmd -> queryMultiple cmd
 
-rethrowPythia :: MonadUnliftIO m => Text -> m a -> m a
+rethrowPythia :: MonadCatch m => Text -> m a -> m a
 rethrowPythia n io =
   io `catch` \(e :: PythiaException) ->
-    throwIO $
+    throwM $
       MkEventError
         { name = n,
           short = "PythiaException",

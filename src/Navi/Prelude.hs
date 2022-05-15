@@ -34,6 +34,7 @@ module Navi.Prelude
 where
 
 import Control.Applicative as X (Alternative (..), Applicative (..), (<**>))
+import Control.Exception as X (Exception (..), SomeException)
 import Control.Monad as X
   ( Monad (..),
     forever,
@@ -43,9 +44,20 @@ import Control.Monad as X
     (=<<),
     (>=>),
   )
+import Control.Monad.Base as X (MonadBase (..))
+import Control.Monad.Catch as X
+  ( MonadCatch (..),
+    MonadThrow (..),
+    bracket,
+    catch,
+    catchAll,
+    handle,
+    try,
+  )
 import Control.Monad.IO.Class as X (MonadIO (..))
 import Control.Monad.Reader as X (MonadReader (..), ReaderT (..), asks)
 import Control.Monad.Trans as X (MonadTrans (..))
+import Control.Monad.Trans.Control as X (MonadBaseControl (..))
 import Data.Bifunctor as X (Bifunctor (..))
 import Data.Bool as X (Bool (..), not, otherwise, (&&), (||))
 import Data.ByteString (ByteString)
@@ -86,19 +98,6 @@ import GHC.Show as X (Show (..))
 import Optics.Core as X (over, set, view, (%), (.~), (^.))
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrismLabels)
 import System.IO as X (FilePath, IO)
-import UnliftIO as X (MonadUnliftIO)
-import UnliftIO.Exception as X
-  ( Exception (..),
-    SomeException (..),
-    bracket,
-    catch,
-    catchAny,
-    finally,
-    handle,
-    onException,
-    throwIO,
-    try,
-  )
 import Prelude as X (Integer, seq)
 import Prelude qualified as P
 

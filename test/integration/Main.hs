@@ -11,7 +11,7 @@
 module Main (main) where
 
 import Control.Concurrent qualified as CC
-import Control.Concurrent.Async qualified as Async
+import Control.Concurrent.Async.Lifted qualified as Async
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
 import Integration.MockApp (MockEnv (..), configToMockEnv, runMockApp)
