@@ -30,7 +30,7 @@ main = do
   args <- getArgs
   config <-
     tryParseConfig args
-      `catchAny` writeConfigErr
+      `catchAll` writeConfigErr
 
   let mkLogEnvFn = mkLogEnv (config ^. #logging)
   bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
@@ -80,7 +80,7 @@ writeConfigErr ex = do
   let logFile = xdgBase </> "config_fatal.log"
   renameIfExists logFile
   writeFileUtf8 logFile $ "Couldn't read config: " <> pack (displayException ex)
-  throwIO ex
+  throwM ex
 
 renameIfExists :: FilePath -> IO ()
 renameIfExists fp = do

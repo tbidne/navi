@@ -11,6 +11,7 @@ where
 
 import Control.Concurrent.STM qualified as STM
 import Control.Concurrent.STM.TBQueue qualified as TBQueue
+import Control.Monad.Trans.Control as X (RunInBase)
 import Integration.Prelude
 import Katip.Core (Namespace)
 import Navi.Config (Config)
@@ -74,9 +75,19 @@ newtype IntTestIO a = MkIntTestIO {runIntTestIO :: IO a}
       MonadQueue,
       MonadMutRef IORef,
       MonadShell,
-      MonadUnliftIO
+      MonadCatch,
+      MonadThrow
     )
     via IO
+
+instance MonadBase IO IntTestIO where
+  liftBase = MkIntTestIO
+
+instance MonadBaseControl IO IntTestIO where
+  type StM IntTestIO a = a
+  liftBaseWith :: forall a. (RunInBase IntTestIO IO -> IO a) -> IntTestIO a
+  liftBaseWith f = MkIntTestIO $ f (\(MkIntTestIO x) -> x)
+  restoreM = pure
 
 instance MonadLogger (NaviT MockEnv IntTestIO) where
   -- if we ever decide to test logs, we can capture them similar to the
@@ -87,7 +98,7 @@ instance MonadLogger (NaviT MockEnv IntTestIO) where
 instance MonadNotify (NaviT MockEnv IntTestIO) where
   sendNote note =
     if note ^. #summary == "SentException"
-      then throwIO $ MkEventError "SentException" "sending mock exception" ""
+      then throwM $ MkEventError "SentException" "sending mock exception" ""
       else do
         notes <- asks (view #sentNotes)
         liftIO $ modifyIORef' notes (note :)
@@ -109,7 +120,7 @@ instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
   query (BatteryStatus _) = pure Charging
   -- Service error. Can test error behavior.
   query (NetworkInterface _ _) =
-    throwIO $ MkCommandException "nmcli" "Nmcli error"
+    throwM $ MkCommandException "nmcli" "Nmcli error"
   -- Constant service. Can test duplicate behavior.
   query (Single _) = pure "single trigger"
   -- Constant service. Can test duplicate behavior.

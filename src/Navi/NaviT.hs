@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Provides 'NaviT', the main type that runs the application.
 module Navi.NaviT
@@ -35,11 +36,14 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
     ( Functor,
       Applicative,
       Monad,
+      MonadBase b,
+      MonadBaseControl b,
       MonadIO,
       MonadQueue,
       MonadReader e,
       MonadShell,
-      MonadUnliftIO
+      MonadCatch,
+      MonadThrow
     )
     via (ReaderT e m)
   deriving (MonadTrans) via (ReaderT e)

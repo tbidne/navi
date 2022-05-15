@@ -59,11 +59,11 @@ packages:
     pantry-tree:
       sha256: c5cb939633b6f478cb499f239bedfe459ede0b218e5c2a952ef9cbbe196d9c81
       size: 4472
-    commit: 0dd761db6154162bb45ac9e9f22ab5df8bc3e77d
+    commit: 0b8977d67b1f7e8bb00560988f92455ed0ebc3a7
     git: https://github.com/tbidne/pythia.git
     version: '0.1'
   original:
-    commit: 0dd761db6154162bb45ac9e9f22ab5df8bc3e77d
+    commit: 0b8977d67b1f7e8bb00560988f92455ed0ebc3a7
     git: https://github.com/tbidne/pythia.git
 - completed:
     name: relative-time
