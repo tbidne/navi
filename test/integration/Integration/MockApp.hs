@@ -5,14 +5,18 @@
 module Integration.MockApp
   ( MockEnv (..),
     runMockApp,
+    configToMockEnv,
   )
 where
 
+import Control.Concurrent.STM qualified as STM
+import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import Integration.Prelude
 import Katip.Core (Namespace)
+import Navi.Config (Config)
 import Navi.Data.NaviLog (NaviLog)
 import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Data.NaviQueue (NaviQueue)
+import Navi.Data.NaviQueue (NaviQueue (MkNaviQueue))
 import Navi.Effects.MonadLogger (MonadLogger (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
@@ -110,3 +114,20 @@ instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
 
 runMockApp :: (NaviT MockEnv IntTestIO) a -> MockEnv -> IO a
 runMockApp nt = runIntTestIO . runNaviT nt
+
+configToMockEnv :: Config IORef -> IO MockEnv
+configToMockEnv config = do
+  sentNotesRef <- newIORef []
+
+  lastPercentageRef <- newIORef $ MkPercentage $ Interval.unsafeLRInterval 6
+  logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
+  noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
+
+  pure $
+    MkMockEnv
+      { events = config ^. #events,
+        sentNotes = sentNotesRef,
+        logQueue = MkNaviQueue logQueue,
+        noteQueue = MkNaviQueue noteQueue,
+        lastPercentage = lastPercentageRef
+      }

@@ -178,6 +178,9 @@ test-suite integration
   build-depends:
     , async        ^>=2.2.4
     , base
+    , directory
+    , fdo-notify
+    , filepath
     , katip
     , navi
     , pythia
@@ -185,6 +188,7 @@ test-suite integration
     , stm
     , tasty
     , tasty-hunit
+    , text
 
   ghc-options:      -Wunused-packages
   hs-source-dirs:   test/integration

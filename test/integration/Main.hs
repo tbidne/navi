@@ -12,28 +12,15 @@ module Main (main) where
 
 import Control.Concurrent qualified as CC
 import Control.Concurrent.Async qualified as Async
-import Control.Concurrent.STM qualified as STM
-import Control.Concurrent.STM.TBQueue qualified as TBQueue
-import Integration.MockApp (MockEnv (..), runMockApp)
+import DBus.Notify (UrgencyLevel (..))
+import Data.Text qualified as T
+import Integration.MockApp (MockEnv (..), configToMockEnv, runMockApp)
 import Integration.Prelude
 import Navi (runNavi)
+import Navi.Config (readConfig)
 import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Data.NaviQueue (NaviQueue (..))
-import Navi.Data.PollInterval (PollInterval (..))
-import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
-import Navi.Event.Types (AnyEvent)
-import Navi.Services.Battery.Percentage qualified as Percentage
-import Navi.Services.Battery.Percentage.Toml
-  ( BatteryPercentageNoteToml (..),
-    BatteryPercentageToml (..),
-  )
-import Navi.Services.Custom.Single qualified as Single
-import Navi.Services.Custom.Single.Toml (SingleToml (..))
-import Navi.Services.Network.NetInterfaces qualified as NetInterfaces
-import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..))
-import Numeric.Data.Interval qualified as Interval
-import Pythia.Data.RunApp (RunApp (..))
-import Pythia.Services.Battery (Percentage (..))
+import System.Directory qualified as Dir
+import System.FilePath ((</>))
 import Test.Tasty qualified as Tasty
 
 -- | Runs integration tests.
@@ -52,167 +39,130 @@ main = do
 
 testMultiNotifs :: TestTree
 testMultiNotifs = testCase "Sends multiple new notifications" $ do
-  percentageEvent <- mkPercentageEvent
+  mockEnv <- runMock 6 batteryPercentageEventConfig
 
-  mockEnv <- mkEnv $ percentageEvent :| []
-  runMock 6 mockEnv
-
-  sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  let desc = "Summaries should be 'Battery Percentage': " <> show sentNotes
-  6 @=? length sentNotes
-  assertBool desc $
-    all
-      ((==) "Battery Percentage" . view #summary)
-      (filter ((/=) "Navi" . view #summary) sentNotes)
+  sentNotes <- mockEnvToNotes mockEnv
+  expected @=? sentNotes
+  where
+    expected = fmap toNote [1 .. 5 :: Int]
+    toNote i =
+      MkNaviNote
+        { summary = "Battery Percentage",
+          body = Just (showt i <> "%"),
+          urgency = Nothing,
+          timeout = Nothing
+        }
 
 testDuplicates :: TestTree
 testDuplicates = testCase "Send duplicate notifications" $ do
-  singleEvent <- mkSingleEvent (Just AllowRepeatsToml)
+  mockEnv <- runMock 3 (singleEventConfig "repeat-events = true")
 
-  mockEnv <- mkEnv $ singleEvent :| []
-  runMock 3 mockEnv
-
-  sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  let desc = "Summaries should be 'Single': " <> show sentNotes
-  assertBool "Should send at least 3 notifs" $ length sentNotes >= 3
-  assertBool desc $
-    all
-      ((==) "Single" . view #summary)
-      (filter ((/=) "Navi" . view #summary) sentNotes)
+  sentNotes <- mockEnvToNotes mockEnv
+  expected @=? sentNotes
+  where
+    expected = replicate 4 $ MkNaviNote "Single" (Just "body") Nothing Nothing
 
 testNoDuplicates :: TestTree
 testNoDuplicates = testCase "Does not send duplicate notifications" $ do
-  singleEvent <- mkSingleEvent Nothing
+  mockEnv <- runMock 3 (singleEventConfig "")
 
-  mockEnv <- mkEnv $ singleEvent :| []
-  runMock 3 mockEnv
-
-  sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  let desc = "Summaries should be 'Single': " <> show sentNotes
-  2 @=? length sentNotes
-  assertBool desc $
-    all
-      ((==) "Single" . view #summary)
-      (filter ((/=) "Navi" . view #summary) sentNotes)
+  sentNotes <- mockEnvToNotes mockEnv
+  expected @=? sentNotes
+  where
+    expected = [MkNaviNote "Single" (Just "body") Nothing Nothing]
 
 testNoDuplicateErrs :: TestTree
 testNoDuplicateErrs = testCase "Does not send duplicate errors" $ do
-  -- Nothing = ErrNoteNoRepeatsToml i.e. No Repeats
-  netInterfaceEvent <- mkNetInterfaceEvent Nothing
+  -- empty string = no duplicate errors
+  mockEnv <- runMock 3 (netInterfaceEventConfig "")
 
-  mockEnv <- mkEnv $ netInterfaceEvent :| []
-  runMock 3 mockEnv
-
-  sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  let desc = "Summaries should be 'Single': " <> show sentNotes
-  2 @=? length sentNotes
-  assertBool desc $
-    all
-      ((==) "Exception" . view #summary)
-      (filter ((/=) "Navi" . view #summary) sentNotes)
+  sentNotes <- mockEnvToNotes mockEnv
+  expected @=? sentNotes
+  where
+    expected = [MkNaviNote "Exception" (Just body) (Just Critical) Nothing]
+    body = "Command exception. Command: <nmcli>. Error: <Nmcli error>"
 
 testSwallowErrs :: TestTree
 testSwallowErrs = testCase "Does not send any errors" $ do
-  netInterfaceEvent <- mkNetInterfaceEvent (Just NoErrNoteToml)
+  mockEnv <- runMock 3 (netInterfaceEventConfig "error-events = \"none\"")
 
-  mockEnv <- mkEnv $ netInterfaceEvent :| []
-  runMock 3 mockEnv
-
-  sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  1 @=? length sentNotes
+  sentNotes <- mockEnvToNotes mockEnv
+  [] @=? sentNotes
 
 testSendsMultipleErrs :: TestTree
 testSendsMultipleErrs = testCase "Sends multiple errors" $ do
-  netInterfaceEvent <- mkNetInterfaceEvent (Just ErrNoteAllowRepeatsToml)
+  mockEnv <- runMock 3 (netInterfaceEventConfig "error-events = \"repeats\"")
 
-  mockEnv <- mkEnv $ netInterfaceEvent :| []
-  runMock 3 mockEnv
+  sentNotes <- mockEnvToNotes mockEnv
+  expected @=? sentNotes
+  where
+    expected = replicate 4 $ MkNaviNote "Exception" (Just body) (Just Critical) Nothing
+    body = "Command exception. Command: <nmcli>. Error: <Nmcli error>"
 
-  sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  let desc = "Summaries should be 'Exception': " <> show sentNotes
-  assertBool "Should send at least 3 notifs" $ length sentNotes >= 3
-  assertBool desc $
-    all
-      ((==) "Exception" . view #summary)
-      (filter ((/=) "Navi" . view #summary) sentNotes)
-
-runMock :: Word8 -> MockEnv -> IO ()
-runMock maxSeconds env = do
+runMock :: Word8 -> Text -> IO MockEnv
+runMock maxSeconds config = do
+  -- setup file
+  tmp <- Dir.getTemporaryDirectory
+  let configFp = tmp </> "int.toml"
+  writeFileUtf8 configFp config
+  -- file -> config
+  cfg <- readConfig @IORef configFp
+  mockEnv <- configToMockEnv cfg
   -- runNavi runs forever, so we use race_ to kill it once the countdown
   -- runs out.
-  Async.race_ (countdown maxSeconds) (runMockApp runNavi env)
+  Async.race_ (countdown maxSeconds) (runMockApp runNavi mockEnv)
+  Dir.removeFile configFp
+  pure mockEnv
 
 countdown :: Word8 -> IO ()
 countdown 0 = pure ()
 countdown !counter = CC.threadDelay 1_000_000 *> countdown (counter - 1)
 
-mkEnv :: NonEmpty (AnyEvent IORef) -> IO MockEnv
-mkEnv events = do
-  sentNotesRef <- newIORef []
+batteryPercentageEventConfig :: Text
+batteryPercentageEventConfig =
+  T.unlines
+    [ "[battery-percentage]",
+      "poll-interval = \"1\"",
+      "",
+      "[[battery-percentage.alert]]",
+      "percent = 5",
+      "[[battery-percentage.alert]]",
+      "percent = 4",
+      "[[battery-percentage.alert]]",
+      "percent = 3",
+      "[[battery-percentage.alert]]",
+      "percent = 2",
+      "[[battery-percentage.alert]]",
+      "percent = 1",
+      ""
+    ]
 
-  lastPercentageRef <- newIORef $ MkPercentage $ Interval.unsafeLRInterval 6
-  logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
-  noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
+singleEventConfig :: Text -> Text
+singleEventConfig repeats =
+  T.unlines
+    [ "[[single]]",
+      "poll-interval = \"1\"",
+      "command = \"cmd\"",
+      "trigger = \"single trigger\"", -- matches trigger in MockApp
+      repeats,
+      "",
+      "[single.note]",
+      "summary = \"Single\"",
+      "body = \"body\"",
+      ""
+    ]
 
-  let mockEnv =
-        MkMockEnv
-          { events = events,
-            sentNotes = sentNotesRef,
-            logQueue = MkNaviQueue logQueue,
-            noteQueue = MkNaviQueue noteQueue,
-            lastPercentage = lastPercentageRef
-          }
-  pure mockEnv
+netInterfaceEventConfig :: Text -> Text
+netInterfaceEventConfig errorEvents =
+  T.unlines
+    [ "[[net-interface]]",
+      "poll-interval = \"1\"",
+      "device = \"device\"",
+      errorEvents,
+      ""
+    ]
 
-mkPercentageEvent :: IO (AnyEvent IORef)
-mkPercentageEvent = do
-  let toAlert i =
-        MkBatteryPercentageNoteToml
-          (MkPercentage (Interval.unsafeLRInterval i))
-          Nothing
-          Nothing
-      alerts = toAlert <$> [1 .. 4]
-
-      percentageToml =
-        MkBatteryPercentageToml
-          (toAlert 5 :| alerts)
-          (Just $ MkPollInterval 1)
-          Nothing
-          Nothing
-          Many
-
-  Percentage.toEvent percentageToml
-
-mkSingleEvent :: Maybe RepeatEventToml -> IO (AnyEvent IORef)
-mkSingleEvent repeatEventToml = do
-  let note =
-        MkNaviNote
-          "Single"
-          (Just "body")
-          Nothing
-          Nothing
-
-      singleToml =
-        MkSingleToml
-          "cmd"
-          Nothing
-          "single trigger" -- matches trigger in MockApp
-          (Just (MkPollInterval 1))
-          note
-          repeatEventToml
-          Nothing
-
-  Single.toEvent singleToml
-
-mkNetInterfaceEvent :: Maybe ErrorNoteToml -> IO (AnyEvent IORef)
-mkNetInterfaceEvent errNoteToml = do
-  let netInterfacesToml =
-        MkNetInterfacesToml
-          Many
-          "device"
-          (Just (MkPollInterval 1))
-          Nothing
-          errNoteToml
-          Nothing
-
-  NetInterfaces.toEvent netInterfacesToml
+mockEnvToNotes :: MockEnv -> IO [NaviNote]
+mockEnvToNotes mockEnv = do
+  sentNotes <- readIORef $ mockEnv ^. #sentNotes
+  pure $ filter ((/= "Navi") . view #summary) sentNotes
