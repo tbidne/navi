@@ -127,8 +127,7 @@ runMock maxSeconds config = do
   pure mockEnv
 
 countdown :: Word8 -> IO ()
-countdown 0 = pure ()
-countdown !counter = CC.threadDelay 1_000_000 *> countdown (counter - 1)
+countdown = CC.threadDelay . (* 1_000_000) . fromIntegral . (+ 1)
 
 batteryPercentageEventConfig :: Text
 batteryPercentageEventConfig =
