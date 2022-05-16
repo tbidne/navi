@@ -43,6 +43,7 @@ toEvent toml = do
     triggerNotePairs = fmap toPair (toml ^. #triggerNotes)
     toPair (MkTriggerNoteToml t n) = (T.strip t, n)
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
+{-# INLINEABLE toEvent #-}
 
 mkMultipleEvent ::
   Maybe Text ->
@@ -64,3 +65,4 @@ mkMultipleEvent mname cmd noteList pi re en =
   where
     noteMap = Map.fromList $ NE.toList noteList
     name' = fromMaybe "multiple" mname
+{-# INLINEABLE mkMultipleEvent #-}

@@ -26,3 +26,4 @@ sendLogQueue ::
 sendLogQueue lg = do
   ns <- asks getLogNamespace
   asks getLogQueue >>= (`writeQueue` (lg, ns))
+{-# INLINEABLE sendLogQueue #-}

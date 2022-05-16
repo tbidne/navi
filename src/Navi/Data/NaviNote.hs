@@ -51,18 +51,22 @@ naviNoteCodec =
     <*> Toml.dioptional bodyCodec .= body
     <*> Toml.dioptional urgencyLevelCodec .= urgency
     <*> Toml.dioptional timeoutCodec .= timeout
+{-# INLINEABLE naviNoteCodec #-}
 
 -- | Codec for the 'NaviNote' 'summary'.
 summaryCodec :: TomlCodec Text
 summaryCodec = Toml.text "summary"
+{-# INLINEABLE summaryCodec #-}
 
 -- | Codec for the 'NaviNote' 'body'.
 bodyCodec :: TomlCodec Text
 bodyCodec = Toml.text "body"
+{-# INLINEABLE bodyCodec #-}
 
 -- | Codec for the 'NaviNote' 'urgency'.
 urgencyLevelCodec :: TomlCodec UrgencyLevel
 urgencyLevelCodec = urgencyLevelKeyCodec "urgency"
+{-# INLINEABLE urgencyLevelCodec #-}
 
 -- | Codec for the 'NaviNote' 'urgency' with custom 'Key'.
 urgencyLevelKeyCodec :: Key -> TomlCodec UrgencyLevel
@@ -75,6 +79,7 @@ urgencyLevelKeyCodec = Toml.textBy showUrgencyLevel parseUrgencyLevel
     parseUrgencyLevel "normal" = Right Normal
     parseUrgencyLevel "critical" = Right Critical
     parseUrgencyLevel other = Left $ "Unsupported urgency level: " <> other
+{-# INLINEABLE urgencyLevelKeyCodec #-}
 
 -- | Codec for the 'NaviNote' 'timeout'.
 timeoutCodec :: TomlCodec Timeout
@@ -89,3 +94,4 @@ timeoutCodec =
         Just s -> Right $ Seconds s
         Nothing -> Left $ "Unsupported timeout: " <> other
     readNN = TR.readMaybe
+{-# INLINEABLE timeoutCodec #-}

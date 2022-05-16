@@ -46,3 +46,4 @@ batteryStatusCodec =
     <*> Toml.dioptional EToml.repeatEventCodec .= repeatEvent
     <*> Toml.dioptional EToml.errorNoteCodec .= errorNote
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
+{-# INLINEABLE batteryStatusCodec #-}

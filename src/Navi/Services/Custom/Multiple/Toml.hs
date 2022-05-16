@@ -59,9 +59,11 @@ multipleCodec =
     <*> Toml.dioptional pollIntervalCodec .= pollInterval
     <*> Toml.dioptional EventToml.repeatEventCodec .= repeatEventCfg
     <*> Toml.dioptional EventToml.errorNoteCodec .= errEventCfg
+{-# INLINEABLE multipleCodec #-}
 
 triggerNotesCodec :: TomlCodec (NonEmpty TriggerNoteToml)
 triggerNotesCodec = Toml.nonEmpty triggerNoteCodec "trigger-note"
+{-# INLINEABLE triggerNotesCodec #-}
 
 triggerNoteCodec :: TomlCodec TriggerNoteToml
 triggerNoteCodec =
@@ -70,6 +72,8 @@ triggerNoteCodec =
     <*> Toml.table NaviNote.naviNoteCodec "note" .= note
   where
     triggerCodec = Toml.text "trigger"
+{-# INLINEABLE triggerNoteCodec #-}
 
 commandCodec :: TomlCodec Command
 commandCodec = Toml.textBy showt (Right . MkCommand) "command"
+{-# INLINEABLE commandCodec #-}

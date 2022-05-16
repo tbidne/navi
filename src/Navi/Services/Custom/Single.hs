@@ -39,6 +39,7 @@ toEvent toml = do
         errorNote
   where
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
+{-# INLINEABLE toEvent #-}
 
 mkSingleEvent ::
   Maybe Text ->
@@ -59,3 +60,4 @@ mkSingleEvent mname cmd pi (triggerVal, note) re en =
     }
   where
     name' = fromMaybe "single" mname
+{-# INLINEABLE mkSingleEvent #-}

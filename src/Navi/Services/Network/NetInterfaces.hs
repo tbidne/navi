@@ -43,6 +43,7 @@ toEvent toml = do
     cmd =
       NetworkInterface device $
         MkNetInterfaceConfig (toml ^. #app)
+{-# INLINEABLE toEvent #-}
 
 toNote :: NetInterfacesToml -> NetInterface -> Maybe NaviNote
 toNote noteToml conn =
@@ -61,3 +62,4 @@ toNote noteToml conn =
       Up -> " is connected to: " <> nameTxt
       Down -> " is disconnected from: " <> nameTxt
       UnknownState txt -> " is in an unknown state: " <> txt
+{-# INLINEABLE toNote #-}

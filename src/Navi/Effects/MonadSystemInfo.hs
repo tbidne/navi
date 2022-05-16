@@ -29,6 +29,7 @@ instance MonadSystemInfo IO where
       rethrowPythia "NetInterface" $ Pythia.queryNetInterface device cp
     Single cmd -> querySingle cmd
     Multiple cmd -> queryMultiple cmd
+  {-# INLINEABLE query #-}
 
 rethrowPythia :: MonadCatch m => Text -> m a -> m a
 rethrowPythia n io =
@@ -39,14 +40,17 @@ rethrowPythia n io =
           short = "PythiaException",
           long = pack $ displayException e
         }
+{-# INLINEABLE rethrowPythia #-}
 
 instance MonadSystemInfo m => MonadSystemInfo (ReaderT e m) where
   query = lift . query
+  {-# INLINEABLE query #-}
 
 queryMultiple :: Command -> IO Text
 queryMultiple cmd =
   let shellApp = multipleShellApp cmd
    in T.strip <$> ShellApp.runSimple shellApp
+{-# INLINEABLE queryMultiple #-}
 
 multipleShellApp :: Command -> SimpleShell EventError Text
 multipleShellApp cmd =
@@ -55,14 +59,17 @@ multipleShellApp cmd =
       parser = parseMultiple,
       liftShellEx = liftEventError "Multiple"
     }
+{-# INLINEABLE multipleShellApp #-}
 
 parseMultiple :: Text -> Either EventError Text
 parseMultiple = Right
+{-# INLINEABLE parseMultiple #-}
 
 querySingle :: Command -> IO Text
 querySingle cmd = do
   let shellApp = singleShellApp cmd
    in T.strip <$> ShellApp.runSimple shellApp
+{-# INLINEABLE querySingle #-}
 
 singleShellApp :: Command -> SimpleShell EventError Text
 singleShellApp cmd =
@@ -71,9 +78,11 @@ singleShellApp cmd =
       parser = parseSingle,
       liftShellEx = liftEventError "Single"
     }
+{-# INLINEABLE singleShellApp #-}
 
 parseSingle :: Text -> Either EventError Text
 parseSingle = Right
+{-# INLINEABLE parseSingle #-}
 
 liftEventError :: Exception e => Text -> e -> EventError
 liftEventError n e =
@@ -82,3 +91,4 @@ liftEventError n e =
       short = "Command error",
       long = pack $ displayException e
     }
+{-# INLINEABLE liftEventError #-}

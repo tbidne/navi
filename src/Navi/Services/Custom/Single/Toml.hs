@@ -50,6 +50,8 @@ singleCodec =
       <*> Toml.table NaviNote.naviNoteCodec "note" .= note
       <*> Toml.dioptional EventToml.repeatEventCodec .= repeatEventCfg
       <*> Toml.dioptional EventToml.errorNoteCodec .= errEventCfg
+{-# INLINEABLE singleCodec #-}
 
 commandCodec :: TomlCodec Command
 commandCodec = Toml.textBy showt (Right . MkCommand) "command"
+{-# INLINEABLE commandCodec #-}

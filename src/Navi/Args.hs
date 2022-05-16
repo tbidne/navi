@@ -40,6 +40,7 @@ instance (Show1 f) => Show (Args f) where
   show MkArgs {configFile} =
     "MkArgs "
       <> Functor.showsPrec1 9 configFile " "
+  {-# INLINEABLE show #-}
 
 -- | Parses cli args and fills in defaults. These defaults are based on the
 -- detected XDG Base Directory and default names.
@@ -47,6 +48,7 @@ getArgs :: MonadIO m => m (Args Identity)
 getArgs = liftIO $ do
   args <- OptApp.execParser parserInfoArgs
   fillMissingDefaults args
+{-# INLINEABLE getArgs #-}
 
 fillMissingDefaults :: Args Maybe -> IO (Args Identity)
 fillMissingDefaults args = do
@@ -65,6 +67,7 @@ fillMissingDefaults args = do
     configFile = args ^. #configFile
     defaultXdg = Dir.getXdgDirectory XdgConfig "navi/"
     defConfigName = "navi-config.toml"
+{-# INLINEABLE fillMissingDefaults #-}
 
 -- | 'ParserInfo' type for parsing 'Args'.
 parserInfoArgs :: ParserInfo (Args Maybe)
@@ -93,6 +96,7 @@ parserInfoArgs =
           <> " this query and send a desktop notification if the status has"
           <> " changed. See github.com/tbidne/navi#README for full"
           <> " documentation."
+{-# INLINEABLE parserInfoArgs #-}
 
 argsParser :: Parser (Args Maybe)
 argsParser =
@@ -100,6 +104,7 @@ argsParser =
     <$> configFileParser
       <**> OptApp.helper
       <**> version
+{-# INLINEABLE argsParser #-}
 
 version :: Parser (a -> a)
 version = OptApp.infoOption txt (OptApp.long "version" <> OptApp.short 'v')
@@ -112,9 +117,11 @@ version = OptApp.infoOption txt (OptApp.long "version" <> OptApp.short 'v')
           "Revision: " <> $(GitRev.gitHash),
           "Date: " <> $(GitRev.gitCommitDate)
         ]
+{-# INLINEABLE version #-}
 
 versNum :: [Char]
 versNum = "Version: " <> $$(PV.packageVersionStringTH "navi.cabal")
+{-# INLINEABLE versNum #-}
 
 configFileParser :: Parser (Maybe String)
 configFileParser =
@@ -129,3 +136,4 @@ configFileParser =
   where
     helpTxt =
       "Path to config file. Defaults to <xdgConfig>/navi/navi-config.toml."
+{-# INLINEABLE configFileParser #-}

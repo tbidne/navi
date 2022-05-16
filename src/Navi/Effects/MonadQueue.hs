@@ -21,10 +21,16 @@ class Monad m => MonadQueue m where
 
 instance MonadQueue IO where
   readQueue = Queue.readQueueIO
+  {-# INLINEABLE readQueue #-}
   writeQueue = Queue.writeQueueIO
+  {-# INLINEABLE writeQueue #-}
   flushQueue = Queue.flushQueueIO
+  {-# INLINEABLE flushQueue #-}
 
 instance MonadQueue m => MonadQueue (ReaderT e m) where
   readQueue = lift . readQueue
+  {-# INLINEABLE readQueue #-}
   writeQueue q = lift . writeQueue q
+  {-# INLINEABLE writeQueue #-}
   flushQueue = lift . flushQueue
+  {-# INLINEABLE flushQueue #-}

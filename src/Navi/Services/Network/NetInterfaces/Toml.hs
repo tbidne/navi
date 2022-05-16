@@ -50,6 +50,7 @@ netInterfacesCodec =
     <*> Toml.dioptional EToml.repeatEventCodec .= repeatEvent
     <*> Toml.dioptional EToml.errorNoteCodec .= errorNote
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
+{-# INLINEABLE netInterfacesCodec #-}
 
 appCodec :: TomlCodec (RunApp NetInterfaceApp)
 appCodec = Toml.dimap f g mappCodec
@@ -68,3 +69,4 @@ mappCodec =
     parseBatteryType "nmcli" = Right NetInterfaceNmCli
     parseBatteryType "ip" = Right NetInterfaceIp
     parseBatteryType t = Left t
+{-# INLINEABLE mappCodec #-}

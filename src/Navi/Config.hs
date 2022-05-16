@@ -50,6 +50,7 @@ readConfig path = do
       case Toml.decodeExact ConfigToml.configCodec contents of
         Left tomlErrs -> throwM $ TomlError tomlErrs
         Right cfg -> tomlToConfig cfg
+{-# INLINEABLE readConfig #-}
 
 tomlToConfig :: (MonadMutRef ref m, MonadThrow m) => ConfigToml -> m (Config ref)
 tomlToConfig toml = do
@@ -86,3 +87,4 @@ tomlToConfig toml = do
     batteryPercentageToml = toml ^. #batteryPercentageToml
     batteryStatusToml = toml ^. #batteryStatusToml
     netInterfacesToml = toml ^. #netInterfacesToml
+{-# INLINEABLE tomlToConfig #-}

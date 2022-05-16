@@ -46,12 +46,14 @@ configCodec =
     <*> Toml.dioptional (Toml.table BStateToml.batteryPercentageCodec "battery-percentage") .= batteryPercentageToml
     <*> Toml.dioptional (Toml.table BChargeStatusToml.batteryStatusCodec "battery-status") .= batteryStatusToml
     <*> Toml.list NetConnToml.netInterfacesCodec "net-interface" .= netInterfacesToml
+{-# INLINEABLE configCodec #-}
 
 logCodec :: TomlCodec Logging
 logCodec =
   MkLogging
     <$> severityCodec .= severity
     <*> locationCodec .= location
+{-# INLINEABLE logCodec #-}
 
 severityCodec :: TomlCodec (Maybe Severity)
 severityCodec =
@@ -69,6 +71,7 @@ severityCodec =
         "Unsupported severity: "
           <> other
           <> ". Should be one of <info|error>."
+{-# INLINEABLE severityCodec #-}
 
 locationCodec :: TomlCodec (Maybe LogLoc)
 locationCodec = Toml.dioptional $ Toml.textBy showLoc parseLoc "location"
@@ -79,6 +82,7 @@ locationCodec = Toml.dioptional $ Toml.textBy showLoc parseLoc "location"
     parseLoc "stdout" = Right Stdout
     parseLoc "default" = Right DefPath
     parseLoc f = Right $ File $ unpack f
+{-# INLINEABLE locationCodec #-}
 
 noteSystemCodec :: TomlCodec NoteSystem
 noteSystemCodec = Toml.textBy showSys parseSys "note-system"
@@ -88,3 +92,4 @@ noteSystemCodec = Toml.textBy showSys parseSys "note-system"
     parseSys "dbus" = Right DBus
     parseSys "notify-send" = Right NotifySend
     parseSys x = Left x
+{-# INLINEABLE noteSystemCodec #-}

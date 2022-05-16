@@ -51,6 +51,7 @@ runEvent event = addNamespace "runEvent" $ do
   result <- query $ event ^. #serviceType
   sendLogQueue $ MkNaviLog InfoS ("Shell returned: " <> showt result)
   pure result
+{-# INLINEABLE runEvent #-}
 
 -- | Determines if we should block the event. The semantics are:
 --
@@ -86,6 +87,7 @@ blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
         do
           writeRef prevRef $ Just newVal
           pure False
+{-# INLINEABLE blockRepeat #-}
 
 -- | Determines if we should block the error event. The semantics are:
 --
@@ -126,6 +128,7 @@ blockErr errorEvent = addNamespace "blockErr" $ do
           sendLogQueue $ MkNaviLog DebugS "Send error"
           writeRef ref $ Just ()
           pure False
+{-# INLINEABLE blockErr #-}
 
 -- | If the reference is 'NoRepeats' then we overwrite the previous reference
 -- with the new parameter. Otherwise we do nothing.
@@ -139,3 +142,4 @@ updatePrevTrigger repeatEvent newVal =
         then writeRef ref $ Just newVal
         else pure ()
     _ -> pure ()
+{-# INLINEABLE updatePrevTrigger #-}

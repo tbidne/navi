@@ -12,24 +12,24 @@ optimization: 2
 source-repository-package
     type: git
     location: https://github.com/tbidne/algebra-simple.git
-    tag: 2a020dbe0290abe57af31c5011a3a18ff17dcec9
+    tag: be105b31e3bd2bc00c69cd5c1e869294b26fbb17
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/byte-types.git
-    tag: e1f2f889ede098b8c7682db1504a831f81c98c3d
+    tag: 60e7ad675f017cbd8467bef649cfcea48f626ab5
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/pythia.git
-    tag: 0b8977d67b1f7e8bb00560988f92455ed0ebc3a7
+    tag: ea7dd618664012b5fa7bf59da62959057f5eb008
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/relative-time.git
-    tag: 1b0a14bee427e7401247fd3d8279a54e0b5bd5ea
+    tag: dd4bf2a37bc22763eed6c9bf80ada9b323fb7a22
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/smart-math.git
-    tag: f33aabe5eb9f6f5ae4d51607d7159086bcb9899d
+    tag: 652cf1c7b61c1c8b67ce1ce1b4ecea77173b947a

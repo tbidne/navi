@@ -87,6 +87,7 @@ runNavi = do
     logExAndRethrow prefix io = catchAllLifted io $ \ex -> do
       sendLogQueue $ MkNaviLog CriticalS (prefix <> pack (displayException ex))
       throwM ex
+{-# INLINEABLE runNavi #-}
 
 processEvent ::
   forall m ref env.
@@ -147,6 +148,7 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
       if blockErrEvent
         then sendLogQueue $ MkNaviLog DebugS "Error note blocked"
         else sendNoteQueue (toNote e)
+{-# INLINEABLE processEvent #-}
 
 eventErrToNote :: EventError -> NaviNote
 eventErrToNote ex =
@@ -156,6 +158,7 @@ eventErrToNote ex =
       urgency = Just Critical,
       timeout = Nothing
     }
+{-# INLINEABLE eventErrToNote #-}
 
 exToNote :: SomeException -> NaviNote
 exToNote ex =
@@ -165,6 +168,7 @@ exToNote ex =
       urgency = Just Critical,
       timeout = Nothing
     }
+{-# INLINEABLE exToNote #-}
 
 pollNoteQueue ::
   ( HasNoteQueue env,
@@ -177,6 +181,7 @@ pollNoteQueue ::
 pollNoteQueue = addNamespace "note-poller" $ do
   queue <- asks getNoteQueue
   forever $ readQueue queue >>= sendNote
+{-# INLINEABLE pollNoteQueue #-}
 
 pollLogQueue ::
   ( HasLogQueue env,
@@ -188,3 +193,4 @@ pollLogQueue ::
 pollLogQueue = addNamespace "logger" $ do
   queue <- asks getLogQueue
   forever $ readQueue queue >>= uncurry logText
+{-# INLINEABLE pollLogQueue #-}

@@ -16,8 +16,12 @@ class Monad m => MonadShell m where
 
 instance MonadShell IO where
   readFile = readFileUtf8Lenient
+  {-# INLINEABLE readFile #-}
   sleep = CC.threadDelay . PollInt.toSleepTime
+  {-# INLINEABLE sleep #-}
 
 instance MonadShell m => MonadShell (ReaderT e m) where
   readFile = lift . readFile
+  {-# INLINEABLE readFile #-}
   sleep = lift . sleep
+  {-# INLINEABLE sleep #-}

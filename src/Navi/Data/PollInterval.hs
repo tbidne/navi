@@ -28,7 +28,9 @@ makeFieldLabelsNoPrefix ''PollInterval
 -- | @since 0.1
 instance Bounded PollInterval where
   minBound = MkPollInterval 0
+  {-# INLINEABLE minBound #-}
   maxBound = maxPollInterval
+  {-# INLINEABLE maxBound #-}
 
 -- | Codec for 'PollInterval'.
 --
@@ -52,6 +54,7 @@ pollIntervalCodec =
                     <> ". Maximum seconds is "
                     <> showt (maxBound :: PollInterval)
               else Right $ MkPollInterval relTimeSec
+{-# INLINEABLE pollIntervalCodec #-}
 
 -- | Converts a 'PollInterval' into an 'Int' suitable to be used with
 -- threadDelay.
@@ -59,6 +62,7 @@ pollIntervalCodec =
 -- @since 0.1
 toSleepTime :: PollInterval -> Int
 toSleepTime = fromIntegral . (* 1_000_000) . view #unPollInterval
+{-# INLINEABLE toSleepTime #-}
 
 maxPollInterval :: PollInterval
 maxPollInterval = MkPollInterval (fromIntegral mx)
@@ -68,3 +72,4 @@ maxPollInterval = MkPollInterval (fromIntegral mx)
     -- by 1_000_000, thus the maximum value we can safely store is
     -- (maxInt / 1_000_000).
     mx = (maxBound :: Int) `div` 1_000_000
+{-# INLINEABLE maxPollInterval #-}

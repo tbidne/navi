@@ -107,38 +107,46 @@ import Prelude qualified as P
 -- | 'Text' version of 'P.show'.
 showt :: P.Show a => a -> Text
 showt = pack . P.show
+{-# INLINEABLE showt #-}
 
 -- | 'Text' version of 'error'.
 error :: Text -> a
 error = P.error . unpack
+{-# INLINEABLE error #-}
 
 -- | 'Text' version of 'P.print'.
 print :: P.Show a => a -> IO ()
 print = putStrLn . showt
+{-# INLINEABLE print #-}
 
 -- | Safe @head@.
 headMaybe :: [a] -> Maybe a
 headMaybe [] = Nothing
 headMaybe (x : _) = Just x
+{-# INLINEABLE headMaybe #-}
 
 -- | Transforms 'Maybe' to 'Either'.
 maybeToEither :: e -> Maybe a -> Either e a
 maybeToEither e Nothing = Left e
 maybeToEither _ (Just x) = Right x
+{-# INLINEABLE maybeToEither #-}
 
 -- | Convenience function for mapping @(a -> b)@ over a monomorphic bifunctor.
 monoBimap :: Bifunctor p => (a -> b) -> p a a -> p b b
 monoBimap f = bimap f f
+{-# INLINEABLE monoBimap #-}
 
 -- | Flipped version of '(.)'.
 (>.>) :: (a -> b) -> (b -> c) -> a -> c
 (>.>) = flip (.)
+{-# INLINEABLE (>.>) #-}
 
 infixr 8 >.>
 
 -- | Composed 'fmap'.
 (<<$>>) :: (Functor f, Functor g) => (a -> b) -> g (f a) -> g (f b)
 (<<$>>) = fmap . fmap
+{-# INLINEABLE (<<$>>) #-}
 
 infixl 4 <<$>>
 
@@ -147,21 +155,25 @@ infixl 4 <<$>>
 -- @since 0.1
 writeFileUtf8 :: FilePath -> Text -> IO ()
 writeFileUtf8 fp = BS.writeFile fp . TextEnc.encodeUtf8
+{-# INLINEABLE writeFileUtf8 #-}
 
 -- | Strictly reads a file and leniently converts the contents to UTF8.
 --
 -- @since 0.1
 readFileUtf8Lenient :: MonadIO m => FilePath -> m Text
 readFileUtf8Lenient = fmap decodeUtf8Lenient . liftIO . BS.readFile
+{-# INLINEABLE readFileUtf8Lenient #-}
 
 -- | Lenient UTF8 decode.
 --
 -- @since 0.1
 decodeUtf8Lenient :: ByteString -> Text
 decodeUtf8Lenient = TextEnc.decodeUtf8With TextEncErr.lenientDecode
+{-# INLINEABLE decodeUtf8Lenient #-}
 
 -- | Like 'catchAll', but for 'MonadBaseControl'.
 --
 -- @since 0.1
 catchAllLifted :: MonadBaseControl IO m => m a -> (SomeException -> m a) -> m a
 catchAllLifted = Lifted.catch
+{-# INLINEABLE catchAllLifted #-}

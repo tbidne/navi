@@ -37,6 +37,7 @@ toEvent toml = do
     cfg = MkBatteryConfig $ toml ^. #app
     to = toml ^. #mTimeout
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
+{-# INLINEABLE toEvent #-}
 
 mkStatusEvent ::
   Maybe Timeout ->
@@ -54,6 +55,7 @@ mkStatusEvent to cfg pi repeatEvent errorNote =
       repeatEvent = repeatEvent,
       errorNote = errorNote
     }
+{-# INLINEABLE mkStatusEvent #-}
 
 toNote :: Maybe Timeout -> BatteryStatus -> Maybe NaviNote
 toNote timeout status = toNote' timeout $ fromStatus status
@@ -62,6 +64,7 @@ toNote timeout status = toNote' timeout $ fromStatus status
     fromStatus Discharging = "Battery discharging"
     fromStatus Full = "Battery full"
     fromStatus Pending = "Battery pending"
+{-# INLINEABLE toNote #-}
 
 toNote' :: Maybe Timeout -> Text -> Maybe NaviNote
 toNote' timeout msg =
@@ -72,3 +75,4 @@ toNote' timeout msg =
         NNote.urgency = Nothing,
         NNote.timeout = timeout
       }
+{-# INLINEABLE toNote' #-}

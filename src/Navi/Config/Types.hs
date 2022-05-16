@@ -60,10 +60,12 @@ makePrismLabels ''NoteSystem
 -- | Default notification system i.e. DBus.
 defaultNoteSystem :: NoteSystem
 defaultNoteSystem = DBus
+{-# INLINEABLE defaultNoteSystem #-}
 
 -- | Default logging i.e. log errors and use the default path.
 defaultLogging :: Logging
 defaultLogging = MkLogging (Just ErrorS) (Just DefPath)
+{-# INLINEABLE defaultLogging #-}
 
 -- | 'Config' holds the data from 'Navi.Config.Toml.ConfigToml' once it has been processed
 -- (e.g., all user defined Events are parsed).
@@ -85,6 +87,7 @@ instance Show (Config ref) where
       <> ", logging = "
       <> show (config ^. #logging)
       <> "}"
+  {-# INLINEABLE show #-}
 
 -- | 'ConfigErr' represents the errors we can encounter when attempting to
 -- parse a config file.
@@ -98,5 +101,6 @@ instance Exception ConfigErr where
   displayException (FileErr ex) = "Error reading file: <" <> displayException ex <> ">"
   displayException NoEvents = "No events found"
   displayException (TomlError errs) = unpack $ Toml.prettyTomlDecodeErrors errs
+  {-# INLINEABLE displayException #-}
 
 makeFieldLabelsNoPrefix ''ConfigErr

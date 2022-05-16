@@ -67,24 +67,36 @@ makeFieldLabelsNoPrefix ''Env
 
 instance HasEvents ref (Env ref) where
   getEvents = view #events
+  {-# INLINEABLE getEvents #-}
 
 instance HasLogEnv (Env ref) where
   getLogEnv = view #logEnv
+  {-# INLINEABLE getLogEnv #-}
   setLogEnv = set #logEnv
+  {-# INLINEABLE setLogEnv #-}
   overLogEnv = over #logEnv
+  {-# INLINEABLE overLogEnv #-}
 
 instance HasLogContexts (Env ref) where
   getLogContexts = view #logCtx
+  {-# INLINEABLE getLogContexts #-}
   setLogContexts = set #logCtx
+  {-# INLINEABLE setLogContexts #-}
   overLogContexts = over #logCtx
+  {-# INLINEABLE overLogContexts #-}
 
 instance HasLogNamespace (Env ref) where
   getLogNamespace = view #logNamespace
+  {-# INLINEABLE getLogNamespace #-}
   setLogNamespace = set #logNamespace
+  {-# INLINEABLE setLogNamespace #-}
   overLogNamespace = over #logNamespace
+  {-# INLINEABLE overLogNamespace #-}
 
 instance HasLogQueue (Env ref) where
   getLogQueue = view #logQueue
+  {-# INLINEABLE getLogQueue #-}
 
 instance HasNoteQueue (Env ref) where
   getNoteQueue = view #noteQueue
+  {-# INLINEABLE getNoteQueue #-}

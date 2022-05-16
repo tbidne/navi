@@ -17,6 +17,7 @@ appCodec = Toml.dimap f g mappCodec
     f (Single x) = Just x
     g Nothing = Many
     g (Just x) = Single x
+{-# INLINEABLE appCodec #-}
 
 mappCodec :: TomlCodec (Maybe BatteryApp)
 mappCodec =
@@ -29,3 +30,4 @@ mappCodec =
     parseBatteryType "sysfs" = Right BatterySysFs
     parseBatteryType "upower" = Right BatteryUPower
     parseBatteryType t = Left t
+{-# INLINEABLE mappCodec #-}

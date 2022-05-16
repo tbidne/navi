@@ -75,6 +75,7 @@ batteryPercentageCodec =
     <*> Toml.dioptional EventToml.repeatEventCodec .= repeatEvent
     <*> Toml.dioptional EventToml.errorNoteCodec .= errorNote
     <*> appCodec .= app
+{-# INLINEABLE batteryPercentageCodec #-}
 
 batteryPercentageNoteTomlCodec :: TomlCodec BatteryPercentageNoteToml
 batteryPercentageNoteTomlCodec =
@@ -82,15 +83,19 @@ batteryPercentageNoteTomlCodec =
     <$> percentageCodec .= percentage
     <*> Toml.dioptional NaviNote.urgencyLevelCodec .= urgency
     <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
+{-# INLINEABLE batteryPercentageNoteTomlCodec #-}
 
 percentageCodec :: TomlCodec Percentage
 percentageCodec = boundedNCodec "percent"
+{-# INLINEABLE percentageCodec #-}
 
 boundedNCodec :: Key -> TomlCodec Percentage
 boundedNCodec = Toml.match _BoundedN
+{-# INLINEABLE boundedNCodec #-}
 
 _BoundedN :: TomlBiMap Percentage AnyValue
 _BoundedN = _BoundedNNatural >>> Toml._Natural
+{-# INLINEABLE _BoundedN #-}
 
 _BoundedNNatural :: TomlBiMap Percentage Natural
 _BoundedNNatural = BiMap (Right . fromIntegral . Interval.unLRInterval . unPercentage) parseBounded
@@ -99,3 +104,4 @@ _BoundedNNatural = BiMap (Right . fromIntegral . Interval.unLRInterval . unPerce
       (fmap MkPercentage . Interval.mkLRInterval . fromIntegral) >.> \case
         Nothing -> Left $ ArbitraryError "Passed integer outside of bounds"
         Just n -> Right n
+{-# INLINEABLE _BoundedNNatural #-}

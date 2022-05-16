@@ -30,6 +30,7 @@ makeFieldLabelsNoPrefix ''RepeatEvent
 instance Show (RepeatEvent ref a) where
   show (NoRepeats _) = "NoRepeats <ref>"
   show AllowRepeats = "AllowRepeats"
+  {-# INLINEABLE show #-}
 
 -- | Determines if we should send notifications for errors and, if so, if we
 -- allow repeats.
@@ -85,6 +86,7 @@ instance Show (Event ref result) where
       <> ", errorNote = "
       <> show (event ^. #errorNote)
       <> "}"
+  {-# INLINEABLE show #-}
 
 -- | Existentially quantifies result type on an 'Event'. Used so that we can
 -- store different events in the same list.
