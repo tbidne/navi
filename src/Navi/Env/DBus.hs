@@ -85,16 +85,16 @@ instance HasDBusClient DBusEnv where
 
 -- | Creates a 'DBusEnv' from the provided log types and configuration data.
 mkDBusEnv ::
-  MonadIO m =>
+  MonadBase IO m =>
   LogEnv ->
   LogContexts ->
   Namespace ->
   Config IORef ->
   m DBusEnv
 mkDBusEnv logEnv logContext namespace config = do
-  client <- liftIO DBusN.connectSession
-  logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
-  noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
+  client <- liftBase DBusN.connectSession
+  logQueue <- liftBase $ STM.atomically $ TBQueue.newTBQueue 1000
+  noteQueue <- liftBase $ STM.atomically $ TBQueue.newTBQueue 1000
   pure $
     MkDBusEnv
       { coreEnv =

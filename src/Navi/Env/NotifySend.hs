@@ -74,15 +74,15 @@ instance HasNoteQueue NotifySendEnv where
 -- | Creates a 'NotifySendEnv' from the provided log types and configuration
 -- data.
 mkNotifySendEnv ::
-  MonadIO m =>
+  MonadBase IO m =>
   LogEnv ->
   LogContexts ->
   Namespace ->
   Config IORef ->
   m NotifySendEnv
 mkNotifySendEnv logEnv logContext namespace config = do
-  logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
-  noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
+  logQueue <- liftBase $ STM.atomically $ TBQueue.newTBQueue 1000
+  noteQueue <- liftBase $ STM.atomically $ TBQueue.newTBQueue 1000
   pure $
     MkNotifySendEnv
       { coreEnv =

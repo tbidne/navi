@@ -101,20 +101,20 @@ instance MonadNotify (NaviT MockEnv IntTestIO) where
       then throwM $ MkEventError "SentException" "sending mock exception" ""
       else do
         notes <- asks (view #sentNotes)
-        liftIO $ modifyIORef' notes (note :)
+        liftBase $ modifyIORef' notes (note :)
 
 instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
   -- Service that changes every time: can be used to test multiple
   -- notifications are sent.
   query (BatteryPercentage _) = do
     bpRef <- asks (view #lastPercentage)
-    oldVal <- liftIO $ Interval.unLRInterval . unPercentage <$> readIORef bpRef
+    oldVal <- liftBase $ Interval.unLRInterval . unPercentage <$> readIORef bpRef
     let !newVal =
           if oldVal == 0
             then 100
             else oldVal - 1
         newBp = MkPercentage $ Interval.unsafeLRInterval newVal
-    liftIO $ writeIORef bpRef newBp
+    liftBase $ writeIORef bpRef newBp
     pure $ MkBattery newBp Discharging
   -- Constant service. Can test duplicate behavior.
   query (BatteryStatus _) = pure Charging
@@ -134,8 +134,8 @@ configToMockEnv config = do
   sentNotesRef <- newIORef []
 
   lastPercentageRef <- newIORef $ MkPercentage $ Interval.unsafeLRInterval 6
-  logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
-  noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
+  logQueue <- liftBase $ STM.atomically $ TBQueue.newTBQueue 1000
+  noteQueue <- liftBase $ STM.atomically $ TBQueue.newTBQueue 1000
 
   pure $
     MkMockEnv

@@ -160,8 +160,8 @@ writeFileUtf8 fp = BS.writeFile fp . TextEnc.encodeUtf8
 -- | Strictly reads a file and leniently converts the contents to UTF8.
 --
 -- @since 0.1
-readFileUtf8Lenient :: MonadIO m => FilePath -> m Text
-readFileUtf8Lenient = fmap decodeUtf8Lenient . liftIO . BS.readFile
+readFileUtf8Lenient :: MonadBase IO m => FilePath -> m Text
+readFileUtf8Lenient = fmap decodeUtf8Lenient . liftBase . BS.readFile
 {-# INLINEABLE readFileUtf8Lenient #-}
 
 -- | Lenient UTF8 decode.
