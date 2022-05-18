@@ -11,8 +11,8 @@ import Navi.Services.Types (ServiceType (..))
 import Pythia (PythiaException (..))
 import Pythia qualified
 import Pythia.Data.Command (Command (..))
-import Pythia.ShellApp (SimpleShell (..))
-import Pythia.ShellApp qualified as ShellApp
+import Pythia.Internal.ShellApp (SimpleShell (..))
+import Pythia.Internal.ShellApp qualified as ShellApp
 
 -- | This class represents an effect of querying system information.
 class Monad m => MonadSystemInfo m where
@@ -31,7 +31,7 @@ instance MonadSystemInfo IO where
     Multiple cmd -> queryMultiple cmd
   {-# INLINEABLE query #-}
 
-rethrowPythia :: MonadCatch m => Text -> m a -> m a
+rethrowPythia :: Text -> IO a -> IO a
 rethrowPythia n io =
   io `catch` \(e :: PythiaException) ->
     throwM $

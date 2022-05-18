@@ -94,7 +94,6 @@ processEvent ::
   ( HasLogNamespace env,
     HasLogQueue env,
     HasNoteQueue env,
-    MonadBaseControl IO m,
     MonadCatch m,
     MonadLogger m,
     MonadMutRef ref m,

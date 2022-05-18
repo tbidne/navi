@@ -55,15 +55,26 @@ packages:
     commit: 60e7ad675f017cbd8467bef649cfcea48f626ab5
     git: https://github.com/tbidne/byte-types.git
 - completed:
+    name: env-guard
+    pantry-tree:
+      sha256: 9316c18d5e16921505028dca43257cd98e8fd467b76e49554e3b969da63590e2
+      size: 1335
+    commit: 89a68d033d0671239b5e5e4a31f4355c46d4b6d3
+    git: https://github.com/tbidne/env-guard.git
+    version: '0.1'
+  original:
+    commit: 89a68d033d0671239b5e5e4a31f4355c46d4b6d3
+    git: https://github.com/tbidne/env-guard.git
+- completed:
     name: pythia
     pantry-tree:
-      sha256: 5aff32c06af6e31117f946053a747d6cbc1d52285b02f339d411a60761e2d875
-      size: 4473
-    commit: ea7dd618664012b5fa7bf59da62959057f5eb008
+      sha256: a5c4bb3882b7fc8ccabaa09c21195c3185b55e1f886478ecc37e229ea8657ada
+      size: 4482
+    commit: 9088124cd1ac3514b26dc636487c490fce99d218
     git: https://github.com/tbidne/pythia.git
     version: '0.1'
   original:
-    commit: ea7dd618664012b5fa7bf59da62959057f5eb008
+    commit: 9088124cd1ac3514b26dc636487c490fce99d218
     git: https://github.com/tbidne/pythia.git
 - completed:
     name: relative-time

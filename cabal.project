@@ -21,8 +21,13 @@ source-repository-package
 
 source-repository-package
     type: git
+    location: https://github.com/tbidne/env-guard.git
+    tag: 89a68d033d0671239b5e5e4a31f4355c46d4b6d3
+
+source-repository-package
+    type: git
     location: https://github.com/tbidne/pythia.git
-    tag: ea7dd618664012b5fa7bf59da62959057f5eb008
+    tag: 9088124cd1ac3514b26dc636487c490fce99d218
 
 source-repository-package
     type: git

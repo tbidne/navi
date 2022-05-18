@@ -18,8 +18,10 @@ extra-deps:
   commit: be105b31e3bd2bc00c69cd5c1e869294b26fbb17
 - git: https://github.com/tbidne/byte-types.git
   commit: 60e7ad675f017cbd8467bef649cfcea48f626ab5
+- git: https://github.com/tbidne/env-guard.git
+  commit: 89a68d033d0671239b5e5e4a31f4355c46d4b6d3
 - git: https://github.com/tbidne/pythia.git
-  commit: ea7dd618664012b5fa7bf59da62959057f5eb008
+  commit: 9088124cd1ac3514b26dc636487c490fce99d218
 - git: https://github.com/tbidne/relative-time.git
   commit: dd4bf2a37bc22763eed6c9bf80ada9b323fb7a22
 - git: https://github.com/tbidne/smart-math.git
