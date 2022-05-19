@@ -84,7 +84,7 @@ runNavi = do
           ( Async.mapConcurrently processEvent evts
           )
 
-    logExAndRethrow prefix io = catchAllLifted io $ \ex -> do
+    logExAndRethrow prefix io = catchAnyLifted io $ \ex -> do
       sendLogQueue $ MkNaviLog CriticalS (prefix <> pack (displayException ex))
       throwM ex
 {-# INLINEABLE runNavi #-}
@@ -110,7 +110,7 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
     sendLogQueue $ MkNaviLog InfoS ("Checking " <> name)
     (Event.runEvent event >>= handleSuccess)
       `catch` handleEventError
-      `catchAll` handleSomeException
+      `catchAny` handleSomeException
     sleep pi
   where
     name = event ^. #name

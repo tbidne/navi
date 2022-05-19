@@ -29,7 +29,7 @@ module Navi.Prelude
     print,
 
     -- * Exceptions
-    catchAllLifted,
+    catchAnyLifted,
 
     -- * Base exports
     module X,
@@ -37,8 +37,18 @@ module Navi.Prelude
 where
 
 import Control.Applicative as X (Alternative (..), Applicative (..), (<**>))
-import Control.Exception as X (Exception (..), SomeException)
-import Control.Exception.Lifted qualified as Lifted
+import Control.Exception.Safe as X
+  ( Exception (..),
+    MonadCatch,
+    MonadThrow,
+    SomeException,
+    bracket,
+    catch,
+    catchAny,
+    handle,
+    throwM,
+    try,
+  )
 import Control.Monad as X
   ( Monad (..),
     forever,
@@ -49,18 +59,10 @@ import Control.Monad as X
     (>=>),
   )
 import Control.Monad.Base as X (MonadBase (..))
-import Control.Monad.Catch as X
-  ( MonadCatch (..),
-    MonadThrow (..),
-    bracket,
-    catchAll,
-    handle,
-    try,
-  )
 import Control.Monad.IO.Class as X (MonadIO (..))
 import Control.Monad.Reader as X (MonadReader (..), ReaderT (..), asks)
 import Control.Monad.Trans as X (MonadTrans (..))
-import Control.Monad.Trans.Control as X (MonadBaseControl (..))
+import Control.Monad.Trans.Control as X (MonadBaseControl (..), control)
 import Data.Bifunctor as X (Bifunctor (..))
 import Data.Bool as X (Bool (..), not, otherwise, (&&), (||))
 import Data.ByteString (ByteString)
@@ -171,9 +173,12 @@ decodeUtf8Lenient :: ByteString -> Text
 decodeUtf8Lenient = TextEnc.decodeUtf8With TextEncErr.lenientDecode
 {-# INLINEABLE decodeUtf8Lenient #-}
 
--- | Like 'catchAll', but for 'MonadBaseControl'.
+-- | Like 'catchAny', but for 'MonadBaseControl'.
 --
 -- @since 0.1
-catchAllLifted :: MonadBaseControl IO m => m a -> (SomeException -> m a) -> m a
-catchAllLifted = Lifted.catch
-{-# INLINEABLE catchAllLifted #-}
+catchAnyLifted :: MonadBaseControl IO m => m a -> (SomeException -> m a) -> m a
+catchAnyLifted io handler = control $ \runInIO ->
+  catchAny
+    (runInIO io)
+    (runInIO . handler)
+{-# INLINEABLE catchAnyLifted #-}

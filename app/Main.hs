@@ -30,7 +30,7 @@ main = do
   args <- getArgs
   config <-
     tryParseConfig args
-      `catchAll` writeConfigErr
+      `catchAny` writeConfigErr
 
   let mkLogEnvFn = mkLogEnv (config ^. #logging)
   bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
