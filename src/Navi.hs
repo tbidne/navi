@@ -9,8 +9,6 @@ module Navi
   )
 where
 
-import Control.Concurrent.Async.Lifted.Safe (Forall, Pure)
-import Control.Concurrent.Async.Lifted.Safe qualified as Async
 import DBus.Notify (UrgencyLevel (..))
 import Data.List.NonEmpty qualified as NE
 import Katip (Severity (..))
@@ -32,24 +30,23 @@ import Navi.Event qualified as Event
 import Navi.Event.Types (AnyEvent (..), EventError (..))
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Prelude
+import UnliftIO.Async qualified as Async
 
 -- | Entry point for the application.
 runNavi ::
   forall ref env m.
-  ( Forall (Pure m),
-    HasEvents ref env,
+  ( HasEvents ref env,
     HasLogNamespace env,
     HasLogQueue env,
     HasNoteQueue env,
-    MonadBaseControl IO m,
-    MonadCatch m,
     MonadLogger m,
     MonadMutRef ref m,
     MonadNotify m,
     MonadQueue m,
     MonadShell m,
     MonadSystemInfo m,
-    MonadReader env m
+    MonadReader env m,
+    MonadUnliftIO m
   ) =>
   m Void
 runNavi = do
@@ -84,9 +81,9 @@ runNavi = do
           ( Async.mapConcurrently processEvent evts
           )
 
-    logExAndRethrow prefix io = catchAnyLifted io $ \ex -> do
+    logExAndRethrow prefix io = catchAny io $ \ex -> do
       sendLogQueue $ MkNaviLog CriticalS (prefix <> pack (displayException ex))
-      throwM ex
+      throwIO ex
 {-# INLINEABLE runNavi #-}
 
 processEvent ::
@@ -94,13 +91,13 @@ processEvent ::
   ( HasLogNamespace env,
     HasLogQueue env,
     HasNoteQueue env,
-    MonadCatch m,
     MonadLogger m,
     MonadMutRef ref m,
     MonadQueue m,
     MonadReader env m,
     MonadShell m,
-    MonadSystemInfo m
+    MonadSystemInfo m,
+    MonadUnliftIO m
   ) =>
   AnyEvent ref ->
   m Void

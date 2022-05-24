@@ -44,8 +44,8 @@ instance (Show1 f) => Show (Args f) where
 
 -- | Parses cli args and fills in defaults. These defaults are based on the
 -- detected XDG Base Directory and default names.
-getArgs :: MonadBase IO m => m (Args Identity)
-getArgs = liftBase $ do
+getArgs :: MonadIO m => m (Args Identity)
+getArgs = liftIO $ do
   args <- OptApp.execParser parserInfoArgs
   fillMissingDefaults args
 {-# INLINEABLE getArgs #-}

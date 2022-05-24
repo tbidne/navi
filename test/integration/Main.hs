@@ -11,7 +11,6 @@
 module Main (main) where
 
 import Control.Concurrent qualified as CC
-import Control.Concurrent.Async.Lifted qualified as Async
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
 import Integration.MockApp (MockEnv (..), configToMockEnv, runMockApp)
@@ -23,6 +22,7 @@ import Navi.Event (EventError (MkEventError))
 import System.Directory qualified as Dir
 import System.FilePath ((</>))
 import Test.Tasty qualified as Tasty
+import UnliftIO.Async qualified as Async
 
 -- | Runs integration tests.
 main :: IO ()

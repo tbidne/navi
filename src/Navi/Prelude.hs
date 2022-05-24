@@ -28,27 +28,12 @@ module Navi.Prelude
     showt,
     print,
 
-    -- * Exceptions
-    catchAnyLifted,
-
     -- * Base exports
     module X,
   )
 where
 
 import Control.Applicative as X (Alternative (..), Applicative (..), (<**>))
-import Control.Exception.Safe as X
-  ( Exception (..),
-    MonadCatch,
-    MonadThrow,
-    SomeException,
-    bracket,
-    catch,
-    catchAny,
-    handle,
-    throwM,
-    try,
-  )
 import Control.Monad as X
   ( Monad (..),
     forever,
@@ -58,11 +43,9 @@ import Control.Monad as X
     (=<<),
     (>=>),
   )
-import Control.Monad.Base as X (MonadBase (..))
 import Control.Monad.IO.Class as X (MonadIO (..))
 import Control.Monad.Reader as X (MonadReader (..), ReaderT (..), asks)
 import Control.Monad.Trans as X (MonadTrans (..))
-import Control.Monad.Trans.Control as X (MonadBaseControl (..), control)
 import Data.Bifunctor as X (Bifunctor (..))
 import Data.Bool as X (Bool (..), not, otherwise, (&&), (||))
 import Data.ByteString (ByteString)
@@ -103,6 +86,17 @@ import GHC.Show as X (Show (..))
 import Optics.Core as X (over, set, view, (%), (.~), (^.))
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrismLabels)
 import System.IO as X (FilePath, IO)
+import UnliftIO as X
+  ( Exception (..),
+    MonadUnliftIO (..),
+    SomeException,
+    bracket,
+    catch,
+    catchAny,
+    handle,
+    throwIO,
+    try,
+  )
 import Prelude as X (Integer, seq)
 import Prelude qualified as P
 
@@ -162,8 +156,8 @@ writeFileUtf8 fp = BS.writeFile fp . TextEnc.encodeUtf8
 -- | Strictly reads a file and leniently converts the contents to UTF8.
 --
 -- @since 0.1
-readFileUtf8Lenient :: MonadBase IO m => FilePath -> m Text
-readFileUtf8Lenient = fmap decodeUtf8Lenient . liftBase . BS.readFile
+readFileUtf8Lenient :: MonadIO m => FilePath -> m Text
+readFileUtf8Lenient = fmap decodeUtf8Lenient . liftIO . BS.readFile
 {-# INLINEABLE readFileUtf8Lenient #-}
 
 -- | Lenient UTF8 decode.
@@ -172,13 +166,3 @@ readFileUtf8Lenient = fmap decodeUtf8Lenient . liftBase . BS.readFile
 decodeUtf8Lenient :: ByteString -> Text
 decodeUtf8Lenient = TextEnc.decodeUtf8With TextEncErr.lenientDecode
 {-# INLINEABLE decodeUtf8Lenient #-}
-
--- | Like 'catchAny', but for 'MonadBaseControl'.
---
--- @since 0.1
-catchAnyLifted :: MonadBaseControl IO m => m a -> (SomeException -> m a) -> m a
-catchAnyLifted io handler = control $ \runInIO ->
-  catchAny
-    (runInIO io)
-    (runInIO . handler)
-{-# INLINEABLE catchAnyLifted #-}

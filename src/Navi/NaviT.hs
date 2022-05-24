@@ -36,14 +36,11 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
     ( Functor,
       Applicative,
       Monad,
-      MonadBase b,
-      MonadBaseControl b,
       MonadIO,
       MonadQueue,
       MonadReader e,
       MonadShell,
-      MonadCatch,
-      MonadThrow
+      MonadUnliftIO
     )
     via (ReaderT e m)
   deriving (MonadTrans) via (ReaderT e)
@@ -51,7 +48,7 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
 -- Concrete IO rather than MonadIO so that we can write instances over
 -- other MonadIOs (i.e. in tests)
 instance MonadSystemInfo (NaviT env IO) where
-  query = liftBase . query
+  query = liftIO . query
   {-# INLINEABLE query #-}
 
 -- Concrete IO rather than MonadIO so that we can write instances over
@@ -60,7 +57,7 @@ instance MonadNotify (NaviT DBusEnv IO) where
   sendNote naviNote = addNamespace "dbus" $ do
     sendLogQueue $ MkNaviLog DebugS (showt note)
     client <- asks getClient
-    liftBase $ sendDbus client note
+    liftIO $ sendDbus client note
     where
       note = naviToDBus naviNote
       sendDbus c = void . DBusN.notify c
@@ -71,7 +68,7 @@ instance MonadNotify (NaviT DBusEnv IO) where
 instance MonadNotify (NaviT NotifySendEnv IO) where
   sendNote naviNote = addNamespace "notify-send" $ do
     sendLogQueue $ MkNaviLog DebugS noteTxt
-    liftBase $ void $ Proc.readCreateProcess cp "notify-send"
+    liftIO $ void $ Proc.readCreateProcess cp "notify-send"
     where
       noteTxt = naviToNotifySend naviNote
       cp = Proc.shell $ unpack noteTxt

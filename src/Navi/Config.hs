@@ -39,20 +39,20 @@ import Toml qualified
 -- | Parses the provided toml file into a 'Config'. Throws 'ConfigErr' if
 -- anything goes wrong.
 readConfig ::
-  (MonadMutRef ref m, MonadShell m, MonadCatch m) =>
+  (MonadMutRef ref m, MonadShell m, MonadUnliftIO m) =>
   FilePath ->
   m (Config ref)
 readConfig path = do
   eContents <- try $ readFile path
   case eContents of
-    Left ex -> throwM $ FileErr ex
+    Left ex -> throwIO $ FileErr ex
     Right contents -> do
       case Toml.decodeExact ConfigToml.configCodec contents of
-        Left tomlErrs -> throwM $ TomlError tomlErrs
+        Left tomlErrs -> throwIO $ TomlError tomlErrs
         Right cfg -> tomlToConfig cfg
 {-# INLINEABLE readConfig #-}
 
-tomlToConfig :: (MonadMutRef ref m, MonadThrow m) => ConfigToml -> m (Config ref)
+tomlToConfig :: (MonadIO m, MonadMutRef ref m) => ConfigToml -> m (Config ref)
 tomlToConfig toml = do
   singleEvents <- traverse Single.toEvent singleToml
   multipleEvents <- traverse Multiple.toEvent multipleToml
@@ -71,7 +71,7 @@ tomlToConfig toml = do
       allEvts = maybeEvts <> multipleEvts
 
   case allEvts of
-    [] -> throwM NoEvents
+    [] -> throwIO NoEvents
     (e : es) ->
       pure $
         MkConfig
