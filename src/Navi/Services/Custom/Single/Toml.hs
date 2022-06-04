@@ -44,12 +44,12 @@ singleCodec :: TomlCodec SingleToml
 singleCodec =
   MkSingleToml
     <$> commandCodec .= command
-      <*> Toml.dioptional (Toml.text "name") .= name
-      <*> Toml.text "trigger" .= triggerVal
-      <*> Toml.dioptional pollIntervalCodec .= pollInterval
-      <*> Toml.table NaviNote.naviNoteCodec "note" .= note
-      <*> Toml.dioptional EventToml.repeatEventCodec .= repeatEventCfg
-      <*> Toml.dioptional EventToml.errorNoteCodec .= errEventCfg
+    <*> Toml.dioptional (Toml.text "name") .= name
+    <*> Toml.text "trigger" .= triggerVal
+    <*> Toml.dioptional pollIntervalCodec .= pollInterval
+    <*> Toml.table NaviNote.naviNoteCodec "note" .= note
+    <*> Toml.dioptional EventToml.repeatEventCodec .= repeatEventCfg
+    <*> Toml.dioptional EventToml.errorNoteCodec .= errEventCfg
 {-# INLINEABLE singleCodec #-}
 
 commandCodec :: TomlCodec Command

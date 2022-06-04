@@ -102,8 +102,8 @@ argsParser :: Parser (Args Maybe)
 argsParser =
   MkArgs
     <$> configFileParser
-      <**> OptApp.helper
-      <**> version
+    <**> OptApp.helper
+    <**> version
 {-# INLINEABLE argsParser #-}
 
 version :: Parser (a -> a)
