@@ -4,6 +4,10 @@
 build:
 	cabal build all
 
+.PHONY: clean
+clean:
+	cabal clean
+
 .PHONY: test
 test:
 	cabal test
