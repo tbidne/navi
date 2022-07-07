@@ -4,7 +4,7 @@ import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
-import Navi.Services.Custom.Single.Toml (SingleToml (..), singleCodec)
+import Navi.Services.Custom.Single.Toml (SingleToml (..))
 import Unit.Prelude
 
 tests :: TestTree
@@ -69,7 +69,7 @@ parsesNote =
           "summary = \"a summary\"",
           "body = \"a body\"",
           "urgency = \"critical\"",
-          "timeout = \"5\""
+          "timeout = 5"
         ]
     expected = MkNaviNote "a summary" (Just "a body") (Just Critical) (Just (Seconds 5))
 
@@ -149,4 +149,4 @@ parsesExpected ::
   a ->
   (SingleToml -> a) ->
   TestTree
-parsesExpected = decodeExpected singleCodec
+parsesExpected = decodeExpected

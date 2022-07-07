@@ -1,7 +1,6 @@
 -- | This module provides a service for multiple alerts.
 module Navi.Services.Custom.Multiple
   ( MultipleToml,
-    MultipleToml.multipleCodec,
     toEvent,
   )
 where
@@ -21,7 +20,6 @@ import Navi.Event.Types
   )
 import Navi.Prelude
 import Navi.Services.Custom.Multiple.Toml (MultipleToml, TriggerNoteToml (..))
-import Navi.Services.Custom.Multiple.Toml qualified as MultipleToml
 import Navi.Services.Types (ServiceType (..))
 import Pythia.Data.Command (Command)
 

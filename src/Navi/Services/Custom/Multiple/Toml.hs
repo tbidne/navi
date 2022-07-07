@@ -5,19 +5,20 @@
 module Navi.Services.Custom.Multiple.Toml
   ( MultipleToml (..),
     TriggerNoteToml (..),
-    multipleCodec,
   )
 where
 
 import Navi.Data.NaviNote (NaviNote)
-import Navi.Data.NaviNote qualified as NaviNote
-import Navi.Data.PollInterval (PollInterval (..), pollIntervalCodec)
-import Navi.Event.Toml (ErrorNoteToml, RepeatEventToml)
-import Navi.Event.Toml qualified as EventToml
+import Navi.Data.PollInterval (PollInterval (..), pollIntervalOptDecoder)
+import Navi.Event.Toml
+  ( ErrorNoteToml,
+    RepeatEventToml,
+    errorNoteOptDecoder,
+    repeatEventOptDecoder,
+  )
 import Navi.Prelude
+import Navi.Utils (commandDecoder)
 import Pythia.Data.Command (Command (..))
-import Toml (TomlCodec, (.=))
-import Toml qualified
 
 -- | TOML for alerts.
 data TriggerNoteToml = MkTriggerNoteToml
@@ -29,6 +30,13 @@ data TriggerNoteToml = MkTriggerNoteToml
   deriving stock (Eq, Show)
 
 makeFieldLabelsNoPrefix ''TriggerNoteToml
+
+-- | @since 0.1
+instance DecodeTOML TriggerNoteToml where
+  tomlDecoder =
+    MkTriggerNoteToml
+      <$> getField "trigger"
+      <*> getField "note"
 
 -- | TOML for the custom multiple service.
 data MultipleToml = MkMultipleToml
@@ -49,31 +57,13 @@ data MultipleToml = MkMultipleToml
 
 makeFieldLabelsNoPrefix ''MultipleToml
 
--- | Codec for 'MultipleToml'.
-multipleCodec :: TomlCodec MultipleToml
-multipleCodec =
-  MkMultipleToml
-    <$> commandCodec .= command
-    <*> Toml.dioptional (Toml.text "name") .= name
-    <*> triggerNotesCodec .= triggerNotes
-    <*> Toml.dioptional pollIntervalCodec .= pollInterval
-    <*> Toml.dioptional EventToml.repeatEventCodec .= repeatEventCfg
-    <*> Toml.dioptional EventToml.errorNoteCodec .= errEventCfg
-{-# INLINEABLE multipleCodec #-}
-
-triggerNotesCodec :: TomlCodec (NonEmpty TriggerNoteToml)
-triggerNotesCodec = Toml.nonEmpty triggerNoteCodec "trigger-note"
-{-# INLINEABLE triggerNotesCodec #-}
-
-triggerNoteCodec :: TomlCodec TriggerNoteToml
-triggerNoteCodec =
-  MkTriggerNoteToml
-    <$> triggerCodec .= trigger
-    <*> Toml.table NaviNote.naviNoteCodec "note" .= note
-  where
-    triggerCodec = Toml.text "trigger"
-{-# INLINEABLE triggerNoteCodec #-}
-
-commandCodec :: TomlCodec Command
-commandCodec = Toml.textBy showt (Right . MkCommand) "command"
-{-# INLINEABLE commandCodec #-}
+-- | @since 0.1
+instance DecodeTOML MultipleToml where
+  tomlDecoder =
+    MkMultipleToml
+      <$> commandDecoder
+      <*> getFieldOpt "name"
+      <*> getFieldWith tomlDecoder "trigger-note"
+      <*> pollIntervalOptDecoder
+      <*> repeatEventOptDecoder
+      <*> errorNoteOptDecoder

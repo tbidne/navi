@@ -29,7 +29,7 @@ urgency = "critical"
 
 # Send alert when the current minute is even
 [[single]]
-poll-interval = "10"
+poll-interval = 10
 command = """
   min=`date +%M`;
   if [[ \"$min % 2\" -eq 0 ]]; then
@@ -43,7 +43,7 @@ trigger = "true"
 [single.note]
 summary = "Even/Odd"
 body = "We're even, yay!"
-timeout = "10"
+timeout = 10
 
 # requires lm-sensors
 [[single]]
@@ -70,4 +70,4 @@ trigger = "true"
 summary = "Temperature"
 body = "We're hot!"
 urgency = "critical"
-timeout = "10"
+timeout = 10

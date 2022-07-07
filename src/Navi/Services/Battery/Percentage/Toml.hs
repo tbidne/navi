@@ -6,35 +6,27 @@
 module Navi.Services.Battery.Percentage.Toml
   ( BatteryPercentageToml (..),
     BatteryPercentageNoteToml (..),
-    batteryPercentageCodec,
   )
 where
 
-import Control.Category ((>>>))
 import DBus.Notify (UrgencyLevel)
-import Navi.Data.NaviNote (Timeout)
-import Navi.Data.NaviNote qualified as NaviNote
-import Navi.Data.PollInterval (PollInterval, pollIntervalCodec)
-import Navi.Event.Toml (ErrorNoteToml, RepeatEventToml)
-import Navi.Event.Toml qualified as EventToml
+import Navi.Data.NaviNote (Timeout, timeoutOptDecoder)
+import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
+import Navi.Event.Toml
+  ( ErrorNoteToml,
+    RepeatEventToml,
+    errorNoteOptDecoder,
+    repeatEventOptDecoder,
+  )
 import Navi.Prelude
-import Navi.Services.Battery.Common (appCodec)
+import Navi.Services.Battery.Common (batteryAppDecoder)
+import Navi.Utils (runAppDecoder, urgencyLevelOptDecoder)
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Services.Battery
   ( BatteryApp (..),
     Percentage (..),
     RunApp (..),
   )
-import Toml
-  ( AnyValue,
-    BiMap (..),
-    Key,
-    TomlBiMap,
-    TomlBiMapError (..),
-    TomlCodec,
-    (.=),
-  )
-import Toml qualified
 
 -- | TOML for each individual battery percentage.
 data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml
@@ -48,6 +40,31 @@ data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml
   deriving stock (Eq, Show)
 
 makeFieldLabelsNoPrefix ''BatteryPercentageNoteToml
+
+-- | @since 0.1
+instance DecodeTOML BatteryPercentageNoteToml where
+  tomlDecoder =
+    MkBatteryPercentageNoteToml
+      <$> percentageDecoder
+      <*> urgencyLevelOptDecoder
+      <*> timeoutOptDecoder
+
+percentageDecoder :: Decoder Percentage
+percentageDecoder = getFieldWith decoder "percent"
+  where
+    decoder =
+      tomlDecoder >>= \x ->
+        case mkPercentage x of
+          Just n -> pure n
+          Nothing ->
+            fail $
+              unpack $
+                concat
+                  [ "Unexpected percent: ",
+                    showt x,
+                    ". Expected integer in [0, 100]."
+                  ]
+    mkPercentage = fmap MkPercentage . Interval.mkLRInterval
 
 -- | TOML for the battery percentage service.
 data BatteryPercentageToml = MkBatteryPercentageToml
@@ -66,42 +83,12 @@ data BatteryPercentageToml = MkBatteryPercentageToml
 
 makeFieldLabelsNoPrefix ''BatteryPercentageToml
 
--- | Codec for 'BatteryPercentageToml'.
-batteryPercentageCodec :: TomlCodec BatteryPercentageToml
-batteryPercentageCodec =
-  MkBatteryPercentageToml
-    <$> Toml.nonEmpty batteryPercentageNoteTomlCodec "alert" .= alerts
-    <*> Toml.dioptional pollIntervalCodec .= pollInterval
-    <*> Toml.dioptional EventToml.repeatEventCodec .= repeatEvent
-    <*> Toml.dioptional EventToml.errorNoteCodec .= errorNote
-    <*> appCodec .= app
-{-# INLINEABLE batteryPercentageCodec #-}
-
-batteryPercentageNoteTomlCodec :: TomlCodec BatteryPercentageNoteToml
-batteryPercentageNoteTomlCodec =
-  MkBatteryPercentageNoteToml
-    <$> percentageCodec .= percentage
-    <*> Toml.dioptional NaviNote.urgencyLevelCodec .= urgency
-    <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
-{-# INLINEABLE batteryPercentageNoteTomlCodec #-}
-
-percentageCodec :: TomlCodec Percentage
-percentageCodec = boundedNCodec "percent"
-{-# INLINEABLE percentageCodec #-}
-
-boundedNCodec :: Key -> TomlCodec Percentage
-boundedNCodec = Toml.match _BoundedN
-{-# INLINEABLE boundedNCodec #-}
-
-_BoundedN :: TomlBiMap Percentage AnyValue
-_BoundedN = _BoundedNNatural >>> Toml._Natural
-{-# INLINEABLE _BoundedN #-}
-
-_BoundedNNatural :: TomlBiMap Percentage Natural
-_BoundedNNatural = BiMap (Right . fromIntegral . Interval.unLRInterval . unPercentage) parseBounded
-  where
-    parseBounded =
-      (fmap MkPercentage . Interval.mkLRInterval . fromIntegral) >.> \case
-        Nothing -> Left $ ArbitraryError "Passed integer outside of bounds"
-        Just n -> Right n
-{-# INLINEABLE _BoundedNNatural #-}
+-- | @since 0.1
+instance DecodeTOML BatteryPercentageToml where
+  tomlDecoder =
+    MkBatteryPercentageToml
+      <$> getFieldWith tomlDecoder "alert"
+      <*> pollIntervalOptDecoder
+      <*> repeatEventOptDecoder
+      <*> errorNoteOptDecoder
+      <*> runAppDecoder batteryAppDecoder

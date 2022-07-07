@@ -37,7 +37,7 @@ tests =
 
 readsExample :: (Config IORef -> IO ()) -> FilePath -> TestTree
 readsExample verifyCfg fp = testCase ("Reads " <> fp) $ do
-  eResult <- try @_ @SomeException $ Config.readConfig @IORef fp
+  eResult <- tryAny $ Config.readConfig @IORef fp
   case eResult of
     Left ex -> assertFailure $ "Reading config failed: " <> displayException ex
     Right cfg -> verifyCfg cfg

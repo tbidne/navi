@@ -1,7 +1,6 @@
 -- | This module provides a service for alerts related to battery levels.
 module Navi.Services.Battery.Percentage
   ( BatteryPercentageToml,
-    BatteryPercentageToml.batteryPercentageCodec,
     toEvent,
   )
 where
@@ -16,7 +15,6 @@ import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), ErrorNote, Event (..), RepeatEvent)
 import Navi.Prelude
 import Navi.Services.Battery.Percentage.Toml (BatteryPercentageNoteToml (..), BatteryPercentageToml)
-import Navi.Services.Battery.Percentage.Toml qualified as BatteryPercentageToml
 import Navi.Services.Types (ServiceType (..))
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Services.Battery

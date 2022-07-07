@@ -133,7 +133,7 @@ batteryPercentageEventConfig :: Text
 batteryPercentageEventConfig =
   T.unlines
     [ "[battery-percentage]",
-      "poll-interval = \"1\"",
+      "poll-interval = 1",
       "",
       "[[battery-percentage.alert]]",
       "percent = 5",
@@ -152,7 +152,7 @@ singleEventConfig :: Text -> Text
 singleEventConfig repeats =
   T.unlines
     [ "[[single]]",
-      "poll-interval = \"1\"",
+      "poll-interval = 1",
       "command = \"cmd\"",
       "trigger = \"single trigger\"", -- matches trigger in MockApp
       repeats,
@@ -167,7 +167,7 @@ netInterfaceEventConfig :: Text -> Text
 netInterfaceEventConfig errorEvents =
   T.unlines
     [ "[[net-interface]]",
-      "poll-interval = \"1\"",
+      "poll-interval = 1",
       "device = \"device\"",
       errorEvents,
       ""
@@ -177,7 +177,7 @@ sendExceptionConfig :: Text
 sendExceptionConfig =
   T.unlines
     [ "[[single]]",
-      "poll-interval = \"1\"",
+      "poll-interval = 1",
       "name = \"Single\"",
       "command = \"cmd\"",
       "trigger = \"single trigger\"", -- needs to be triggered to be sent

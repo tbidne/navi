@@ -1,11 +1,11 @@
 -- | This modules provides toml configuration related to events.
 module Navi.Event.Toml
   ( RepeatEventToml (..),
-    repeatEventCodec,
+    repeatEventOptDecoder,
     repeatEventTomlToVal,
     mRepeatEventTomlToVal,
     ErrorNoteToml (..),
-    errorNoteCodec,
+    errorNoteOptDecoder,
     errorNoteTomlToVal,
     mErrorNoteTomlToVal,
   )
@@ -14,8 +14,6 @@ where
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Event.Types (ErrorNote (..), RepeatEvent (..))
 import Navi.Prelude
-import Toml (TomlCodec)
-import Toml qualified
 
 -- | TOML for 'Event.Event'.
 data EventConfig = MkEventConfig
@@ -30,15 +28,20 @@ data RepeatEventToml
   | AllowRepeatsToml
   deriving stock (Eq, Show)
 
--- | Codec for 'RepeatEventToml'.
-repeatEventCodec :: TomlCodec RepeatEventToml
-repeatEventCodec = Toml.dimap toBool fromBool $ Toml.bool "repeat-events"
-  where
-    fromBool True = AllowRepeatsToml
-    fromBool False = NoRepeatsToml
-    toBool AllowRepeatsToml = True
-    toBool NoRepeatsToml = False
-{-# INLINEABLE repeatEventCodec #-}
+-- | @since 0.1
+instance DecodeTOML RepeatEventToml where
+  tomlDecoder =
+    tomlDecoder <&> \b ->
+      if b
+        then AllowRepeatsToml
+        else NoRepeatsToml
+
+-- | TOML decoder for optional 'RepeatEventToml' with field name
+-- "repeat-events".
+--
+-- @since 0.1
+repeatEventOptDecoder :: Decoder (Maybe RepeatEventToml)
+repeatEventOptDecoder = getFieldOptWith tomlDecoder "repeat-events"
 
 -- | Constructs a mutable 'RepeatEvent' from 'RepeatEventToml'.
 repeatEventTomlToVal :: MonadMutRef ref m => RepeatEventToml -> m (RepeatEvent ref a)
@@ -60,18 +63,29 @@ data ErrorNoteToml
   | ErrNoteNoRepeatsToml
   deriving stock (Eq, Show)
 
--- | Codec for 'ErrorNoteToml'.
-errorNoteCodec :: TomlCodec ErrorNoteToml
-errorNoteCodec = Toml.textBy showErrEvt parseErrEvt "error-events"
-  where
-    showErrEvt NoErrNoteToml = "none"
-    showErrEvt ErrNoteAllowRepeatsToml = "repeats"
-    showErrEvt ErrNoteNoRepeatsToml = "no-repeats"
-    parseErrEvt "none" = Right NoErrNoteToml
-    parseErrEvt "repeats" = Right ErrNoteAllowRepeatsToml
-    parseErrEvt "no-repeats" = Right ErrNoteNoRepeatsToml
-    parseErrEvt other = Left $ "Unsupported error event key: " <> other
-{-# INLINEABLE errorNoteCodec #-}
+-- | @since 0.1
+instance DecodeTOML ErrorNoteToml where
+  tomlDecoder =
+    tomlDecoder
+      >>= \case
+        "none" -> pure NoErrNoteToml
+        "repeats" -> pure ErrNoteAllowRepeatsToml
+        "no-repeats" -> pure ErrNoteNoRepeatsToml
+        bad ->
+          fail $
+            unpack $
+              concat
+                [ "Unexpected error-events string: ",
+                  bad,
+                  ". Expected one of <none | repeats | no-repeats>."
+                ]
+
+-- | TOML decoder for optional 'ErrorNoteToml' with field name
+-- "error-events".
+--
+-- @since 0.1
+errorNoteOptDecoder :: Decoder (Maybe ErrorNoteToml)
+errorNoteOptDecoder = getFieldOptWith tomlDecoder "error-events"
 
 -- | Constructs a mutable 'ErrorNote' from 'ErrorNoteToml'.
 errorNoteTomlToVal :: MonadMutRef ref m => ErrorNoteToml -> m (ErrorNote ref)

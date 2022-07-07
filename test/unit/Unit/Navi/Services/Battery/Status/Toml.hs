@@ -5,7 +5,7 @@ where
 
 import Navi.Data.NaviNote (Timeout (..))
 import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
-import Navi.Services.Battery.Status.Toml (BatteryStatusToml (..), batteryStatusCodec)
+import Navi.Services.Battery.Status.Toml (BatteryStatusToml (..))
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..))
 import Unit.Prelude
@@ -24,7 +24,7 @@ noteTests :: TestTree
 noteTests =
   testGroup
     "Parses note"
-    [ parsesExpected "with timeout" "timeout = \"5\"" timeout (view #mTimeout),
+    [ parsesExpected "with timeout" "timeout = 5" timeout (view #mTimeout),
       parsesExpected "no timeout" "" noTimeout (view #mTimeout)
     ]
   where
@@ -85,4 +85,4 @@ parsesErrorEvent desc flag ret =
     (view #errorNote)
 
 parsesExpected :: (Eq a, Show a) => String -> Text -> a -> (BatteryStatusToml -> a) -> TestTree
-parsesExpected = decodeExpected batteryStatusCodec
+parsesExpected = decodeExpected

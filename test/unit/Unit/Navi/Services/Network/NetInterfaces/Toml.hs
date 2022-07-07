@@ -6,7 +6,7 @@ where
 import Data.Text qualified as T
 import Navi.Data.NaviNote (Timeout (..))
 import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
-import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..), netInterfacesCodec)
+import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..))
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.NetInterface (NetInterfaceApp (..))
 import Unit.Prelude
@@ -33,7 +33,7 @@ timeoutTests =
     timeout = Just $ Seconds 5
     toLines =
       T.unlines
-        [ "timeout = \"5\"",
+        [ "timeout = 5",
           "device = \"my-device\""
         ]
 
@@ -108,4 +108,4 @@ parsesErrorEvent desc flag ret =
         ]
 
 parsesExpected :: (Eq a, Show a) => String -> Text -> a -> (NetInterfacesToml -> a) -> TestTree
-parsesExpected = decodeExpected netInterfacesCodec
+parsesExpected = decodeExpected

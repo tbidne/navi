@@ -5,20 +5,21 @@
 -- | This module provides toml configuration for the battery status service.
 module Navi.Services.Battery.Status.Toml
   ( BatteryStatusToml (..),
-    batteryStatusCodec,
   )
 where
 
-import Navi.Data.NaviNote (Timeout)
-import Navi.Data.NaviNote qualified as NaviNote
-import Navi.Data.PollInterval (PollInterval (..), pollIntervalCodec)
-import Navi.Event.Toml (ErrorNoteToml, RepeatEventToml)
-import Navi.Event.Toml qualified as EToml
+import Navi.Data.NaviNote (Timeout, timeoutOptDecoder)
+import Navi.Data.PollInterval (PollInterval (..), pollIntervalOptDecoder)
+import Navi.Event.Toml
+  ( ErrorNoteToml,
+    RepeatEventToml,
+    errorNoteOptDecoder,
+    repeatEventOptDecoder,
+  )
 import Navi.Prelude
-import Navi.Services.Battery.Common (appCodec)
+import Navi.Services.Battery.Common (batteryAppDecoder)
+import Navi.Utils (runAppDecoder)
 import Pythia.Services.Battery (BatteryApp (..), RunApp (..))
-import Toml (TomlCodec, (.=))
-import Toml qualified
 
 -- | TOML for the battery status service.
 data BatteryStatusToml = MkBatteryStatusToml
@@ -37,13 +38,12 @@ data BatteryStatusToml = MkBatteryStatusToml
 
 makeFieldLabelsNoPrefix ''BatteryStatusToml
 
--- | Codec for 'BatteryStatusToml'.
-batteryStatusCodec :: TomlCodec BatteryStatusToml
-batteryStatusCodec =
-  MkBatteryStatusToml
-    <$> appCodec .= app
-    <*> Toml.dioptional pollIntervalCodec .= pollInterval
-    <*> Toml.dioptional EToml.repeatEventCodec .= repeatEvent
-    <*> Toml.dioptional EToml.errorNoteCodec .= errorNote
-    <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
-{-# INLINEABLE batteryStatusCodec #-}
+-- | @since 0.1
+instance DecodeTOML BatteryStatusToml where
+  tomlDecoder =
+    MkBatteryStatusToml
+      <$> runAppDecoder batteryAppDecoder
+      <*> pollIntervalOptDecoder
+      <*> repeatEventOptDecoder
+      <*> errorNoteOptDecoder
+      <*> timeoutOptDecoder

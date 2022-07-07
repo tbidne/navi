@@ -23,8 +23,6 @@ import Data.List.NonEmpty
 import Katip (Severity (..))
 import Navi.Event (AnyEvent (..))
 import Navi.Prelude
-import Toml (TomlDecodeError)
-import Toml qualified
 
 -- | Log location configuration.
 data LogLoc
@@ -93,14 +91,14 @@ instance Show (Config ref) where
 -- parse a config file.
 data ConfigErr
   = FileErr !SomeException
-  | TomlError ![TomlDecodeError]
+  | TomlError !TOMLError
   | NoEvents
   deriving stock (Show)
 
 instance Exception ConfigErr where
   displayException (FileErr ex) = "Error reading file: <" <> displayException ex <> ">"
   displayException NoEvents = "No events found"
-  displayException (TomlError errs) = unpack $ Toml.prettyTomlDecodeErrors errs
+  displayException (TomlError err) = unpack $ renderTOMLError err
   {-# INLINEABLE displayException #-}
 
 makeFieldLabelsNoPrefix ''ConfigErr

@@ -78,7 +78,7 @@ trigger = "true"
 summary = "Temperature"
 body = "We're hot!"
 urgency = "critical"
-timeout = "10"
+timeout = 10
 ```
 
 This allows one to define arbitrary notification services based on one's system. In other words, as long as you can query for a particular bit of information (e.g. bash code), then navi will take care of the rest: running this query every N seconds, sending notifications, caching previous values to avoid repeats, and error handling.
@@ -150,13 +150,13 @@ The full list of notification options are:
 * `summary`: Text summary.
 * `body`: (Optional). Text body.
 * `urgency`: (Optional). One of `["low"|"normal"|"critical"]`.
-* `timeout`: (Optional). One of `["never"|"<seconds>"]`. Determines how long notifications persist. Defaults to 10 seconds.
+* `timeout`: (Optional). One of `["never"|<seconds>]`. Determines how long notifications persist. Defaults to 10 seconds.
 
 ## Service Options
 
 Individual services have their own options, but there are a few that are common to most.
 
-* `poll-interval`: Optional. One of `["never"|"<seconds>"]`. Determines how often we query the system for the particular service, in seconds. Each service defines its own default.
+* `poll-interval`: Optional. One of `["never"|<seconds>]`. Determines how often we query the system for the particular service, in seconds. Each service defines its own default.
 * `repeat-events`: One of `[true|false]`. Determines if we send off the same notification twice in a row. Defaults to `false` (i.e. no repeats) unless stated otherwise.
 * `error-events`: One of `["none"|"repeats"|"no-repeats">`. Determines if we send off notifications for errors, and how we handle repeats. Defaults to `"no-repeats"` unless stated otherwise i.e. we send error notifications but no repeats.
 
@@ -285,7 +285,7 @@ This service allows one to create a single notification based on an arbitrary co
 ```toml
 # Send alert when the current minute is even
 [[single]]
-poll-interval = "10"
+poll-interval = 10
 command = """
   min=`date +%M`;
   if [[ \"$min % 2\" -eq 0 ]]; then
@@ -299,7 +299,7 @@ trigger = "true"
 [single.note]
 summary = "Even/Odd"
 body = "We're even, yay!"
-timeout = "10"
+timeout = 10
 ```
 
 #### Multiple
@@ -355,15 +355,15 @@ trigger = "100"
 [multiple.trigger-note.note]
 summary = "Battery Percentage"
 body = "Full"
-timeout = "10"
+timeout = 10
 
 [[multiple.trigger-note]]
-trigger = "80"
+trigger = 80
 
 [multiple.trigger-note.note]
 summary = "Battery Percentage"
 body = "< 80"
-timeout = "10"
+timeout = 10
 
 [[multiple.trigger-note]]
 trigger = "40"
@@ -372,7 +372,7 @@ trigger = "40"
 summary = "Battery Percentage"
 body = "< 40"
 urgency = "critical"
-timeout = "10"
+timeout = 10
 ```
 
 # Building

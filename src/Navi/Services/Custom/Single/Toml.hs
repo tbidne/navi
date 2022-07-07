@@ -4,19 +4,20 @@
 -- | This module provides toml configuration for the custom single service.
 module Navi.Services.Custom.Single.Toml
   ( SingleToml (..),
-    singleCodec,
   )
 where
 
 import Navi.Data.NaviNote (NaviNote)
-import Navi.Data.NaviNote qualified as NaviNote
-import Navi.Data.PollInterval (PollInterval (..), pollIntervalCodec)
-import Navi.Event.Toml (ErrorNoteToml, RepeatEventToml)
-import Navi.Event.Toml qualified as EventToml
+import Navi.Data.PollInterval (PollInterval (..), pollIntervalOptDecoder)
+import Navi.Event.Toml
+  ( ErrorNoteToml,
+    RepeatEventToml,
+    errorNoteOptDecoder,
+    repeatEventOptDecoder,
+  )
 import Navi.Prelude
+import Navi.Utils (commandDecoder)
 import Pythia.Data.Command (Command (..))
-import Toml (TomlCodec, (.=))
-import Toml qualified
 
 -- | Codec for 'SingleToml'.
 data SingleToml = MkSingleToml
@@ -39,19 +40,14 @@ data SingleToml = MkSingleToml
 
 makeFieldLabelsNoPrefix ''SingleToml
 
--- | Codec for 'SingleToml'.
-singleCodec :: TomlCodec SingleToml
-singleCodec =
-  MkSingleToml
-    <$> commandCodec .= command
-    <*> Toml.dioptional (Toml.text "name") .= name
-    <*> Toml.text "trigger" .= triggerVal
-    <*> Toml.dioptional pollIntervalCodec .= pollInterval
-    <*> Toml.table NaviNote.naviNoteCodec "note" .= note
-    <*> Toml.dioptional EventToml.repeatEventCodec .= repeatEventCfg
-    <*> Toml.dioptional EventToml.errorNoteCodec .= errEventCfg
-{-# INLINEABLE singleCodec #-}
-
-commandCodec :: TomlCodec Command
-commandCodec = Toml.textBy showt (Right . MkCommand) "command"
-{-# INLINEABLE commandCodec #-}
+-- | @since 0.1
+instance DecodeTOML SingleToml where
+  tomlDecoder =
+    MkSingleToml
+      <$> commandDecoder
+      <*> getFieldOpt "name"
+      <*> getField "trigger"
+      <*> pollIntervalOptDecoder
+      <*> getField "note"
+      <*> repeatEventOptDecoder
+      <*> errorNoteOptDecoder

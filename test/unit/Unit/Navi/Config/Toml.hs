@@ -6,7 +6,7 @@ where
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
 import Katip (Severity (..))
-import Navi.Config.Toml (ConfigToml (..), configCodec)
+import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Types (LogLoc (..), Logging (..))
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Data.PollInterval (PollInterval (..))
@@ -20,7 +20,6 @@ import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..))
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..), Percentage (..))
-import Toml qualified
 import Unit.Prelude
 
 tests :: TestTree
@@ -32,7 +31,7 @@ tests =
 
 parsesConfig :: TestTree
 parsesConfig = testCase "Parses config" $ do
-  let eResult = Toml.decodeExact configCodec fullConfig
+  let eResult = decode fullConfig
   case eResult of
     Left err -> assertFailure $ "Parsing config fails: " <> show err
     Right result -> expected @=? result
@@ -131,10 +130,10 @@ fullConfig =
       "",
       "[battery-status]",
       "app = \"acpi\"",
-      "timeout = \"5\"",
+      "timeout = 5",
       "",
       "[battery-percentage]",
-      "poll-interval = \"15\"",
+      "poll-interval = 15",
       "",
       "[[battery-percentage.alert]]",
       "percent = 50",
@@ -157,5 +156,5 @@ fullConfig =
       "[single.note]",
       "summary = \"Some single\"",
       "body = \"A body\"",
-      "timeout = \"15\""
+      "timeout = 15"
     ]

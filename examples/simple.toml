@@ -6,7 +6,7 @@ location = "stdout"
 
 [[single]]
 name = "trivial-service"
-poll-interval = "5"
+poll-interval = 5
 repeat-events = true
 command = ""
 trigger = ""
@@ -14,5 +14,5 @@ trigger = ""
 [single.note]
 summary = "Trivial"
 body = "We did nothing, yay!"
-timeout = "2"
+timeout = 2
 

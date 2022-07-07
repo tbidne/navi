@@ -4,11 +4,7 @@ import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
-import Navi.Services.Custom.Multiple.Toml
-  ( MultipleToml (..),
-    TriggerNoteToml (..),
-    multipleCodec,
-  )
+import Navi.Services.Custom.Multiple.Toml (MultipleToml (..), TriggerNoteToml (..))
 import Unit.Prelude
 
 tests :: TestTree
@@ -58,7 +54,7 @@ parsesNotes =
           "summary = \"first summary\"",
           "body = \"first body\"",
           "urgency = \"critical\"",
-          "timeout = \"5\"",
+          "timeout = 5",
           "[[trigger-note]]",
           "trigger = \"second val\"",
           "[trigger-note.note]",
@@ -155,4 +151,4 @@ parsesExpected ::
   a ->
   (MultipleToml -> a) ->
   TestTree
-parsesExpected = decodeExpected multipleCodec
+parsesExpected = decodeExpected

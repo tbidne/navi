@@ -6,15 +6,14 @@
 -- @since 0.1
 module Navi.Data.PollInterval
   ( PollInterval (..),
-    pollIntervalCodec,
+    pollIntervalOptDecoder,
     toSleepTime,
   )
 where
 
+import Data.Text qualified as T
 import Data.Time.Relative qualified as Rel
 import Navi.Prelude
-import Toml (TomlCodec)
-import Toml qualified
 
 -- | Represents how often to poll for service changes, in seconds.
 --
@@ -32,29 +31,34 @@ instance Bounded PollInterval where
   maxBound = maxPollInterval
   {-# INLINEABLE maxBound #-}
 
--- | Codec for 'PollInterval'.
+-- | @since 0.1
+instance DecodeTOML PollInterval where
+  tomlDecoder = makeDecoder $ \case
+    String t ->
+      case Rel.fromString (unpack t) of
+        Left _ -> fail $ unpack $ "Could not parse poll-interval: " <> t
+        Right relTime -> ltRelTimeBounds $ Rel.toSeconds relTime
+    Integer i -> ltRelTimeBounds (fromIntegral i)
+    badTy -> typeMismatch badTy
+
+ltRelTimeBounds :: MonadFail f => Natural -> f PollInterval
+ltRelTimeBounds n
+  | MkPollInterval n <= maxBound = pure $ MkPollInterval n
+  | otherwise =
+      fail $
+        unpack $
+          T.concat
+            [ "Given poll interval of ",
+              showt n,
+              " is too large. Maximum seconds is ",
+              showt @PollInterval maxBound
+            ]
+
+-- | TOML decoder for optional 'PollInterval' with field name 'poll-interval'.
 --
 -- @since 0.1
-pollIntervalCodec :: TomlCodec PollInterval
-pollIntervalCodec =
-  Toml.textBy showPollInterval parsePollInterval "poll-interval"
-  where
-    showPollInterval :: PollInterval -> Text
-    showPollInterval (MkPollInterval x) = showt x
-    parsePollInterval :: Text -> Either Text PollInterval
-    parsePollInterval t = case Rel.fromString (unpack t) of
-      Left err -> Left $ "Could not parse poll-interval: " <> pack err
-      Right relTime ->
-        let relTimeSec = Rel.toSeconds relTime
-         in if MkPollInterval relTimeSec > maxBound
-              then
-                Left $
-                  "Poll interval too large: "
-                    <> showt relTimeSec
-                    <> ". Maximum seconds is "
-                    <> showt (maxBound :: PollInterval)
-              else Right $ MkPollInterval relTimeSec
-{-# INLINEABLE pollIntervalCodec #-}
+pollIntervalOptDecoder :: Decoder (Maybe PollInterval)
+pollIntervalOptDecoder = getFieldOptWith tomlDecoder "poll-interval"
 
 -- | Converts a 'PollInterval' into an 'Int' suitable to be used with
 -- threadDelay.

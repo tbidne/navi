@@ -5,19 +5,20 @@
 -- connectivity service.
 module Navi.Services.Network.NetInterfaces.Toml
   ( NetInterfacesToml (..),
-    netInterfacesCodec,
   )
 where
 
-import Navi.Data.NaviNote (Timeout)
-import Navi.Data.NaviNote qualified as NaviNote
-import Navi.Data.PollInterval (PollInterval (..), pollIntervalCodec)
-import Navi.Event.Toml (ErrorNoteToml, RepeatEventToml)
-import Navi.Event.Toml qualified as EToml
+import Navi.Data.NaviNote (Timeout, timeoutOptDecoder)
+import Navi.Data.PollInterval (PollInterval (..), pollIntervalOptDecoder)
+import Navi.Event.Toml
+  ( ErrorNoteToml,
+    RepeatEventToml,
+    errorNoteOptDecoder,
+    repeatEventOptDecoder,
+  )
 import Navi.Prelude
+import Navi.Utils (runAppDecoder)
 import Pythia.Services.NetInterface (NetInterfaceApp (..), RunApp (..))
-import Toml (TomlCodec, (.=))
-import Toml qualified
 
 -- | TOML for the network connectivity service.
 data NetInterfacesToml = MkNetInterfacesToml
@@ -40,33 +41,28 @@ data NetInterfacesToml = MkNetInterfacesToml
 
 makeFieldLabelsNoPrefix ''NetInterfacesToml
 
--- | Codec for 'NetInterfacesToml'.
-netInterfacesCodec :: TomlCodec NetInterfacesToml
-netInterfacesCodec =
-  MkNetInterfacesToml
-    <$> appCodec .= app
-    <*> Toml.text "device" .= deviceName
-    <*> Toml.dioptional pollIntervalCodec .= pollInterval
-    <*> Toml.dioptional EToml.repeatEventCodec .= repeatEvent
-    <*> Toml.dioptional EToml.errorNoteCodec .= errorNote
-    <*> Toml.dioptional NaviNote.timeoutCodec .= mTimeout
-{-# INLINEABLE netInterfacesCodec #-}
+-- | @since 0.1
+instance DecodeTOML NetInterfacesToml where
+  tomlDecoder =
+    MkNetInterfacesToml
+      <$> runAppDecoder decodeNetInterfaceApp
+      <*> getField "device"
+      <*> pollIntervalOptDecoder
+      <*> repeatEventOptDecoder
+      <*> errorNoteOptDecoder
+      <*> timeoutOptDecoder
 
-appCodec :: TomlCodec (RunApp NetInterfaceApp)
-appCodec = Toml.dimap f g mappCodec
-  where
-    f Many = Nothing
-    f (Single x) = Just x
-    g Nothing = Many
-    g (Just x) = Single x
-
-mappCodec :: TomlCodec (Maybe NetInterfaceApp)
-mappCodec =
-  Toml.dioptional $ Toml.textBy showBatteryType parseBatteryType "app"
-  where
-    showBatteryType NetInterfaceNmCli = "nmcli"
-    showBatteryType NetInterfaceIp = "ip"
-    parseBatteryType "nmcli" = Right NetInterfaceNmCli
-    parseBatteryType "ip" = Right NetInterfaceIp
-    parseBatteryType t = Left t
-{-# INLINEABLE mappCodec #-}
+decodeNetInterfaceApp :: Decoder NetInterfaceApp
+decodeNetInterfaceApp =
+  tomlDecoder >>= \case
+    "nmcli" -> pure NetInterfaceNmCli
+    "ip" -> pure NetInterfaceIp
+    bad ->
+      fail $
+        unpack $
+          concat
+            [ "Unexpected net-interface app: ",
+              bad,
+              ". Expected one of <nmcli | ip>."
+            ]
+{-# INLINEABLE decodeNetInterfaceApp #-}

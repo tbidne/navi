@@ -43,6 +43,7 @@ import Control.Monad as X
     (=<<),
     (>=>),
   )
+import Control.Monad.Fail as X (MonadFail (..))
 import Control.Monad.IO.Class as X (MonadIO (..))
 import Control.Monad.Reader as X (MonadReader (..), ReaderT (..), asks)
 import Control.Monad.Trans as X (MonadTrans (..))
@@ -67,7 +68,7 @@ import Data.Ord as X (Ord (..))
 import Data.Proxy as X (Proxy (..))
 import Data.Semigroup as X (Semigroup (..))
 import Data.String as X (IsString (fromString), String)
-import Data.Text as X (Text, pack, unpack)
+import Data.Text as X (Text, concat, pack, unpack)
 import Data.Text.Encoding qualified as TextEnc
 import Data.Text.Encoding.Error qualified as TextEncErr
 import Data.Text.IO as X (putStr, putStrLn)
@@ -86,6 +87,22 @@ import GHC.Show as X (Show (..))
 import Optics.Core as X (over, set, view, (%), (.~), (^.))
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrismLabels)
 import System.IO as X (FilePath, IO)
+import TOML as X
+  ( DecodeTOML (..),
+    TOMLError (..),
+    Value (..),
+    decode,
+    getArrayOf,
+    getField,
+    getFieldOpt,
+    getFieldOptWith,
+    getFieldWith,
+    invalidValue,
+    makeDecoder,
+    renderTOMLError,
+    typeMismatch,
+  )
+import TOML.Decode as X (Decoder)
 import UnliftIO as X
   ( Exception (..),
     MonadUnliftIO (..),
@@ -96,6 +113,7 @@ import UnliftIO as X
     handle,
     throwIO,
     try,
+    tryAny,
   )
 import Prelude as X (Integer, seq)
 import Prelude qualified as P

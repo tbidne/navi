@@ -1,7 +1,6 @@
 -- | This module provides a service for a single alert.
 module Navi.Services.Custom.Single
   ( SingleToml,
-    SingleToml.singleCodec,
     toEvent,
   )
 where
@@ -19,7 +18,6 @@ import Navi.Event.Types
   )
 import Navi.Prelude
 import Navi.Services.Custom.Single.Toml (SingleToml)
-import Navi.Services.Custom.Single.Toml qualified as SingleToml
 import Navi.Services.Types (ServiceType (..))
 import Pythia.Data.Command (Command)
 

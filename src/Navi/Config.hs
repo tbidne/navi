@@ -17,7 +17,6 @@ where
 
 import Data.Maybe (catMaybes)
 import Navi.Config.Toml (ConfigToml (..))
-import Navi.Config.Toml qualified as ConfigToml
 import Navi.Config.Types
   ( Config (..),
     ConfigErr (..),
@@ -34,7 +33,6 @@ import Navi.Services.Battery.Status qualified as BattChargeStatus
 import Navi.Services.Custom.Multiple qualified as Multiple
 import Navi.Services.Custom.Single qualified as Single
 import Navi.Services.Network.NetInterfaces qualified as NetConn
-import Toml qualified
 
 -- | Parses the provided toml file into a 'Config'. Throws 'ConfigErr' if
 -- anything goes wrong.
@@ -47,8 +45,8 @@ readConfig path = do
   case eContents of
     Left ex -> throwIO $ FileErr ex
     Right contents -> do
-      case Toml.decodeExact ConfigToml.configCodec contents of
-        Left tomlErrs -> throwIO $ TomlError tomlErrs
+      case decode contents of
+        Left tomlErr -> throwIO $ TomlError tomlErr
         Right cfg -> tomlToConfig cfg
 {-# INLINEABLE readConfig #-}
 

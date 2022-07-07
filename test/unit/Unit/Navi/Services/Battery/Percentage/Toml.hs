@@ -10,7 +10,6 @@ import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
 import Navi.Services.Battery.Percentage.Toml
   ( BatteryPercentageNoteToml (..),
     BatteryPercentageToml (..),
-    batteryPercentageCodec,
   )
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Data.RunApp (RunApp (..))
@@ -45,7 +44,7 @@ parsesAlerts =
           "[[alert]]",
           "percent = 10",
           "urgency = \"critical\"",
-          "timeout = \"15\""
+          "timeout = 15"
         ]
     alert1 =
       MkBatteryPercentageNoteToml
@@ -141,4 +140,4 @@ parsesErrorEvent desc flag ret =
         ]
 
 parsesExpected :: (Eq a, Show a) => String -> Text -> a -> (BatteryPercentageToml -> a) -> TestTree
-parsesExpected = decodeExpected batteryPercentageCodec
+parsesExpected = decodeExpected

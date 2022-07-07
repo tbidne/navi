@@ -5,30 +5,49 @@
 module Navi.Data.NaviNote
   ( NaviNote (..),
     Timeout (..),
-    naviNoteCodec,
-    summaryCodec,
-    bodyCodec,
-    urgencyLevelCodec,
-    urgencyLevelKeyCodec,
-    timeoutCodec,
+    timeoutOptDecoder,
   )
 where
 
 import DBus.Notify (UrgencyLevel (..))
+import Data.Bits (toIntegralSized)
 import Navi.Prelude
-import Text.Read qualified as TR
-import Toml (Key, TomlCodec, (.=))
-import Toml qualified
+import Navi.Utils (urgencyLevelOptDecoder)
 
 -- | Determines how long a notification persists.
+--
+-- @since 0.1
 data Timeout
   = Never
   | Seconds !Word16
   deriving stock (Eq, Show)
 
+-- | @since 0.1
 makePrismLabels ''Timeout
 
+-- | @since 0.1
+instance DecodeTOML Timeout where
+  tomlDecoder = makeDecoder $ \case
+    String "never" -> pure Never
+    String bad -> invalidValue strErr (String bad)
+    Integer i -> case toIntegralSized i of
+      Just i' -> pure $ Seconds i'
+      Nothing -> invalidValue tooLargeErr (Integer i)
+    badTy -> typeMismatch badTy
+    where
+      tooLargeErr = "Timeout integer too large. Max is: " <> showt maxW16
+      strErr = "Unexpected timeout. Only valid string is 'never'."
+      maxW16 = maxBound @Word16
+
+-- | TOML decoder for optional 'Timeout' with field name "timeout".
+--
+-- @since 0.1
+timeoutOptDecoder :: Decoder (Maybe Timeout)
+timeoutOptDecoder = getFieldOptWith tomlDecoder "timeout"
+
 -- | 'NaviNote' represents desktop notifications.
+--
+-- @since 0.1
 data NaviNote = MkNaviNote
   { -- | Text summary.
     summary :: !Text,
@@ -43,55 +62,11 @@ data NaviNote = MkNaviNote
 
 makeFieldLabelsNoPrefix ''NaviNote
 
--- | Codec for 'NaviNote'.
-naviNoteCodec :: TomlCodec NaviNote
-naviNoteCodec =
-  MkNaviNote
-    <$> summaryCodec .= summary
-    <*> Toml.dioptional bodyCodec .= body
-    <*> Toml.dioptional urgencyLevelCodec .= urgency
-    <*> Toml.dioptional timeoutCodec .= timeout
-{-# INLINEABLE naviNoteCodec #-}
-
--- | Codec for the 'NaviNote' 'summary'.
-summaryCodec :: TomlCodec Text
-summaryCodec = Toml.text "summary"
-{-# INLINEABLE summaryCodec #-}
-
--- | Codec for the 'NaviNote' 'body'.
-bodyCodec :: TomlCodec Text
-bodyCodec = Toml.text "body"
-{-# INLINEABLE bodyCodec #-}
-
--- | Codec for the 'NaviNote' 'urgency'.
-urgencyLevelCodec :: TomlCodec UrgencyLevel
-urgencyLevelCodec = urgencyLevelKeyCodec "urgency"
-{-# INLINEABLE urgencyLevelCodec #-}
-
--- | Codec for the 'NaviNote' 'urgency' with custom 'Key'.
-urgencyLevelKeyCodec :: Key -> TomlCodec UrgencyLevel
-urgencyLevelKeyCodec = Toml.textBy showUrgencyLevel parseUrgencyLevel
-  where
-    showUrgencyLevel Low = "low"
-    showUrgencyLevel Normal = "normal"
-    showUrgencyLevel Critical = "critical"
-    parseUrgencyLevel "low" = Right Low
-    parseUrgencyLevel "normal" = Right Normal
-    parseUrgencyLevel "critical" = Right Critical
-    parseUrgencyLevel other = Left $ "Unsupported urgency level: " <> other
-{-# INLINEABLE urgencyLevelKeyCodec #-}
-
--- | Codec for the 'NaviNote' 'timeout'.
-timeoutCodec :: TomlCodec Timeout
-timeoutCodec =
-  Toml.textBy showTimeout parseTimeout "timeout"
-  where
-    showTimeout Never = "never"
-    showTimeout (Seconds s) = showt s
-    parseTimeout "never" = Right Never
-    parseTimeout other =
-      case readNN (unpack other) of
-        Just s -> Right $ Seconds s
-        Nothing -> Left $ "Unsupported timeout: " <> other
-    readNN = TR.readMaybe
-{-# INLINEABLE timeoutCodec #-}
+-- | @since 0.1
+instance DecodeTOML NaviNote where
+  tomlDecoder =
+    MkNaviNote
+      <$> getField "summary"
+      <*> getFieldOpt "body"
+      <*> urgencyLevelOptDecoder
+      <*> timeoutOptDecoder

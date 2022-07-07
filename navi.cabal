@@ -95,6 +95,7 @@ library
     Navi.Services.Network.NetInterfaces
     Navi.Services.Network.NetInterfaces.Toml
     Navi.Services.Types
+    Navi.Utils
 
   build-depends:
     , base                  >=4.14.1.0  && <4.17
@@ -117,7 +118,7 @@ library
     , smart-math            ^>=0.1
     , stm                   ^>=2.5.0
     , text                  >=1.2.3.2   && <2.1
-    , tomland               ^>=1.3.0.0
+    , toml-reader           ^>=0.1.0.0
     , unliftio              ^>=0.2.0.0
 
   hs-source-dirs:   src
@@ -161,7 +162,6 @@ test-suite unit
     , tasty        >=1.1.0.3 && <1.5
     , tasty-hunit  >=0.9     && <0.11
     , text
-    , tomland
 
   hs-source-dirs:   test/unit
   default-language: Haskell2010

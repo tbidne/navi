@@ -1,7 +1,6 @@
 -- | This module provides a service for alerts related to battery statuses.
 module Navi.Services.Battery.Status
   ( BatteryStatusToml,
-    BatteryStatusToml.batteryStatusCodec,
     toEvent,
   )
 where
@@ -19,7 +18,6 @@ import Navi.Event.Types
   )
 import Navi.Prelude
 import Navi.Services.Battery.Status.Toml (BatteryStatusToml)
-import Navi.Services.Battery.Status.Toml qualified as BatteryStatusToml
 import Navi.Services.Types (ServiceType (..))
 import Pythia.Services.Battery (BatteryConfig (..), BatteryStatus (..))
 

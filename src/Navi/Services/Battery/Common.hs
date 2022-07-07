@@ -1,33 +1,27 @@
 -- | Provides common functionality for battery services.
 module Navi.Services.Battery.Common
-  ( appCodec,
+  ( batteryAppDecoder,
   )
 where
 
 import Navi.Prelude
-import Pythia.Services.Battery (BatteryApp (..), RunApp (..))
-import Toml (TomlCodec)
-import Toml qualified
+import Pythia.Services.Battery (BatteryApp (..))
 
--- | Codec for 'RunApp' 'BatteryApp'.
-appCodec :: TomlCodec (RunApp BatteryApp)
-appCodec = Toml.dimap f g mappCodec
-  where
-    f Many = Nothing
-    f (Single x) = Just x
-    g Nothing = Many
-    g (Just x) = Single x
-{-# INLINEABLE appCodec #-}
-
-mappCodec :: TomlCodec (Maybe BatteryApp)
-mappCodec =
-  Toml.dioptional $ Toml.textBy showBatteryType parseBatteryType "app"
-  where
-    showBatteryType BatteryAcpi = "acpi"
-    showBatteryType BatterySysFs = "sysfs"
-    showBatteryType BatteryUPower = "upower"
-    parseBatteryType "acpi" = Right BatteryAcpi
-    parseBatteryType "sysfs" = Right BatterySysFs
-    parseBatteryType "upower" = Right BatteryUPower
-    parseBatteryType t = Left t
-{-# INLINEABLE mappCodec #-}
+-- | TOML decoder for 'BatteryApp'.
+--
+-- @since 0.1
+batteryAppDecoder :: Decoder BatteryApp
+batteryAppDecoder =
+  tomlDecoder >>= \case
+    "acpi" -> pure BatteryAcpi
+    "sysfs" -> pure BatterySysFs
+    "upower" -> pure BatteryUPower
+    bad ->
+      fail $
+        unpack $
+          concat
+            [ "Unexpected battery app: ",
+              bad,
+              ". Expected one of <acpi | sysfs | upower>."
+            ]
+{-# INLINEABLE batteryAppDecoder #-}
