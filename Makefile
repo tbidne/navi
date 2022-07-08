@@ -48,7 +48,7 @@ watch:
 cic: formatc lintc haddockc
 
 .PHONY: ci
-ci: format lint
+ci: lint format
 
 # formatting
 
