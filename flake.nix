@@ -5,7 +5,7 @@
     byte-types-src.url = "github:tbidne/byte-types";
     env-guard-src.url = "github:tbidne/env-guard";
     flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.url = "github:nixos/nixpkgs?rev=98000933d72a97632caf0db0027ea3eb2e5e7f29";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     pythia-src.url = "github:tbidne/pythia";
     relative-time-src.url = "github:tbidne/relative-time";
     smart-math-src.url = "github:tbidne/smart-math";
