@@ -4,10 +4,9 @@
 
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/tbidne/navi?include_prereleases&sort=semver)](https://github.com/tbidne/navi/releases/)
 [![MIT](https://img.shields.io/github/license/tbidne/navi?color=blue)](https://opensource.org/licenses/MIT)
-
-[![nix](https://img.shields.io/github/workflow/status/tbidne/navi/nix/main?label=nix%209.2&logo=nixos&logoColor=85c5e7&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/nix_ci.yaml)
 [![style](https://img.shields.io/github/workflow/status/tbidne/navi/style/main?label=style&logoColor=white&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/style_ci.yaml)
 
+[![nix](https://img.shields.io/github/workflow/status/tbidne/navi/nix/main?label=nix%209.2&logo=nixos&logoColor=85c5e7&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/nix_ci.yaml)
 [![cabal 9.2](https://img.shields.io/github/workflow/status/tbidne/navi/cabal_9-2/main?label=9.2&logo=haskell&logoColor=655889&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/cabal_9-2.yaml)
 [![stack nightly](https://img.shields.io/github/workflow/status/tbidne/navi/stack_nightly/main?label=stack%20nightly&logoColor=white&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/stack_nightly.yaml)
 
