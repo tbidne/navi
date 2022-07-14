@@ -7,14 +7,22 @@ module Navi.Config.Types
   ( -- * Config
     Config (..),
     ConfigErr (..),
+    _FileErr,
+    _TomlError,
+    _NoEvents,
 
     -- * Logging
     Logging (..),
     LogLoc (..),
+    _DefPath,
+    _Stdout,
+    _File,
     defaultLogging,
 
     -- * Note System
     NoteSystem (..),
+    _DBus,
+    _NotifySend,
     defaultNoteSystem,
   )
 where
@@ -31,7 +39,7 @@ data LogLoc
   | File !FilePath
   deriving stock (Eq, Show)
 
-makeFieldLabelsNoPrefix ''LogLoc
+makePrisms ''LogLoc
 
 -- | Logging configuration.
 data Logging = MkLogging
@@ -53,7 +61,7 @@ data NoteSystem
     NotifySend
   deriving stock (Eq, Show)
 
-makePrismLabels ''NoteSystem
+makePrisms ''NoteSystem
 
 -- | Default notification system i.e. DBus.
 defaultNoteSystem :: NoteSystem
@@ -101,4 +109,4 @@ instance Exception ConfigErr where
   displayException (TomlError err) = unpack $ renderTOMLError err
   {-# INLINEABLE displayException #-}
 
-makeFieldLabelsNoPrefix ''ConfigErr
+makePrisms ''ConfigErr

@@ -1,9 +1,9 @@
 { compilerVersion
+, stackYaml
 , hash ? null
 }:
 
 let
-  # If a hash is not provided, read it from the lock's top-level nixpkgs.
   hash' =
     if hash == null
     then
@@ -21,11 +21,17 @@ let
     { };
   compiler = pkgs.haskell.packages."${compilerVersion}";
 in
-pkgs.mkShell {
-  buildInputs =
-    [
-      pkgs.cabal-install
-      compiler.ghc
-      pkgs.zlib
-    ];
+pkgs.haskell.lib.buildStackProject {
+  name = "navi";
+
+  buildInputs = with pkgs; [
+    git
+    stack
+    zlib.dev
+    zlib.out
+  ];
+
+  ghc = compiler.ghc;
+
+  STACK_YAML = stackYaml;
 }

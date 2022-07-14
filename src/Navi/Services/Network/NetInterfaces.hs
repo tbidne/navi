@@ -59,7 +59,7 @@ toNote noteToml conn =
     nameTxt = fromMaybe "Unknown" $ conn ^. #name
     body = "Device " <> deviceTxt <> stateTxt
     stateTxt = case conn ^. #state of
-      Up -> " is connected to: " <> nameTxt
-      Down -> " is disconnected from: " <> nameTxt
-      UnknownState txt -> " is in an unknown state: " <> txt
+      NetStateUp -> " is connected to: " <> nameTxt
+      NetStateDown -> " is disconnected from: " <> nameTxt
+      NetStateUnknown txt -> " is in an unknown state: " <> txt
 {-# INLINEABLE toNote #-}

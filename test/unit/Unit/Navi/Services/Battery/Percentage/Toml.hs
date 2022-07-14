@@ -69,9 +69,9 @@ appTests :: TestTree
 appTests =
   testGroup
     "Parses app"
-    [ parsesApp "acpi" BatteryAcpi,
-      parsesApp "sysfs" BatterySysFs,
-      parsesApp "upower" BatteryUPower,
+    [ parsesApp "acpi" BatteryAppAcpi,
+      parsesApp "sysfs" BatteryAppSysFs,
+      parsesApp "upower" BatteryAppUPower,
       parsesExpected "<none>" "[[alert]]\npercent=50" Many (view #app)
     ]
 

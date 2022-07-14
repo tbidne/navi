@@ -8,7 +8,11 @@ module Navi.Event.Types
   ( Event (..),
     AnyEvent (..),
     RepeatEvent (..),
+    _NoRepeats,
+    _AllowRepeats,
     ErrorNote (..),
+    _NoErrNote,
+    _AllowErrNote,
     EventError (..),
   )
 where
@@ -25,7 +29,7 @@ data RepeatEvent ref a
   = NoRepeats !(ref (Maybe a))
   | AllowRepeats
 
-makeFieldLabelsNoPrefix ''RepeatEvent
+makePrisms ''RepeatEvent
 
 instance Show (RepeatEvent ref a) where
   show (NoRepeats _) = "NoRepeats <ref>"
@@ -39,7 +43,7 @@ data ErrorNote ref
   | AllowErrNote !(RepeatEvent ref ())
   deriving stock (Show)
 
-makeFieldLabelsNoPrefix ''ErrorNote
+makePrisms ''ErrorNote
 
 -- | Represents an error when querying an 'Event'.
 data EventError = MkEventError
@@ -95,5 +99,3 @@ data AnyEvent ref where
   MkAnyEvent :: (Eq result, Show result) => Event ref result -> AnyEvent ref
 
 deriving stock instance Show (AnyEvent ref)
-
-makeFieldLabelsNoPrefix ''AnyEvent

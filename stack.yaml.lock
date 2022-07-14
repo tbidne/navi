@@ -48,26 +48,15 @@ packages:
     commit: 60e7ad675f017cbd8467bef649cfcea48f626ab5
     git: https://github.com/tbidne/byte-types.git
 - completed:
-    name: env-guard
-    pantry-tree:
-      sha256: 9316c18d5e16921505028dca43257cd98e8fd467b76e49554e3b969da63590e2
-      size: 1335
-    commit: 89a68d033d0671239b5e5e4a31f4355c46d4b6d3
-    git: https://github.com/tbidne/env-guard.git
-    version: '0.1'
-  original:
-    commit: 89a68d033d0671239b5e5e4a31f4355c46d4b6d3
-    git: https://github.com/tbidne/env-guard.git
-- completed:
     name: pythia
     pantry-tree:
-      sha256: a5c4bb3882b7fc8ccabaa09c21195c3185b55e1f886478ecc37e229ea8657ada
-      size: 4482
-    commit: 9088124cd1ac3514b26dc636487c490fce99d218
+      sha256: 927463a37b7eff8ebcc63a6dab6a85c4418e14ff5ba421c8dd58377dfed79208
+      size: 5286
+    commit: d6008cc71a374d6455e1f478946da5b8293e2699
     git: https://github.com/tbidne/pythia.git
     version: '0.1'
   original:
-    commit: 9088124cd1ac3514b26dc636487c490fce99d218
+    commit: d6008cc71a374d6455e1f478946da5b8293e2699
     git: https://github.com/tbidne/pythia.git
 - completed:
     name: relative-time
@@ -91,9 +80,20 @@ packages:
   original:
     commit: 652cf1c7b61c1c8b67ce1ce1b4ecea77173b947a
     git: https://github.com/tbidne/smart-math.git
+- completed:
+    name: time-conv
+    pantry-tree:
+      sha256: 767ee2b3dc4464857bc0d07f40d927de4cb95be966ec302f4987061bebe50492
+      size: 2438
+    commit: 7bcf5964949563c00f7ab378503d3aa08a42a62d
+    git: https://github.com/tbidne/time-conv.git
+    version: '0.1'
+  original:
+    commit: 7bcf5964949563c00f7ab378503d3aa08a42a62d
+    git: https://github.com/tbidne/time-conv.git
 snapshots:
 - completed:
-    sha256: 4c31d4ef975b0211078862566aedf3b82b6cea569fc2cde4c72a51e5a8d236ce
-    size: 618951
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/14.yaml
-  original: lts-19.14
+    sha256: f749167ba2a9ff2fcd0434bbd76a17a277572e90798617bc024d40a5324ce2af
+    size: 616346
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/7/7.yaml
+  original: nightly-2022-07-07

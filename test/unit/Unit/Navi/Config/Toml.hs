@@ -102,7 +102,7 @@ expectedBatteryStatus :: Maybe BatteryStatusToml
 expectedBatteryStatus =
   Just $
     MkBatteryStatusToml
-      { app = Single BatteryAcpi,
+      { app = Single BatteryAppAcpi,
         pollInterval = Nothing,
         repeatEvent = Nothing,
         errorNote = Nothing,

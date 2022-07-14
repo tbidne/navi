@@ -22,7 +22,7 @@ newtype PollInterval = MkPollInterval {unPollInterval :: Natural}
   deriving stock (Eq, Ord, Show)
 
 -- | @since 0.1
-makeFieldLabelsNoPrefix ''PollInterval
+makePrisms ''PollInterval
 
 -- | @since 0.1
 instance Bounded PollInterval where
@@ -65,7 +65,7 @@ pollIntervalOptDecoder = getFieldOptWith tomlDecoder "poll-interval"
 --
 -- @since 0.1
 toSleepTime :: PollInterval -> Int
-toSleepTime = fromIntegral . (* 1_000_000) . view #unPollInterval
+toSleepTime = fromIntegral . (* 1_000_000) . view _MkPollInterval
 {-# INLINEABLE toSleepTime #-}
 
 maxPollInterval :: PollInterval

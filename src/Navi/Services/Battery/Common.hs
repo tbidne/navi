@@ -13,9 +13,9 @@ import Pythia.Services.Battery (BatteryApp (..))
 batteryAppDecoder :: Decoder BatteryApp
 batteryAppDecoder =
   tomlDecoder >>= \case
-    "acpi" -> pure BatteryAcpi
-    "sysfs" -> pure BatterySysFs
-    "upower" -> pure BatteryUPower
+    "acpi" -> pure BatteryAppAcpi
+    "sysfs" -> pure BatteryAppSysFs
+    "upower" -> pure BatteryAppUPower
     bad ->
       fail $
         unpack $

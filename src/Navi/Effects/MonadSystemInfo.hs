@@ -27,8 +27,8 @@ instance MonadSystemInfo IO where
       rethrowPythia "Battery Status" $ view #status <$> Pythia.queryBattery bp
     NetworkInterface device cp ->
       rethrowPythia "NetInterface" $ Pythia.queryNetInterface device cp
-    Single cmd -> querySingle cmd
-    Multiple cmd -> queryMultiple cmd
+    Single cmd -> rethrowPythia "Single" $ querySingle cmd
+    Multiple cmd -> rethrowPythia "Multiple" $ queryMultiple cmd
   {-# INLINEABLE query #-}
 
 rethrowPythia :: Text -> IO a -> IO a
@@ -56,8 +56,7 @@ multipleShellApp :: Command -> SimpleShell EventError Text
 multipleShellApp cmd =
   MkSimpleShell
     { command = cmd,
-      parser = parseMultiple,
-      liftShellEx = liftEventError "Multiple"
+      parser = parseMultiple
     }
 {-# INLINEABLE multipleShellApp #-}
 
@@ -75,20 +74,10 @@ singleShellApp :: Command -> SimpleShell EventError Text
 singleShellApp cmd =
   MkSimpleShell
     { command = cmd,
-      parser = parseSingle,
-      liftShellEx = liftEventError "Single"
+      parser = parseSingle
     }
 {-# INLINEABLE singleShellApp #-}
 
 parseSingle :: Text -> Either EventError Text
 parseSingle = Right
 {-# INLINEABLE parseSingle #-}
-
-liftEventError :: Exception e => Text -> e -> EventError
-liftEventError n e =
-  MkEventError
-    { name = n,
-      short = "Command error",
-      long = pack $ displayException e
-    }
-{-# INLINEABLE liftEventError #-}

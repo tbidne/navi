@@ -1,10 +1,18 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | This modules provides toml configuration related to events.
 module Navi.Event.Toml
   ( RepeatEventToml (..),
+    _NoRepeatsToml,
+    _AllowRepeatsToml,
     repeatEventOptDecoder,
     repeatEventTomlToVal,
     mRepeatEventTomlToVal,
     ErrorNoteToml (..),
+    _NoErrNoteToml,
+    _ErrNoteAllowRepeatsToml,
+    _ErrNoteNoRepeatsToml,
     errorNoteOptDecoder,
     errorNoteTomlToVal,
     mErrorNoteTomlToVal,
@@ -15,18 +23,13 @@ import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Event.Types (ErrorNote (..), RepeatEvent (..))
 import Navi.Prelude
 
--- | TOML for 'Event.Event'.
-data EventConfig = MkEventConfig
-  { repeatEvent :: Maybe RepeatEventToml,
-    errEvent :: Maybe ErrorNoteToml
-  }
-  deriving stock (Eq, Show)
-
 -- | TOML for 'RepeatEvent'.
 data RepeatEventToml
   = NoRepeatsToml
   | AllowRepeatsToml
   deriving stock (Eq, Show)
+
+makePrisms ''RepeatEventToml
 
 -- | @since 0.1
 instance DecodeTOML RepeatEventToml where
@@ -62,6 +65,8 @@ data ErrorNoteToml
   | ErrNoteAllowRepeatsToml
   | ErrNoteNoRepeatsToml
   deriving stock (Eq, Show)
+
+makePrisms ''ErrorNoteToml
 
 -- | @since 0.1
 instance DecodeTOML ErrorNoteToml where

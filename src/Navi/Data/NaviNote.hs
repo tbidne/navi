@@ -5,6 +5,8 @@
 module Navi.Data.NaviNote
   ( NaviNote (..),
     Timeout (..),
+    _Never,
+    _Seconds,
     timeoutOptDecoder,
   )
 where
@@ -23,7 +25,7 @@ data Timeout
   deriving stock (Eq, Show)
 
 -- | @since 0.1
-makePrismLabels ''Timeout
+makePrisms ''Timeout
 
 -- | @since 0.1
 instance DecodeTOML Timeout where

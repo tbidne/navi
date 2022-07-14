@@ -41,8 +41,8 @@ appTests :: TestTree
 appTests =
   testGroup
     "Parses app"
-    [ parsesApp "ip" NetInterfaceIp,
-      parsesApp "nmcli" NetInterfaceNmCli,
+    [ parsesApp "ip" NetInterfaceAppIp,
+      parsesApp "nmcli" NetInterfaceAppNmCli,
       parsesExpected "<none>" "device = \"my-device\"" Many (view #app)
     ]
 

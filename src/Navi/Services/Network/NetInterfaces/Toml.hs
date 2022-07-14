@@ -55,8 +55,8 @@ instance DecodeTOML NetInterfacesToml where
 decodeNetInterfaceApp :: Decoder NetInterfaceApp
 decodeNetInterfaceApp =
   tomlDecoder >>= \case
-    "nmcli" -> pure NetInterfaceNmCli
-    "ip" -> pure NetInterfaceIp
+    "nmcli" -> pure NetInterfaceAppNmCli
+    "ip" -> pure NetInterfaceAppIp
     bad ->
       fail $
         unpack $

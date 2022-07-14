@@ -1,14 +1,12 @@
-resolver: lts-19.14
+resolver: nightly-2022-07-07
 packages:
 - .
-
 ghc-options:
   "$locals":
     -Wall -Wcompat -Werror -Widentities
     -Wincomplete-record-updates -Wincomplete-uni-patterns
     -Wmissing-home-modules -Wmissing-export-lists -Wpartial-fields
     -Wredundant-constraints -Wunused-packages -Wmissing-deriving-strategies
-
 extra-deps:
 - fdo-notify-0.3.1@sha256:9cfb75a5a0d5e4b1d40b0b4dbcc6bb29e58f21e4e14c83e2ffe1ca78bdee59d8,734
 - package-version-0.1.0.0@sha256:bb9fc93e905540aa8e1b32f80c2dc82756a4481c63779bd92e3796ed8085ab98,2854
@@ -17,16 +15,13 @@ extra-deps:
   commit: be105b31e3bd2bc00c69cd5c1e869294b26fbb17
 - git: https://github.com/tbidne/byte-types.git
   commit: 60e7ad675f017cbd8467bef649cfcea48f626ab5
-- git: https://github.com/tbidne/env-guard.git
-  commit: 89a68d033d0671239b5e5e4a31f4355c46d4b6d3
 - git: https://github.com/tbidne/pythia.git
-  commit: 9088124cd1ac3514b26dc636487c490fce99d218
+  commit: d6008cc71a374d6455e1f478946da5b8293e2699
 - git: https://github.com/tbidne/relative-time.git
   commit: dd4bf2a37bc22763eed6c9bf80ada9b323fb7a22
 - git: https://github.com/tbidne/smart-math.git
   commit: 652cf1c7b61c1c8b67ce1ce1b4ecea77173b947a
-
-allow-newer: true
-
+- git: https://github.com/tbidne/time-conv.git
+  commit: 7bcf5964949563c00f7ab378503d3aa08a42a62d
 nix:
-  shell-file: nix/stack.nix
+  shell-file: nix/stack_nightly.nix

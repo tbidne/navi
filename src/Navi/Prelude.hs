@@ -85,7 +85,7 @@ import GHC.Num as X (Num (..))
 import GHC.Real as X (Integral (..), fromIntegral)
 import GHC.Show as X (Show (..))
 import Optics.Core as X (over, set, view, (%), (.~), (^.))
-import Optics.TH as X (makeFieldLabelsNoPrefix, makePrismLabels)
+import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
 import System.IO as X (FilePath, IO)
 import TOML as X
   ( DecodeTOML (..),
