@@ -46,7 +46,7 @@ tryParseConfig :: Args Identity -> IO (Config IORef)
 tryParseConfig =
   readConfig
     . runIdentity
-    . configFile
+    . view #configFile
 
 mkLogEnv :: Logging -> IO LogEnv
 mkLogEnv logging = do

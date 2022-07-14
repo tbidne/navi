@@ -24,5 +24,6 @@ pkgs.mkShell {
     [
       pkgs.cabal-install
       compiler.ghc
+      pkgs.zlib
     ];
 }
