@@ -17,7 +17,6 @@ import DBus.Notify (Hint (Urgency), Note)
 import DBus.Notify qualified as DBusN
 import Katip (LogContexts, LogEnv, Namespace)
 import Navi.Config (Config)
-import Navi.Config qualified as Config
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Data.NaviQueue (NaviQueue (..))
 import Navi.Env.Core
@@ -99,7 +98,7 @@ mkDBusEnv logEnv logContext namespace config = do
     MkDBusEnv
       { coreEnv =
           MkEnv
-            (Config.events config)
+            (config ^. #events)
             logEnv
             logContext
             namespace

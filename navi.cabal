@@ -25,36 +25,17 @@ source-repository head
 common common-exts
   default-extensions:
     NoImplicitPrelude
-    AllowAmbiguousTypes
-    BangPatterns
-    ConstraintKinds
+    NoStarIsType
+    ApplicativeDo
     DataKinds
-    DeriveFunctor
-    DeriveGeneric
     DerivingVia
     DuplicateRecordFields
-    FlexibleContexts
-    FlexibleInstances
     FunctionalDependencies
-    GADTs
-    ImportQualifiedPost
-    InstanceSigs
     LambdaCase
-    MultiParamTypeClasses
-    MultiWayIf
-    NamedFieldPuns
-    NumericUnderscores
     OverloadedLabels
     OverloadedStrings
-    PatternSynonyms
-    RankNTypes
-    ScopedTypeVariables
-    StandaloneDeriving
-    StandaloneKindSignatures
-    TupleSections
-    TypeApplications
-    TypeFamilyDependencies
-    TypeOperators
+    TypeFamilies
+    NoFieldSelectors
 
 library
   import:           common-exts
@@ -122,7 +103,7 @@ library
     , unliftio              ^>=0.2.0.0
 
   hs-source-dirs:   src
-  default-language: Haskell2010
+  default-language: GHC2021
 
 executable navi
   import:           common-exts
@@ -136,7 +117,7 @@ executable navi
 
   hs-source-dirs:   app
   ghc-options:      -threaded -with-rtsopts=-N
-  default-language: Haskell2010
+  default-language: GHC2021
 
 test-suite unit
   import:           common-exts
@@ -164,7 +145,7 @@ test-suite unit
     , text
 
   hs-source-dirs:   test/unit
-  default-language: Haskell2010
+  default-language: GHC2021
 
 test-suite integration
   import:           common-exts
@@ -190,4 +171,4 @@ test-suite integration
     , unliftio
 
   hs-source-dirs:   test/integration
-  default-language: Haskell2010
+  default-language: GHC2021

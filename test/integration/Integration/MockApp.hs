@@ -52,7 +52,7 @@ data MockEnv = MkMockEnv
 makeFieldLabelsNoPrefix ''MockEnv
 
 instance HasEvents IORef MockEnv where
-  getEvents = events
+  getEvents = view #events
 
 instance HasLogNamespace MockEnv where
   getLogNamespace _ = ""
@@ -60,12 +60,12 @@ instance HasLogNamespace MockEnv where
   overLogNamespace _ = id
 
 instance HasLogQueue MockEnv where
-  getLogQueue = logQueue
+  getLogQueue = view #logQueue
 
 instance HasNoteQueue MockEnv where
-  getNoteQueue = noteQueue
+  getNoteQueue = view #noteQueue
 
-newtype IntTestIO a = MkIntTestIO {runIntTestIO :: IO a}
+newtype IntTestIO a = MkIntTestIO (IO a)
   deriving
     ( Functor,
       Applicative,
@@ -77,6 +77,8 @@ newtype IntTestIO a = MkIntTestIO {runIntTestIO :: IO a}
       MonadUnliftIO
     )
     via IO
+
+makePrisms ''IntTestIO
 
 instance MonadLogger (NaviT MockEnv IntTestIO) where
   -- if we ever decide to test logs, we can capture them similar to the
@@ -116,7 +118,7 @@ instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
   query (Multiple _) = pure "multiple result"
 
 runMockApp :: (NaviT MockEnv IntTestIO) a -> MockEnv -> IO a
-runMockApp nt = runIntTestIO . runNaviT nt
+runMockApp nt = view _MkIntTestIO . runNaviT nt
 
 configToMockEnv :: Config IORef -> IO MockEnv
 configToMockEnv config = do

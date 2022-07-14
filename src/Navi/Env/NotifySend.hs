@@ -14,7 +14,6 @@ import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import DBus.Notify (UrgencyLevel (..))
 import Katip (LogContexts, LogEnv, Namespace)
 import Navi.Config (Config)
-import Navi.Config qualified as Config
 import Navi.Data.NaviNote (NaviNote, Timeout (..))
 import Navi.Data.NaviQueue (NaviQueue (..))
 import Navi.Env.Core
@@ -87,7 +86,7 @@ mkNotifySendEnv logEnv logContext namespace config = do
     MkNotifySendEnv
       { coreEnv =
           MkEnv
-            (Config.events config)
+            (config ^. #events)
             logEnv
             logContext
             namespace
