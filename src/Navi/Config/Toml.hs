@@ -60,8 +60,8 @@ severityDecoder :: Decoder Severity
 severityDecoder =
   tomlDecoder >>= \case
     "debug" -> pure DebugS
-    "InfoS" -> pure InfoS
-    "ErrorS" -> pure ErrorS
+    "info" -> pure InfoS
+    "error" -> pure ErrorS
     bad -> fail $ unpack $ "Unsupported severity: " <> bad
 
 locationDecoderOpt :: Decoder (Maybe LogLoc)

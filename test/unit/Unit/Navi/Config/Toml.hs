@@ -26,18 +26,49 @@ tests :: TestTree
 tests =
   testGroup
     "Navi.Config.Toml"
-    [ parsesConfig
+    [ parsesFull,
+      logTests
     ]
 
-parsesConfig :: TestTree
-parsesConfig = testCase "Parses config" $ do
-  let eResult = decode fullConfig
+parsesFull :: TestTree
+parsesFull = parsesConfig fullConfig expectedFull "Parses full config"
+
+logTests :: TestTree
+logTests =
+  testGroup
+    "Parses log options"
+    [ parsesConfig logDebugConfig expectedDebug "Parses log debug config",
+      parsesConfig logInfoConfig expectedInfo "Parses log info config",
+      parsesConfig logErrorConfig expectedError "Parses log error config"
+    ]
+  where
+    expectedDebug =
+      MkConfigToml
+        { logToml =
+            Just $
+              MkLogging
+                { severity = Just DebugS,
+                  location = Nothing
+                },
+          noteSystemToml = Nothing,
+          singleToml = [],
+          multipleToml = [],
+          batteryPercentageToml = Nothing,
+          batteryStatusToml = expectedBatteryStatus,
+          netInterfacesToml = []
+        }
+    expectedInfo = set (#logToml %? #severity % _Just) InfoS expectedDebug
+    expectedError = set (#logToml %? #severity % _Just) ErrorS expectedDebug
+
+parsesConfig :: Text -> ConfigToml -> String -> TestTree
+parsesConfig config expected desc = testCase desc $ do
+  let eResult = decode config
   case eResult of
-    Left err -> assertFailure $ "Parsing config fails: " <> show err
+    Left err -> assertFailure $ "Parse failed: " <> show err
     Right result -> expected @=? result
 
-expected :: ConfigToml
-expected =
+expectedFull :: ConfigToml
+expectedFull =
   MkConfigToml
     { logToml =
         Just $
@@ -157,4 +188,37 @@ fullConfig =
       "summary = \"Some single\"",
       "body = \"A body\"",
       "timeout = 15"
+    ]
+
+logDebugConfig :: Text
+logDebugConfig =
+  T.unlines
+    [ "[logging]",
+      "severity = \"debug\"",
+      "",
+      "[battery-status]",
+      "app = \"acpi\"",
+      "timeout = 5"
+    ]
+
+logInfoConfig :: Text
+logInfoConfig =
+  T.unlines
+    [ "[logging]",
+      "severity = \"info\"",
+      "",
+      "[battery-status]",
+      "app = \"acpi\"",
+      "timeout = 5"
+    ]
+
+logErrorConfig :: Text
+logErrorConfig =
+  T.unlines
+    [ "[logging]",
+      "severity = \"error\"",
+      "",
+      "[battery-status]",
+      "app = \"acpi\"",
+      "timeout = 5"
     ]
