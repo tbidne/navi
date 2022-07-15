@@ -1,0 +1,757 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module provides the core application type and logic.</span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Navi</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Entry point</span></span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Navi.html#runNavi"><span class="hs-identifier">runNavi</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Application Types</span></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Navi.NaviT.html#NaviT"><span class="hs-identifier">NaviT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Navi.NaviT.html#runNaviT"><span class="hs-identifier">runNaviT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/pw68gjhd191snihqzhsfib2bhl60s3sa-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html"><span class="hs-identifier">DBus.Notify</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/pw68gjhd191snihqzhsfib2bhl60s3sa-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#UrgencyLevel"><span class="hs-identifier">UrgencyLevel</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.List.NonEmpty.html"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/vbnl9xm6b9vslgz0yqxbfkqw1s3a2vgb-katip-0.8.7.2-doc/share/doc/katip-0.8.7.2/html/src/Katip.html"><span class="hs-identifier">Katip</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/vbnl9xm6b9vslgz0yqxbfkqw1s3a2vgb-katip-0.8.7.2-doc/share/doc/katip-0.8.7.2/html/src/Katip.Core.html#Severity"><span class="hs-identifier">Severity</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.NaviLog.html"><span class="hs-identifier">Navi.Data.NaviLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.NaviLog.html#NaviLog"><span class="hs-identifier">NaviLog</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html"><span class="hs-identifier">Navi.Data.NaviNote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier">NaviNote</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#Timeout"><span class="hs-identifier">Timeout</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.MonadLogger.html"><span class="hs-identifier">Navi.Effects.MonadLogger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadLogger.html#MonadLogger"><span class="hs-identifier">MonadLogger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Effects.MonadLogger.html#sendLogQueue"><span class="hs-identifier">sendLogQueue</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.MonadMutRef.html"><span class="hs-identifier">Navi.Effects.MonadMutRef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadMutRef.html#MonadMutRef"><span class="hs-identifier">MonadMutRef</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.MonadNotify.html"><span class="hs-identifier">Navi.Effects.MonadNotify</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier">MonadNotify</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Effects.MonadNotify.html#sendNoteQueue"><span class="hs-identifier">sendNoteQueue</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.MonadQueue.html"><span class="hs-identifier">Navi.Effects.MonadQueue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadQueue.html#MonadQueue"><span class="hs-identifier">MonadQueue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.MonadShell.html"><span class="hs-identifier">Navi.Effects.MonadShell</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadShell.html#MonadShell"><span class="hs-identifier">MonadShell</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html"><span class="hs-identifier">Navi.Effects.MonadSystemInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html#MonadSystemInfo"><span class="hs-identifier">MonadSystemInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Env.Core.html"><span class="hs-identifier">Navi.Env.Core</span></a></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Env.Core.html#HasEvents"><span class="hs-identifier">HasEvents</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasLogNamespace"><span class="hs-identifier">HasLogNamespace</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasLogQueue"><span class="hs-identifier">HasLogQueue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasNoteQueue"><span class="hs-identifier">HasNoteQueue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Event.html"><span class="hs-identifier">Navi.Event</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Event</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Event.Types.html"><span class="hs-identifier">Navi.Event.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier">AnyEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#EventError"><span class="hs-identifier">EventError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.NaviT.html"><span class="hs-identifier">Navi.NaviT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.NaviT.html#NaviT"><span class="hs-identifier">NaviT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.NaviT.html#runNaviT"><span class="hs-identifier">runNaviT</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/dnrgzwxmb4smgkq3ih94sqy0z37xq3qd-unliftio-0.2.22.0-doc/share/doc/unliftio-0.2.22.0/html/src/UnliftIO.Async.html"><span class="hs-identifier">UnliftIO.Async</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Async</span></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- | Entry point for the application.</span><span>
+</span><span id="line-36"></span><span class="annot"><a href="Navi.html#runNavi"><span class="hs-identifier hs-type">runNavi</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679296162"><span class="annot"><a href="#local-6989586621679296162"><span class="hs-identifier hs-type">ref</span></a></span></span><span> </span><span id="local-6989586621679296161"><span class="annot"><a href="#local-6989586621679296161"><span class="hs-identifier hs-type">env</span></a></span></span><span> </span><span id="local-6989586621679296156"><span class="annot"><a href="#local-6989586621679296156"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Env.Core.html#HasEvents"><span class="hs-identifier hs-type">HasEvents</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296162"><span class="hs-identifier hs-type">ref</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296161"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasLogNamespace"><span class="hs-identifier hs-type">HasLogNamespace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296161"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasLogQueue"><span class="hs-identifier hs-type">HasLogQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296161"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasNoteQueue"><span class="hs-identifier hs-type">HasNoteQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296161"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadLogger.html#MonadLogger"><span class="hs-identifier hs-type">MonadLogger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296156"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadMutRef.html#MonadMutRef"><span class="hs-identifier hs-type">MonadMutRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296162"><span class="hs-identifier hs-type">ref</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296156"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier hs-type">MonadNotify</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296156"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadQueue.html#MonadQueue"><span class="hs-identifier hs-type">MonadQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296156"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadShell.html#MonadShell"><span class="hs-identifier hs-type">MonadShell</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296156"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html#MonadSystemInfo"><span class="hs-identifier hs-type">MonadSystemInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296156"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/mtl-2.2.2/src/Control.Monad.Reader.Class.html#MonadReader"><span class="hs-identifier hs-type">MonadReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296161"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296156"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><a href="file:///nix/store/p8b5cbpfr31pnvmabzwhadjsm8ipdxar-unliftio-core-0.2.0.1-doc/share/doc/unliftio-core-0.2.0.1/html/src/Control.Monad.IO.Unlift.html#MonadUnliftIO"><span class="hs-identifier hs-type">MonadUnliftIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296156"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="#local-6989586621679296156"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.Void.html#Void"><span class="hs-identifier hs-type">Void</span></a></span><span>
+</span><span id="line-52"></span><span id="runNavi"><span class="annot"><span class="annottext">runNavi :: forall (ref :: OpticKind -&gt; OpticKind) (env :: OpticKind)
+       (m :: OpticKind -&gt; OpticKind).
+(HasEvents ref env, HasLogNamespace env, HasLogQueue env,
+ HasNoteQueue env, MonadLogger m, MonadMutRef ref m, MonadNotify m,
+ MonadQueue m, MonadShell m, MonadSystemInfo m, MonadReader env m,
+ MonadUnliftIO m) =&gt;
+m Void
+</span><a href="Navi.html#runNavi"><span class="hs-identifier hs-var hs-var">runNavi</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679295932"><span class="annot"><span class="annottext">welcome :: NaviNote
+</span><a href="#local-6989586621679295932"><span class="hs-identifier hs-var hs-var">welcome</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-54"></span><span>        </span><span class="annot"><a href="Navi.Data.NaviNote.html#MkNaviNote"><span class="hs-identifier hs-type">MkNaviNote</span></a></span><span>
+</span><span id="line-55"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:summary:MkNaviNote :: Text
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Asummary%3AMkNaviNote"><span class="hs-identifier hs-var">summary</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Navi&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>            </span><span class="annot"><span class="annottext">$sel:body:MkNaviNote :: Maybe Text
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Abody%3AMkNaviNote"><span class="hs-identifier hs-var">body</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+forall (a :: OpticKind). a -&gt; Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Navi is up :-)&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>            </span><span class="annot"><span class="annottext">$sel:urgency:MkNaviNote :: Maybe UrgencyLevel
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Aurgency%3AMkNaviNote"><span class="hs-identifier hs-var">urgency</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UrgencyLevel -&gt; Maybe UrgencyLevel
+forall (a :: OpticKind). a -&gt; Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">UrgencyLevel
+</span><a href="file:///nix/store/pw68gjhd191snihqzhsfib2bhl60s3sa-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#Normal"><span class="hs-identifier hs-var">Normal</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>            </span><span class="annot"><span class="annottext">$sel:timeout:MkNaviNote :: Maybe Timeout
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Atimeout%3AMkNaviNote"><span class="hs-identifier hs-var">timeout</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Timeout -&gt; Maybe Timeout
+forall (a :: OpticKind). a -&gt; Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(Timeout -&gt; Maybe Timeout) -&gt; Timeout -&gt; Maybe Timeout
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Word16 -&gt; Timeout
+</span><a href="Navi.Data.NaviNote.html#Seconds"><span class="hs-identifier hs-var">Seconds</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><span class="hs-number">10</span></span><span>
+</span><span id="line-59"></span><span>          </span><span class="hs-special">}</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><span class="annottext">NaviNote -&gt; m ()
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasNoteQueue env, MonadQueue m, MonadReader env m) =&gt;
+NaviNote -&gt; m ()
+</span><a href="Navi.Effects.MonadNotify.html#sendNoteQueue"><span class="hs-identifier hs-var">sendNoteQueue</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679295932"><span class="hs-identifier hs-var">welcome</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621679295924"><span class="annot"><span class="annottext">NonEmpty (AnyEvent ref)
+</span><a href="#local-6989586621679295924"><span class="hs-identifier hs-var">events</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(env -&gt; NonEmpty (AnyEvent ref)) -&gt; m (NonEmpty (AnyEvent ref))
+forall (r :: OpticKind) (m :: OpticKind -&gt; OpticKind)
+       (a :: OpticKind).
+MonadReader r m =&gt;
+(r -&gt; a) -&gt; m a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/mtl-2.2.2/src/Control.Monad.Reader.Class.html#asks"><span class="hs-identifier hs-var">asks</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (ref :: OpticKind -&gt; OpticKind) (env :: OpticKind).
+HasEvents ref env =&gt;
+env -&gt; NonEmpty (AnyEvent ref)
+</span><a href="Navi.Env.Core.html#getEvents"><span class="hs-identifier hs-var">getEvents</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679296162"><span class="hs-identifier hs-type">ref</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621679295921"><span class="annot"><span class="annottext">Either (Either Void Void) (NonEmpty Void)
+</span><a href="#local-6989586621679295921"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NonEmpty (AnyEvent ref)
+-&gt; m (Either (Either Void Void) (NonEmpty Void))
+forall {env :: OpticKind} {m :: OpticKind -&gt; OpticKind}
+       {ref :: OpticKind -&gt; OpticKind} {t :: OpticKind -&gt; OpticKind}.
+(MonadReader env m, MonadMutRef ref m, HasNoteQueue env,
+ HasLogQueue env, HasLogNamespace env, Traversable t, MonadNotify m,
+ MonadUnliftIO m, MonadLogger m, MonadQueue m, MonadShell m,
+ MonadSystemInfo m) =&gt;
+t (AnyEvent ref) -&gt; m (Either (Either Void Void) (t Void))
+</span><a href="#local-6989586621679295920"><span class="hs-identifier hs-var">runAllAsync</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty (AnyEvent ref)
+</span><a href="#local-6989586621679295924"><span class="hs-identifier hs-var">events</span></a></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">(Either Void Void -&gt; Void)
+-&gt; (NonEmpty Void -&gt; Void)
+-&gt; Either (Either Void Void) (NonEmpty Void)
+-&gt; Void
+forall (a :: OpticKind) (c :: OpticKind) (b :: OpticKind).
+(a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.Either.html#either"><span class="hs-identifier hs-var">either</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Void -&gt; Void) -&gt; (Void -&gt; Void) -&gt; Either Void Void -&gt; Void
+forall (a :: OpticKind) (c :: OpticKind) (b :: OpticKind).
+(a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.Either.html#either"><span class="hs-identifier hs-var">either</span></a></span><span> </span><span class="annot"><span class="annottext">Void -&gt; Void
+forall (a :: OpticKind). a -&gt; a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#id"><span class="hs-identifier hs-var">id</span></a></span><span> </span><span class="annot"><span class="annottext">Void -&gt; Void
+forall (a :: OpticKind). a -&gt; a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#id"><span class="hs-identifier hs-var">id</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">NonEmpty Void -&gt; Void
+forall (a :: OpticKind). NonEmpty a -&gt; a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.List.NonEmpty.html#head"><span class="hs-identifier hs-var">NE.head</span></a></span><span> </span><span class="annot"><span class="annottext">Either (Either Void Void) (NonEmpty Void)
+</span><a href="#local-6989586621679295921"><span class="hs-identifier hs-var">res</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>    </span><span class="hs-comment">-- We use race so that we do not swallow exceptions. If any of these</span><span>
+</span><span id="line-66"></span><span>    </span><span class="hs-comment">-- throw an exception we want to die:</span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-68"></span><span>    </span><span class="hs-comment">-- 1. Logging: something is really wrong.</span><span>
+</span><span id="line-69"></span><span>    </span><span class="hs-comment">-- 2. Notify: something is really wrong.</span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-comment">-- 3. processEvent: should be catching and logging its own exceptions,</span><span>
+</span><span id="line-71"></span><span>    </span><span class="hs-comment">--    so if an exception escapes then something is really wrong.</span><span>
+</span><span id="line-72"></span><span>    </span><span id="local-6989586621679295920"><span class="annot"><span class="annottext">runAllAsync :: t (AnyEvent ref) -&gt; m (Either (Either Void Void) (t Void))
+</span><a href="#local-6989586621679295920"><span class="hs-identifier hs-var hs-var">runAllAsync</span></a></span></span><span> </span><span id="local-6989586621679295869"><span class="annot"><span class="annottext">t (AnyEvent ref)
+</span><a href="#local-6989586621679295869"><span class="hs-identifier hs-var">evts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-73"></span><span>      </span><span class="hs-comment">-- no logging here since logging itself is broken</span><span>
+</span><span id="line-74"></span><span>      </span><span class="annot"><span class="annottext">m Void
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasLogQueue env, MonadLogger m, MonadQueue m,
+ MonadReader env m) =&gt;
+m Void
+</span><a href="Navi.html#pollLogQueue"><span class="hs-identifier hs-var">pollLogQueue</span></a></span><span>
+</span><span id="line-75"></span><span>        </span><span class="hs-comment">-- log and rethrow notify exceptions</span><span>
+</span><span id="line-76"></span><span>        </span><span class="annot"><span class="annottext">m Void -&gt; m Void -&gt; m (Either Void Void)
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+MonadUnliftIO m =&gt;
+m a -&gt; m b -&gt; m (Either a b)
+</span><a href="file:///nix/store/dnrgzwxmb4smgkq3ih94sqy0z37xq3qd-unliftio-0.2.22.0-doc/share/doc/unliftio-0.2.22.0/html/src/UnliftIO.Internals.Async.html#race"><span class="hs-operator hs-var">`Async.race`</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Void -&gt; m Void
+forall {m :: OpticKind -&gt; OpticKind} {env :: OpticKind}
+       {a :: OpticKind}.
+(MonadUnliftIO m, HasLogNamespace env, HasLogQueue env,
+ MonadQueue m, MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="#local-6989586621679295866"><span class="hs-identifier hs-var">logExAndRethrow</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Notify: &quot;</span></span><span> </span><span class="annot"><span class="annottext">m Void
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasNoteQueue env, MonadLogger m, MonadNotify m, MonadQueue m,
+ MonadReader env m) =&gt;
+m Void
+</span><a href="Navi.html#pollNoteQueue"><span class="hs-identifier hs-var">pollNoteQueue</span></a></span><span>
+</span><span id="line-77"></span><span>        </span><span class="hs-comment">-- log and rethrow anything that escaped the exception handling in</span><span>
+</span><span id="line-78"></span><span>        </span><span class="hs-comment">-- processEvent</span><span>
+</span><span id="line-79"></span><span>        </span><span class="annot"><span class="annottext">m (Either Void Void)
+-&gt; m (t Void) -&gt; m (Either (Either Void Void) (t Void))
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+MonadUnliftIO m =&gt;
+m a -&gt; m b -&gt; m (Either a b)
+</span><a href="file:///nix/store/dnrgzwxmb4smgkq3ih94sqy0z37xq3qd-unliftio-0.2.22.0-doc/share/doc/unliftio-0.2.22.0/html/src/UnliftIO.Internals.Async.html#race"><span class="hs-operator hs-var">`Async.race`</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (t Void) -&gt; m (t Void)
+forall {m :: OpticKind -&gt; OpticKind} {env :: OpticKind}
+       {a :: OpticKind}.
+(MonadUnliftIO m, HasLogNamespace env, HasLogQueue env,
+ MonadQueue m, MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="#local-6989586621679295866"><span class="hs-identifier hs-var">logExAndRethrow</span></a></span><span>
+</span><span id="line-80"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Event processing: &quot;</span></span><span>
+</span><span id="line-81"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">(AnyEvent ref -&gt; m Void) -&gt; t (AnyEvent ref) -&gt; m (t Void)
+forall (m :: OpticKind -&gt; OpticKind) (t :: OpticKind -&gt; OpticKind)
+       (a :: OpticKind) (b :: OpticKind).
+(MonadUnliftIO m, Traversable t) =&gt;
+(a -&gt; m b) -&gt; t a -&gt; m (t b)
+</span><a href="file:///nix/store/dnrgzwxmb4smgkq3ih94sqy0z37xq3qd-unliftio-0.2.22.0-doc/share/doc/unliftio-0.2.22.0/html/src/UnliftIO.Internals.Async.html#mapConcurrently"><span class="hs-identifier hs-var">Async.mapConcurrently</span></a></span><span> </span><span class="annot"><span class="annottext">AnyEvent ref -&gt; m Void
+forall (m :: OpticKind -&gt; OpticKind)
+       (ref :: OpticKind -&gt; OpticKind) (env :: OpticKind).
+(HasLogNamespace env, HasLogQueue env, HasNoteQueue env,
+ MonadLogger m, MonadMutRef ref m, MonadQueue m, MonadReader env m,
+ MonadShell m, MonadSystemInfo m, MonadUnliftIO m) =&gt;
+AnyEvent ref -&gt; m Void
+</span><a href="Navi.html#processEvent"><span class="hs-identifier hs-var">processEvent</span></a></span><span> </span><span class="annot"><span class="annottext">t (AnyEvent ref)
+</span><a href="#local-6989586621679295869"><span class="hs-identifier hs-var">evts</span></a></span><span>
+</span><span id="line-82"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span>    </span><span id="local-6989586621679295866"><span class="annot"><span class="annottext">logExAndRethrow :: Text -&gt; m a -&gt; m a
+</span><a href="#local-6989586621679295866"><span class="hs-identifier hs-var hs-var">logExAndRethrow</span></a></span></span><span> </span><span id="local-6989586621679295842"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679295842"><span class="hs-identifier hs-var">prefix</span></a></span></span><span> </span><span id="local-6989586621679295841"><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621679295841"><span class="hs-identifier hs-var">io</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m a -&gt; (SomeException -&gt; m a) -&gt; m a
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadUnliftIO m =&gt;
+m a -&gt; (SomeException -&gt; m a) -&gt; m a
+</span><a href="file:///nix/store/dnrgzwxmb4smgkq3ih94sqy0z37xq3qd-unliftio-0.2.22.0-doc/share/doc/unliftio-0.2.22.0/html/src/UnliftIO.Exception.html#catchAny"><span class="hs-identifier hs-var">catchAny</span></a></span><span> </span><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621679295841"><span class="hs-identifier hs-var">io</span></a></span><span> </span><span class="annot"><span class="annottext">((SomeException -&gt; m a) -&gt; m a) -&gt; (SomeException -&gt; m a) -&gt; m a
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679295839"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679295839"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-85"></span><span>      </span><span class="annot"><span class="annottext">NaviLog -&gt; m ()
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasLogNamespace env, HasLogQueue env, MonadQueue m,
+ MonadReader env m) =&gt;
+NaviLog -&gt; m ()
+</span><a href="Navi.Effects.MonadLogger.html#sendLogQueue"><span class="hs-identifier hs-var">sendLogQueue</span></a></span><span> </span><span class="annot"><span class="annottext">(NaviLog -&gt; m ()) -&gt; NaviLog -&gt; m ()
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Severity -&gt; Text -&gt; NaviLog
+</span><a href="Navi.Data.NaviLog.html#MkNaviLog"><span class="hs-identifier hs-var">MkNaviLog</span></a></span><span> </span><span class="annot"><span class="annottext">Severity
+</span><a href="file:///nix/store/vbnl9xm6b9vslgz0yqxbfkqw1s3a2vgb-katip-0.8.7.2-doc/share/doc/katip-0.8.7.2/html/src/Katip.Core.html#CriticalS"><span class="hs-identifier hs-var">CriticalS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679295842"><span class="hs-identifier hs-var">prefix</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall (a :: OpticKind). Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.html#pack"><span class="hs-identifier hs-var">pack</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SomeException -&gt; String
+forall (e :: OpticKind). Exception e =&gt; e -&gt; String
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Exception.Type.html#displayException"><span class="hs-identifier hs-var">displayException</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679295839"><span class="hs-identifier hs-var">ex</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>      </span><span class="annot"><span class="annottext">SomeException -&gt; m a
+forall (m :: OpticKind -&gt; OpticKind) (e :: OpticKind)
+       (a :: OpticKind).
+(MonadIO m, Exception e) =&gt;
+e -&gt; m a
+</span><a href="file:///nix/store/dnrgzwxmb4smgkq3ih94sqy0z37xq3qd-unliftio-0.2.22.0-doc/share/doc/unliftio-0.2.22.0/html/src/UnliftIO.Exception.html#throwIO"><span class="hs-identifier hs-var">throwIO</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679295839"><span class="hs-identifier hs-var">ex</span></a></span><span>
+</span><span id="line-87"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#runNavi"><span class="hs-pragma hs-type">runNavi</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="annot"><a href="Navi.html#processEvent"><span class="hs-identifier hs-type">processEvent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679296101"><span class="annot"><a href="#local-6989586621679296101"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621679296100"><span class="annot"><a href="#local-6989586621679296100"><span class="hs-identifier hs-type">ref</span></a></span></span><span> </span><span id="local-6989586621679296102"><span class="annot"><a href="#local-6989586621679296102"><span class="hs-identifier hs-type">env</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Env.Core.html#HasLogNamespace"><span class="hs-identifier hs-type">HasLogNamespace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296102"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-92"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasLogQueue"><span class="hs-identifier hs-type">HasLogQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296102"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasNoteQueue"><span class="hs-identifier hs-type">HasNoteQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296102"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadLogger.html#MonadLogger"><span class="hs-identifier hs-type">MonadLogger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296101"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadMutRef.html#MonadMutRef"><span class="hs-identifier hs-type">MonadMutRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296100"><span class="hs-identifier hs-type">ref</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296101"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadQueue.html#MonadQueue"><span class="hs-identifier hs-type">MonadQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296101"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/mtl-2.2.2/src/Control.Monad.Reader.Class.html#MonadReader"><span class="hs-identifier hs-type">MonadReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296102"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296101"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadShell.html#MonadShell"><span class="hs-identifier hs-type">MonadShell</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296101"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html#MonadSystemInfo"><span class="hs-identifier hs-type">MonadSystemInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296101"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><a href="file:///nix/store/p8b5cbpfr31pnvmabzwhadjsm8ipdxar-unliftio-core-0.2.0.1-doc/share/doc/unliftio-core-0.2.0.1/html/src/Control.Monad.IO.Unlift.html#MonadUnliftIO"><span class="hs-identifier hs-type">MonadUnliftIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296101"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier hs-type">AnyEvent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296100"><span class="hs-identifier hs-type">ref</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><a href="#local-6989586621679296101"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.Void.html#Void"><span class="hs-identifier hs-type">Void</span></a></span><span>
+</span><span id="line-104"></span><span id="processEvent"><span class="annot"><span class="annottext">processEvent :: forall (m :: OpticKind -&gt; OpticKind)
+       (ref :: OpticKind -&gt; OpticKind) (env :: OpticKind).
+(HasLogNamespace env, HasLogQueue env, HasNoteQueue env,
+ MonadLogger m, MonadMutRef ref m, MonadQueue m, MonadReader env m,
+ MonadShell m, MonadSystemInfo m, MonadUnliftIO m) =&gt;
+AnyEvent ref -&gt; m Void
+</span><a href="Navi.html#processEvent"><span class="hs-identifier hs-var hs-var">processEvent</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#MkAnyEvent"><span class="hs-identifier hs-type">MkAnyEvent</span></a></span><span> </span><span id="local-6989586621679295701"><span class="annot"><span class="annottext">Event ref result
+</span><a href="#local-6989586621679295701"><span class="hs-identifier hs-var">event</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Namespace -&gt; m Void -&gt; m Void
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadLogger m =&gt;
+Namespace -&gt; m a -&gt; m a
+</span><a href="Navi.Effects.MonadLogger.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Namespace
+forall (a :: OpticKind). IsString a =&gt; String -&gt; a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.String.html#fromString"><span class="hs-identifier hs-var">fromString</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Namespace) -&gt; String -&gt; Namespace
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">unpack</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679295698"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m Void -&gt; m Void) -&gt; m Void -&gt; m Void
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679295697"><span class="annot"><span class="annottext">pi :: PollInterval
+</span><a href="#local-6989586621679295697"><span class="hs-identifier hs-var hs-var">pi</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Event ref result
+</span><a href="#local-6989586621679295701"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event ref result
+-&gt; Optic' A_Lens NoIx (Event ref result) PollInterval
+-&gt; PollInterval
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event ref result) PollInterval
+</span><span class="">#pollInterval</span></span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m Void
+forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Applicative f =&gt;
+f a -&gt; f b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Control.Monad.html#forever"><span class="hs-identifier hs-var">forever</span></a></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m Void) -&gt; m () -&gt; m Void
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">NaviLog -&gt; m ()
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasLogNamespace env, HasLogQueue env, MonadQueue m,
+ MonadReader env m) =&gt;
+NaviLog -&gt; m ()
+</span><a href="Navi.Effects.MonadLogger.html#sendLogQueue"><span class="hs-identifier hs-var">sendLogQueue</span></a></span><span> </span><span class="annot"><span class="annottext">(NaviLog -&gt; m ()) -&gt; NaviLog -&gt; m ()
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Severity -&gt; Text -&gt; NaviLog
+</span><a href="Navi.Data.NaviLog.html#MkNaviLog"><span class="hs-identifier hs-var">MkNaviLog</span></a></span><span> </span><span class="annot"><span class="annottext">Severity
+</span><a href="file:///nix/store/vbnl9xm6b9vslgz0yqxbfkqw1s3a2vgb-katip-0.8.7.2-doc/share/doc/katip-0.8.7.2/html/src/Katip.Core.html#InfoS"><span class="hs-identifier hs-var">InfoS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Checking &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall (a :: OpticKind). Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679295698"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Event ref result -&gt; m result
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind)
+       (result :: OpticKind) (ref :: OpticKind -&gt; OpticKind).
+(HasLogNamespace env, HasLogQueue env, MonadLogger m, MonadQueue m,
+ MonadReader env m, MonadSystemInfo m, Show result) =&gt;
+Event ref result -&gt; m result
+</span><a href="Navi.Event.html#runEvent"><span class="hs-identifier hs-var">Event.runEvent</span></a></span><span> </span><span class="annot"><span class="annottext">Event ref result
+</span><a href="#local-6989586621679295701"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">m result -&gt; (result -&gt; m ()) -&gt; m ()
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Monad m =&gt;
+m a -&gt; (a -&gt; m b) -&gt; m b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%3E%3E%3D"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">result -&gt; m ()
+</span><a href="#local-6989586621679295692"><span class="hs-identifier hs-var">handleSuccess</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">m () -&gt; (EventError -&gt; m ()) -&gt; m ()
+forall (m :: OpticKind -&gt; OpticKind) (e :: OpticKind)
+       (a :: OpticKind).
+(MonadUnliftIO m, Exception e) =&gt;
+m a -&gt; (e -&gt; m a) -&gt; m a
+</span><a href="file:///nix/store/dnrgzwxmb4smgkq3ih94sqy0z37xq3qd-unliftio-0.2.22.0-doc/share/doc/unliftio-0.2.22.0/html/src/UnliftIO.Exception.html#catch"><span class="hs-operator hs-var">`catch`</span></a></span><span> </span><span class="annot"><span class="annottext">EventError -&gt; m ()
+</span><a href="#local-6989586621679295690"><span class="hs-identifier hs-var">handleEventError</span></a></span><span>
+</span><span id="line-110"></span><span>      </span><span class="annot"><span class="annottext">m () -&gt; (SomeException -&gt; m ()) -&gt; m ()
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadUnliftIO m =&gt;
+m a -&gt; (SomeException -&gt; m a) -&gt; m a
+</span><a href="file:///nix/store/dnrgzwxmb4smgkq3ih94sqy0z37xq3qd-unliftio-0.2.22.0-doc/share/doc/unliftio-0.2.22.0/html/src/UnliftIO.Exception.html#catchAny"><span class="hs-operator hs-var">`catchAny`</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; m ()
+</span><a href="#local-6989586621679295689"><span class="hs-identifier hs-var">handleSomeException</span></a></span><span>
+</span><span id="line-111"></span><span>    </span><span class="annot"><span class="annottext">PollInterval -&gt; m ()
+forall (m :: OpticKind -&gt; OpticKind).
+MonadShell m =&gt;
+PollInterval -&gt; m ()
+</span><a href="Navi.Effects.MonadShell.html#sleep"><span class="hs-identifier hs-var">sleep</span></a></span><span> </span><span class="annot"><span class="annottext">PollInterval
+</span><a href="#local-6989586621679295697"><span class="hs-identifier hs-var">pi</span></a></span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-113"></span><span>    </span><span id="local-6989586621679295698"><span class="annot"><span class="annottext">name :: Text
+</span><a href="#local-6989586621679295698"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Event ref result
+</span><a href="#local-6989586621679295701"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event ref result
+-&gt; Optic' A_Lens NoIx (Event ref result) Text -&gt; Text
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event ref result) Text
+</span><span class="">#name</span></span><span>
+</span><span id="line-114"></span><span>    </span><span id="local-6989586621679295687"><span class="annot"><span class="annottext">repeatEvent :: RepeatEvent ref result
+</span><a href="#local-6989586621679295687"><span class="hs-identifier hs-var hs-var">repeatEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Event ref result
+</span><a href="#local-6989586621679295701"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event ref result
+-&gt; Optic' A_Lens NoIx (Event ref result) (RepeatEvent ref result)
+-&gt; RepeatEvent ref result
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event ref result) (RepeatEvent ref result)
+</span><span class="">#repeatEvent</span></span><span>
+</span><span id="line-115"></span><span>    </span><span id="local-6989586621679295686"><span class="annot"><span class="annottext">errorNote :: ErrorNote ref
+</span><a href="#local-6989586621679295686"><span class="hs-identifier hs-var hs-var">errorNote</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Event ref result
+</span><a href="#local-6989586621679295701"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event ref result
+-&gt; Optic' A_Lens NoIx (Event ref result) (ErrorNote ref)
+-&gt; ErrorNote ref
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event ref result) (ErrorNote ref)
+</span><span class="">#errorNote</span></span><span>
+</span><span id="line-116"></span><span>    </span><span id="local-6989586621679295685"><span class="annot"><span class="annottext">raiseAlert :: result -&gt; Maybe NaviNote
+</span><a href="#local-6989586621679295685"><span class="hs-identifier hs-var hs-var">raiseAlert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Event ref result
+</span><a href="#local-6989586621679295701"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event ref result
+-&gt; Optic' A_Lens NoIx (Event ref result) (result -&gt; Maybe NaviNote)
+-&gt; result
+-&gt; Maybe NaviNote
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event ref result) (result -&gt; Maybe NaviNote)
+</span><span class="">#raiseAlert</span></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span>    </span><span id="local-6989586621679295692"><span class="annot"><span class="annottext">handleSuccess :: result -&gt; m ()
+</span><a href="#local-6989586621679295692"><span class="hs-identifier hs-var hs-var">handleSuccess</span></a></span></span><span> </span><span id="local-6989586621679295684"><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679295684"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Namespace -&gt; m () -&gt; m ()
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadLogger m =&gt;
+Namespace -&gt; m a -&gt; m a
+</span><a href="Navi.Effects.MonadLogger.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Namespace
+</span><span class="hs-string">&quot;handleSuccess&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-119"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">result -&gt; Maybe NaviNote
+</span><a href="#local-6989586621679295685"><span class="hs-identifier hs-var">raiseAlert</span></a></span><span> </span><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679295684"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-120"></span><span>        </span><span class="annot"><span class="annottext">Maybe NaviNote
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-121"></span><span>          </span><span class="annot"><span class="annottext">NaviLog -&gt; m ()
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasLogNamespace env, HasLogQueue env, MonadQueue m,
+ MonadReader env m) =&gt;
+NaviLog -&gt; m ()
+</span><a href="Navi.Effects.MonadLogger.html#sendLogQueue"><span class="hs-identifier hs-var">sendLogQueue</span></a></span><span> </span><span class="annot"><span class="annottext">(NaviLog -&gt; m ()) -&gt; NaviLog -&gt; m ()
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Severity -&gt; Text -&gt; NaviLog
+</span><a href="Navi.Data.NaviLog.html#MkNaviLog"><span class="hs-identifier hs-var">MkNaviLog</span></a></span><span> </span><span class="annot"><span class="annottext">Severity
+</span><a href="file:///nix/store/vbnl9xm6b9vslgz0yqxbfkqw1s3a2vgb-katip-0.8.7.2-doc/share/doc/katip-0.8.7.2/html/src/Katip.Core.html#DebugS"><span class="hs-identifier hs-var">DebugS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;No alert to raise &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall (a :: OpticKind). Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">result -&gt; Text
+forall (a :: OpticKind). Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679295684"><span class="hs-identifier hs-var">result</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>          </span><span class="annot"><span class="annottext">RepeatEvent ref result -&gt; result -&gt; m ()
+forall (a :: OpticKind) (ref :: OpticKind -&gt; OpticKind)
+       (m :: OpticKind -&gt; OpticKind).
+(Eq a, MonadMutRef ref m) =&gt;
+RepeatEvent ref a -&gt; a -&gt; m ()
+</span><a href="Navi.Event.html#updatePrevTrigger"><span class="hs-identifier hs-var">Event.updatePrevTrigger</span></a></span><span> </span><span class="annot"><span class="annottext">RepeatEvent ref result
+</span><a href="#local-6989586621679295687"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679295684"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><span id="line-123"></span><span>        </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679295680"><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679295680"><span class="hs-identifier hs-var">note</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-124"></span><span>          </span><span id="local-6989586621679295679"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679295679"><span class="hs-identifier hs-var">blocked</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">RepeatEvent ref result -&gt; result -&gt; m Bool
+forall (a :: OpticKind) (env :: OpticKind)
+       (m :: OpticKind -&gt; OpticKind) (ref :: OpticKind -&gt; OpticKind).
+(Eq a, HasLogQueue env, HasLogNamespace env, MonadLogger m,
+ MonadMutRef ref m, MonadQueue m, MonadReader env m, Show a) =&gt;
+RepeatEvent ref a -&gt; a -&gt; m Bool
+</span><a href="Navi.Event.html#blockRepeat"><span class="hs-identifier hs-var">Event.blockRepeat</span></a></span><span> </span><span class="annot"><span class="annottext">RepeatEvent ref result
+</span><a href="#local-6989586621679295687"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679295684"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><span id="line-125"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679295679"><span class="hs-identifier hs-var">blocked</span></a></span><span>
+</span><span id="line-126"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">NaviLog -&gt; m ()
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasLogNamespace env, HasLogQueue env, MonadQueue m,
+ MonadReader env m) =&gt;
+NaviLog -&gt; m ()
+</span><a href="Navi.Effects.MonadLogger.html#sendLogQueue"><span class="hs-identifier hs-var">sendLogQueue</span></a></span><span> </span><span class="annot"><span class="annottext">(NaviLog -&gt; m ()) -&gt; NaviLog -&gt; m ()
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Severity -&gt; Text -&gt; NaviLog
+</span><a href="Navi.Data.NaviLog.html#MkNaviLog"><span class="hs-identifier hs-var">MkNaviLog</span></a></span><span> </span><span class="annot"><span class="annottext">Severity
+</span><a href="file:///nix/store/vbnl9xm6b9vslgz0yqxbfkqw1s3a2vgb-katip-0.8.7.2-doc/share/doc/katip-0.8.7.2/html/src/Katip.Core.html#DebugS"><span class="hs-identifier hs-var">DebugS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Alert blocked &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall (a :: OpticKind). Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">result -&gt; Text
+forall (a :: OpticKind). Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679295684"><span class="hs-identifier hs-var">result</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-128"></span><span>              </span><span class="annot"><span class="annottext">NaviLog -&gt; m ()
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasLogNamespace env, HasLogQueue env, MonadQueue m,
+ MonadReader env m) =&gt;
+NaviLog -&gt; m ()
+</span><a href="Navi.Effects.MonadLogger.html#sendLogQueue"><span class="hs-identifier hs-var">sendLogQueue</span></a></span><span> </span><span class="annot"><span class="annottext">(NaviLog -&gt; m ()) -&gt; NaviLog -&gt; m ()
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Severity -&gt; Text -&gt; NaviLog
+</span><a href="Navi.Data.NaviLog.html#MkNaviLog"><span class="hs-identifier hs-var">MkNaviLog</span></a></span><span> </span><span class="annot"><span class="annottext">Severity
+</span><a href="file:///nix/store/vbnl9xm6b9vslgz0yqxbfkqw1s3a2vgb-katip-0.8.7.2-doc/share/doc/katip-0.8.7.2/html/src/Katip.Core.html#InfoS"><span class="hs-identifier hs-var">InfoS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Sending note &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall (a :: OpticKind). Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote -&gt; Text
+forall (a :: OpticKind). Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679295680"><span class="hs-identifier hs-var">note</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-129"></span><span>              </span><span class="annot"><span class="annottext">RepeatEvent ref result -&gt; result -&gt; m ()
+forall (a :: OpticKind) (ref :: OpticKind -&gt; OpticKind)
+       (m :: OpticKind -&gt; OpticKind).
+(Eq a, MonadMutRef ref m) =&gt;
+RepeatEvent ref a -&gt; a -&gt; m ()
+</span><a href="Navi.Event.html#updatePrevTrigger"><span class="hs-identifier hs-var">Event.updatePrevTrigger</span></a></span><span> </span><span class="annot"><span class="annottext">RepeatEvent ref result
+</span><a href="#local-6989586621679295687"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679295684"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><span id="line-130"></span><span>              </span><span class="annot"><span class="annottext">NaviNote -&gt; m ()
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasNoteQueue env, MonadQueue m, MonadReader env m) =&gt;
+NaviNote -&gt; m ()
+</span><a href="Navi.Effects.MonadNotify.html#sendNoteQueue"><span class="hs-identifier hs-var">sendNoteQueue</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679295680"><span class="hs-identifier hs-var">note</span></a></span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span>    </span><span id="local-6989586621679295690"><span class="annot"><span class="annottext">handleEventError :: EventError -&gt; m ()
+</span><a href="#local-6989586621679295690"><span class="hs-identifier hs-var hs-var">handleEventError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-133"></span><span>      </span><span class="annot"><span class="annottext">Namespace -&gt; m () -&gt; m ()
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadLogger m =&gt;
+Namespace -&gt; m a -&gt; m a
+</span><a href="Navi.Effects.MonadLogger.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Namespace
+</span><span class="hs-string">&quot;handleEventError&quot;</span></span><span>
+</span><span id="line-134"></span><span>        </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; (EventError -&gt; m ()) -&gt; EventError -&gt; m ()
+forall (b :: OpticKind) (c :: OpticKind) (a :: OpticKind).
+(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(EventError -&gt; NaviNote) -&gt; EventError -&gt; m ()
+forall (e :: OpticKind).
+Exception e =&gt;
+(e -&gt; NaviNote) -&gt; e -&gt; m ()
+</span><a href="#local-6989586621679295676"><span class="hs-identifier hs-var">handleErr</span></a></span><span> </span><span class="annot"><span class="annottext">EventError -&gt; NaviNote
+</span><a href="Navi.html#eventErrToNote"><span class="hs-identifier hs-var">eventErrToNote</span></a></span><span>
+</span><span id="line-135"></span><span>
+</span><span id="line-136"></span><span>    </span><span id="local-6989586621679295689"><span class="annot"><span class="annottext">handleSomeException :: SomeException -&gt; m ()
+</span><a href="#local-6989586621679295689"><span class="hs-identifier hs-var hs-var">handleSomeException</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-137"></span><span>      </span><span class="annot"><span class="annottext">Namespace -&gt; m () -&gt; m ()
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadLogger m =&gt;
+Namespace -&gt; m a -&gt; m a
+</span><a href="Navi.Effects.MonadLogger.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Namespace
+</span><span class="hs-string">&quot;handleSomeException&quot;</span></span><span>
+</span><span id="line-138"></span><span>        </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; (SomeException -&gt; m ()) -&gt; SomeException -&gt; m ()
+forall (b :: OpticKind) (c :: OpticKind) (a :: OpticKind).
+(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">(SomeException -&gt; NaviNote) -&gt; SomeException -&gt; m ()
+forall (e :: OpticKind).
+Exception e =&gt;
+(e -&gt; NaviNote) -&gt; e -&gt; m ()
+</span><a href="#local-6989586621679295676"><span class="hs-identifier hs-var">handleErr</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; NaviNote
+</span><a href="Navi.html#exToNote"><span class="hs-identifier hs-var">exToNote</span></a></span><span>
+</span><span id="line-139"></span><span>
+</span><span id="line-140"></span><span>    </span><span id="local-6989586621679296021"><span class="annot"><a href="#local-6989586621679295676"><span class="hs-identifier hs-type">handleErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296021"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679296021"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679296021"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679296101"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-141"></span><span>    </span><span id="local-6989586621679295676"><span class="annot"><span class="annottext">handleErr :: forall (e :: OpticKind).
+Exception e =&gt;
+(e -&gt; NaviNote) -&gt; e -&gt; m ()
+</span><a href="#local-6989586621679295676"><span class="hs-identifier hs-var hs-var">handleErr</span></a></span></span><span> </span><span id="local-6989586621679295650"><span class="annot"><span class="annottext">e -&gt; NaviNote
+</span><a href="#local-6989586621679295650"><span class="hs-identifier hs-var">toNote</span></a></span></span><span> </span><span id="local-6989586621679295649"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679295649"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-142"></span><span>      </span><span id="local-6989586621679295648"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679295648"><span class="hs-identifier hs-var">blockErrEvent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ErrorNote ref -&gt; m Bool
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind)
+       (ref :: OpticKind -&gt; OpticKind).
+(HasLogNamespace env, HasLogQueue env, MonadLogger m,
+ MonadMutRef ref m, MonadQueue m, MonadReader env m) =&gt;
+ErrorNote ref -&gt; m Bool
+</span><a href="Navi.Event.html#blockErr"><span class="hs-identifier hs-var">Event.blockErr</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorNote ref
+</span><a href="#local-6989586621679295686"><span class="hs-identifier hs-var">errorNote</span></a></span><span>
+</span><span id="line-143"></span><span>      </span><span class="annot"><span class="annottext">NaviLog -&gt; m ()
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasLogNamespace env, HasLogQueue env, MonadQueue m,
+ MonadReader env m) =&gt;
+NaviLog -&gt; m ()
+</span><a href="Navi.Effects.MonadLogger.html#sendLogQueue"><span class="hs-identifier hs-var">sendLogQueue</span></a></span><span> </span><span class="annot"><span class="annottext">(NaviLog -&gt; m ()) -&gt; NaviLog -&gt; m ()
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Severity -&gt; Text -&gt; NaviLog
+</span><a href="Navi.Data.NaviLog.html#MkNaviLog"><span class="hs-identifier hs-var">MkNaviLog</span></a></span><span> </span><span class="annot"><span class="annottext">Severity
+</span><a href="file:///nix/store/vbnl9xm6b9vslgz0yqxbfkqw1s3a2vgb-katip-0.8.7.2-doc/share/doc/katip-0.8.7.2/html/src/Katip.Core.html#ErrorS"><span class="hs-identifier hs-var">ErrorS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.html#pack"><span class="hs-identifier hs-var">pack</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; String -&gt; Text
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">e -&gt; String
+forall (e :: OpticKind). Exception e =&gt; e -&gt; String
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Exception.Type.html#displayException"><span class="hs-identifier hs-var">displayException</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679295649"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-144"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679295648"><span class="hs-identifier hs-var">blockErrEvent</span></a></span><span>
+</span><span id="line-145"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">NaviLog -&gt; m ()
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasLogNamespace env, HasLogQueue env, MonadQueue m,
+ MonadReader env m) =&gt;
+NaviLog -&gt; m ()
+</span><a href="Navi.Effects.MonadLogger.html#sendLogQueue"><span class="hs-identifier hs-var">sendLogQueue</span></a></span><span> </span><span class="annot"><span class="annottext">(NaviLog -&gt; m ()) -&gt; NaviLog -&gt; m ()
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Severity -&gt; Text -&gt; NaviLog
+</span><a href="Navi.Data.NaviLog.html#MkNaviLog"><span class="hs-identifier hs-var">MkNaviLog</span></a></span><span> </span><span class="annot"><span class="annottext">Severity
+</span><a href="file:///nix/store/vbnl9xm6b9vslgz0yqxbfkqw1s3a2vgb-katip-0.8.7.2-doc/share/doc/katip-0.8.7.2/html/src/Katip.Core.html#DebugS"><span class="hs-identifier hs-var">DebugS</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Error note blocked&quot;</span></span><span>
+</span><span id="line-146"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">NaviNote -&gt; m ()
+forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasNoteQueue env, MonadQueue m, MonadReader env m) =&gt;
+NaviNote -&gt; m ()
+</span><a href="Navi.Effects.MonadNotify.html#sendNoteQueue"><span class="hs-identifier hs-var">sendNoteQueue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">e -&gt; NaviNote
+</span><a href="#local-6989586621679295650"><span class="hs-identifier hs-var">toNote</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679295649"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-147"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#processEvent"><span class="hs-pragma hs-type">processEvent</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-148"></span><span>
+</span><span id="line-149"></span><span class="annot"><a href="Navi.html#eventErrToNote"><span class="hs-identifier hs-type">eventErrToNote</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#EventError"><span class="hs-identifier hs-type">EventError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span>
+</span><span id="line-150"></span><span id="eventErrToNote"><span class="annot"><span class="annottext">eventErrToNote :: EventError -&gt; NaviNote
+</span><a href="Navi.html#eventErrToNote"><span class="hs-identifier hs-var hs-var">eventErrToNote</span></a></span></span><span> </span><span id="local-6989586621679295645"><span class="annot"><span class="annottext">EventError
+</span><a href="#local-6989586621679295645"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-151"></span><span>  </span><span class="annot"><a href="Navi.Data.NaviNote.html#MkNaviNote"><span class="hs-identifier hs-type">MkNaviNote</span></a></span><span>
+</span><span id="line-152"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:summary:MkNaviNote :: Text
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Asummary%3AMkNaviNote"><span class="hs-identifier hs-var">summary</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EventError
+</span><a href="#local-6989586621679295645"><span class="hs-identifier hs-var">ex</span></a></span><span> </span><span class="annot"><span class="annottext">EventError -&gt; Optic' A_Lens NoIx EventError Text -&gt; Text
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx EventError Text
+</span><span class="">#name</span></span><span class="hs-special">,</span><span>
+</span><span id="line-153"></span><span>      </span><span class="annot"><span class="annottext">$sel:body:MkNaviNote :: Maybe Text
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Abody%3AMkNaviNote"><span class="hs-identifier hs-var">body</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+forall (a :: OpticKind). a -&gt; Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe Text) -&gt; Text -&gt; Maybe Text
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">EventError
+</span><a href="#local-6989586621679295645"><span class="hs-identifier hs-var">ex</span></a></span><span> </span><span class="annot"><span class="annottext">EventError -&gt; Optic' A_Lens NoIx EventError Text -&gt; Text
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx EventError Text
+</span><span class="">#short</span></span><span class="hs-special">,</span><span>
+</span><span id="line-154"></span><span>      </span><span class="annot"><span class="annottext">$sel:urgency:MkNaviNote :: Maybe UrgencyLevel
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Aurgency%3AMkNaviNote"><span class="hs-identifier hs-var">urgency</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UrgencyLevel -&gt; Maybe UrgencyLevel
+forall (a :: OpticKind). a -&gt; Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">UrgencyLevel
+</span><a href="file:///nix/store/pw68gjhd191snihqzhsfib2bhl60s3sa-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#Critical"><span class="hs-identifier hs-var">Critical</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-155"></span><span>      </span><span class="annot"><span class="annottext">$sel:timeout:MkNaviNote :: Maybe Timeout
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Atimeout%3AMkNaviNote"><span class="hs-identifier hs-var">timeout</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Timeout
+forall (a :: OpticKind). Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-156"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-157"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#eventErrToNote"><span class="hs-pragma hs-type">eventErrToNote</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-158"></span><span>
+</span><span id="line-159"></span><span class="annot"><a href="Navi.html#exToNote"><span class="hs-identifier hs-type">exToNote</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Exception.Type.html#SomeException"><span class="hs-identifier hs-type">SomeException</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span>
+</span><span id="line-160"></span><span id="exToNote"><span class="annot"><span class="annottext">exToNote :: SomeException -&gt; NaviNote
+</span><a href="Navi.html#exToNote"><span class="hs-identifier hs-var hs-var">exToNote</span></a></span></span><span> </span><span id="local-6989586621679295643"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679295643"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-161"></span><span>  </span><span class="annot"><a href="Navi.Data.NaviNote.html#MkNaviNote"><span class="hs-identifier hs-type">MkNaviNote</span></a></span><span>
+</span><span id="line-162"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:summary:MkNaviNote :: Text
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Asummary%3AMkNaviNote"><span class="hs-identifier hs-var">summary</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Exception&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-163"></span><span>      </span><span class="annot"><span class="annottext">$sel:body:MkNaviNote :: Maybe Text
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Abody%3AMkNaviNote"><span class="hs-identifier hs-var">body</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+forall (a :: OpticKind). a -&gt; Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe Text) -&gt; Text -&gt; Maybe Text
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.html#pack"><span class="hs-identifier hs-var">pack</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SomeException -&gt; String
+forall (e :: OpticKind). Exception e =&gt; e -&gt; String
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Exception.Type.html#displayException"><span class="hs-identifier hs-var">displayException</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679295643"><span class="hs-identifier hs-var">ex</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-164"></span><span>      </span><span class="annot"><span class="annottext">$sel:urgency:MkNaviNote :: Maybe UrgencyLevel
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Aurgency%3AMkNaviNote"><span class="hs-identifier hs-var">urgency</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UrgencyLevel -&gt; Maybe UrgencyLevel
+forall (a :: OpticKind). a -&gt; Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">UrgencyLevel
+</span><a href="file:///nix/store/pw68gjhd191snihqzhsfib2bhl60s3sa-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#Critical"><span class="hs-identifier hs-var">Critical</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-165"></span><span>      </span><span class="annot"><span class="annottext">$sel:timeout:MkNaviNote :: Maybe Timeout
+</span><a href="Navi.Data.NaviNote.html#%24sel%3Atimeout%3AMkNaviNote"><span class="hs-identifier hs-var">timeout</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Timeout
+forall (a :: OpticKind). Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-166"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-167"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#exToNote"><span class="hs-pragma hs-type">exToNote</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-168"></span><span>
+</span><span id="line-169"></span><span id="local-6989586621679296107"><span id="local-6989586621679296108"><span class="annot"><a href="Navi.html#pollNoteQueue"><span class="hs-identifier hs-type">pollNoteQueue</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-170"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Env.Core.html#HasNoteQueue"><span class="hs-identifier hs-type">HasNoteQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296108"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-171"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadLogger.html#MonadLogger"><span class="hs-identifier hs-type">MonadLogger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296107"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-172"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier hs-type">MonadNotify</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296107"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-173"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadQueue.html#MonadQueue"><span class="hs-identifier hs-type">MonadQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296107"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-174"></span><span>    </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/mtl-2.2.2/src/Control.Monad.Reader.Class.html#MonadReader"><span class="hs-identifier hs-type">MonadReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296108"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296107"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-175"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-176"></span><span>  </span><span class="annot"><a href="#local-6989586621679296107"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.Void.html#Void"><span class="hs-identifier hs-type">Void</span></a></span></span></span><span>
+</span><span id="line-177"></span><span id="pollNoteQueue"><span class="annot"><span class="annottext">pollNoteQueue :: forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasNoteQueue env, MonadLogger m, MonadNotify m, MonadQueue m,
+ MonadReader env m) =&gt;
+m Void
+</span><a href="Navi.html#pollNoteQueue"><span class="hs-identifier hs-var hs-var">pollNoteQueue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Namespace -&gt; m Void -&gt; m Void
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadLogger m =&gt;
+Namespace -&gt; m a -&gt; m a
+</span><a href="Navi.Effects.MonadLogger.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Namespace
+</span><span class="hs-string">&quot;note-poller&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m Void -&gt; m Void) -&gt; m Void -&gt; m Void
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-178"></span><span>  </span><span id="local-6989586621679295626"><span class="annot"><span class="annottext">NaviQueue NaviNote
+</span><a href="#local-6989586621679295626"><span class="hs-identifier hs-var">queue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(env -&gt; NaviQueue NaviNote) -&gt; m (NaviQueue NaviNote)
+forall (r :: OpticKind) (m :: OpticKind -&gt; OpticKind)
+       (a :: OpticKind).
+MonadReader r m =&gt;
+(r -&gt; a) -&gt; m a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/mtl-2.2.2/src/Control.Monad.Reader.Class.html#asks"><span class="hs-identifier hs-var">asks</span></a></span><span> </span><span class="annot"><span class="annottext">env -&gt; NaviQueue NaviNote
+forall (env :: OpticKind).
+HasNoteQueue env =&gt;
+env -&gt; NaviQueue NaviNote
+</span><a href="Navi.Env.Core.html#getNoteQueue"><span class="hs-identifier hs-var">getNoteQueue</span></a></span><span>
+</span><span id="line-179"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m Void
+forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Applicative f =&gt;
+f a -&gt; f b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Control.Monad.html#forever"><span class="hs-identifier hs-var">forever</span></a></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m Void) -&gt; m () -&gt; m Void
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">NaviQueue NaviNote -&gt; m NaviNote
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadQueue m =&gt;
+NaviQueue a -&gt; m a
+</span><a href="Navi.Effects.MonadQueue.html#readQueue"><span class="hs-identifier hs-var">readQueue</span></a></span><span> </span><span class="annot"><span class="annottext">NaviQueue NaviNote
+</span><a href="#local-6989586621679295626"><span class="hs-identifier hs-var">queue</span></a></span><span> </span><span class="annot"><span class="annottext">m NaviNote -&gt; (NaviNote -&gt; m ()) -&gt; m ()
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Monad m =&gt;
+m a -&gt; (a -&gt; m b) -&gt; m b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%3E%3E%3D"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote -&gt; m ()
+forall (m :: OpticKind -&gt; OpticKind).
+MonadNotify m =&gt;
+NaviNote -&gt; m ()
+</span><a href="Navi.Effects.MonadNotify.html#sendNote"><span class="hs-identifier hs-var">sendNote</span></a></span><span>
+</span><span id="line-180"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#pollNoteQueue"><span class="hs-pragma hs-type">pollNoteQueue</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-181"></span><span>
+</span><span id="line-182"></span><span id="local-6989586621679296115"><span id="local-6989586621679296116"><span class="annot"><a href="Navi.html#pollLogQueue"><span class="hs-identifier hs-type">pollLogQueue</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-183"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Env.Core.html#HasLogQueue"><span class="hs-identifier hs-type">HasLogQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296116"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-184"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadLogger.html#MonadLogger"><span class="hs-identifier hs-type">MonadLogger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296115"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-185"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadQueue.html#MonadQueue"><span class="hs-identifier hs-type">MonadQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296115"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-186"></span><span>    </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/mtl-2.2.2/src/Control.Monad.Reader.Class.html#MonadReader"><span class="hs-identifier hs-type">MonadReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296116"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679296115"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-187"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-188"></span><span>  </span><span class="annot"><a href="#local-6989586621679296115"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.Void.html#Void"><span class="hs-identifier hs-type">Void</span></a></span></span></span><span>
+</span><span id="line-189"></span><span id="pollLogQueue"><span class="annot"><span class="annottext">pollLogQueue :: forall (env :: OpticKind) (m :: OpticKind -&gt; OpticKind).
+(HasLogQueue env, MonadLogger m, MonadQueue m,
+ MonadReader env m) =&gt;
+m Void
+</span><a href="Navi.html#pollLogQueue"><span class="hs-identifier hs-var hs-var">pollLogQueue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Namespace -&gt; m Void -&gt; m Void
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadLogger m =&gt;
+Namespace -&gt; m a -&gt; m a
+</span><a href="Navi.Effects.MonadLogger.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Namespace
+</span><span class="hs-string">&quot;logger&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m Void -&gt; m Void) -&gt; m Void -&gt; m Void
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-190"></span><span>  </span><span id="local-6989586621679295607"><span class="annot"><span class="annottext">NaviQueue (NaviLog, Namespace)
+</span><a href="#local-6989586621679295607"><span class="hs-identifier hs-var">queue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(env -&gt; NaviQueue (NaviLog, Namespace))
+-&gt; m (NaviQueue (NaviLog, Namespace))
+forall (r :: OpticKind) (m :: OpticKind -&gt; OpticKind)
+       (a :: OpticKind).
+MonadReader r m =&gt;
+(r -&gt; a) -&gt; m a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/mtl-2.2.2/src/Control.Monad.Reader.Class.html#asks"><span class="hs-identifier hs-var">asks</span></a></span><span> </span><span class="annot"><span class="annottext">env -&gt; NaviQueue (NaviLog, Namespace)
+forall (env :: OpticKind).
+HasLogQueue env =&gt;
+env -&gt; NaviQueue (NaviLog, Namespace)
+</span><a href="Navi.Env.Core.html#getLogQueue"><span class="hs-identifier hs-var">getLogQueue</span></a></span><span>
+</span><span id="line-191"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m Void
+forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Applicative f =&gt;
+f a -&gt; f b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Control.Monad.html#forever"><span class="hs-identifier hs-var">forever</span></a></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m Void) -&gt; m () -&gt; m Void
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">NaviQueue (NaviLog, Namespace) -&gt; m (NaviLog, Namespace)
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadQueue m =&gt;
+NaviQueue a -&gt; m a
+</span><a href="Navi.Effects.MonadQueue.html#readQueue"><span class="hs-identifier hs-var">readQueue</span></a></span><span> </span><span class="annot"><span class="annottext">NaviQueue (NaviLog, Namespace)
+</span><a href="#local-6989586621679295607"><span class="hs-identifier hs-var">queue</span></a></span><span> </span><span class="annot"><span class="annottext">m (NaviLog, Namespace) -&gt; ((NaviLog, Namespace) -&gt; m ()) -&gt; m ()
+forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Monad m =&gt;
+m a -&gt; (a -&gt; m b) -&gt; m b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%3E%3E%3D"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">(NaviLog -&gt; Namespace -&gt; m ()) -&gt; (NaviLog, Namespace) -&gt; m ()
+forall (a :: OpticKind) (b :: OpticKind) (c :: OpticKind).
+(a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.Tuple.html#uncurry"><span class="hs-identifier hs-var">uncurry</span></a></span><span> </span><span class="annot"><span class="annottext">NaviLog -&gt; Namespace -&gt; m ()
+forall (m :: OpticKind -&gt; OpticKind).
+MonadLogger m =&gt;
+NaviLog -&gt; Namespace -&gt; m ()
+</span><a href="Navi.Effects.MonadLogger.html#logText"><span class="hs-identifier hs-var">logText</span></a></span><span>
+</span><span id="line-192"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#pollLogQueue"><span class="hs-pragma hs-type">pollLogQueue</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-193"></span></pre></body></html>

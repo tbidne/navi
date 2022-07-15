@@ -1,0 +1,336 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module provides a service for alerts related to battery levels.</span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Navi.Services.Battery.Percentage</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageToml"><span class="hs-identifier">BatteryPercentageToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Navi.Services.Battery.Percentage.html#toEvent"><span class="hs-identifier">toEvent</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.List.NonEmpty.html"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/containers-0.6.5.1/src/Data.Map.html"><span class="hs-identifier">Data.Map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/containers-0.6.5.1/src/Data.Map.Internal.html#Map"><span class="hs-identifier">Map</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/containers-0.6.5.1/src/Data.Map.html"><span class="hs-identifier">Data.Map</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html"><span class="hs-identifier">Navi.Data.NaviNote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier">NaviNote</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html"><span class="hs-identifier">Navi.Data.PollInterval</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier">PollInterval</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.html"><span class="hs-identifier">Navi.Effects</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadMutRef.html#MonadMutRef"><span class="hs-identifier">MonadMutRef</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Event.Toml.html"><span class="hs-identifier">Navi.Event.Toml</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">EventToml</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Event.Types.html"><span class="hs-identifier">Navi.Event.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier">AnyEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#ErrorNote"><span class="hs-identifier">ErrorNote</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#Event"><span class="hs-identifier">Event</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier">RepeatEvent</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html"><span class="hs-identifier">Navi.Services.Battery.Percentage.Toml</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageNoteToml"><span class="hs-identifier">BatteryPercentageNoteToml</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageToml"><span class="hs-identifier">BatteryPercentageToml</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Services.Types.html"><span class="hs-identifier">Navi.Services.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Services.Types.html#ServiceType"><span class="hs-identifier">ServiceType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Numeric.Data.Interval</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Interval</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Pythia.Services.Battery</span></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">Battery</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><span class="hs-identifier">BatteryConfig</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><span class="hs-identifier">BatteryStatus</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="hs-identifier">Percentage</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- | Transforms toml configuration data into an 'AnyEvent'.</span><span>
+</span><span id="line-28"></span><span id="local-6989586621679292293"><span id="local-6989586621679292294"><span class="annot"><a href="Navi.Services.Battery.Percentage.html#toEvent"><span class="hs-identifier hs-type">toEvent</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadMutRef.html#MonadMutRef"><span class="hs-identifier hs-type">MonadMutRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292294"><span class="hs-identifier hs-type">ref</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292293"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageToml"><span class="hs-identifier hs-type">BatteryPercentageToml</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679292293"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier hs-type">AnyEvent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292294"><span class="hs-identifier hs-type">ref</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-29"></span><span id="toEvent"><span class="annot"><span class="annottext">toEvent :: forall (ref :: OpticKind -&gt; OpticKind)
+       (m :: OpticKind -&gt; OpticKind).
+MonadMutRef ref m =&gt;
+BatteryPercentageToml -&gt; m (AnyEvent ref)
+</span><a href="Navi.Services.Battery.Percentage.html#toEvent"><span class="hs-identifier hs-var hs-var">toEvent</span></a></span></span><span> </span><span id="local-6989586621679292072"><span class="annot"><span class="annottext">BatteryPercentageToml
+</span><a href="#local-6989586621679292072"><span class="hs-identifier hs-var">toml</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621679292071"><span class="annot"><span class="annottext">RepeatEvent ref Battery
+</span><a href="#local-6989586621679292071"><span class="hs-identifier hs-var">repeatEvent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe RepeatEventToml -&gt; m (RepeatEvent ref Battery)
+forall (ref :: OpticKind -&gt; OpticKind)
+       (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadMutRef ref m =&gt;
+Maybe RepeatEventToml -&gt; m (RepeatEvent ref a)
+</span><a href="Navi.Event.Toml.html#mRepeatEventTomlToVal"><span class="hs-identifier hs-var">EventToml.mRepeatEventTomlToVal</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe RepeatEventToml -&gt; m (RepeatEvent ref Battery))
+-&gt; Maybe RepeatEventToml -&gt; m (RepeatEvent ref Battery)
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageToml
+</span><a href="#local-6989586621679292072"><span class="hs-identifier hs-var">toml</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageToml
+-&gt; Optic' A_Lens NoIx BatteryPercentageToml (Maybe RepeatEventToml)
+-&gt; Maybe RepeatEventToml
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx BatteryPercentageToml (Maybe RepeatEventToml)
+</span><span class="">#repeatEvent</span></span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621679292068"><span class="annot"><span class="annottext">ErrorNote ref
+</span><a href="#local-6989586621679292068"><span class="hs-identifier hs-var">errorNote</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe ErrorNoteToml -&gt; m (ErrorNote ref)
+forall (ref :: OpticKind -&gt; OpticKind)
+       (m :: OpticKind -&gt; OpticKind).
+MonadMutRef ref m =&gt;
+Maybe ErrorNoteToml -&gt; m (ErrorNote ref)
+</span><a href="Navi.Event.Toml.html#mErrorNoteTomlToVal"><span class="hs-identifier hs-var">EventToml.mErrorNoteTomlToVal</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe ErrorNoteToml -&gt; m (ErrorNote ref))
+-&gt; Maybe ErrorNoteToml -&gt; m (ErrorNote ref)
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageToml
+</span><a href="#local-6989586621679292072"><span class="hs-identifier hs-var">toml</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageToml
+-&gt; Optic' A_Lens NoIx BatteryPercentageToml (Maybe ErrorNoteToml)
+-&gt; Maybe ErrorNoteToml
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx BatteryPercentageToml (Maybe ErrorNoteToml)
+</span><span class="">#errorNote</span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679292066"><span class="annot"><span class="annottext">evt :: Event ref Battery
+</span><a href="#local-6989586621679292066"><span class="hs-identifier hs-var hs-var">evt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty (Percentage, NaviNote)
+-&gt; BatteryConfig
+-&gt; PollInterval
+-&gt; RepeatEvent ref Battery
+-&gt; ErrorNote ref
+-&gt; Event ref Battery
+forall (ref :: OpticKind -&gt; OpticKind).
+NonEmpty (Percentage, NaviNote)
+-&gt; BatteryConfig
+-&gt; PollInterval
+-&gt; RepeatEvent ref Battery
+-&gt; ErrorNote ref
+-&gt; Event ref Battery
+</span><a href="Navi.Services.Battery.Percentage.html#mkBatteryEvent"><span class="hs-identifier hs-var">mkBatteryEvent</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Percentage, NaviNote)
+</span><a href="#local-6989586621679292064"><span class="hs-identifier hs-var">percentNoteList</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryConfig
+</span><a href="#local-6989586621679292063"><span class="hs-identifier hs-var">app</span></a></span><span> </span><span class="annot"><span class="annottext">PollInterval
+</span><a href="#local-6989586621679292062"><span class="hs-identifier hs-var">pi</span></a></span><span> </span><span class="annot"><span class="annottext">RepeatEvent ref Battery
+</span><a href="#local-6989586621679292071"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorNote ref
+</span><a href="#local-6989586621679292068"><span class="hs-identifier hs-var">errorNote</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="annot"><span class="annottext">AnyEvent ref -&gt; m (AnyEvent ref)
+forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+Applicative f =&gt;
+a -&gt; f a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">(AnyEvent ref -&gt; m (AnyEvent ref))
+-&gt; AnyEvent ref -&gt; m (AnyEvent ref)
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Event ref Battery -&gt; AnyEvent ref
+forall (result :: OpticKind) (ref :: OpticKind -&gt; OpticKind).
+(Eq result, Show result) =&gt;
+Event ref result -&gt; AnyEvent ref
+</span><a href="Navi.Event.Types.html#MkAnyEvent"><span class="hs-identifier hs-var">MkAnyEvent</span></a></span><span> </span><span class="annot"><span class="annottext">Event ref Battery
+</span><a href="#local-6989586621679292066"><span class="hs-identifier hs-var">evt</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-35"></span><span>    </span><span id="local-6989586621679292064"><span class="annot"><span class="annottext">percentNoteList :: NonEmpty (Percentage, NaviNote)
+</span><a href="#local-6989586621679292064"><span class="hs-identifier hs-var hs-var">percentNoteList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BatteryPercentageNoteToml -&gt; (Percentage, NaviNote)
+</span><a href="Navi.Services.Battery.Percentage.html#tomlToNote"><span class="hs-identifier hs-var">tomlToNote</span></a></span><span> </span><span class="annot"><span class="annottext">(BatteryPercentageNoteToml -&gt; (Percentage, NaviNote))
+-&gt; NonEmpty BatteryPercentageNoteToml
+-&gt; NonEmpty (Percentage, NaviNote)
+forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Functor f =&gt;
+(a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageToml
+</span><a href="#local-6989586621679292072"><span class="hs-identifier hs-var">toml</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageToml
+-&gt; Optic'
+     A_Lens
+     NoIx
+     BatteryPercentageToml
+     (NonEmpty BatteryPercentageNoteToml)
+-&gt; NonEmpty BatteryPercentageNoteToml
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic'
+  A_Lens
+  NoIx
+  BatteryPercentageToml
+  (NonEmpty BatteryPercentageNoteToml)
+</span><span class="">#alerts</span></span><span>
+</span><span id="line-36"></span><span>    </span><span id="local-6989586621679292063"><span class="annot"><span class="annottext">app :: BatteryConfig
+</span><a href="#local-6989586621679292063"><span class="hs-identifier hs-var hs-var">app</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RunApp BatteryApp -&gt; BatteryConfig
+</span><span class="hs-identifier hs-var">MkBatteryConfig</span></span><span> </span><span class="annot"><span class="annottext">(RunApp BatteryApp -&gt; BatteryConfig)
+-&gt; RunApp BatteryApp -&gt; BatteryConfig
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageToml
+</span><a href="#local-6989586621679292072"><span class="hs-identifier hs-var">toml</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageToml
+-&gt; Optic' A_Lens NoIx BatteryPercentageToml (RunApp BatteryApp)
+-&gt; RunApp BatteryApp
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx BatteryPercentageToml (RunApp BatteryApp)
+</span><span class="">#app</span></span><span>
+</span><span id="line-37"></span><span>    </span><span id="local-6989586621679292062"><span class="annot"><span class="annottext">pi :: PollInterval
+</span><a href="#local-6989586621679292062"><span class="hs-identifier hs-var hs-var">pi</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PollInterval -&gt; Maybe PollInterval -&gt; PollInterval
+forall (a :: OpticKind). a -&gt; Maybe a -&gt; a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.Maybe.html#fromMaybe"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural -&gt; PollInterval
+</span><a href="Navi.Data.PollInterval.html#MkPollInterval"><span class="hs-identifier hs-var">MkPollInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-number">30</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BatteryPercentageToml
+</span><a href="#local-6989586621679292072"><span class="hs-identifier hs-var">toml</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageToml
+-&gt; Optic' A_Lens NoIx BatteryPercentageToml (Maybe PollInterval)
+-&gt; Maybe PollInterval
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx BatteryPercentageToml (Maybe PollInterval)
+</span><span class="">#pollInterval</span></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.html#toEvent"><span class="hs-pragma hs-type">toEvent</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="annot"><a href="Navi.Services.Battery.Percentage.html#tomlToNote"><span class="hs-identifier hs-type">tomlToNote</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageNoteToml"><span class="hs-identifier hs-type">BatteryPercentageNoteToml</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Percentage</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span id="tomlToNote"><span class="annot"><span class="annottext">tomlToNote :: BatteryPercentageNoteToml -&gt; (Percentage, NaviNote)
+</span><a href="Navi.Services.Battery.Percentage.html#tomlToNote"><span class="hs-identifier hs-var hs-var">tomlToNote</span></a></span></span><span> </span><span id="local-6989586621679292055"><span class="annot"><span class="annottext">BatteryPercentageNoteToml
+</span><a href="#local-6989586621679292055"><span class="hs-identifier hs-var">toml</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679292054"><span class="hs-identifier hs-var">percentage</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; Maybe Text -&gt; Maybe UrgencyLevel -&gt; Maybe Timeout -&gt; NaviNote
+</span><a href="Navi.Data.NaviNote.html#MkNaviNote"><span class="hs-identifier hs-var">MkNaviNote</span></a></span><span>
+</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679292052"><span class="hs-identifier hs-var">summary</span></a></span><span>
+</span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621679292051"><span class="hs-identifier hs-var">body</span></a></span><span>
+</span><span id="line-46"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BatteryPercentageNoteToml
+</span><a href="#local-6989586621679292055"><span class="hs-identifier hs-var">toml</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageNoteToml
+-&gt; Optic'
+     A_Lens NoIx BatteryPercentageNoteToml (Maybe UrgencyLevel)
+-&gt; Maybe UrgencyLevel
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx BatteryPercentageNoteToml (Maybe UrgencyLevel)
+</span><span class="">#urgency</span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BatteryPercentageNoteToml
+</span><a href="#local-6989586621679292055"><span class="hs-identifier hs-var">toml</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageNoteToml
+-&gt; Optic' A_Lens NoIx BatteryPercentageNoteToml (Maybe Timeout)
+-&gt; Maybe Timeout
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx BatteryPercentageNoteToml (Maybe Timeout)
+</span><span class="">#mTimeout</span></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>    </span><span id="local-6989586621679292054"><span class="annot"><span class="annottext">percentage :: Percentage
+</span><a href="#local-6989586621679292054"><span class="hs-identifier hs-var hs-var">percentage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BatteryPercentageNoteToml
+</span><a href="#local-6989586621679292055"><span class="hs-identifier hs-var">toml</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryPercentageNoteToml
+-&gt; Optic' A_Lens NoIx BatteryPercentageNoteToml Percentage
+-&gt; Percentage
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx BatteryPercentageNoteToml Percentage
+</span><span class="">#percentage</span></span><span>
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621679292052"><span class="annot"><span class="annottext">summary :: Text
+</span><a href="#local-6989586621679292052"><span class="hs-identifier hs-var hs-var">summary</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Battery Percentage&quot;</span></span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621679292051"><span class="annot"><span class="annottext">body :: Maybe Text
+</span><a href="#local-6989586621679292051"><span class="hs-identifier hs-var hs-var">body</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+forall (a :: OpticKind). a -&gt; Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe Text) -&gt; Text -&gt; Maybe Text
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">Word8 -&gt; Text
+forall (a :: OpticKind). Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LRInterval 0 100 Word8 -&gt; Word8
+forall (l :: Natural) (r :: Natural) (a :: OpticKind).
+LRInterval l r a -&gt; a
+</span><span class="hs-identifier hs-var">Interval.unLRInterval</span></span><span> </span><span class="annot"><span class="annottext">(LRInterval 0 100 Word8 -&gt; Word8)
+-&gt; LRInterval 0 100 Word8 -&gt; Word8
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679292054"><span class="hs-identifier hs-var">percentage</span></a></span><span> </span><span class="annot"><span class="annottext">Percentage
+-&gt; Optic' A_Lens NoIx Percentage (LRInterval 0 100 Word8)
+-&gt; LRInterval 0 100 Word8
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx Percentage (LRInterval 0 100 Word8)
+</span><span class="">#unPercentage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall (a :: OpticKind). Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;%&quot;</span></span><span>
+</span><span id="line-56"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.html#tomlToNote"><span class="hs-pragma hs-type">tomlToNote</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span id="local-6989586621679292246"><span class="annot"><a href="Navi.Services.Battery.Percentage.html#mkBatteryEvent"><span class="hs-identifier hs-type">mkBatteryEvent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#NonEmpty"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Percentage</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">BatteryConfig</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier hs-type">RepeatEvent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292246"><span class="hs-identifier hs-type">ref</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Battery</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Navi.Event.Types.html#ErrorNote"><span class="hs-identifier hs-type">ErrorNote</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292246"><span class="hs-identifier hs-type">ref</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Navi.Event.Types.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292246"><span class="hs-identifier hs-type">ref</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Battery</span></span></span><span>
+</span><span id="line-65"></span><span id="mkBatteryEvent"><span class="annot"><span class="annottext">mkBatteryEvent :: forall (ref :: OpticKind -&gt; OpticKind).
+NonEmpty (Percentage, NaviNote)
+-&gt; BatteryConfig
+-&gt; PollInterval
+-&gt; RepeatEvent ref Battery
+-&gt; ErrorNote ref
+-&gt; Event ref Battery
+</span><a href="Navi.Services.Battery.Percentage.html#mkBatteryEvent"><span class="hs-identifier hs-var hs-var">mkBatteryEvent</span></a></span></span><span> </span><span id="local-6989586621679292045"><span class="annot"><span class="annottext">NonEmpty (Percentage, NaviNote)
+</span><a href="#local-6989586621679292045"><span class="hs-identifier hs-var">percentNoteList</span></a></span></span><span> </span><span id="local-6989586621679292044"><span class="annot"><span class="annottext">BatteryConfig
+</span><a href="#local-6989586621679292044"><span class="hs-identifier hs-var">batteryProgram</span></a></span></span><span> </span><span id="local-6989586621679292043"><span class="annot"><span class="annottext">PollInterval
+</span><a href="#local-6989586621679292043"><span class="hs-identifier hs-var">pi</span></a></span></span><span> </span><span id="local-6989586621679292042"><span class="annot"><span class="annottext">RepeatEvent ref Battery
+</span><a href="#local-6989586621679292042"><span class="hs-identifier hs-var">re</span></a></span></span><span> </span><span id="local-6989586621679292041"><span class="annot"><span class="annottext">ErrorNote ref
+</span><a href="#local-6989586621679292041"><span class="hs-identifier hs-var">en</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="Navi.Event.Types.html#MkEvent"><span class="hs-identifier hs-type">MkEvent</span></a></span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:name:MkEvent :: Text
+</span><a href="Navi.Event.Types.html#%24sel%3Aname%3AMkEvent"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;battery-percentage&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>      </span><span class="annot"><span class="annottext">$sel:serviceType:MkEvent :: ServiceType Battery
+</span><a href="Navi.Event.Types.html#%24sel%3AserviceType%3AMkEvent"><span class="hs-identifier hs-var">serviceType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BatteryConfig -&gt; ServiceType Battery
+</span><a href="Navi.Services.Types.html#BatteryPercentage"><span class="hs-identifier hs-var">BatteryPercentage</span></a></span><span> </span><span class="annot"><span class="annottext">BatteryConfig
+</span><a href="#local-6989586621679292044"><span class="hs-identifier hs-var">batteryProgram</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-69"></span><span>      </span><span class="annot"><span class="annottext">$sel:pollInterval:MkEvent :: PollInterval
+</span><a href="Navi.Event.Types.html#%24sel%3ApollInterval%3AMkEvent"><span class="hs-identifier hs-var">pollInterval</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PollInterval
+</span><a href="#local-6989586621679292043"><span class="hs-identifier hs-var">pi</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">$sel:raiseAlert:MkEvent :: Battery -&gt; Maybe NaviNote
+</span><a href="Navi.Event.Types.html#%24sel%3AraiseAlert%3AMkEvent"><span class="hs-identifier hs-var">raiseAlert</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map Percentage NaviNote -&gt; Battery -&gt; Maybe NaviNote
+</span><a href="Navi.Services.Battery.Percentage.html#lookupPercent"><span class="hs-identifier hs-var">lookupPercent</span></a></span><span> </span><span class="annot"><span class="annottext">Map Percentage NaviNote
+</span><a href="#local-6989586621679292033"><span class="hs-identifier hs-var">percentNoteMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">$sel:repeatEvent:MkEvent :: RepeatEvent ref Battery
+</span><a href="Navi.Event.Types.html#%24sel%3ArepeatEvent%3AMkEvent"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RepeatEvent ref Battery
+</span><a href="#local-6989586621679292042"><span class="hs-identifier hs-var">re</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>      </span><span class="annot"><span class="annottext">$sel:errorNote:MkEvent :: ErrorNote ref
+</span><a href="Navi.Event.Types.html#%24sel%3AerrorNote%3AMkEvent"><span class="hs-identifier hs-var">errorNote</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ErrorNote ref
+</span><a href="#local-6989586621679292041"><span class="hs-identifier hs-var">en</span></a></span><span>
+</span><span id="line-73"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621679292033"><span class="annot"><span class="annottext">percentNoteMap :: Map Percentage NaviNote
+</span><a href="#local-6989586621679292033"><span class="hs-identifier hs-var hs-var">percentNoteMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Percentage, NaviNote)] -&gt; Map Percentage NaviNote
+forall (k :: OpticKind) (a :: OpticKind).
+Ord k =&gt;
+[(k, a)] -&gt; Map k a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/containers-0.6.5.1/src/Data.Map.Internal.html#fromList"><span class="hs-identifier hs-var">Map.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">([(Percentage, NaviNote)] -&gt; Map Percentage NaviNote)
+-&gt; [(Percentage, NaviNote)] -&gt; Map Percentage NaviNote
+forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Percentage, NaviNote) -&gt; [(Percentage, NaviNote)]
+forall (a :: OpticKind). NonEmpty a -&gt; [a]
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/Data.List.NonEmpty.html#toList"><span class="hs-identifier hs-var">NE.toList</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Percentage, NaviNote)
+</span><a href="#local-6989586621679292045"><span class="hs-identifier hs-var">percentNoteList</span></a></span><span>
+</span><span id="line-76"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.html#mkBatteryEvent"><span class="hs-pragma hs-type">mkBatteryEvent</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="annot"><a href="Navi.Services.Battery.Percentage.html#lookupPercent"><span class="hs-identifier hs-type">lookupPercent</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/containers-0.6.5.1/src/Data.Map.Internal.html#Map"><span class="hs-identifier hs-type">Map</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Percentage</span></span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Battery</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span>
+</span><span id="line-79"></span><span id="lookupPercent"><span class="annot"><span class="annottext">lookupPercent :: Map Percentage NaviNote -&gt; Battery -&gt; Maybe NaviNote
+</span><a href="Navi.Services.Battery.Percentage.html#lookupPercent"><span class="hs-identifier hs-var hs-var">lookupPercent</span></a></span></span><span> </span><span id="local-6989586621679292028"><span class="annot"><span class="annottext">Map Percentage NaviNote
+</span><a href="#local-6989586621679292028"><span class="hs-identifier hs-var">percentNoteMap</span></a></span></span><span> </span><span id="local-6989586621679292027"><span class="annot"><span class="annottext">Battery
+</span><a href="#local-6989586621679292027"><span class="hs-identifier hs-var">state</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Battery
+</span><a href="#local-6989586621679292027"><span class="hs-identifier hs-var">state</span></a></span><span> </span><span class="annot"><span class="annottext">Battery
+-&gt; Optic' A_Lens NoIx Battery BatteryStatus -&gt; BatteryStatus
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx Battery BatteryStatus
+</span><span class="">#status</span></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><span class="annottext">BatteryStatus
+</span><span class="hs-identifier hs-var">Discharging</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Percentage -&gt; Map Percentage NaviNote -&gt; Maybe NaviNote
+forall (k :: OpticKind) (a :: OpticKind).
+Ord k =&gt;
+k -&gt; Map k a -&gt; Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/containers-0.6.5.1/src/Data.Map.Internal.html#lookup"><span class="hs-identifier hs-var">Map.lookup</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Battery
+</span><a href="#local-6989586621679292027"><span class="hs-identifier hs-var">state</span></a></span><span> </span><span class="annot"><span class="annottext">Battery -&gt; Optic' A_Lens NoIx Battery Percentage -&gt; Percentage
+forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/wnx39jjxjr7ivk5xmark8v1f1fl8cmvb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx Battery Percentage
+</span><span class="">#percentage</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Map Percentage NaviNote
+</span><a href="#local-6989586621679292028"><span class="hs-identifier hs-var">percentNoteMap</span></a></span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><span class="annottext">BatteryStatus
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe NaviNote
+forall (a :: OpticKind). Maybe a
+</span><a href="file:///nix/store/16s6s6gbs6bxf3x75xpna03ygn755wig-ghc-9.2.3-doc/share/doc/ghc/html/libraries/base-4.16.2.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-82"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.html#lookupPercent"><span class="hs-pragma hs-type">lookupPercent</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-83"></span></pre></body></html>
