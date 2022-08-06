@@ -12,16 +12,16 @@ extra-deps:
 - package-version-0.1.0.0@sha256:bb9fc93e905540aa8e1b32f80c2dc82756a4481c63779bd92e3796ed8085ab98,2854
 - toml-reader-0.1.0.0@sha256:66e2b4261739559e6d1be50391af7038610c3898bc748ce7985c4e4037b623ea,3559
 - git: https://github.com/tbidne/algebra-simple.git
-  commit: be105b31e3bd2bc00c69cd5c1e869294b26fbb17
+  commit: 5d9288b1e2149a1bb6db28d694c5528c0aef3cbd
 - git: https://github.com/tbidne/byte-types.git
-  commit: 60e7ad675f017cbd8467bef649cfcea48f626ab5
+  commit: da898995e2a96d6993c5771883a04894c5455f4d
 - git: https://github.com/tbidne/pythia.git
-  commit: d6008cc71a374d6455e1f478946da5b8293e2699
+  commit: aff55bc7a3a754d9bf4dd107fdcc7bcaf460cbe6
 - git: https://github.com/tbidne/relative-time.git
   commit: dd4bf2a37bc22763eed6c9bf80ada9b323fb7a22
 - git: https://github.com/tbidne/smart-math.git
-  commit: 652cf1c7b61c1c8b67ce1ce1b4ecea77173b947a
+  commit: 91de961c2606c72fdd2cec3ad76372448b28ee50
 - git: https://github.com/tbidne/time-conv.git
-  commit: 7bcf5964949563c00f7ab378503d3aa08a42a62d
+  commit: 12bff1c3aede0783a56d1b04590a13ee60437c98
 nix:
   shell-file: nix/stack.nix

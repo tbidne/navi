@@ -13,29 +13,29 @@ test-show-details: direct
 source-repository-package
     type: git
     location: https://github.com/tbidne/algebra-simple.git
-    tag: 078953fdac6bb9738aa6adae12bd893cf4debc01
+    tag: 5d9288b1e2149a1bb6db28d694c5528c0aef3cbd
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/byte-types.git
-    tag: d081ebf918b1e1430b1399bf2bd27fdf11b695dc
+    tag: da898995e2a96d6993c5771883a04894c5455f4d
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/pythia.git
-    tag: d6008cc71a374d6455e1f478946da5b8293e2699
+    tag: aff55bc7a3a754d9bf4dd107fdcc7bcaf460cbe6
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/relative-time.git
-    tag: f25b269f0ff3eefd4a568cc11611bc3ac8fa565c
+    tag: debaa2523b3b58afc84e9cb1dab0d3af3ff332cd
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/smart-math.git
-    tag: f1f42d96ef11259f0d5a078f7d3cb6f5d8bb044b
+    tag: 91de961c2606c72fdd2cec3ad76372448b28ee50
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/time-conv.git
-    tag: 7bcf5964949563c00f7ab378503d3aa08a42a62d
+    tag: 12bff1c3aede0783a56d1b04590a13ee60437c98
