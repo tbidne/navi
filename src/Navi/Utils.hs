@@ -30,9 +30,9 @@ import Pythia.Data.Command (Command (..))
 --
 -- @since 0.1
 getFieldOptArrayOf :: DecodeTOML a => Text -> Decoder [a]
-getFieldOptArrayOf name = fromMaybe [] <$> optArray
-  where
-    optArray = getFieldOptWith (getArrayOf tomlDecoder) name
+getFieldOptArrayOf =
+  fmap (fromMaybe [])
+    . getFieldOptWith (getArrayOf tomlDecoder)
 
 -- | TOML decoder for optional 'UrgencyLevel' with field name "urgency".
 --

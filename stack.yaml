@@ -24,4 +24,4 @@ extra-deps:
 - git: https://github.com/tbidne/time-conv.git
   commit: 7bcf5964949563c00f7ab378503d3aa08a42a62d
 nix:
-  shell-file: nix/stack_nightly.nix
+  shell-file: nix/stack.nix
