@@ -18,12 +18,12 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/byte-types.git
-    tag: da898995e2a96d6993c5771883a04894c5455f4d
+    tag: 4374876dc1c9d53d810d46531268fbb26c341f74
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/pythia.git
-    tag: aff55bc7a3a754d9bf4dd107fdcc7bcaf460cbe6
+    tag: 0692e756b23667f90b079682ca87802731fd5140
 
 source-repository-package
     type: git
