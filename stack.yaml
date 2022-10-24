@@ -18,7 +18,7 @@ extra-deps:
 - git: https://github.com/tbidne/byte-types.git
   commit: cc0e1323b51f1ec3441ddc6578a05e9d7fcdb977
 - git: https://github.com/tbidne/pythia.git
-  commit: a2c4c962114a7f706f595f4fed5c4256ec28cf03
+  commit: 0f3674a6dd09ed2aa1e95854a31d97a936952c8e
 - git: https://github.com/tbidne/relative-time.git
   commit: dd4bf2a37bc22763eed6c9bf80ada9b323fb7a22
 - git: https://github.com/tbidne/smart-math.git
