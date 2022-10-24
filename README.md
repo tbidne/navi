@@ -3,7 +3,7 @@
 # Navi
 
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/tbidne/navi?include_prereleases&sort=semver)](https://github.com/tbidne/navi/releases/)
-![haskell](https://img.shields.io/static/v1?label=&message=9.2&logo=haskell&logoColor=655889&labelColor=2f353e&color=655889)
+![haskell](https://img.shields.io/static/v1?label=&message=9.4&logo=haskell&logoColor=655889&labelColor=2f353e&color=655889)
 [![MIT](https://img.shields.io/github/license/tbidne/navi?color=blue)](https://opensource.org/licenses/MIT)
 
 [![nix](https://img.shields.io/github/workflow/status/tbidne/navi/nix/main?label=nix&logo=nixos&logoColor=85c5e7&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/nix.yaml)
@@ -381,11 +381,13 @@ timeout = 10
 
 You will need one of:
 
-* [cabal-install 2.4+](https://www.haskell.org/cabal/download.html) and [ghc 9.2](https://www.haskell.org/ghc/download_ghc_9_2_3.html)
+* [cabal-install 2.4+](https://www.haskell.org/cabal/download.html) and one of:
+  * [ghc 9.2](https://www.haskell.org/ghcup/)
+  * [ghc 9.4](https://www.haskell.org/ghcup/)
 * [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
 * [nix](https://nixos.org/download.html)
 
-If you have never built a haskell program before, `stack` is probably the best choice.
+If you have never built a haskell program before, `cabal` + `ghcup` is probably the best choice.
 
 ## Cabal
 

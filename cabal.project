@@ -44,3 +44,5 @@ source-repository-package
     type: git
     location: https://github.com/tbidne/time-conv.git
     tag: bb918e30ef862a92d5b38e6354d96bc2c2d9778e
+
+allow-newer: dbus:template-haskell
