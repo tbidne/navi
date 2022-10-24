@@ -8,7 +8,6 @@ import Data.Text qualified as T
 import Navi.Event.Types (EventError (..))
 import Navi.Prelude
 import Navi.Services.Types (ServiceType (..))
-import Pythia (PythiaException (..))
 import Pythia qualified
 import Pythia.Data.Command (Command (..))
 import Pythia.Internal.ShellApp (SimpleShell (..))
@@ -33,7 +32,7 @@ instance MonadSystemInfo IO where
 
 rethrowPythia :: Text -> IO a -> IO a
 rethrowPythia n io =
-  io `catch` \(e :: PythiaException) ->
+  io `catchAny` \e ->
     throwIO $
       MkEventError
         { name = n,
@@ -56,6 +55,7 @@ multipleShellApp :: Command -> SimpleShell EventError Text
 multipleShellApp cmd =
   MkSimpleShell
     { command = cmd,
+      isSupported = pure True,
       parser = parseMultiple
     }
 {-# INLINEABLE multipleShellApp #-}
@@ -74,6 +74,7 @@ singleShellApp :: Command -> SimpleShell EventError Text
 singleShellApp cmd =
   MkSimpleShell
     { command = cmd,
+      isSupported = pure True,
       parser = parseSingle
     }
 {-# INLINEABLE singleShellApp #-}

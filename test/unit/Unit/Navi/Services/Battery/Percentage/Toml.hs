@@ -12,7 +12,6 @@ import Navi.Services.Battery.Percentage.Toml
     BatteryPercentageToml (..),
   )
 import Numeric.Data.Interval qualified as Interval
-import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..), Percentage (..))
 import Unit.Prelude
 
@@ -36,7 +35,8 @@ parsesAlerts =
   where
     alertTxt =
       T.unlines
-        [ "[[alert]]",
+        [ "app = \"upower\"",
+          "[[alert]]",
           "percent = 50",
           "[[alert]]",
           "percent = 20",
@@ -71,8 +71,7 @@ appTests =
     "Parses app"
     [ parsesApp "acpi" BatteryAppAcpi,
       parsesApp "sysfs" BatteryAppSysFs,
-      parsesApp "upower" BatteryAppUPower,
-      parsesExpected "<none>" "[[alert]]\npercent=50" Many (view #app)
+      parsesApp "upower" BatteryAppUPower
     ]
 
 parsesApp :: Text -> BatteryApp -> TestTree
@@ -80,7 +79,7 @@ parsesApp appName app =
   parsesExpected
     (unpack appName)
     txt
-    (Single app)
+    app
     (view #app)
   where
     txt =
@@ -96,7 +95,11 @@ repeatEventTests =
     "Parses repeat event"
     [ parsesRepeatEvent "off" "false" NoRepeatsToml,
       parsesRepeatEvent "on" "true" AllowRepeatsToml,
-      parsesExpected "<none>" "[[alert]]\npercent=50" Nothing (view #repeatEvent)
+      parsesExpected
+        "<none>"
+        "app=\"upower\"\n[[alert]]\npercent=50"
+        Nothing
+        (view #repeatEvent)
     ]
 
 parsesRepeatEvent :: String -> Text -> RepeatEventToml -> TestTree
@@ -109,7 +112,8 @@ parsesRepeatEvent desc flag ret =
   where
     txt =
       T.unlines
-        [ "repeat-events = " <> flag,
+        [ "app = \"upower\"",
+          "repeat-events = " <> flag,
           "[[alert]]",
           "percent = 50"
         ]
@@ -121,7 +125,11 @@ errorNoteTests =
     [ parsesErrorEvent "off" "none" NoErrNoteToml,
       parsesErrorEvent "on" "repeats" ErrNoteAllowRepeatsToml,
       parsesErrorEvent "on" "no-repeats" ErrNoteNoRepeatsToml,
-      parsesExpected "<none>" "[[alert]]\npercent=50" Nothing (view #errorNote)
+      parsesExpected
+        "<none>"
+        "app=\"upower\"\n[[alert]]\npercent=50"
+        Nothing
+        (view #errorNote)
     ]
 
 parsesErrorEvent :: String -> Text -> ErrorNoteToml -> TestTree
@@ -134,7 +142,8 @@ parsesErrorEvent desc flag ret =
   where
     txt =
       T.unlines
-        [ "error-events = \"" <> flag <> "\"",
+        [ "app = \"upower\"",
+          "error-events = \"" <> flag <> "\"",
           "[[alert]]",
           "percent = 50"
         ]

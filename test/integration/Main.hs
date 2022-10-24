@@ -133,6 +133,7 @@ batteryPercentageEventConfig :: Text
 batteryPercentageEventConfig =
   T.unlines
     [ "[battery-percentage]",
+      "app=\"sysfs\"",
       "poll-interval = 1",
       "",
       "[[battery-percentage.alert]]",
@@ -167,6 +168,7 @@ netInterfaceEventConfig :: Text -> Text
 netInterfaceEventConfig errorEvents =
   T.unlines
     [ "[[net-interface]]",
+      "app=\"nmcli\"",
       "poll-interval = 1",
       "device = \"device\"",
       errorEvents,

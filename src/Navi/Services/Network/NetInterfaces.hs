@@ -15,7 +15,6 @@ import Navi.Services.Types (ServiceType (..))
 import Pythia.Services.NetInterface
   ( Device (..),
     NetInterface (..),
-    NetInterfaceConfig (..),
     NetInterfaceState (..),
   )
 
@@ -41,8 +40,7 @@ toEvent toml = do
     device = MkDevice $ toml ^. #deviceName
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
     cmd =
-      NetworkInterface device $
-        MkNetInterfaceConfig (toml ^. #app)
+      NetworkInterface device (toml ^. #app)
 {-# INLINEABLE toEvent #-}
 
 toNote :: NetInterfacesToml -> NetInterface -> Maybe NaviNote

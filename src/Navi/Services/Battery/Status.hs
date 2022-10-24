@@ -19,7 +19,7 @@ import Navi.Event.Types
 import Navi.Prelude
 import Navi.Services.Battery.Status.Toml (BatteryStatusToml)
 import Navi.Services.Types (ServiceType (..))
-import Pythia.Services.Battery (BatteryConfig (..), BatteryStatus (..))
+import Pythia.Services.Battery (BatteryApp, BatteryStatus (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
@@ -32,14 +32,14 @@ toEvent toml = do
   let evt = mkStatusEvent to cfg pi repeatEvent errorNote
   pure $ MkAnyEvent evt
   where
-    cfg = MkBatteryConfig $ toml ^. #app
+    cfg = toml ^. #app
     to = toml ^. #mTimeout
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 {-# INLINEABLE toEvent #-}
 
 mkStatusEvent ::
   Maybe Timeout ->
-  BatteryConfig ->
+  BatteryApp ->
   PollInterval ->
   RepeatEvent ref BatteryStatus ->
   ErrorNote ref ->

@@ -17,13 +17,12 @@ import Navi.Event.Toml
     repeatEventOptDecoder,
   )
 import Navi.Prelude
-import Navi.Utils (runAppDecoder)
-import Pythia.Services.NetInterface (NetInterfaceApp (..), RunApp (..))
+import Pythia.Services.NetInterface (NetInterfaceApp (..))
 
 -- | TOML for the network connectivity service.
 data NetInterfacesToml = MkNetInterfacesToml
   { -- | Determines how we should query the system for network information.
-    app :: RunApp NetInterfaceApp,
+    app :: NetInterfaceApp,
     -- | The name of the network device. For \"standard\" formats like
     -- ifconfig or NetworkManager, this might be something like
     -- wlp0s20f3 or enp0s31f6.
@@ -45,7 +44,7 @@ makeFieldLabelsNoPrefix ''NetInterfacesToml
 instance DecodeTOML NetInterfacesToml where
   tomlDecoder =
     MkNetInterfacesToml
-      <$> runAppDecoder decodeNetInterfaceApp
+      <$> getFieldWith decodeNetInterfaceApp "app"
       <*> getField "device"
       <*> pollIntervalOptDecoder
       <*> repeatEventOptDecoder

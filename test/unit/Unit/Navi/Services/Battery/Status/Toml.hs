@@ -6,7 +6,6 @@ where
 import Navi.Data.NaviNote (Timeout (..))
 import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
 import Navi.Services.Battery.Status.Toml (BatteryStatusToml (..))
-import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..))
 import Unit.Prelude
 
@@ -24,8 +23,8 @@ noteTests :: TestTree
 noteTests =
   testGroup
     "Parses note"
-    [ parsesExpected "with timeout" "timeout = 5" timeout (view #mTimeout),
-      parsesExpected "no timeout" "" noTimeout (view #mTimeout)
+    [ parsesExpected "with timeout" "app=\"upower\"\ntimeout = 5" timeout (view #mTimeout),
+      parsesExpected "no timeout" "app=\"upower\"\n" noTimeout (view #mTimeout)
     ]
   where
     timeout = Just $ Seconds 5
@@ -37,8 +36,7 @@ appTests =
     "Parses app"
     [ parsesApp "acpi" BatteryAppAcpi,
       parsesApp "sysfs" BatteryAppSysFs,
-      parsesApp "upower" BatteryAppUPower,
-      parsesExpected "<none>" "" Many (view #app)
+      parsesApp "upower" BatteryAppUPower
     ]
 
 parsesApp :: Text -> BatteryApp -> TestTree
@@ -46,7 +44,7 @@ parsesApp appName app =
   parsesExpected
     (unpack appName)
     ("app = \"" <> appName <> "\"")
-    (Single app)
+    app
     (view #app)
 
 repeatEventTests :: TestTree
@@ -55,14 +53,14 @@ repeatEventTests =
     "Parses repeat event"
     [ parsesRepeatEvent "off" "false" NoRepeatsToml,
       parsesRepeatEvent "on" "true" AllowRepeatsToml,
-      parsesExpected "<none>" "" Nothing (view #repeatEvent)
+      parsesExpected "<none>" "app=\"upower\"\n" Nothing (view #repeatEvent)
     ]
 
 parsesRepeatEvent :: String -> Text -> RepeatEventToml -> TestTree
 parsesRepeatEvent desc flag ret =
   parsesExpected
     desc
-    ("repeat-events = " <> flag)
+    ("app=\"upower\"\nrepeat-events = " <> flag)
     (Just ret)
     (view #repeatEvent)
 
@@ -73,14 +71,14 @@ errorNoteTests =
     [ parsesErrorEvent "off" "none" NoErrNoteToml,
       parsesErrorEvent "on" "repeats" ErrNoteAllowRepeatsToml,
       parsesErrorEvent "on" "no-repeats" ErrNoteNoRepeatsToml,
-      parsesExpected "<none>" "" Nothing (view #errorNote)
+      parsesExpected "<none>" "app=\"upower\"\n" Nothing (view #errorNote)
     ]
 
 parsesErrorEvent :: String -> Text -> ErrorNoteToml -> TestTree
 parsesErrorEvent desc flag ret =
   parsesExpected
     desc
-    ("error-events = \"" <> flag <> "\"")
+    ("app=\"upower\"\nerror-events = \"" <> flag <> "\"")
     (Just ret)
     (view #errorNote)
 

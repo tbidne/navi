@@ -20,13 +20,9 @@ import Navi.Event.Toml
   )
 import Navi.Prelude
 import Navi.Services.Battery.Common (batteryAppDecoder)
-import Navi.Utils (runAppDecoder, urgencyLevelOptDecoder)
+import Navi.Utils (urgencyLevelOptDecoder)
 import Numeric.Data.Interval qualified as Interval
-import Pythia.Services.Battery
-  ( BatteryApp (..),
-    Percentage (..),
-    RunApp (..),
-  )
+import Pythia.Services.Battery (BatteryApp (..), Percentage (..))
 
 -- | TOML for each individual battery percentage.
 data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml
@@ -77,7 +73,7 @@ data BatteryPercentageToml = MkBatteryPercentageToml
     -- | Determines how we handle errors.
     errorNote :: Maybe ErrorNoteToml,
     -- | Determines how we should query the system for battery information.
-    app :: RunApp BatteryApp
+    app :: BatteryApp
   }
   deriving stock (Eq, Show)
 
@@ -91,4 +87,4 @@ instance DecodeTOML BatteryPercentageToml where
       <*> pollIntervalOptDecoder
       <*> repeatEventOptDecoder
       <*> errorNoteOptDecoder
-      <*> runAppDecoder batteryAppDecoder
+      <*> getFieldWith batteryAppDecoder "app"

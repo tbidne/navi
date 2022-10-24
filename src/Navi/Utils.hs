@@ -9,14 +9,12 @@ module Navi.Utils
 
     -- ** Specific decoders
     commandDecoder,
-    runAppDecoder,
     urgencyLevelOptDecoder,
   )
 where
 
 import DBus.Notify (UrgencyLevel (..))
 import Navi.Prelude
-import Pythia (RunApp (..))
 import Pythia.Data.Command (Command (..))
 
 -- | Decodes an optional list. This is morally
@@ -49,14 +47,6 @@ urgencyLevelDecoder = do
     "critical" -> pure Critical
     bad -> fail $ unpack $ "Invalid value: " <> bad
 {-# INLINEABLE urgencyLevelDecoder #-}
-
--- | TOML decoder for optional 'RunApp' with field name "app". If the field
--- is not found then we decode 'Many'.
---
--- @since 0.1
-runAppDecoder :: Decoder a -> Decoder (RunApp a)
-runAppDecoder decoder = getFieldOptWith decoder "app" <&> maybe Many Single
-{-# INLINEABLE runAppDecoder #-}
 
 -- | TOML decoder for 'Command' with field name "command".
 --

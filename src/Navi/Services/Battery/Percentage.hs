@@ -20,7 +20,7 @@ import Numeric.Data.Interval qualified as Interval
 import Pythia.Data.Percentage (_MkPercentage)
 import Pythia.Services.Battery
   ( Battery (..),
-    BatteryConfig (..),
+    BatteryApp,
     BatteryStatus (..),
     Percentage (..),
   )
@@ -34,7 +34,7 @@ toEvent toml = do
   pure $ MkAnyEvent evt
   where
     percentNoteList = tomlToNote <$> toml ^. #alerts
-    app = MkBatteryConfig $ toml ^. #app
+    app = toml ^. #app
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 {-# INLINEABLE toEvent #-}
 
@@ -58,7 +58,7 @@ tomlToNote toml =
 
 mkBatteryEvent ::
   NonEmpty (Percentage, NaviNote) ->
-  BatteryConfig ->
+  BatteryApp ->
   PollInterval ->
   RepeatEvent ref Battery ->
   ErrorNote ref ->

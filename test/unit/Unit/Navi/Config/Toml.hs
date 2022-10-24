@@ -18,8 +18,8 @@ import Navi.Services.Battery.Status.Toml (BatteryStatusToml (..))
 import Navi.Services.Custom.Single.Toml (SingleToml (..))
 import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..))
 import Numeric.Data.Interval qualified as Interval
-import Pythia.Data.RunApp (RunApp (..))
 import Pythia.Services.Battery (BatteryApp (..), Percentage (..))
+import Pythia.Services.NetInterface (NetInterfaceApp (..))
 import Unit.Prelude
 
 tests :: TestTree
@@ -109,7 +109,7 @@ expectedBatteryPercentage :: Maybe BatteryPercentageToml
 expectedBatteryPercentage =
   Just $
     MkBatteryPercentageToml
-      { app = Many,
+      { app = BatteryAppUPower,
         pollInterval = Just $ MkPollInterval 15,
         repeatEvent = Nothing,
         errorNote = Nothing,
@@ -133,7 +133,7 @@ expectedBatteryStatus :: Maybe BatteryStatusToml
 expectedBatteryStatus =
   Just $
     MkBatteryStatusToml
-      { app = Single BatteryAppAcpi,
+      { app = BatteryAppAcpi,
         pollInterval = Nothing,
         repeatEvent = Nothing,
         errorNote = Nothing,
@@ -143,7 +143,7 @@ expectedBatteryStatus =
 expectedNetInterfaces :: [NetInterfacesToml]
 expectedNetInterfaces =
   [ MkNetInterfacesToml
-      { app = Many,
+      { app = NetInterfaceAppNmCli,
         deviceName = "my-device",
         pollInterval = Nothing,
         repeatEvent = Nothing,
@@ -164,6 +164,7 @@ fullConfig =
       "timeout = 5",
       "",
       "[battery-percentage]",
+      "app = \"upower\"",
       "poll-interval = 15",
       "",
       "[[battery-percentage.alert]]",
@@ -173,6 +174,7 @@ fullConfig =
       "urgency = \"critical\"",
       "",
       "[[net-interface]]",
+      "app = \"nmcli\"",
       "device = \"my-device\"",
       "",
       "[[single]]",

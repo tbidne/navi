@@ -18,13 +18,12 @@ import Navi.Event.Toml
   )
 import Navi.Prelude
 import Navi.Services.Battery.Common (batteryAppDecoder)
-import Navi.Utils (runAppDecoder)
-import Pythia.Services.Battery (BatteryApp (..), RunApp (..))
+import Pythia.Services.Battery (BatteryApp (..))
 
 -- | TOML for the battery status service.
 data BatteryStatusToml = MkBatteryStatusToml
   { -- | Determines how we should query the system for battery information.
-    app :: RunApp BatteryApp,
+    app :: BatteryApp,
     -- | The poll interval.
     pollInterval :: Maybe PollInterval,
     -- | Determines how we treat repeat alerts.
@@ -42,7 +41,7 @@ makeFieldLabelsNoPrefix ''BatteryStatusToml
 instance DecodeTOML BatteryStatusToml where
   tomlDecoder =
     MkBatteryStatusToml
-      <$> runAppDecoder batteryAppDecoder
+      <$> getFieldWith batteryAppDecoder "app"
       <*> pollIntervalOptDecoder
       <*> repeatEventOptDecoder
       <*> errorNoteOptDecoder

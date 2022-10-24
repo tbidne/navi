@@ -5,95 +5,106 @@
 
 packages:
 - completed:
+    hackage: fdo-notify-0.3.1@sha256:9cfb75a5a0d5e4b1d40b0b4dbcc6bb29e58f21e4e14c83e2ffe1ca78bdee59d8,734
     pantry-tree:
       sha256: 9b555f4b4c61a3a92680bba864c95ce428cce2715399c12b27669abb6cdbd479
       size: 264
-    hackage: fdo-notify-0.3.1@sha256:9cfb75a5a0d5e4b1d40b0b4dbcc6bb29e58f21e4e14c83e2ffe1ca78bdee59d8,734
   original:
     hackage: fdo-notify-0.3.1@sha256:9cfb75a5a0d5e4b1d40b0b4dbcc6bb29e58f21e4e14c83e2ffe1ca78bdee59d8,734
 - completed:
+    hackage: package-version-0.1.0.0@sha256:bb9fc93e905540aa8e1b32f80c2dc82756a4481c63779bd92e3796ed8085ab98,2854
     pantry-tree:
       sha256: 8e33ac2f8d2db754cf11d1439fa970dbf14c6756746426ba89f54a7183a9d2d7
       size: 981
-    hackage: package-version-0.1.0.0@sha256:bb9fc93e905540aa8e1b32f80c2dc82756a4481c63779bd92e3796ed8085ab98,2854
   original:
     hackage: package-version-0.1.0.0@sha256:bb9fc93e905540aa8e1b32f80c2dc82756a4481c63779bd92e3796ed8085ab98,2854
 - completed:
+    hackage: toml-reader-0.1.0.0@sha256:66e2b4261739559e6d1be50391af7038610c3898bc748ce7985c4e4037b623ea,3559
     pantry-tree:
       sha256: 8f4be57eedd319a0af20c0f001fda8124164ae4623627127cee591c0412bca6b
       size: 2411
-    hackage: toml-reader-0.1.0.0@sha256:66e2b4261739559e6d1be50391af7038610c3898bc748ce7985c4e4037b623ea,3559
   original:
     hackage: toml-reader-0.1.0.0@sha256:66e2b4261739559e6d1be50391af7038610c3898bc748ce7985c4e4037b623ea,3559
 - completed:
+    commit: c8aaa4495964ecea9bb898c4fcb8b1c718ecc813
+    git: https://github.com/tbidne/algebra-simple.git
     name: algebra-simple
     pantry-tree:
-      sha256: 054da92da6e250783a99efa3f148540e8843b74f9abfe84967d1e5896b76c764
-      size: 4196
-    commit: 5d9288b1e2149a1bb6db28d694c5528c0aef3cbd
-    git: https://github.com/tbidne/algebra-simple.git
+      sha256: 35146456af251b3f9726d520aa8caa62b35a4102205a493eab9c5f41697d7b67
+      size: 4285
     version: '0.1'
   original:
-    commit: 5d9288b1e2149a1bb6db28d694c5528c0aef3cbd
+    commit: c8aaa4495964ecea9bb898c4fcb8b1c718ecc813
     git: https://github.com/tbidne/algebra-simple.git
 - completed:
+    commit: 7a8832ef4a55d565e72fab553a4d485329235bf7
+    git: https://github.com/tbidne/bounds.git
+    name: bounds
+    pantry-tree:
+      sha256: 6a960a4a889dde6f76ffdead9abdcbe8ac3efc17f24c4ff7594861c41070a667
+      size: 1474
+    version: '0.1'
+  original:
+    commit: 7a8832ef4a55d565e72fab553a4d485329235bf7
+    git: https://github.com/tbidne/bounds.git
+- completed:
+    commit: cc0e1323b51f1ec3441ddc6578a05e9d7fcdb977
+    git: https://github.com/tbidne/byte-types.git
     name: byte-types
     pantry-tree:
-      sha256: 62b5805d1649fe17680cfdd15961d66c4b8b98544f6c02daa440664c1a6e2ecb
-      size: 3157
-    commit: 4374876dc1c9d53d810d46531268fbb26c341f74
-    git: https://github.com/tbidne/byte-types.git
+      sha256: 13c68f816dedfccae0c8a54839325a869de61586636a36d658c34a7b14ffa757
+      size: 9212
     version: '0.1'
   original:
-    commit: 4374876dc1c9d53d810d46531268fbb26c341f74
+    commit: cc0e1323b51f1ec3441ddc6578a05e9d7fcdb977
     git: https://github.com/tbidne/byte-types.git
 - completed:
+    commit: a2c4c962114a7f706f595f4fed5c4256ec28cf03
+    git: https://github.com/tbidne/pythia.git
     name: pythia
     pantry-tree:
-      sha256: 927566f5a8bd0d26ef9782520e6e88f8257065c20f2a0e851617ca37da7c376a
-      size: 4481
-    commit: 0692e756b23667f90b079682ca87802731fd5140
-    git: https://github.com/tbidne/pythia.git
+      sha256: f36617f04c484dc76bf419aa20174a30f41adad4dba45ac429cfac7027c7fd55
+      size: 4470
     version: '0.1'
   original:
-    commit: 0692e756b23667f90b079682ca87802731fd5140
+    commit: a2c4c962114a7f706f595f4fed5c4256ec28cf03
     git: https://github.com/tbidne/pythia.git
 - completed:
+    commit: dd4bf2a37bc22763eed6c9bf80ada9b323fb7a22
+    git: https://github.com/tbidne/relative-time.git
     name: relative-time
     pantry-tree:
       sha256: ce7e76ffe10bdf9debe195a09e236c3bed6ca6bd2538b8944aa7724f546e8083
       size: 1591
-    commit: dd4bf2a37bc22763eed6c9bf80ada9b323fb7a22
-    git: https://github.com/tbidne/relative-time.git
     version: '0.1'
   original:
     commit: dd4bf2a37bc22763eed6c9bf80ada9b323fb7a22
     git: https://github.com/tbidne/relative-time.git
 - completed:
+    commit: 49c8269089372c989426b57ad0574ec0ef63bad0
+    git: https://github.com/tbidne/smart-math.git
     name: smart-math
     pantry-tree:
-      sha256: f708fc43ee8bcfb62e9fae669fb2a7e66a25dee655c8731199a82d77de0d4206
-      size: 3196
-    commit: 91de961c2606c72fdd2cec3ad76372448b28ee50
-    git: https://github.com/tbidne/smart-math.git
+      sha256: eb61d107bc8f028bca89603b6a78e9bf71c39a4ddbba74562ce8c182737c2196
+      size: 3179
     version: '0.1'
   original:
-    commit: 91de961c2606c72fdd2cec3ad76372448b28ee50
+    commit: 49c8269089372c989426b57ad0574ec0ef63bad0
     git: https://github.com/tbidne/smart-math.git
 - completed:
+    commit: bb918e30ef862a92d5b38e6354d96bc2c2d9778e
+    git: https://github.com/tbidne/time-conv.git
     name: time-conv
     pantry-tree:
-      sha256: 41fd26ae1551977ea80c953397445aaf23aeacc36f556a806511ac945d655e90
-      size: 1637
-    commit: 12bff1c3aede0783a56d1b04590a13ee60437c98
-    git: https://github.com/tbidne/time-conv.git
+      sha256: ed32f8808a249c2370c777bfe81bd2c4a565d789abf9d36d291c33f5ffde59e0
+      size: 2123
     version: '0.1'
   original:
-    commit: 12bff1c3aede0783a56d1b04590a13ee60437c98
+    commit: bb918e30ef862a92d5b38e6354d96bc2c2d9778e
     git: https://github.com/tbidne/time-conv.git
 snapshots:
 - completed:
-    sha256: f749167ba2a9ff2fcd0434bbd76a17a277572e90798617bc024d40a5324ce2af
-    size: 616346
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/7/7.yaml
-  original: nightly-2022-07-07
+    sha256: d3ba2e94c3ccbd3da4949243c83b59667c5eb9ffc7646148661c16741bbad1d4
+    size: 643623
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/10/11.yaml
+  original: nightly-2022-10-11

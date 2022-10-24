@@ -6,6 +6,7 @@ severity = "debug"
 [battery-percentage]
 repeat-events = false
 error-events = "no-repeats"
+app = "sysfs"
 
 [[battery-percentage.alert]]
 percent = 50

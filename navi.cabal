@@ -24,6 +24,7 @@ source-repository head
 
 common common-exts
   default-extensions:
+    NoFieldSelectors
     NoImplicitPrelude
     NoStarIsType
     ApplicativeDo
@@ -35,7 +36,6 @@ common common-exts
     OverloadedLabels
     OverloadedStrings
     TypeFamilies
-    NoFieldSelectors
 
 library
   import:           common-exts
@@ -92,7 +92,7 @@ library
     , optics-core           ^>=0.4
     , optics-th             ^>=0.4
     , optparse-applicative  >=0.16.1.0  && <0.18
-    , package-version       ^>=0.1.0.0
+    , package-version       >=0.1.0.0 && <0.4
     , process               ^>=1.6.9.0
     , pythia                ^>=0.1
     , relative-time         ^>=0.1

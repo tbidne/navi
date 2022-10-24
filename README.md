@@ -3,10 +3,11 @@
 # Navi
 
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/tbidne/navi?include_prereleases&sort=semver)](https://github.com/tbidne/navi/releases/)
+![haskell](https://img.shields.io/static/v1?label=&message=9.2&logo=haskell&logoColor=655889&labelColor=2f353e&color=655889)
 [![MIT](https://img.shields.io/github/license/tbidne/navi?color=blue)](https://opensource.org/licenses/MIT)
 
-[![nix](https://img.shields.io/github/workflow/status/tbidne/navi/nix/main?label=nix%209.2&&logo=nixos&logoColor=85c5e7&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/nix.yaml)
-[![cabal](https://img.shields.io/github/workflow/status/tbidne/navi/cabal/main?label=cabal&logo=haskell&logoColor=655889&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/cabal.yaml)
+[![nix](https://img.shields.io/github/workflow/status/tbidne/navi/nix/main?label=nix&logo=nixos&logoColor=85c5e7&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/nix.yaml)
+[![cabal](https://img.shields.io/github/workflow/status/tbidne/navi/cabal/main?label=cabal&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/cabal.yaml)
 [![stack](https://img.shields.io/github/workflow/status/tbidne/navi/stack/main?label=stack&logoColor=white&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/stack.yaml)
 [![style](https://img.shields.io/github/workflow/status/tbidne/navi/style/main?label=style&logoColor=white&labelColor=2f353c)](https://github.com/tbidne/navi/actions/workflows/style.yaml)
 
@@ -168,11 +169,10 @@ This service sends notifications based on the current battery status. Options in
 
 ##### Specific Options
 
-* `battery-status.app`: (Optional). One of `["sysfs" | "acpi" | "upower"]`.
+* `battery-status.app`: One of `["sysfs" | "acpi" | "upower"]`.
   * `sysfs` reads `/sys` or `/sysfs` directly.
   * `acpi` requires the `acpi` utility.
   * `upower` requires the `upower` utility.
-  * If no option is given then we will try each of the above in the given order, if they are supported.
 
 
 ##### General Options
@@ -186,6 +186,7 @@ This service sends notifications based on the current battery status. Options in
 
 ```toml
 [battery-status]
+app = "sysfs"
 repeat-events = false
 error-events = "repeats"
 ```
@@ -197,11 +198,10 @@ This service sends notifications based on the current battery percentage when it
 ##### Specific Options
 
 * `battery-percentage.alert.percent`: integer in `[0, 100]`. Sends a notification once the battery level drops to this level.
-* `battery-percentage.app`: (Optional). One of `["sysfs" | "acpi" | "upower"]`.
+* `battery-percentage.app`: One of `["sysfs" | "acpi" | "upower"]`.
   * `sysfs` reads `/sys` or `/sysfs` directly.
   * `acpi` requires the `acpi` utility.
   * `upower` requires the `upower` utility.
-  * If no option is given then we will try each of the above in the given order, if they are supported.
 
 ##### General Options
 
@@ -215,6 +215,7 @@ This service sends notifications based on the current battery percentage when it
 
 ```toml
 [battery-percentage]
+app = "upower"
 repeat-events = false
 error-events = "repeats"
 
@@ -236,7 +237,6 @@ This service sends notifications based on the network connectivity for given dev
 * `net-interface.app`: One of `["nmcli" | "ip"]`.
   * `nmcli` requires the `nmcli` (`NetworkManager cli`) utility.
   * `ip` requires the `ip` utility.
-  * If no option is given then we will try each of the above in the given order, if they are supported.
 
 ##### General Options
 
@@ -250,9 +250,11 @@ This service sends notifications based on the network connectivity for given dev
 
 ```toml
 [[net-interface]]
+app = "nmcli"
 device = "wlp0s20f3"
 
 [[net-interface]]
+app = "ip"
 device = "enp0s31f6"
 ```
 
