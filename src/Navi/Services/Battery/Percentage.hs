@@ -17,7 +17,6 @@ import Navi.Prelude
 import Navi.Services.Battery.Percentage.Toml (BatteryPercentageNoteToml (..), BatteryPercentageToml)
 import Navi.Services.Types (ServiceType (..))
 import Numeric.Data.Interval qualified as Interval
-import Pythia.Data.Percentage (_MkPercentage)
 import Pythia.Services.Battery
   ( Battery (..),
     BatteryApp,
@@ -52,7 +51,7 @@ tomlToNote toml =
     summary = "Battery Percentage"
     body =
       Just $
-        showt (Interval.unLRInterval $ percentage ^. _MkPercentage)
+        showt (Interval.unLRInterval $ percentage ^. #unPercentage)
           <> "%"
 {-# INLINEABLE tomlToNote #-}
 

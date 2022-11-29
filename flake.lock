@@ -159,11 +159,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1669684717,
-        "narHash": "sha256-lKl5PBEhptWxfiQSj4NVkJ8H6x6dBXhUAstTktt6N0g=",
+        "lastModified": 1669758655,
+        "narHash": "sha256-WhmzORpgfLB0szabP+oyXoZgkYySxtsw6wlaiEv4ycA=",
         "owner": "tbidne",
         "repo": "pythia",
-        "rev": "4a1bd6e5091bf401e11758ed38369244e22029ba",
+        "rev": "b8a942f5136ee247facb1e7be4749facd8939199",
         "type": "github"
       },
       "original": {

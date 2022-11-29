@@ -35,7 +35,6 @@ import Navi.Services.Types (ServiceType (..))
 import Numeric.Data.Interval (_MkLRInterval)
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Control.Exception (CommandException (..))
-import Pythia.Data.Percentage (_MkPercentage)
 import Pythia.Services.Battery (Battery (..), BatteryStatus (..), Percentage (..))
 
 -- | Mock configuration.
@@ -101,7 +100,7 @@ instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
   -- notifications are sent.
   query (BatteryPercentage _) = do
     bpRef <- asks (view #lastPercentage)
-    oldVal <- liftIO $ view (_MkPercentage % _MkLRInterval) <$> readIORef bpRef
+    oldVal <- liftIO $ view (#unPercentage % _MkLRInterval) <$> readIORef bpRef
     let !newVal =
           if oldVal == 0
             then 100

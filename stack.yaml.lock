@@ -59,15 +59,15 @@ packages:
     commit: cc0e1323b51f1ec3441ddc6578a05e9d7fcdb977
     git: https://github.com/tbidne/byte-types.git
 - completed:
-    commit: 4a1bd6e5091bf401e11758ed38369244e22029ba
+    commit: b8a942f5136ee247facb1e7be4749facd8939199
     git: https://github.com/tbidne/pythia.git
     name: pythia
     pantry-tree:
-      sha256: cac1889faa29640883411acfd910d7294469dbe6951ad0067d0f3c78f186f7b9
-      size: 4469
+      sha256: cbb56d6b06c6a79f8e0bc07ff9a96f813df71d78d97dd3a7ab9528ce7a59940e
+      size: 4470
     version: '0.1'
   original:
-    commit: 4a1bd6e5091bf401e11758ed38369244e22029ba
+    commit: b8a942f5136ee247facb1e7be4749facd8939199
     git: https://github.com/tbidne/pythia.git
 - completed:
     commit: dd4bf2a37bc22763eed6c9bf80ada9b323fb7a22
