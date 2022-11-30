@@ -19,7 +19,6 @@ import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Effects.MonadSystemTime (MonadSystemTime (..))
 import Navi.Env.Core
   ( HasLogEnv (..),
-    HasLogNamespace (..),
     HasLogQueue (getLogQueue),
   )
 import Navi.Env.DBus (DBusEnv, HasDBusClient (..), naviToDBus)
@@ -76,7 +75,6 @@ instance MonadNotify (NaviT NotifySendEnv IO) where
 -- other MonadIOs (i.e. in tests)
 instance
   ( HasLogEnv env,
-    HasLogNamespace env,
     HasLogQueue env
   ) =>
   MonadLogger (NaviT env IO)
@@ -90,13 +88,12 @@ instance
 
 instance
   ( HasLogEnv env,
-    HasLogNamespace env,
     HasLogQueue env
   ) =>
   MonadLoggerContext (NaviT env IO)
   where
-  getNamespace = asks getLogNamespace
-  localNamespace = local . localLogNamespace
+  getNamespace = asks (view #logNamespace . getLogEnv)
+  localNamespace f = local (localLogEnv (over' #logNamespace f))
 
 instance MonadSystemTime (NaviT env IO) where
   getSystemTime = lift getSystemTime

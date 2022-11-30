@@ -18,12 +18,10 @@ import DBus.Notify qualified as DBusN
 import Navi.Config (Config)
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
-import Navi.Effects.MonadLoggerContext (Namespace)
 import Navi.Env.Core
   ( Env (MkEnv),
     HasEvents (..),
     HasLogEnv (..),
-    HasLogNamespace (..),
     HasLogQueue (..),
     HasNoteQueue (..),
   )
@@ -51,12 +49,6 @@ instance HasLogEnv DBusEnv where
   localLogEnv = over' (#coreEnv % #logEnv)
   {-# INLINEABLE localLogEnv #-}
 
-instance HasLogNamespace DBusEnv where
-  getLogNamespace = view (#coreEnv % #logNamespace)
-  {-# INLINEABLE getLogNamespace #-}
-  localLogNamespace = over' (#coreEnv % #logNamespace)
-  {-# INLINEABLE localLogNamespace #-}
-
 instance HasLogQueue DBusEnv where
   getLogQueue = view (#coreEnv % #logQueue)
   {-# INLINEABLE getLogQueue #-}
@@ -73,10 +65,9 @@ instance HasDBusClient DBusEnv where
 mkDBusEnv ::
   MonadIO m =>
   LogEnv ->
-  Namespace ->
   Config IORef ->
   m DBusEnv
-mkDBusEnv logEnv namespace config = do
+mkDBusEnv logEnv config = do
   client <- liftIO DBusN.connectSession
   logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
   noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
@@ -86,7 +77,6 @@ mkDBusEnv logEnv namespace config = do
           MkEnv
             (config ^. #events)
             logEnv
-            namespace
             logQueue
             noteQueue,
         dbusClient = client

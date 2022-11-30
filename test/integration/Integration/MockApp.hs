@@ -24,7 +24,6 @@ import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
   ( HasEvents (..),
     HasLogEnv (getLogEnv, localLogEnv),
-    HasLogNamespace (..),
     HasLogQueue (..),
     HasNoteQueue (..),
   )
@@ -58,10 +57,6 @@ instance HasLogEnv MockEnv where
   getLogEnv = pure $ MkLogEnv Nothing LevelInfo ""
   localLogEnv _ = id
 
-instance HasLogNamespace MockEnv where
-  getLogNamespace _ = ""
-  localLogNamespace _ = id
-
 instance HasLogQueue MockEnv where
   getLogQueue = view #logQueue
 
@@ -89,8 +84,8 @@ instance MonadLogger (NaviT MockEnv IntTestIO) where
   monadLoggerLog _loc _src _lvl _msg = pure ()
 
 instance MonadLoggerContext (NaviT MockEnv IntTestIO) where
-  getNamespace = asks getLogNamespace
-  localNamespace = local . localLogNamespace
+  getNamespace = pure ""
+  localNamespace _ = id
 
 instance MonadNotify (NaviT MockEnv IntTestIO) where
   sendNote note =

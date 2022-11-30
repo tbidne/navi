@@ -33,8 +33,7 @@ main = do
   let mkLogEnvFn = mkLogEnv (config ^. #logging)
   bracket mkLogEnvFn closeLogging $ \logEnv -> do
     let mkNaviEnv :: forall env. _ -> IO env
-        -- TODO: redundant namespace?
-        mkNaviEnv envFn = envFn logEnv "main" config
+        mkNaviEnv envFn = envFn logEnv config
     case config ^. #noteSystem of
       DBus -> mkNaviEnv mkDBusEnv >>= runWithEnv
       NotifySend -> mkNaviEnv mkNotifySendEnv >>= runWithEnv
@@ -81,7 +80,7 @@ mkLogEnv logging = do
     MkLogEnv
       { logFile,
         logLevel,
-        logNamespace = "navi"
+        logNamespace = "main"
       }
   where
     logLevel = fromMaybe LevelError (logging ^. #severity)

@@ -6,7 +6,6 @@ module Navi.Env.Core
   ( -- * HasX-style Typeclasses
     HasEvents (..),
     HasLogEnv (..),
-    HasLogNamespace (..),
     HasLogQueue (..),
     HasNoteQueue (..),
 
@@ -17,7 +16,6 @@ where
 
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote)
-import Navi.Effects.MonadLoggerContext (Namespace)
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
 
@@ -29,11 +27,6 @@ class HasEvents ref env | env -> ref where
 class HasLogEnv env where
   getLogEnv :: env -> LogEnv
   localLogEnv :: (LogEnv -> LogEnv) -> env -> env
-
--- | Retrieves the log namespace.
-class HasLogNamespace env where
-  getLogNamespace :: env -> Namespace
-  localLogNamespace :: (Namespace -> Namespace) -> env -> env
 
 -- | Retrieves the log queue.
 class HasLogQueue env where
@@ -47,7 +40,6 @@ class HasNoteQueue env where
 data Env ref = MkEnv
   { events :: !(NonEmpty (AnyEvent ref)),
     logEnv :: !LogEnv,
-    logNamespace :: !Namespace,
     logQueue :: !(TBQueue LogStr),
     noteQueue :: !(TBQueue NaviNote)
   }
@@ -63,12 +55,6 @@ instance HasLogEnv (Env ref) where
   {-# INLINEABLE getLogEnv #-}
   localLogEnv = over' #logEnv
   {-# INLINEABLE localLogEnv #-}
-
-instance HasLogNamespace (Env ref) where
-  getLogNamespace = view #logNamespace
-  {-# INLINEABLE getLogNamespace #-}
-  localLogNamespace = over' #logNamespace
-  {-# INLINEABLE localLogNamespace #-}
 
 instance HasLogQueue (Env ref) where
   getLogQueue = view #logQueue

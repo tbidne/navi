@@ -15,12 +15,10 @@ import DBus.Notify (UrgencyLevel (..))
 import Navi.Config.Types (Config)
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote, Timeout (..))
-import Navi.Effects.MonadLoggerContext (Namespace)
 import Navi.Env.Core
   ( Env (MkEnv),
     HasEvents (..),
     HasLogEnv (..),
-    HasLogNamespace (..),
     HasLogQueue (..),
     HasNoteQueue (..),
   )
@@ -43,12 +41,6 @@ instance HasLogEnv NotifySendEnv where
   localLogEnv = over' (#coreEnv % #logEnv)
   {-# INLINEABLE localLogEnv #-}
 
-instance HasLogNamespace NotifySendEnv where
-  getLogNamespace = view (#coreEnv % #logNamespace)
-  {-# INLINEABLE getLogNamespace #-}
-  localLogNamespace = over' (#coreEnv % #logNamespace)
-  {-# INLINEABLE localLogNamespace #-}
-
 instance HasLogQueue NotifySendEnv where
   getLogQueue = view (#coreEnv % #logQueue)
   {-# INLINEABLE getLogQueue #-}
@@ -62,10 +54,9 @@ instance HasNoteQueue NotifySendEnv where
 mkNotifySendEnv ::
   MonadIO m =>
   LogEnv ->
-  Namespace ->
   Config IORef ->
   m NotifySendEnv
-mkNotifySendEnv logEnv namespace config = do
+mkNotifySendEnv logEnv config = do
   logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
   noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
   pure $
@@ -74,7 +65,6 @@ mkNotifySendEnv logEnv namespace config = do
           MkEnv
             (config ^. #events)
             logEnv
-            namespace
             logQueue
             noteQueue
       }
