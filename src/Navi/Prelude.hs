@@ -118,7 +118,14 @@ import Optics.Core as X
     _Just,
   )
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
-import System.IO as X (FilePath, Handle, IO, IOMode (AppendMode), openFile)
+import System.IO as X
+  ( FilePath,
+    Handle,
+    IO,
+    IOMode (AppendMode),
+    hFlush,
+    openFile,
+  )
 import TOML as X
   ( DecodeTOML (..),
     TOMLError (..),

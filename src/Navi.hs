@@ -191,8 +191,10 @@ pollLogQueue ::
 pollLogQueue = addNamespace "logger" $ do
   queue <- asks getLogQueue
   mfileHandle <- asks (preview (#logFile % _Just % #handle) . getLogEnv)
-  let sendFn = maybe BS.putStr hPut mfileHandle
+  let sendFn = maybe BS.putStr toFile mfileHandle
   forever $ do
     logStr <- logStrToBs <$> readQueue queue
     liftIO $ sendFn logStr
+  where
+    toFile h bs = hPut h bs *> hFlush h
 {-# INLINEABLE pollLogQueue #-}
