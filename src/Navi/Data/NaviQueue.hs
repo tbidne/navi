@@ -4,7 +4,6 @@
 -- | Provides queue functionality.
 module Navi.Data.NaviQueue
   ( NaviQueue (..),
-    _MkNaviQueue,
     readQueueIO,
     writeQueueIO,
     flushQueueIO,
@@ -20,19 +19,19 @@ import Navi.Prelude
 -- intended to be used with concurrency.
 newtype NaviQueue a = MkNaviQueue {unNaviQueue :: TBQueue a}
 
-makePrisms ''NaviQueue
+makeFieldLabelsNoPrefix ''NaviQueue
 
 -- | Atomically reads from the queue. Blocks until a value is available.
 readQueueIO :: MonadIO m => NaviQueue a -> m a
-readQueueIO = liftIO . STM.atomically . TBQueue.readTBQueue . view _MkNaviQueue
+readQueueIO = liftIO . STM.atomically . TBQueue.readTBQueue . view #unNaviQueue
 {-# INLINEABLE readQueueIO #-}
 
 -- | Atomically writes to the queue.
 writeQueueIO :: MonadIO m => NaviQueue a -> a -> m ()
-writeQueueIO queue = liftIO . STM.atomically . TBQueue.writeTBQueue (queue ^. _MkNaviQueue)
+writeQueueIO queue = liftIO . STM.atomically . TBQueue.writeTBQueue (queue ^. #unNaviQueue)
 {-# INLINEABLE writeQueueIO #-}
 
 -- | Atomically reads from the queue. Does not retry.
 flushQueueIO :: MonadIO m => NaviQueue a -> m [a]
-flushQueueIO = liftIO . STM.atomically . STM.flushTBQueue . view _MkNaviQueue
+flushQueueIO = liftIO . STM.atomically . STM.flushTBQueue . view #unNaviQueue
 {-# INLINEABLE flushQueueIO #-}

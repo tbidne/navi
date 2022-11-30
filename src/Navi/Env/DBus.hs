@@ -49,18 +49,14 @@ instance HasEvents IORef DBusEnv where
 instance HasLogEnv DBusEnv where
   getLogEnv = view (#coreEnv % #logEnv)
   {-# INLINEABLE getLogEnv #-}
-  setLogEnv = set' (#coreEnv % #logEnv)
-  {-# INLINEABLE setLogEnv #-}
-  overLogEnv = over' (#coreEnv % #logEnv)
-  {-# INLINEABLE overLogEnv #-}
+  localLogEnv = over' (#coreEnv % #logEnv)
+  {-# INLINEABLE localLogEnv #-}
 
 instance HasLogNamespace DBusEnv where
   getLogNamespace = view (#coreEnv % #logNamespace)
   {-# INLINEABLE getLogNamespace #-}
-  setLogNamespace = set' (#coreEnv % #logNamespace)
-  {-# INLINEABLE setLogNamespace #-}
-  overLogNamespace = over' (#coreEnv % #logNamespace)
-  {-# INLINEABLE overLogNamespace #-}
+  localLogNamespace = over' (#coreEnv % #logNamespace)
+  {-# INLINEABLE localLogNamespace #-}
 
 instance HasLogQueue DBusEnv where
   getLogQueue = view (#coreEnv % #logQueue)

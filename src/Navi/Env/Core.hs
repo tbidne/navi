@@ -29,14 +29,12 @@ class HasEvents ref env | env -> ref where
 -- | Retrieves the log environment.
 class HasLogEnv env where
   getLogEnv :: env -> LogEnv
-  setLogEnv :: LogEnv -> env -> env
-  overLogEnv :: (LogEnv -> LogEnv) -> env -> env
+  localLogEnv :: (LogEnv -> LogEnv) -> env -> env
 
 -- | Retrieves the log namespace.
 class HasLogNamespace env where
   getLogNamespace :: env -> Namespace
-  setLogNamespace :: Namespace -> env -> env
-  overLogNamespace :: (Namespace -> Namespace) -> env -> env
+  localLogNamespace :: (Namespace -> Namespace) -> env -> env
 
 -- | Retrieves the log queue.
 class HasLogQueue env where
@@ -64,18 +62,14 @@ instance HasEvents ref (Env ref) where
 instance HasLogEnv (Env ref) where
   getLogEnv = view #logEnv
   {-# INLINEABLE getLogEnv #-}
-  setLogEnv = set' #logEnv
-  {-# INLINEABLE setLogEnv #-}
-  overLogEnv = over' #logEnv
-  {-# INLINEABLE overLogEnv #-}
+  localLogEnv = over' #logEnv
+  {-# INLINEABLE localLogEnv #-}
 
 instance HasLogNamespace (Env ref) where
   getLogNamespace = view #logNamespace
   {-# INLINEABLE getLogNamespace #-}
-  setLogNamespace = set' #logNamespace
-  {-# INLINEABLE setLogNamespace #-}
-  overLogNamespace = over' #logNamespace
-  {-# INLINEABLE overLogNamespace #-}
+  localLogNamespace = over' #logNamespace
+  {-# INLINEABLE localLogNamespace #-}
 
 instance HasLogQueue (Env ref) where
   getLogQueue = view #logQueue

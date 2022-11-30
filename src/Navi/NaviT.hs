@@ -96,7 +96,7 @@ instance
   MonadLoggerContext (NaviT env IO)
   where
   getNamespace = asks getLogNamespace
-  localNamespace = local . overLogNamespace
+  localNamespace = local . localLogNamespace
 
 instance MonadSystemTime (NaviT env IO) where
   getSystemTime = lift getSystemTime
