@@ -66,7 +66,7 @@ fillMissingDefaults args = do
   where
     configFile = args ^. #configFile
     defaultXdg = Dir.getXdgDirectory XdgConfig "navi/"
-    defConfigName = "navi-config.toml"
+    defConfigName = "config.toml"
 {-# INLINEABLE fillMissingDefaults #-}
 
 -- | 'ParserInfo' type for parsing 'Args'.
@@ -135,5 +135,5 @@ configFileParser =
     )
   where
     helpTxt =
-      "Path to config file. Defaults to <xdgConfig>/navi/navi-config.toml."
+      "Path to config file. Defaults to <xdgConfig>/navi/config.toml."
 {-# INLINEABLE configFileParser #-}
