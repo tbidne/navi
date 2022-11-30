@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | This module provides the core application type and logic.
 module Navi
   ( -- * Entry point
@@ -10,11 +12,11 @@ module Navi
 where
 
 import DBus.Notify (UrgencyLevel (..))
+import Data.ByteString qualified as BS
 import Data.List.NonEmpty qualified as NE
-import Katip (Severity (..))
-import Navi.Data.NaviLog (NaviLog (..))
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
-import Navi.Effects.MonadLogger (MonadLogger (..), sendLogQueue)
+import Navi.Effects (MonadLoggerContext)
+import Navi.Effects.MonadLoggerContext (addNamespace, logStrToBs)
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..), sendNoteQueue)
 import Navi.Effects.MonadQueue (MonadQueue (..))
@@ -22,7 +24,7 @@ import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
   ( HasEvents (..),
-    HasLogNamespace,
+    HasLogEnv (getLogEnv),
     HasLogQueue (..),
     HasNoteQueue (..),
   )
@@ -36,10 +38,10 @@ import UnliftIO.Async qualified as Async
 runNavi ::
   forall ref env m.
   ( HasEvents ref env,
-    HasLogNamespace env,
+    HasLogEnv env,
     HasLogQueue env,
     HasNoteQueue env,
-    MonadLogger m,
+    MonadLoggerContext m,
     MonadMutRef ref m,
     MonadNotify m,
     MonadQueue m,
@@ -82,16 +84,14 @@ runNavi = do
           )
 
     logExAndRethrow prefix io = catchAny io $ \ex -> do
-      sendLogQueue $ MkNaviLog CriticalS (prefix <> pack (displayException ex))
+      $(logError) (prefix <> pack (displayException ex))
       throwIO ex
 {-# INLINEABLE runNavi #-}
 
 processEvent ::
   forall m ref env.
-  ( HasLogNamespace env,
-    HasLogQueue env,
-    HasNoteQueue env,
-    MonadLogger m,
+  ( HasNoteQueue env,
+    MonadLoggerContext m,
     MonadMutRef ref m,
     MonadQueue m,
     MonadReader env m,
@@ -104,7 +104,7 @@ processEvent ::
 processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
   let pi = event ^. #pollInterval
   forever $ do
-    sendLogQueue $ MkNaviLog InfoS ("Checking " <> name)
+    $(logInfo) ("Checking " <> name)
     (Event.runEvent event >>= handleSuccess)
       `catch` handleEventError
       `catchAny` handleSomeException
@@ -118,14 +118,14 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
     handleSuccess result = addNamespace "handleSuccess" $ do
       case raiseAlert result of
         Nothing -> do
-          sendLogQueue $ MkNaviLog DebugS ("No alert to raise " <> showt result)
+          $(logDebug) ("No alert to raise " <> showt result)
           Event.updatePrevTrigger repeatEvent result
         Just note -> do
           blocked <- Event.blockRepeat repeatEvent result
           if blocked
-            then sendLogQueue $ MkNaviLog DebugS ("Alert blocked " <> showt result)
+            then $(logDebug) ("Alert blocked " <> showt result)
             else do
-              sendLogQueue $ MkNaviLog InfoS ("Sending note " <> showt note)
+              $(logInfo) ("Sending note " <> showt note)
               Event.updatePrevTrigger repeatEvent result
               sendNoteQueue note
 
@@ -140,9 +140,9 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
     handleErr :: Exception e => (e -> NaviNote) -> e -> m ()
     handleErr toNote e = do
       blockErrEvent <- Event.blockErr errorNote
-      sendLogQueue $ MkNaviLog ErrorS (pack $ displayException e)
+      $(logError) (pack $ displayException e)
       if blockErrEvent
-        then sendLogQueue $ MkNaviLog DebugS "Error note blocked"
+        then $(logDebug) "Error note blocked"
         else sendNoteQueue (toNote e)
 {-# INLINEABLE processEvent #-}
 
@@ -168,7 +168,7 @@ exToNote ex =
 
 pollNoteQueue ::
   ( HasNoteQueue env,
-    MonadLogger m,
+    MonadLoggerContext m,
     MonadNotify m,
     MonadQueue m,
     MonadReader env m
@@ -181,12 +181,18 @@ pollNoteQueue = addNamespace "note-poller" $ do
 
 pollLogQueue ::
   ( HasLogQueue env,
-    MonadLogger m,
+    HasLogEnv env,
+    MonadIO m,
+    MonadLoggerContext m,
     MonadQueue m,
     MonadReader env m
   ) =>
   m Void
 pollLogQueue = addNamespace "logger" $ do
   queue <- asks getLogQueue
-  forever $ readQueue queue >>= uncurry logText
+  mfileHandle <- asks (preview (#logFile % _Just % #handle) . getLogEnv)
+  let sendFn = maybe BS.putStr hPut mfileHandle
+  forever $ do
+    logStr <- logStrToBs <$> readQueue queue
+    liftIO $ sendFn logStr
 {-# INLINEABLE pollLogQueue #-}

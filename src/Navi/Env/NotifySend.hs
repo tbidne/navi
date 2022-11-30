@@ -12,14 +12,14 @@ where
 import Control.Concurrent.STM qualified as STM
 import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import DBus.Notify (UrgencyLevel (..))
-import Katip (LogContexts, LogEnv, Namespace)
-import Navi.Config (Config)
+import Navi.Config.Types (Config)
+import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote, Timeout (..))
 import Navi.Data.NaviQueue (NaviQueue (..))
+import Navi.Effects.MonadLoggerContext (Namespace)
 import Navi.Env.Core
   ( Env (MkEnv),
     HasEvents (..),
-    HasLogContexts (..),
     HasLogEnv (..),
     HasLogNamespace (..),
     HasLogQueue (..),
@@ -41,25 +41,17 @@ instance HasEvents IORef NotifySendEnv where
 instance HasLogEnv NotifySendEnv where
   getLogEnv = view (#coreEnv % #logEnv)
   {-# INLINEABLE getLogEnv #-}
-  setLogEnv = set (#coreEnv % #logEnv)
+  setLogEnv = set' (#coreEnv % #logEnv)
   {-# INLINEABLE setLogEnv #-}
-  overLogEnv = over (#coreEnv % #logEnv)
+  overLogEnv = over' (#coreEnv % #logEnv)
   {-# INLINEABLE overLogEnv #-}
-
-instance HasLogContexts NotifySendEnv where
-  getLogContexts = view (#coreEnv % #logCtx)
-  {-# INLINEABLE getLogContexts #-}
-  setLogContexts = set (#coreEnv % #logCtx)
-  {-# INLINEABLE setLogContexts #-}
-  overLogContexts = over (#coreEnv % #logCtx)
-  {-# INLINEABLE overLogContexts #-}
 
 instance HasLogNamespace NotifySendEnv where
   getLogNamespace = view (#coreEnv % #logNamespace)
   {-# INLINEABLE getLogNamespace #-}
-  setLogNamespace = set (#coreEnv % #logNamespace)
+  setLogNamespace = set' (#coreEnv % #logNamespace)
   {-# INLINEABLE setLogNamespace #-}
-  overLogNamespace = over (#coreEnv % #logNamespace)
+  overLogNamespace = over' (#coreEnv % #logNamespace)
   {-# INLINEABLE overLogNamespace #-}
 
 instance HasLogQueue NotifySendEnv where
@@ -75,11 +67,10 @@ instance HasNoteQueue NotifySendEnv where
 mkNotifySendEnv ::
   MonadIO m =>
   LogEnv ->
-  LogContexts ->
   Namespace ->
   Config IORef ->
   m NotifySendEnv
-mkNotifySendEnv logEnv logContext namespace config = do
+mkNotifySendEnv logEnv namespace config = do
   logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
   noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
   pure $
@@ -88,7 +79,6 @@ mkNotifySendEnv logEnv logContext namespace config = do
           MkEnv
             (config ^. #events)
             logEnv
-            logContext
             namespace
             (MkNaviQueue logQueue)
             (MkNaviQueue noteQueue)

@@ -5,7 +5,6 @@ where
 
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
-import Katip (Severity (..))
 import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Types (LogLoc (..), Logging (..))
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
@@ -47,7 +46,7 @@ logTests =
         { logToml =
             Just $
               MkLogging
-                { severity = Just DebugS,
+                { severity = Just LevelDebug,
                   location = Nothing
                 },
           noteSystemToml = Nothing,
@@ -57,8 +56,8 @@ logTests =
           batteryStatusToml = expectedBatteryStatus,
           netInterfacesToml = []
         }
-    expectedInfo = set (#logToml %? #severity % _Just) InfoS expectedDebug
-    expectedError = set (#logToml %? #severity % _Just) ErrorS expectedDebug
+    expectedInfo = set' (#logToml %? #severity % _Just) LevelInfo expectedDebug
+    expectedError = set' (#logToml %? #severity % _Just) LevelError expectedDebug
 
 parsesConfig :: Text -> ConfigToml -> String -> TestTree
 parsesConfig config expected desc = testCase desc $ do
@@ -73,7 +72,7 @@ expectedFull =
     { logToml =
         Just $
           MkLogging
-            { severity = Just DebugS,
+            { severity = Just LevelDebug,
               location = Just $ File "some-file"
             },
       noteSystemToml = Nothing,

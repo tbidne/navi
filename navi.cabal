@@ -50,12 +50,13 @@ library
     Navi.Data.NaviQueue
     Navi.Data.PollInterval
     Navi.Effects
-    Navi.Effects.MonadLogger
+    Navi.Effects.MonadLoggerContext
     Navi.Effects.MonadMutRef
     Navi.Effects.MonadNotify
     Navi.Effects.MonadQueue
     Navi.Effects.MonadShell
     Navi.Effects.MonadSystemInfo
+    Navi.Effects.MonadSystemTime
     Navi.Env.Core
     Navi.Env.DBus
     Navi.Env.NotifySend
@@ -83,11 +84,13 @@ library
     , bytestring            >=0.10.10.0 && <0.12
     , containers            >=0.5.11.0  && <0.7
     , dbus                  ^>=1.2.14
+    , deepseq               ^>=1.4.6.0
     , directory             ^>=1.3.5.0
+    , fast-logger           >=2.1       && <3.2
     , fdo-notify            ^>=0.3.1
     , filepath              ^>=1.4.2.1
     , gitrev                >=1.2.0     && <1.4
-    , katip                 ^>=0.8.4.0
+    , monad-logger          ^>=0.3.30
     , mtl                   >=2.2.2     && <2.4
     , optics-core           ^>=0.4
     , optics-th             ^>=0.4
@@ -98,7 +101,10 @@ library
     , relative-time         ^>=0.1
     , smart-math            ^>=0.1
     , stm                   ^>=2.5.0
+    , template-haskell      >=2.18.0.0  && <2.20
     , text                  >=1.2.3.2   && <2.1
+    , time                  >=1.9.3     && <1.14
+    , time-compat           ^>=1.9.6.1
     , toml-reader           ^>=0.1.0.0
     , unliftio              ^>=0.2.0.0
 
@@ -112,7 +118,6 @@ executable navi
     , base
     , directory
     , filepath
-    , katip
     , navi
 
   hs-source-dirs:   app
@@ -136,7 +141,6 @@ test-suite unit
   build-depends:
     , base
     , fdo-notify
-    , katip
     , navi
     , pythia
     , smart-math
@@ -160,7 +164,6 @@ test-suite integration
     , directory
     , fdo-notify
     , filepath
-    , katip
     , navi
     , pythia
     , smart-math

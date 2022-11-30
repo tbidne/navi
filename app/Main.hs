@@ -4,18 +4,16 @@
 module Main (main) where
 
 import Data.Functor.Identity (Identity (..))
-import Katip
-  ( ColorStrategy (..),
-    Item,
-    LogContexts,
-    LogEnv (..),
-    Severity (..),
-    Verbosity (..),
-  )
-import Katip qualified as K
 import Navi (runNavi, runNaviT)
 import Navi.Args (Args (..), getArgs)
 import Navi.Config (Config (..), LogLoc (..), Logging (..), NoteSystem (..), readConfig)
+import Navi.Data.NaviLog
+  ( LogEnv (MkLogEnv),
+    LogFile (MkLogFile, finalizer, handle),
+    logFile,
+    logLevel,
+    logNamespace,
+  )
 import Navi.Env.DBus (mkDBusEnv)
 import Navi.Env.NotifySend (mkNotifySendEnv)
 import Navi.Prelude
@@ -33,14 +31,18 @@ main = do
       `catchAny` writeConfigErr
 
   let mkLogEnvFn = mkLogEnv (config ^. #logging)
-  bracket mkLogEnvFn K.closeScribes $ \logEnv -> do
+  bracket mkLogEnvFn closeLogging $ \logEnv -> do
     let mkNaviEnv :: forall env. _ -> IO env
-        mkNaviEnv envFn = envFn logEnv logCtx "main" config
+        -- TODO: redundant namespace?
+        mkNaviEnv envFn = envFn logEnv "main" config
     case config ^. #noteSystem of
       DBus -> mkNaviEnv mkDBusEnv >>= runWithEnv
       NotifySend -> mkNaviEnv mkNotifySendEnv >>= runWithEnv
   where
     runWithEnv env = absurd <$> runNaviT runNavi env
+    closeLogging env = do
+      let mFinalizer = env ^? #logFile %? #finalizer
+      fromMaybe (pure ()) mFinalizer
 
 tryParseConfig :: Args Identity -> IO (Config IORef)
 tryParseConfig =
@@ -50,29 +52,40 @@ tryParseConfig =
 
 mkLogEnv :: Logging -> IO LogEnv
 mkLogEnv logging = do
-  let severityFn :: forall a. Item a -> IO Bool
-      severityFn = K.permitItem severity'
-  scribe <- case logLoc' of
+  logFile <- case logLoc' of
     -- Use the default log path: xdgConfig </> navi/navi.log
     DefPath -> do
       xdgBase <- Dir.getXdgDirectory XdgConfig "navi/"
       let logFile = xdgBase </> "navi.log"
       renameIfExists logFile
-      K.mkFileScribe logFile severityFn V2
+      h <- openFile logFile AppendMode
+      pure $
+        Just $
+          MkLogFile
+            { handle = h,
+              finalizer = IO.hFlush h `finally` IO.hClose h
+            }
     -- Custom log path.
     File f -> do
       renameIfExists f
-      K.mkFileScribe f severityFn V2
+      h <- openFile f AppendMode
+      pure $
+        Just $
+          MkLogFile
+            { handle = h,
+              finalizer = IO.hFlush h `finally` IO.hClose h
+            }
     -- Log location defined in config file as stdout.
-    Stdout -> K.mkHandleScribe ColorIfTerminal IO.stdout severityFn V2
-  K.registerScribe "logger" scribe K.defaultScribeSettings =<< K.initLogEnv "navi" environment
+    Stdout -> pure Nothing
+  pure $
+    MkLogEnv
+      { logFile,
+        logLevel,
+        logNamespace = "navi"
+      }
   where
-    environment = "production"
-    severity' = fromMaybe ErrorS (logging ^. #severity)
+    logLevel = fromMaybe LevelError (logging ^. #severity)
     logLoc' = fromMaybe DefPath (logging ^. #location)
-
-logCtx :: LogContexts
-logCtx = K.liftPayload ()
 
 writeConfigErr :: SomeException -> IO void
 writeConfigErr ex = do
@@ -85,11 +98,9 @@ writeConfigErr ex = do
 renameIfExists :: FilePath -> IO ()
 renameIfExists fp = do
   fileExists <- Dir.doesFileExist fp
-  if fileExists
-    then do
-      fp' <- uniqName fp
-      Dir.renameFile fp fp'
-    else pure ()
+  when fileExists $ do
+    fp' <- uniqName fp
+    Dir.renameFile fp fp'
 
 uniqName :: FilePath -> IO FilePath
 uniqName fp = go 1

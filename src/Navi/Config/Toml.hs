@@ -8,7 +8,6 @@ module Navi.Config.Toml
   )
 where
 
-import Katip (Severity (..))
 import Navi.Config.Types (LogLoc (..), Logging (..), NoteSystem (..))
 import Navi.Prelude
 import Navi.Services.Battery.Percentage.Toml (BatteryPercentageToml)
@@ -53,15 +52,15 @@ logDecoder =
     <$> severityDecoderOpt
     <*> locationDecoderOpt
 
-severityDecoderOpt :: Decoder (Maybe Severity)
+severityDecoderOpt :: Decoder (Maybe LogLevel)
 severityDecoderOpt = getFieldOptWith severityDecoder "severity"
 
-severityDecoder :: Decoder Severity
+severityDecoder :: Decoder LogLevel
 severityDecoder =
   tomlDecoder >>= \case
-    "debug" -> pure DebugS
-    "info" -> pure InfoS
-    "error" -> pure ErrorS
+    "debug" -> pure LevelDebug
+    "info" -> pure LevelInfo
+    "error" -> pure LevelError
     bad -> fail $ unpack $ "Unsupported severity: " <> bad
 
 locationDecoderOpt :: Decoder (Maybe LogLoc)

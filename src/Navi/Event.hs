@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | This module provides functionality for handling events.
 module Navi.Event
   ( -- * Event type
@@ -17,12 +19,9 @@ module Navi.Event
   )
 where
 
-import Katip (Severity (..))
-import Navi.Data.NaviLog (NaviLog (..))
-import Navi.Effects (MonadLogger (..), MonadMutRef (..), MonadSystemInfo (..))
-import Navi.Effects.MonadLogger (sendLogQueue)
+import Navi.Effects (MonadMutRef (..), MonadSystemInfo (..))
+import Navi.Effects.MonadLoggerContext (MonadLoggerContext (..), addNamespace)
 import Navi.Effects.MonadQueue (MonadQueue)
-import Navi.Env.Core (HasLogNamespace (..), HasLogQueue)
 import Navi.Event.Types
   ( AnyEvent (..),
     ErrorNote (..),
@@ -37,11 +36,8 @@ import Navi.Prelude
 -- 1. Queries the system via 'MonadSystemInfo'.
 -- 2. Returns the parsed result.
 runEvent ::
-  ( HasLogNamespace env,
-    HasLogQueue env,
-    MonadLogger m,
+  ( MonadLoggerContext m,
     MonadQueue m,
-    MonadReader env m,
     MonadSystemInfo m,
     Show result
   ) =>
@@ -49,7 +45,7 @@ runEvent ::
   m result
 runEvent event = addNamespace "runEvent" $ do
   result <- query $ event ^. #serviceType
-  sendLogQueue $ MkNaviLog InfoS ("Shell returned: " <> showt result)
+  $(logInfo) ("Shell returned: " <> showt result)
   pure result
 {-# INLINEABLE runEvent #-}
 
@@ -60,12 +56,8 @@ runEvent event = addNamespace "runEvent" $ do
 --    stored in our @ref@.
 blockRepeat ::
   ( Eq a,
-    HasLogQueue env,
-    HasLogNamespace env,
-    MonadLogger m,
+    MonadLoggerContext m,
     MonadMutRef ref m,
-    MonadQueue m,
-    MonadReader env m,
     Show a
   ) =>
   RepeatEvent ref a ->
@@ -78,8 +70,8 @@ blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
     -- Repeat events are not allowed, must check.
     NoRepeats prevRef -> do
       prevVal <- readRef prevRef
-      sendLogQueue $ MkNaviLog DebugS ("Previous value: " <> showt prevVal)
-      sendLogQueue $ MkNaviLog DebugS ("New value: " <> showt newVal)
+      $(logDebug) ("Previous value: " <> showt prevVal)
+      $(logDebug) ("New value: " <> showt newVal)
       if prevVal == Just newVal
         then -- Already sent this alert, block.
           pure True
@@ -96,12 +88,8 @@ blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
 -- 3. 'AllowErrNote' 'NoRepeats': block only if we have sent a notifcation
 --    for this error before.
 blockErr ::
-  ( HasLogNamespace env,
-    HasLogQueue env,
-    MonadLogger m,
-    MonadMutRef ref m,
-    MonadQueue m,
-    MonadReader env m
+  ( MonadLoggerContext m,
+    MonadMutRef ref m
   ) =>
   ErrorNote ref ->
   m Bool
@@ -109,11 +97,11 @@ blockErr errorEvent = addNamespace "blockErr" $ do
   case errorEvent of
     -- Error events are off, block.
     NoErrNote -> do
-      sendLogQueue $ MkNaviLog DebugS "Error notes are off"
+      $(logDebug) "Error notes are off"
       pure True
     -- Error events are on and repeats allowed, do not block.
     AllowErrNote AllowRepeats -> do
-      sendLogQueue $ MkNaviLog DebugS "Error notes are on and repeats allowed"
+      $(logDebug) "Error notes are on and repeats allowed"
       pure False
     -- Error events are on but repeats not allowed, must check.
     AllowErrNote (NoRepeats ref) -> do
@@ -121,11 +109,11 @@ blockErr errorEvent = addNamespace "blockErr" $ do
       case prevErr of
         -- Already sent this error, block
         Just () -> do
-          sendLogQueue $ MkNaviLog DebugS "Already sent error"
+          $(logDebug) "Already sent error"
           pure True
         -- Error not send, do not block
         Nothing -> do
-          sendLogQueue $ MkNaviLog DebugS "Send error"
+          $(logDebug) "Send error"
           writeRef ref $ Just ()
           pure False
 {-# INLINEABLE blockErr #-}

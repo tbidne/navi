@@ -32,13 +32,17 @@ integration:
 
 repl:
 	if [ -z "$(ARGS)" ]; then \
-		cabal repl; \
+		cabal repl navi; \
 	else \
 		cabal repl $(ARGS); \
 	fi
 
 watch:
-	ghcid --command "cabal repl $(ARGS)"
+	if [ -z "$(ARGS)" ]; then \
+		ghcid --command "cabal repl navi"; \
+	else \
+		ghcid --command "cabal repl $(ARGS)"; \
+	fi
 
 # ci
 
@@ -80,4 +84,4 @@ haddockc:
 	-m Navi.Data.NaviQueue 80 \
 	-m Navi.Event.Toml 60 \
 	-m Navi.Event.Types 55 \
-	-m Navi.Prelude 95
+	-m Navi.Prelude 90

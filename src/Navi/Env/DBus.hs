@@ -15,14 +15,14 @@ import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import DBus.Client (Client)
 import DBus.Notify (Hint (Urgency), Note)
 import DBus.Notify qualified as DBusN
-import Katip (LogContexts, LogEnv, Namespace)
 import Navi.Config (Config)
+import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Data.NaviQueue (NaviQueue (..))
+import Navi.Effects.MonadLoggerContext (Namespace)
 import Navi.Env.Core
   ( Env (MkEnv),
     HasEvents (..),
-    HasLogContexts (..),
     HasLogEnv (..),
     HasLogNamespace (..),
     HasLogQueue (..),
@@ -49,25 +49,17 @@ instance HasEvents IORef DBusEnv where
 instance HasLogEnv DBusEnv where
   getLogEnv = view (#coreEnv % #logEnv)
   {-# INLINEABLE getLogEnv #-}
-  setLogEnv = set (#coreEnv % #logEnv)
+  setLogEnv = set' (#coreEnv % #logEnv)
   {-# INLINEABLE setLogEnv #-}
-  overLogEnv = over (#coreEnv % #logEnv)
+  overLogEnv = over' (#coreEnv % #logEnv)
   {-# INLINEABLE overLogEnv #-}
-
-instance HasLogContexts DBusEnv where
-  getLogContexts = view (#coreEnv % #logCtx)
-  {-# INLINEABLE getLogContexts #-}
-  setLogContexts = set (#coreEnv % #logCtx)
-  {-# INLINEABLE setLogContexts #-}
-  overLogContexts = over (#coreEnv % #logCtx)
-  {-# INLINEABLE overLogContexts #-}
 
 instance HasLogNamespace DBusEnv where
   getLogNamespace = view (#coreEnv % #logNamespace)
   {-# INLINEABLE getLogNamespace #-}
-  setLogNamespace = set (#coreEnv % #logNamespace)
+  setLogNamespace = set' (#coreEnv % #logNamespace)
   {-# INLINEABLE setLogNamespace #-}
-  overLogNamespace = over (#coreEnv % #logNamespace)
+  overLogNamespace = over' (#coreEnv % #logNamespace)
   {-# INLINEABLE overLogNamespace #-}
 
 instance HasLogQueue DBusEnv where
@@ -86,11 +78,10 @@ instance HasDBusClient DBusEnv where
 mkDBusEnv ::
   MonadIO m =>
   LogEnv ->
-  LogContexts ->
   Namespace ->
   Config IORef ->
   m DBusEnv
-mkDBusEnv logEnv logContext namespace config = do
+mkDBusEnv logEnv namespace config = do
   client <- liftIO DBusN.connectSession
   logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
   noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
@@ -100,7 +91,6 @@ mkDBusEnv logEnv logContext namespace config = do
           MkEnv
             (config ^. #events)
             logEnv
-            logContext
             namespace
             (MkNaviQueue logQueue)
             (MkNaviQueue noteQueue),

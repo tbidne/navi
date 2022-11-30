@@ -9,20 +9,18 @@ module Navi.NaviT
 where
 
 import DBus.Notify qualified as DBusN
-import Data.Text.Lazy.Builder qualified as T
-import Katip (Katip, KatipContext, LogStr (..), Severity (..))
-import Katip qualified as K
-import Navi.Data.NaviLog (NaviLog (MkNaviLog))
-import Navi.Effects.MonadLogger (MonadLogger (..), sendLogQueue)
+import Navi.Effects.MonadLoggerContext (MonadLoggerContext (..), addNamespace)
+import Navi.Effects.MonadLoggerContext qualified as MonadLoggerContext
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
+import Navi.Effects.MonadSystemTime (MonadSystemTime (..))
 import Navi.Env.Core
-  ( HasLogContexts (..),
-    HasLogEnv (..),
+  ( HasLogEnv (..),
     HasLogNamespace (..),
+    HasLogQueue (getLogQueue),
   )
 import Navi.Env.DBus (DBusEnv, HasDBusClient (..), naviToDBus)
 import Navi.Env.NotifySend (NotifySendEnv, naviToNotifySend)
@@ -55,7 +53,7 @@ instance MonadSystemInfo (NaviT env IO) where
 -- other MonadIOs (i.e. in tests)
 instance MonadNotify (NaviT DBusEnv IO) where
   sendNote naviNote = addNamespace "dbus" $ do
-    sendLogQueue $ MkNaviLog DebugS (showt note)
+    $(logDebug) (showt note)
     client <- asks getClient
     liftIO $ sendDbus client note
     where
@@ -67,61 +65,42 @@ instance MonadNotify (NaviT DBusEnv IO) where
 -- other MonadIOs (i.e. in tests)
 instance MonadNotify (NaviT NotifySendEnv IO) where
   sendNote naviNote = addNamespace "notify-send" $ do
-    sendLogQueue $ MkNaviLog DebugS noteTxt
+    $(logDebug) noteTxt
     liftIO $ void $ Proc.readCreateProcess cp "notify-send"
     where
       noteTxt = naviToNotifySend naviNote
       cp = Proc.shell $ unpack noteTxt
   {-# INLINEABLE sendNote #-}
 
-instance (HasLogEnv env, MonadIO m) => Katip (NaviT env m) where
-  getLogEnv = asks getLogEnv
-  {-# INLINEABLE getLogEnv #-}
-  localLogEnv = updateEnvField overLogEnv
-  {-# INLINEABLE localLogEnv #-}
-
-instance
-  ( HasLogContexts env,
-    HasLogEnv env,
-    HasLogNamespace env,
-    MonadIO m
-  ) =>
-  KatipContext (NaviT env m)
-  where
-  getKatipContext = asks getLogContexts
-  {-# INLINEABLE getKatipContext #-}
-  localKatipContext = updateEnvField overLogContexts
-  {-# INLINEABLE localKatipContext #-}
-  getKatipNamespace = asks getLogNamespace
-  {-# INLINEABLE getKatipNamespace #-}
-  localKatipNamespace = updateEnvField overLogNamespace
-  {-# INLINEABLE localKatipNamespace #-}
-
-updateEnvField ::
-  MonadReader env m =>
-  ((f1 -> f2) -> env -> env) ->
-  (f1 -> f2) ->
-  m a ->
-  m a
-updateEnvField overFn modifier = local (overFn modifier)
-{-# INLINEABLE updateEnvField #-}
-
 -- Concrete IO rather than MonadIO so that we can write instances over
 -- other MonadIOs (i.e. in tests)
 instance
-  ( HasLogContexts env,
-    HasLogEnv env,
-    HasLogNamespace env
+  ( HasLogEnv env,
+    HasLogNamespace env,
+    HasLogQueue env
   ) =>
   MonadLogger (NaviT env IO)
   where
-  logText naviLog ns = addNamespace ns $ do
-    let log = LogStr $ T.fromText (naviLog ^. #text)
-    $(K.logTM) (naviLog ^. #severity) log
-  {-# INLINEABLE logText #-}
+  monadLoggerLog loc _src lvl msg = do
+    logQueue <- asks getLogQueue
+    logLevel <- asks (view #logLevel . getLogEnv)
+    when (logLevel <= lvl) $ do
+      formatted <- MonadLoggerContext.formatLog True loc lvl msg
+      writeQueue logQueue formatted
 
-  addNamespace = K.katipAddNamespace
-  {-# INLINEABLE addNamespace #-}
+instance
+  ( HasLogEnv env,
+    HasLogNamespace env,
+    HasLogQueue env
+  ) =>
+  MonadLoggerContext (NaviT env IO)
+  where
+  getNamespace = asks getLogNamespace
+  localNamespace = local . overLogNamespace
+
+instance MonadSystemTime (NaviT env IO) where
+  getSystemTime = lift getSystemTime
+  getSystemZonedTime = lift getSystemZonedTime
 
 instance MonadMutRef ref m => MonadMutRef ref (NaviT e m) where
   newRef = lift . newRef

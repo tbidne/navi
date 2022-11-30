@@ -12,12 +12,11 @@ where
 import Control.Concurrent.STM qualified as STM
 import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import Integration.Prelude
-import Katip.Core (Namespace)
 import Navi.Config (Config)
-import Navi.Data.NaviLog (NaviLog)
+import Navi.Data.NaviLog (LogEnv (MkLogEnv))
 import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Data.NaviQueue (NaviQueue (MkNaviQueue))
-import Navi.Effects.MonadLogger (MonadLogger (..))
+import Navi.Effects.MonadLoggerContext (MonadLoggerContext (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadQueue (MonadQueue (..))
@@ -25,6 +24,7 @@ import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
   ( HasEvents (..),
+    HasLogEnv (getLogEnv, overLogEnv, setLogEnv),
     HasLogNamespace (..),
     HasLogQueue (..),
     HasNoteQueue (..),
@@ -40,7 +40,7 @@ import Pythia.Services.Battery (Battery (..), BatteryStatus (..), Percentage (..
 -- | Mock configuration.
 data MockEnv = MkMockEnv
   { events :: !(NonEmpty (AnyEvent IORef)),
-    logQueue :: !(NaviQueue (NaviLog, Namespace)),
+    logQueue :: !(NaviQueue LogStr),
     noteQueue :: !(NaviQueue NaviNote),
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
@@ -54,6 +54,11 @@ makeFieldLabelsNoPrefix ''MockEnv
 
 instance HasEvents IORef MockEnv where
   getEvents = view #events
+
+instance HasLogEnv MockEnv where
+  getLogEnv = pure $ MkLogEnv Nothing LevelInfo ""
+  setLogEnv _ = id
+  overLogEnv _ = id
 
 instance HasLogNamespace MockEnv where
   getLogNamespace _ = ""
@@ -84,8 +89,11 @@ makePrisms ''IntTestIO
 instance MonadLogger (NaviT MockEnv IntTestIO) where
   -- if we ever decide to test logs, we can capture them similar to the
   -- MonadNotify instance.
-  logText _ _ = pure ()
-  addNamespace _ mx = mx
+  monadLoggerLog _loc _src _lvl _msg = pure ()
+
+instance MonadLoggerContext (NaviT MockEnv IntTestIO) where
+  getNamespace = asks getLogNamespace
+  localNamespace = local . overLogNamespace
 
 instance MonadNotify (NaviT MockEnv IntTestIO) where
   sendNote note =

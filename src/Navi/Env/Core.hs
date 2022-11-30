@@ -6,7 +6,6 @@ module Navi.Env.Core
   ( -- * HasX-style Typeclasses
     HasEvents (..),
     HasLogEnv (..),
-    HasLogContexts (..),
     HasLogNamespace (..),
     HasLogQueue (..),
     HasNoteQueue (..),
@@ -16,10 +15,10 @@ module Navi.Env.Core
   )
 where
 
-import Katip (LogContexts, LogEnv, Namespace)
-import Navi.Data.NaviLog (NaviLog)
+import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.NaviQueue (NaviQueue)
+import Navi.Effects.MonadLoggerContext (Namespace)
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
 
@@ -33,12 +32,6 @@ class HasLogEnv env where
   setLogEnv :: LogEnv -> env -> env
   overLogEnv :: (LogEnv -> LogEnv) -> env -> env
 
--- | Retrieves the log context.
-class HasLogContexts env where
-  getLogContexts :: env -> LogContexts
-  setLogContexts :: LogContexts -> env -> env
-  overLogContexts :: (LogContexts -> LogContexts) -> env -> env
-
 -- | Retrieves the log namespace.
 class HasLogNamespace env where
   getLogNamespace :: env -> Namespace
@@ -47,7 +40,7 @@ class HasLogNamespace env where
 
 -- | Retrieves the log queue.
 class HasLogQueue env where
-  getLogQueue :: env -> NaviQueue (NaviLog, Namespace)
+  getLogQueue :: env -> NaviQueue LogStr
 
 -- | Retrieves the note queue.
 class HasNoteQueue env where
@@ -57,9 +50,8 @@ class HasNoteQueue env where
 data Env ref = MkEnv
   { events :: !(NonEmpty (AnyEvent ref)),
     logEnv :: !LogEnv,
-    logCtx :: !LogContexts,
     logNamespace :: !Namespace,
-    logQueue :: !(NaviQueue (NaviLog, Namespace)),
+    logQueue :: !(NaviQueue LogStr),
     noteQueue :: !(NaviQueue NaviNote)
   }
 
@@ -72,25 +64,17 @@ instance HasEvents ref (Env ref) where
 instance HasLogEnv (Env ref) where
   getLogEnv = view #logEnv
   {-# INLINEABLE getLogEnv #-}
-  setLogEnv = set #logEnv
+  setLogEnv = set' #logEnv
   {-# INLINEABLE setLogEnv #-}
-  overLogEnv = over #logEnv
+  overLogEnv = over' #logEnv
   {-# INLINEABLE overLogEnv #-}
-
-instance HasLogContexts (Env ref) where
-  getLogContexts = view #logCtx
-  {-# INLINEABLE getLogContexts #-}
-  setLogContexts = set #logCtx
-  {-# INLINEABLE setLogContexts #-}
-  overLogContexts = over #logCtx
-  {-# INLINEABLE overLogContexts #-}
 
 instance HasLogNamespace (Env ref) where
   getLogNamespace = view #logNamespace
   {-# INLINEABLE getLogNamespace #-}
-  setLogNamespace = set #logNamespace
+  setLogNamespace = set' #logNamespace
   {-# INLINEABLE setLogNamespace #-}
-  overLogNamespace = over #logNamespace
+  overLogNamespace = over' #logNamespace
   {-# INLINEABLE overLogNamespace #-}
 
 instance HasLogQueue (Env ref) where

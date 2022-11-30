@@ -1,20 +1,50 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | Provides the 'NaviLog' type.
+-- | Provides the types for logging.
 module Navi.Data.NaviLog
-  ( NaviLog (..),
+  ( LogFile (..),
+    LogEnv (..),
   )
 where
 
-import Katip (Severity)
+import Navi.Effects.MonadLoggerContext (Namespace)
 import Navi.Prelude
 
--- | The log type used in Navi.
-data NaviLog = MkNaviLog
-  { severity :: !Severity,
-    text :: !Text
+-- | Data for file logging.
+--
+-- @since 0.1
+data LogFile = MkLogFile
+  { -- | File handle.
+    --
+    -- @since 0.1
+    handle :: !Handle,
+    -- Finalizer to run e.g. flush/close.
+    --
+    -- @since 0.1
+    finalizer :: IO ()
   }
-  deriving stock (Eq, Show)
 
-makeFieldLabelsNoPrefix ''NaviLog
+-- | @since 0.1
+makeFieldLabelsNoPrefix ''LogFile
+
+-- | Holds logging env data.
+--
+-- @since 0.1
+data LogEnv = MkLogEnv
+  { -- | Data for file logging.
+    --
+    -- @since 0.1
+    logFile :: !(Maybe LogFile),
+    -- | Level in which to log.
+    --
+    -- @since 0.1
+    logLevel :: !LogLevel,
+    -- | The current logging namespace.
+    --
+    -- @since 0.1
+    logNamespace :: !Namespace
+  }
+
+-- | @since 0.1
+makeFieldLabelsNoPrefix ''LogEnv

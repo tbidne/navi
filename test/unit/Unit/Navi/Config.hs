@@ -3,7 +3,6 @@ module Unit.Navi.Config
   )
 where
 
-import Katip (Severity (..))
 import Navi.Config qualified as Config
 import Navi.Config.Types (Config (..), LogLoc (..), NoteSystem (..))
 import Unit.Prelude
@@ -19,19 +18,19 @@ tests =
   where
     verifyConfig cfg = do
       DBus @=? cfg ^. #noteSystem
-      Just DebugS @=? cfg ^. #logging % #severity
+      Just LevelDebug @=? cfg ^. #logging % #severity
       Nothing @=? cfg ^. #logging % #location
       3 @=? length (cfg ^. #events)
 
     verifySimple cfg = do
       NotifySend @=? cfg ^. #noteSystem
-      Just DebugS @=? cfg ^. #logging % #severity
+      Just LevelDebug @=? cfg ^. #logging % #severity
       Just Stdout @=? cfg ^. #logging % #location
       1 @=? length (cfg ^. #events)
 
     verifyMultiple cfg = do
       DBus @=? cfg ^. #noteSystem
-      Just ErrorS @=? cfg ^. #logging % #severity
+      Just LevelError @=? cfg ^. #logging % #severity
       Just DefPath @=? cfg ^. #logging % #location
       1 @=? length (cfg ^. #events)
 

@@ -28,7 +28,6 @@ module Navi.Config.Types
 where
 
 import Data.List.NonEmpty
-import Katip (Severity (..))
 import Navi.Event (AnyEvent (..))
 import Navi.Prelude
 
@@ -44,7 +43,7 @@ makePrisms ''LogLoc
 -- | Logging configuration.
 data Logging = MkLogging
   { -- | Determines the log level.
-    severity :: !(Maybe Severity),
+    severity :: !(Maybe LogLevel),
     -- | Deterines the log location (i.e. file or stdout).
     location :: !(Maybe LogLoc)
   }
@@ -70,7 +69,7 @@ defaultNoteSystem = DBus
 
 -- | Default logging i.e. log errors and use the default path.
 defaultLogging :: Logging
-defaultLogging = MkLogging (Just ErrorS) (Just DefPath)
+defaultLogging = MkLogging (Just LevelError) (Just DefPath)
 {-# INLINEABLE defaultLogging #-}
 
 -- | 'Config' holds the data from 'Navi.Config.Toml.ConfigToml' once it has been processed

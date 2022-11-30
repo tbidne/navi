@@ -34,22 +34,33 @@ module Navi.Prelude
 where
 
 import Control.Applicative as X (Alternative (..), Applicative (..), (<**>))
+import Control.DeepSeq as X (NFData)
 import Control.Monad as X
   ( Monad (..),
     forever,
     join,
     void,
+    when,
     (<=<),
     (=<<),
     (>=>),
   )
 import Control.Monad.Fail as X (MonadFail (..))
 import Control.Monad.IO.Class as X (MonadIO (..))
+import Control.Monad.Logger as X
+  ( LogLevel (LevelDebug, LevelError, LevelInfo, LevelWarn),
+    LogStr,
+    MonadLogger (monadLoggerLog),
+    logDebug,
+    logError,
+    logInfo,
+    logWarn,
+  )
 import Control.Monad.Reader as X (MonadReader (..), ReaderT (..), asks)
 import Control.Monad.Trans as X (MonadTrans (..))
 import Data.Bifunctor as X (Bifunctor (..))
 import Data.Bool as X (Bool (..), not, otherwise, (&&), (||))
-import Data.ByteString (ByteString)
+import Data.ByteString as X (ByteString, hPut)
 import Data.ByteString qualified as BS
 import Data.Char as X (Char)
 import Data.Either as X (Either (..), either)
@@ -67,6 +78,7 @@ import Data.Monoid as X (Monoid (..))
 import Data.Ord as X (Ord (..))
 import Data.Proxy as X (Proxy (..))
 import Data.Semigroup as X (Semigroup (..))
+import Data.Sequence as X (Seq, (<|), (|>))
 import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text, concat, pack, unpack)
 import Data.Text.Encoding qualified as TextEnc
@@ -84,23 +96,29 @@ import GHC.Natural as X (Natural (..))
 import GHC.Num as X (Num (..))
 import GHC.Real as X (Integral (..), fromIntegral)
 import GHC.Show as X (Show (..))
+import GHC.Stack as X (HasCallStack)
 import Optics.Core as X
   ( AffineTraversal',
     Iso',
     Lens',
     Traversal',
-    over,
+    lens,
+    over',
+    preview,
     review,
-    set,
+    set',
     view,
     (%),
     (%?),
     (.~),
     (^.),
+    (^?),
+    _1,
+    _2,
     _Just,
   )
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
-import System.IO as X (FilePath, IO)
+import System.IO as X (FilePath, Handle, IO, IOMode (AppendMode), openFile)
 import TOML as X
   ( DecodeTOML (..),
     TOMLError (..),
@@ -124,6 +142,7 @@ import UnliftIO as X
     bracket,
     catch,
     catchAny,
+    finally,
     handle,
     throwIO,
     try,
