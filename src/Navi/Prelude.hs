@@ -142,9 +142,9 @@ import TOML as X
     typeMismatch,
   )
 import TOML.Decode as X (Decoder)
-import UnliftIO as X
+import UnliftIO as X (MonadUnliftIO)
+import UnliftIO.Exception as X
   ( Exception (..),
-    MonadUnliftIO (..),
     SomeException,
     bracket,
     catch,
@@ -155,6 +155,7 @@ import UnliftIO as X
     try,
     tryAny,
   )
+import UnliftIO.STM as X (TBQueue)
 import Prelude as X (Integer, seq)
 import Prelude qualified as P
 

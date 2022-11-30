@@ -18,7 +18,7 @@ instance MonadNotify m => MonadNotify (ReaderT e m) where
   sendNote = lift . sendNote
   {-# INLINEABLE sendNote #-}
 
--- | Convenience function for retrieving a 'Navi.Data.NaviQueue.NaviQueue'
+-- | Convenience function for retrieving a 'TBQueue'
 -- 'NaviNote' from the @env@ and sending the note.
 sendNoteQueue ::
   (HasNoteQueue env, MonadQueue m, MonadReader env m) =>

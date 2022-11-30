@@ -15,7 +15,6 @@ import DBus.Notify (UrgencyLevel (..))
 import Navi.Config.Types (Config)
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote, Timeout (..))
-import Navi.Data.NaviQueue (NaviQueue (..))
 import Navi.Effects.MonadLoggerContext (Namespace)
 import Navi.Env.Core
   ( Env (MkEnv),
@@ -76,8 +75,8 @@ mkNotifySendEnv logEnv namespace config = do
             (config ^. #events)
             logEnv
             namespace
-            (MkNaviQueue logQueue)
-            (MkNaviQueue noteQueue)
+            logQueue
+            noteQueue
       }
 {-# INLINEABLE mkNotifySendEnv #-}
 

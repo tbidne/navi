@@ -17,7 +17,6 @@ where
 
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote)
-import Navi.Data.NaviQueue (NaviQueue)
 import Navi.Effects.MonadLoggerContext (Namespace)
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
@@ -38,19 +37,19 @@ class HasLogNamespace env where
 
 -- | Retrieves the log queue.
 class HasLogQueue env where
-  getLogQueue :: env -> NaviQueue LogStr
+  getLogQueue :: env -> TBQueue LogStr
 
 -- | Retrieves the note queue.
 class HasNoteQueue env where
-  getNoteQueue :: env -> NaviQueue NaviNote
+  getNoteQueue :: env -> TBQueue NaviNote
 
 -- | 'Env' holds all of our environment data that is used while running navi.
 data Env ref = MkEnv
   { events :: !(NonEmpty (AnyEvent ref)),
     logEnv :: !LogEnv,
     logNamespace :: !Namespace,
-    logQueue :: !(NaviQueue LogStr),
-    noteQueue :: !(NaviQueue NaviNote)
+    logQueue :: !(TBQueue LogStr),
+    noteQueue :: !(TBQueue NaviNote)
   }
 
 makeFieldLabelsNoPrefix ''Env

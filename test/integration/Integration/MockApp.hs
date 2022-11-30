@@ -15,7 +15,6 @@ import Integration.Prelude
 import Navi.Config (Config)
 import Navi.Data.NaviLog (LogEnv (MkLogEnv))
 import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Data.NaviQueue (NaviQueue (MkNaviQueue))
 import Navi.Effects.MonadLoggerContext (MonadLoggerContext (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
@@ -24,7 +23,7 @@ import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
   ( HasEvents (..),
-    HasLogEnv (getLogEnv, overLogEnv, setLogEnv),
+    HasLogEnv (getLogEnv, localLogEnv),
     HasLogNamespace (..),
     HasLogQueue (..),
     HasNoteQueue (..),
@@ -40,8 +39,8 @@ import Pythia.Services.Battery (Battery (..), BatteryStatus (..), Percentage (..
 -- | Mock configuration.
 data MockEnv = MkMockEnv
   { events :: !(NonEmpty (AnyEvent IORef)),
-    logQueue :: !(NaviQueue LogStr),
-    noteQueue :: !(NaviQueue NaviNote),
+    logQueue :: !(TBQueue LogStr),
+    noteQueue :: !(TBQueue NaviNote),
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
     sentNotes :: !(IORef [NaviNote]),
@@ -57,13 +56,11 @@ instance HasEvents IORef MockEnv where
 
 instance HasLogEnv MockEnv where
   getLogEnv = pure $ MkLogEnv Nothing LevelInfo ""
-  setLogEnv _ = id
-  overLogEnv _ = id
+  localLogEnv _ = id
 
 instance HasLogNamespace MockEnv where
   getLogNamespace _ = ""
-  setLogNamespace _ = id
-  overLogNamespace _ = id
+  localLogNamespace _ = id
 
 instance HasLogQueue MockEnv where
   getLogQueue = view #logQueue
@@ -93,7 +90,7 @@ instance MonadLogger (NaviT MockEnv IntTestIO) where
 
 instance MonadLoggerContext (NaviT MockEnv IntTestIO) where
   getNamespace = asks getLogNamespace
-  localNamespace = local . overLogNamespace
+  localNamespace = local . localLogNamespace
 
 instance MonadNotify (NaviT MockEnv IntTestIO) where
   sendNote note =
@@ -141,7 +138,7 @@ configToMockEnv config = do
     MkMockEnv
       { events = config ^. #events,
         sentNotes = sentNotesRef,
-        logQueue = MkNaviQueue logQueue,
-        noteQueue = MkNaviQueue noteQueue,
+        logQueue = logQueue,
+        noteQueue = noteQueue,
         lastPercentage = lastPercentageRef
       }

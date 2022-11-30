@@ -4,27 +4,26 @@ module Navi.Effects.MonadQueue
   )
 where
 
-import Navi.Data.NaviQueue (NaviQueue)
-import Navi.Data.NaviQueue qualified as Queue
 import Navi.Prelude
+import UnliftIO.STM (atomically, flushTBQueue, readTBQueue, writeTBQueue)
 
 -- | Interface for queue operations.
 class Monad m => MonadQueue m where
   -- | Attempts to read from a queue.
-  readQueue :: NaviQueue a -> m a
+  readQueue :: TBQueue a -> m a
 
   -- | Writes to a queue.
-  writeQueue :: NaviQueue a -> a -> m ()
+  writeQueue :: TBQueue a -> a -> m ()
 
   -- | Flushes the queue.
-  flushQueue :: NaviQueue a -> m [a]
+  flushQueue :: TBQueue a -> m [a]
 
 instance MonadQueue IO where
-  readQueue = Queue.readQueueIO
+  readQueue = atomically . readTBQueue
   {-# INLINEABLE readQueue #-}
-  writeQueue = Queue.writeQueueIO
+  writeQueue queue = atomically . writeTBQueue queue
   {-# INLINEABLE writeQueue #-}
-  flushQueue = Queue.flushQueueIO
+  flushQueue = atomically . flushTBQueue
   {-# INLINEABLE flushQueue #-}
 
 instance MonadQueue m => MonadQueue (ReaderT e m) where

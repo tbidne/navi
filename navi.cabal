@@ -47,7 +47,6 @@ library
     Navi.Config.Types
     Navi.Data.NaviLog
     Navi.Data.NaviNote
-    Navi.Data.NaviQueue
     Navi.Data.PollInterval
     Navi.Effects
     Navi.Effects.MonadLoggerContext
