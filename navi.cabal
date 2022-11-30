@@ -49,13 +49,11 @@ library
     Navi.Data.NaviNote
     Navi.Data.PollInterval
     Navi.Effects
-    Navi.Effects.MonadLoggerContext
     Navi.Effects.MonadMutRef
     Navi.Effects.MonadNotify
     Navi.Effects.MonadQueue
     Navi.Effects.MonadShell
     Navi.Effects.MonadSystemInfo
-    Navi.Effects.MonadSystemTime
     Navi.Env.Core
     Navi.Env.DBus
     Navi.Env.NotifySend
@@ -79,33 +77,31 @@ library
     Navi.Utils
 
   build-depends:
-    , base                  >=4.14.1.0  && <4.18
-    , bytestring            >=0.10.10.0 && <0.12
-    , containers            >=0.5.11.0  && <0.7
-    , dbus                  ^>=1.2.14
-    , deepseq               ^>=1.4.6.0
-    , directory             ^>=1.3.5.0
-    , fast-logger           >=2.1       && <3.2
-    , fdo-notify            ^>=0.3.1
-    , filepath              ^>=1.4.2.1
-    , gitrev                >=1.2.0     && <1.4
-    , monad-logger          ^>=0.3.30
-    , mtl                   >=2.2.2     && <2.4
-    , optics-core           ^>=0.4
-    , optics-th             ^>=0.4
-    , optparse-applicative  >=0.16.1.0  && <0.18
-    , package-version       >=0.1.0.0   && <0.4
-    , process               ^>=1.6.9.0
-    , pythia                ^>=0.1
-    , relative-time         ^>=0.1
-    , smart-math            ^>=0.1
-    , stm                   ^>=2.5.0
-    , template-haskell      >=2.18.0.0  && <2.20
-    , text                  >=1.2.3.2   && <2.1
-    , time                  >=1.9.3     && <1.14
-    , time-compat           ^>=1.9.6.1
-    , toml-reader           ^>=0.1.0.0
-    , unliftio              ^>=0.2.0.0
+    , base                    >=4.14.1.0  && <4.18
+    , bytestring              >=0.10.10.0 && <0.12
+    , containers              >=0.5.11.0  && <0.7
+    , dbus                    ^>=1.2.14
+    , deepseq                 ^>=1.4.6.0
+    , directory               ^>=1.3.5.0
+    , fdo-notify              ^>=0.3.1
+    , filepath                ^>=1.4.2.1
+    , gitrev                  >=1.2.0     && <1.4
+    , monad-logger            ^>=0.3.30
+    , monad-logger-namespace  ^>=0.1
+    , monad-time              ^>=0.1
+    , mtl                     >=2.2.2     && <2.4
+    , optics-core             ^>=0.4
+    , optics-th               ^>=0.4
+    , optparse-applicative    >=0.16.1.0  && <0.18
+    , package-version         >=0.1.0.0   && <0.4
+    , process                 ^>=1.6.9.0
+    , pythia                  ^>=0.1
+    , relative-time           ^>=0.1
+    , smart-math              ^>=0.1
+    , stm                     ^>=2.5.0
+    , text                    >=1.2.3.2   && <2.1
+    , toml-reader             ^>=0.1.0.0
+    , unliftio                ^>=0.2.0.0
 
   hs-source-dirs:   src
   default-language: GHC2021
@@ -163,6 +159,7 @@ test-suite integration
     , directory
     , fdo-notify
     , filepath
+    , monad-logger-namespace
     , navi
     , pythia
     , smart-math

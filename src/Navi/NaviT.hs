@@ -9,14 +9,18 @@ module Navi.NaviT
 where
 
 import DBus.Notify qualified as DBusN
-import Navi.Effects.MonadLoggerContext (MonadLoggerContext (..), addNamespace)
-import Navi.Effects.MonadLoggerContext qualified as MonadLoggerContext
+import Effects.MonadLoggerNamespace
+  ( MonadLoggerNamespace (..),
+    addNamespace,
+    defaultLogFormatter,
+    formatLog,
+  )
+import Effects.MonadTime (MonadTime (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
-import Navi.Effects.MonadSystemTime (MonadSystemTime (..))
 import Navi.Env.Core
   ( HasLogEnv (..),
     HasLogQueue (getLogQueue),
@@ -83,21 +87,22 @@ instance
     logQueue <- asks getLogQueue
     logLevel <- asks (view #logLevel . getLogEnv)
     when (logLevel <= lvl) $ do
-      formatted <- MonadLoggerContext.formatLog True loc lvl msg
+      formatted <- formatLog (defaultLogFormatter loc) lvl msg
       writeQueue logQueue formatted
 
 instance
   ( HasLogEnv env,
     HasLogQueue env
   ) =>
-  MonadLoggerContext (NaviT env IO)
+  MonadLoggerNamespace (NaviT env IO)
   where
   getNamespace = asks (view #logNamespace . getLogEnv)
   localNamespace f = local (localLogEnv (over' #logNamespace f))
 
-instance MonadSystemTime (NaviT env IO) where
+instance MonadTime (NaviT env IO) where
   getSystemTime = lift getSystemTime
   getSystemZonedTime = lift getSystemZonedTime
+  getTimeSpec = lift getTimeSpec
 
 instance MonadMutRef ref m => MonadMutRef ref (NaviT e m) where
   newRef = lift . newRef

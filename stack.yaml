@@ -17,6 +17,11 @@ extra-deps:
   commit: 7a8832ef4a55d565e72fab553a4d485329235bf7
 - git: https://github.com/tbidne/byte-types.git
   commit: cc0e1323b51f1ec3441ddc6578a05e9d7fcdb977
+- git: https://github.com/tbidne/monad-effects.git
+  commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+  subdirs:
+  - monad-logger-namespace
+  - monad-time
 - git: https://github.com/tbidne/pythia.git
   commit: b8a942f5136ee247facb1e7be4749facd8939199
 - git: https://github.com/tbidne/relative-time.git

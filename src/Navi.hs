@@ -14,9 +14,12 @@ where
 import DBus.Notify (UrgencyLevel (..))
 import Data.ByteString qualified as BS
 import Data.List.NonEmpty qualified as NE
+import Effects.MonadLoggerNamespace
+  ( MonadLoggerNamespace,
+    addNamespace,
+    logStrToBs,
+  )
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
-import Navi.Effects (MonadLoggerContext)
-import Navi.Effects.MonadLoggerContext (addNamespace, logStrToBs)
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..), sendNoteQueue)
 import Navi.Effects.MonadQueue (MonadQueue (..))
@@ -41,7 +44,7 @@ runNavi ::
     HasLogEnv env,
     HasLogQueue env,
     HasNoteQueue env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadMutRef ref m,
     MonadNotify m,
     MonadQueue m,
@@ -91,7 +94,7 @@ runNavi = do
 processEvent ::
   forall m ref env.
   ( HasNoteQueue env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadMutRef ref m,
     MonadQueue m,
     MonadReader env m,
@@ -168,7 +171,7 @@ exToNote ex =
 
 pollNoteQueue ::
   ( HasNoteQueue env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadNotify m,
     MonadQueue m,
     MonadReader env m
@@ -183,7 +186,7 @@ pollLogQueue ::
   ( HasLogQueue env,
     HasLogEnv env,
     MonadIO m,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadQueue m,
     MonadReader env m
   ) =>

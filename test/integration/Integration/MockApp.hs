@@ -11,11 +11,11 @@ where
 
 import Control.Concurrent.STM qualified as STM
 import Control.Concurrent.STM.TBQueue qualified as TBQueue
+import Effects.MonadLoggerNamespace (MonadLoggerNamespace (..))
 import Integration.Prelude
 import Navi.Config (Config)
 import Navi.Data.NaviLog (LogEnv (MkLogEnv))
 import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Effects.MonadLoggerContext (MonadLoggerContext (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadQueue (MonadQueue (..))
@@ -83,7 +83,7 @@ instance MonadLogger (NaviT MockEnv IntTestIO) where
   -- MonadNotify instance.
   monadLoggerLog _loc _src _lvl _msg = pure ()
 
-instance MonadLoggerContext (NaviT MockEnv IntTestIO) where
+instance MonadLoggerNamespace (NaviT MockEnv IntTestIO) where
   getNamespace = pure ""
   localNamespace _ = id
 

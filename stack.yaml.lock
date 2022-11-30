@@ -59,6 +59,32 @@ packages:
     commit: cc0e1323b51f1ec3441ddc6578a05e9d7fcdb977
     git: https://github.com/tbidne/byte-types.git
 - completed:
+    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    git: https://github.com/tbidne/monad-effects.git
+    name: monad-logger-namespace
+    pantry-tree:
+      sha256: 07cf024c9390c5a30a28269c516f40b7962b3d0d2c0edeaffa674e1265e2c08a
+      size: 347
+    subdir: monad-logger-namespace
+    version: '0.1'
+  original:
+    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    git: https://github.com/tbidne/monad-effects.git
+    subdir: monad-logger-namespace
+- completed:
+    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    git: https://github.com/tbidne/monad-effects.git
+    name: monad-time
+    pantry-tree:
+      sha256: a958a2a9b547d3a84be75cf23ff97af1d18d90632833cd2e46ad275b9984d238
+      size: 324
+    subdir: monad-time
+    version: '0.1'
+  original:
+    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    git: https://github.com/tbidne/monad-effects.git
+    subdir: monad-time
+- completed:
     commit: b8a942f5136ee247facb1e7be4749facd8939199
     git: https://github.com/tbidne/pythia.git
     name: pythia

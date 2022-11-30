@@ -19,8 +19,8 @@ module Navi.Event
   )
 where
 
+import Effects.MonadLoggerNamespace (MonadLoggerNamespace (..), addNamespace)
 import Navi.Effects (MonadMutRef (..), MonadSystemInfo (..))
-import Navi.Effects.MonadLoggerContext (MonadLoggerContext (..), addNamespace)
 import Navi.Effects.MonadQueue (MonadQueue)
 import Navi.Event.Types
   ( AnyEvent (..),
@@ -36,7 +36,7 @@ import Navi.Prelude
 -- 1. Queries the system via 'MonadSystemInfo'.
 -- 2. Returns the parsed result.
 runEvent ::
-  ( MonadLoggerContext m,
+  ( MonadLoggerNamespace m,
     MonadQueue m,
     MonadSystemInfo m,
     Show result
@@ -56,7 +56,7 @@ runEvent event = addNamespace "runEvent" $ do
 --    stored in our @ref@.
 blockRepeat ::
   ( Eq a,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadMutRef ref m,
     Show a
   ) =>
@@ -88,7 +88,7 @@ blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
 -- 3. 'AllowErrNote' 'NoRepeats': block only if we have sent a notifcation
 --    for this error before.
 blockErr ::
-  ( MonadLoggerContext m,
+  ( MonadLoggerNamespace m,
     MonadMutRef ref m
   ) =>
   ErrorNote ref ->
