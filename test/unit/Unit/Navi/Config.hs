@@ -35,8 +35,6 @@ tests =
       1 @=? length (cfg ^. #events)
 
 readsExample :: (Config IORef -> IO ()) -> FilePath -> TestTree
-readsExample verifyCfg fp = testCase ("Reads " <> fp) $ do
-  eResult <- tryAny $ Config.readConfig @IORef fp
-  case eResult of
-    Left ex -> assertFailure $ "Reading config failed: " <> displayException ex
-    Right cfg -> verifyCfg cfg
+readsExample verifyCfg fp =
+  testCase ("Reads " <> fp) $
+    Config.readConfig @_ @IORef fp >>= verifyCfg

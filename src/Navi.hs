@@ -14,16 +14,17 @@ where
 import DBus.Notify (UrgencyLevel (..))
 import Data.ByteString qualified as BS
 import Data.List.NonEmpty qualified as NE
+import Effects.MonadCallStack (prettyAnnotated)
 import Effects.MonadLoggerNamespace
   ( MonadLoggerNamespace,
     addNamespace,
     logStrToBs,
   )
+import Effects.MonadThread (sleep)
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..), sendNoteQueue)
 import Navi.Effects.MonadQueue (MonadQueue (..))
-import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
   ( HasEvents (..),
@@ -40,15 +41,17 @@ import UnliftIO.Async qualified as Async
 -- | Entry point for the application.
 runNavi ::
   forall ref env m.
-  ( HasEvents ref env,
+  ( HasCallStack,
+    HasEvents ref env,
     HasLogEnv env,
     HasLogQueue env,
     HasNoteQueue env,
+    MonadCallStack m,
     MonadLoggerNamespace m,
     MonadMutRef ref m,
     MonadNotify m,
     MonadQueue m,
-    MonadShell m,
+    MonadThread m,
     MonadSystemInfo m,
     MonadReader env m,
     MonadUnliftIO m
@@ -87,8 +90,8 @@ runNavi = do
           )
 
     logExAndRethrow prefix io = catchAny io $ \ex -> do
-      $(logError) (prefix <> pack (displayException ex))
-      throwIO ex
+      $(logError) (prefix <> pack (prettyAnnotated ex))
+      throwWithCallStack ex
 {-# INLINEABLE runNavi #-}
 
 processEvent ::
@@ -98,14 +101,14 @@ processEvent ::
     MonadMutRef ref m,
     MonadQueue m,
     MonadReader env m,
-    MonadShell m,
     MonadSystemInfo m,
+    MonadThread m,
     MonadUnliftIO m
   ) =>
   AnyEvent ref ->
   m Void
 processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
-  let pi = event ^. #pollInterval
+  let pi = event ^. (#pollInterval % #unPollInterval)
   forever $ do
     $(logInfo) ("Checking " <> name)
     (Event.runEvent event >>= handleSuccess)

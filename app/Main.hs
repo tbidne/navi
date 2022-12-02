@@ -92,7 +92,7 @@ writeConfigErr ex = do
   let logFile = xdgBase </> "config_fatal.log"
   renameIfExists logFile
   writeFileUtf8 logFile $ "Couldn't read config: " <> pack (displayException ex)
-  throwIO ex
+  throwWithCallStack ex
 
 renameIfExists :: FilePath -> IO ()
 renameIfExists fp = do

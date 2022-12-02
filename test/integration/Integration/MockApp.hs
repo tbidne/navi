@@ -19,7 +19,6 @@ import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadQueue (MonadQueue (..))
-import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
   ( HasEvents (..),
@@ -68,10 +67,12 @@ newtype IntTestIO a = MkIntTestIO (IO a)
     ( Functor,
       Applicative,
       Monad,
+      MonadCallStack,
+      MonadFsReader,
       MonadIO,
       MonadQueue,
       MonadMutRef IORef,
-      MonadShell,
+      MonadThread,
       MonadUnliftIO
     )
     via IO

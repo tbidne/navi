@@ -19,7 +19,6 @@ import Effects.MonadTime (MonadTime (..))
 import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadQueue (MonadQueue (..))
-import Navi.Effects.MonadShell (MonadShell (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
   ( HasLogEnv (..),
@@ -37,10 +36,12 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
     ( Functor,
       Applicative,
       Monad,
+      MonadCallStack,
+      MonadFsReader,
       MonadIO,
       MonadQueue,
       MonadReader e,
-      MonadShell,
+      MonadThread,
       MonadUnliftIO
     )
     via (ReaderT e m)

@@ -59,29 +59,68 @@ packages:
     commit: cc0e1323b51f1ec3441ddc6578a05e9d7fcdb977
     git: https://github.com/tbidne/byte-types.git
 - completed:
-    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    commit: d84b8a0c1790dca9f52a4e9641cc7874daaa196e
+    git: https://github.com/tbidne/monad-effects.git
+    name: monad-callstack
+    pantry-tree:
+      sha256: 3564f7b733f0772c0148800012bf88999f5c524eab8c6001950f6d618b0daad6
+      size: 235
+    subdir: monad-callstack
+    version: '0.1'
+  original:
+    commit: d84b8a0c1790dca9f52a4e9641cc7874daaa196e
+    git: https://github.com/tbidne/monad-effects.git
+    subdir: monad-callstack
+- completed:
+    commit: d84b8a0c1790dca9f52a4e9641cc7874daaa196e
+    git: https://github.com/tbidne/monad-effects.git
+    name: monad-fs-reader
+    pantry-tree:
+      sha256: d5b07679262c5ba8c2a7b802f18368f880fbc8c62feea2f3574644a519060769
+      size: 234
+    subdir: monad-fs-reader
+    version: '0.1'
+  original:
+    commit: d84b8a0c1790dca9f52a4e9641cc7874daaa196e
+    git: https://github.com/tbidne/monad-effects.git
+    subdir: monad-fs-reader
+- completed:
+    commit: d84b8a0c1790dca9f52a4e9641cc7874daaa196e
     git: https://github.com/tbidne/monad-effects.git
     name: monad-logger-namespace
     pantry-tree:
-      sha256: 07cf024c9390c5a30a28269c516f40b7962b3d0d2c0edeaffa674e1265e2c08a
-      size: 347
+      sha256: 8b7be67f302b54c7ea563584a86c6902510d43a1c2a7dcc6441f78af55c1606b
+      size: 248
     subdir: monad-logger-namespace
     version: '0.1'
   original:
-    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    commit: d84b8a0c1790dca9f52a4e9641cc7874daaa196e
     git: https://github.com/tbidne/monad-effects.git
     subdir: monad-logger-namespace
 - completed:
-    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    commit: d84b8a0c1790dca9f52a4e9641cc7874daaa196e
+    git: https://github.com/tbidne/monad-effects.git
+    name: monad-thread
+    pantry-tree:
+      sha256: 48c73ae8e2a12c1626c5d6b9b17347a5c495aa3c5b72c1f041a4e7be9d181c01
+      size: 229
+    subdir: monad-thread
+    version: '0.1'
+  original:
+    commit: d84b8a0c1790dca9f52a4e9641cc7874daaa196e
+    git: https://github.com/tbidne/monad-effects.git
+    subdir: monad-thread
+- completed:
+    commit: d84b8a0c1790dca9f52a4e9641cc7874daaa196e
     git: https://github.com/tbidne/monad-effects.git
     name: monad-time
     pantry-tree:
-      sha256: a958a2a9b547d3a84be75cf23ff97af1d18d90632833cd2e46ad275b9984d238
-      size: 324
+      sha256: c7970ba16e6d3553617b1de3cbd313fb540ceb788c6a6fc5b6eb3ee9428d1e88
+      size: 225
     subdir: monad-time
     version: '0.1'
   original:
-    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    commit: d84b8a0c1790dca9f52a4e9641cc7874daaa196e
     git: https://github.com/tbidne/monad-effects.git
     subdir: monad-time
 - completed:

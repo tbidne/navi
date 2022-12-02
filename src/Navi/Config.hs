@@ -16,6 +16,8 @@ module Navi.Config
 where
 
 import Data.Maybe (catMaybes)
+import Data.Text.Encoding qualified as TEnc
+import Effects.MonadFsReader (MonadFsReader (readFile))
 import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Types
   ( Config (..),
@@ -26,7 +28,7 @@ import Navi.Config.Types
     defaultLogging,
     defaultNoteSystem,
   )
-import Navi.Effects (MonadMutRef, MonadShell (..))
+import Navi.Effects (MonadMutRef)
 import Navi.Prelude
 import Navi.Services.Battery.Percentage qualified as BattState
 import Navi.Services.Battery.Status qualified as BattChargeStatus
@@ -37,20 +39,30 @@ import Navi.Services.Network.NetInterfaces qualified as NetConn
 -- | Parses the provided toml file into a 'Config'. Throws 'ConfigErr' if
 -- anything goes wrong.
 readConfig ::
-  (MonadMutRef ref m, MonadShell m, MonadUnliftIO m) =>
+  ( HasCallStack,
+    MonadCallStack m,
+    MonadMutRef ref m,
+    MonadFsReader m
+  ) =>
   FilePath ->
   m (Config ref)
-readConfig path = do
-  eContents <- try $ readFile path
-  case eContents of
-    Left ex -> throwIO $ FileErr ex
-    Right contents -> do
-      case decode contents of
-        Left tomlErr -> throwIO $ TomlError tomlErr
-        Right cfg -> tomlToConfig cfg
+readConfig =
+  readFile >=> \contents ->
+    case TEnc.decodeUtf8' contents of
+      Left ex -> throwWithCallStack ex
+      Right tomlContents -> do
+        case decode tomlContents of
+          Left tomlErr -> throwWithCallStack $ TomlError tomlErr
+          Right cfg -> tomlToConfig cfg
 {-# INLINEABLE readConfig #-}
 
-tomlToConfig :: (MonadIO m, MonadMutRef ref m) => ConfigToml -> m (Config ref)
+tomlToConfig ::
+  ( HasCallStack,
+    MonadCallStack m,
+    MonadMutRef ref m
+  ) =>
+  ConfigToml ->
+  m (Config ref)
 tomlToConfig toml = do
   singleEvents <- traverse Single.toEvent singleToml
   multipleEvents <- traverse Multiple.toEvent multipleToml
@@ -69,7 +81,7 @@ tomlToConfig toml = do
       allEvts = maybeEvts <> multipleEvts
 
   case allEvts of
-    [] -> throwIO NoEvents
+    [] -> throwWithCallStack NoEvents
     (e : es) ->
       pure $
         MkConfig

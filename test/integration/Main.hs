@@ -118,7 +118,7 @@ runMock maxSeconds config = do
   let configFp = tmp </> "int.toml"
   writeFileUtf8 configFp config
   -- file -> config
-  cfg <- readConfig @IORef configFp
+  cfg <- readConfig @_ @IORef configFp
   mockEnv <- configToMockEnv cfg
   -- runNavi runs forever, so we use race_ to kill it once the countdown
   -- runs out.

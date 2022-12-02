@@ -17,6 +17,9 @@ module Navi.Prelude
     writeFileUtf8,
     decodeUtf8Lenient,
 
+    -- * Exceptions
+    catchAny,
+
     -- * Misc utilities
     (>.>),
     (<<$>>),
@@ -88,6 +91,13 @@ import Data.Traversable as X (Traversable (..))
 import Data.Tuple as X (fst, snd, uncurry)
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word16, Word8)
+import Effects.MonadCallStack as X
+  ( MonadCallStack (throwWithCallStack),
+    catch,
+    try,
+  )
+import Effects.MonadFsReader as X (MonadFsReader)
+import Effects.MonadThread as X (MonadThread)
 import GHC.Enum as X (Bounded (..))
 import GHC.Err as X (undefined)
 import GHC.Generics as X (Generic)
@@ -147,12 +157,9 @@ import UnliftIO.Exception as X
   ( Exception (..),
     SomeException,
     bracket,
-    catch,
-    catchAny,
     finally,
     handle,
     throwIO,
-    try,
     tryAny,
   )
 import UnliftIO.STM as X (TBQueue)
@@ -225,3 +232,13 @@ readFileUtf8Lenient = fmap decodeUtf8Lenient . liftIO . BS.readFile
 decodeUtf8Lenient :: ByteString -> Text
 decodeUtf8Lenient = TextEnc.decodeUtf8With TextEncErr.lenientDecode
 {-# INLINEABLE decodeUtf8Lenient #-}
+
+-- | @since 0.1
+catchAny ::
+  ( HasCallStack,
+    MonadUnliftIO m
+  ) =>
+  m a ->
+  (SomeException -> m a) ->
+  m a
+catchAny = catch @SomeException
