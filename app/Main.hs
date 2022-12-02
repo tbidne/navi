@@ -4,6 +4,7 @@
 module Main (main) where
 
 import Data.Functor.Identity (Identity (..))
+import GHC.Conc.Sync (setUncaughtExceptionHandler)
 import Navi (runNavi, runNaviT)
 import Navi.Args (Args (..), getArgs)
 import Navi.Config (Config (..), LogLoc (..), Logging (..), NoteSystem (..), readConfig)
@@ -25,6 +26,8 @@ import System.IO qualified as IO
 
 main :: IO ()
 main = do
+  setUncaughtExceptionHandler (putStrLn . prettyAnnotated)
+
   args <- getArgs
   config <-
     tryParseConfig args

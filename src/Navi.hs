@@ -14,7 +14,6 @@ where
 import DBus.Notify (UrgencyLevel (..))
 import Data.ByteString qualified as BS
 import Data.List.NonEmpty qualified as NE
-import Effects.MonadCallStack (prettyAnnotated)
 import Effects.MonadLoggerNamespace
   ( MonadLoggerNamespace,
     addNamespace,

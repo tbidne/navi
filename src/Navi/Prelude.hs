@@ -29,7 +29,6 @@ module Navi.Prelude
     -- * 'Text' replacements for 'P.String' functions.
     error,
     showt,
-    print,
 
     -- * Base exports
     module X,
@@ -86,7 +85,6 @@ import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text, concat, pack, unpack)
 import Data.Text.Encoding qualified as TextEnc
 import Data.Text.Encoding.Error qualified as TextEncErr
-import Data.Text.IO as X (putStr, putStrLn)
 import Data.Traversable as X (Traversable (..))
 import Data.Tuple as X (fst, snd, uncurry)
 import Data.Void as X (Void, absurd)
@@ -94,6 +92,7 @@ import Data.Word as X (Word16, Word8)
 import Effects.MonadCallStack as X
   ( MonadCallStack (throwWithCallStack),
     catch,
+    prettyAnnotated,
     try,
   )
 import Effects.MonadFsReader as X (MonadFsReader)
@@ -135,6 +134,7 @@ import System.IO as X
     IOMode (AppendMode),
     hFlush,
     openFile,
+    putStrLn,
   )
 import TOML as X
   ( DecodeTOML (..),
@@ -175,11 +175,6 @@ showt = pack . P.show
 error :: Text -> a
 error = P.error . unpack
 {-# INLINEABLE error #-}
-
--- | 'Text' version of 'P.print'.
-print :: P.Show a => a -> IO ()
-print = putStrLn . showt
-{-# INLINEABLE print #-}
 
 -- | Safe @head@.
 headMaybe :: [a] -> Maybe a
