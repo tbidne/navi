@@ -26,12 +26,12 @@ import Navi.Prelude
 
 -- | Concrete notify-send environment. Adds the dbus client.
 newtype NotifySendEnv = MkNotifySendEnv
-  { coreEnv :: Env IORef
+  { coreEnv :: Env
   }
 
 makeFieldLabelsNoPrefix ''NotifySendEnv
 
-instance HasEvents IORef NotifySendEnv where
+instance HasEvents NotifySendEnv where
   getEvents = view (#coreEnv % #events)
   {-# INLINEABLE getEvents #-}
 
@@ -54,7 +54,7 @@ instance HasNoteQueue NotifySendEnv where
 mkNotifySendEnv ::
   MonadIO m =>
   LogEnv ->
-  Config IORef ->
+  Config ->
   m NotifySendEnv
 mkNotifySendEnv logEnv config = do
   logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000

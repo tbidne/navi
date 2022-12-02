@@ -128,9 +128,17 @@
                   final.callCabal2nix "monad-fs-reader"
                     "${monad-effects}/monad-fs-reader"
                     { };
+                monad-ioref =
+                  final.callCabal2nix "monad-ioref"
+                    "${monad-effects}/monad-ioref"
+                    { };
                 monad-logger-namespace =
                   final.callCabal2nix "monad-logger-namespace"
                     "${monad-effects}/monad-logger-namespace"
+                    { };
+                monad-stm =
+                  final.callCabal2nix "monad-stm"
+                    "${monad-effects}/monad-stm"
                     { };
                 monad-thread =
                   final.callCabal2nix "monad-thread"

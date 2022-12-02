@@ -20,8 +20,7 @@ module Navi.Event
 where
 
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace (..), addNamespace)
-import Navi.Effects (MonadMutRef (..), MonadSystemInfo (..))
-import Navi.Effects.MonadQueue (MonadQueue)
+import Navi.Effects (MonadSystemInfo (..))
 import Navi.Event.Types
   ( AnyEvent (..),
     ErrorNote (..),
@@ -37,11 +36,11 @@ import Navi.Prelude
 -- 2. Returns the parsed result.
 runEvent ::
   ( MonadLoggerNamespace m,
-    MonadQueue m,
+    MonadTBQueue m,
     MonadSystemInfo m,
     Show result
   ) =>
-  Event ref result ->
+  Event result ->
   m result
 runEvent event = addNamespace "runEvent" $ do
   result <- query $ event ^. #serviceType
@@ -57,10 +56,10 @@ runEvent event = addNamespace "runEvent" $ do
 blockRepeat ::
   ( Eq a,
     MonadLoggerNamespace m,
-    MonadMutRef ref m,
+    MonadIORef m,
     Show a
   ) =>
-  RepeatEvent ref a ->
+  RepeatEvent a ->
   a ->
   m Bool
 blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
@@ -69,7 +68,7 @@ blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
     AllowRepeats -> pure False
     -- Repeat events are not allowed, must check.
     NoRepeats prevRef -> do
-      prevVal <- readRef prevRef
+      prevVal <- readIORef prevRef
       $(logDebug) ("Previous value: " <> showt prevVal)
       $(logDebug) ("New value: " <> showt newVal)
       if prevVal == Just newVal
@@ -77,7 +76,7 @@ blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
           pure True
         else -- New alert, do not block.
         do
-          writeRef prevRef $ Just newVal
+          writeIORef prevRef $ Just newVal
           pure False
 {-# INLINEABLE blockRepeat #-}
 
@@ -89,9 +88,9 @@ blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
 --    for this error before.
 blockErr ::
   ( MonadLoggerNamespace m,
-    MonadMutRef ref m
+    MonadIORef m
   ) =>
-  ErrorNote ref ->
+  ErrorNote ->
   m Bool
 blockErr errorEvent = addNamespace "blockErr" $ do
   case errorEvent of
@@ -105,7 +104,7 @@ blockErr errorEvent = addNamespace "blockErr" $ do
       pure False
     -- Error events are on but repeats not allowed, must check.
     AllowErrNote (NoRepeats ref) -> do
-      prevErr <- readRef ref
+      prevErr <- readIORef ref
       case prevErr of
         -- Already sent this error, block
         Just () -> do
@@ -114,20 +113,18 @@ blockErr errorEvent = addNamespace "blockErr" $ do
         -- Error not send, do not block
         Nothing -> do
           $(logDebug) "Send error"
-          writeRef ref $ Just ()
+          writeIORef ref $ Just ()
           pure False
 {-# INLINEABLE blockErr #-}
 
 -- | If the reference is 'NoRepeats' then we overwrite the previous reference
 -- with the new parameter. Otherwise we do nothing.
-updatePrevTrigger :: (Eq a, MonadMutRef ref m) => RepeatEvent ref a -> a -> m ()
+updatePrevTrigger :: (Eq a, MonadIORef m) => RepeatEvent a -> a -> m ()
 updatePrevTrigger repeatEvent newVal =
   -- Only overwrite value if it's new
   case repeatEvent of
     NoRepeats ref -> do
-      val <- readRef ref
-      if val /= Just newVal
-        then writeRef ref $ Just newVal
-        else pure ()
+      val <- readIORef ref
+      when (val /= Just newVal) $ writeIORef ref $ Just newVal
     _ -> pure ()
 {-# INLINEABLE updatePrevTrigger #-}

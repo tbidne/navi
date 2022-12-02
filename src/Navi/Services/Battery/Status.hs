@@ -8,7 +8,6 @@ where
 import Navi.Data.NaviNote (NaviNote, Timeout)
 import Navi.Data.NaviNote qualified as NNote
 import Navi.Data.PollInterval (PollInterval (..))
-import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
   ( AnyEvent (..),
@@ -23,9 +22,9 @@ import Pythia.Services.Battery (BatteryApp, BatteryStatus (..))
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
-  (MonadMutRef ref m) =>
+  (MonadIORef m) =>
   BatteryStatusToml ->
-  m (AnyEvent ref)
+  m AnyEvent
 toEvent toml = do
   repeatEvent <- EventToml.mRepeatEventTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
@@ -41,9 +40,9 @@ mkStatusEvent ::
   Maybe Timeout ->
   BatteryApp ->
   PollInterval ->
-  RepeatEvent ref BatteryStatus ->
-  ErrorNote ref ->
-  Event ref BatteryStatus
+  RepeatEvent BatteryStatus ->
+  ErrorNote ->
+  Event BatteryStatus
 mkStatusEvent to cfg pi repeatEvent errorNote =
   MkEvent
     { name = "battery-status",

@@ -19,7 +19,6 @@ module Navi.Event.Toml
   )
 where
 
-import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Event.Types (ErrorNote (..), RepeatEvent (..))
 import Navi.Prelude
 
@@ -47,14 +46,14 @@ repeatEventOptDecoder :: Decoder (Maybe RepeatEventToml)
 repeatEventOptDecoder = getFieldOptWith tomlDecoder "repeat-events"
 
 -- | Constructs a mutable 'RepeatEvent' from 'RepeatEventToml'.
-repeatEventTomlToVal :: MonadMutRef ref m => RepeatEventToml -> m (RepeatEvent ref a)
+repeatEventTomlToVal :: MonadIORef m => RepeatEventToml -> m (RepeatEvent a)
 repeatEventTomlToVal AllowRepeatsToml = pure AllowRepeats
-repeatEventTomlToVal NoRepeatsToml = NoRepeats <$> newRef Nothing
+repeatEventTomlToVal NoRepeatsToml = NoRepeats <$> newIORef Nothing
 {-# INLINEABLE repeatEventTomlToVal #-}
 
 -- | Constructs a mutable 'RepeatEvent' from 'RepeatEventToml'. If none is
 -- provided, defaults to 'NoRepeatsToml', i.e., no repeats.
-mRepeatEventTomlToVal :: MonadMutRef ref m => Maybe RepeatEventToml -> m (RepeatEvent ref a)
+mRepeatEventTomlToVal :: MonadIORef m => Maybe RepeatEventToml -> m (RepeatEvent a)
 mRepeatEventTomlToVal Nothing = repeatEventTomlToVal NoRepeatsToml
 mRepeatEventTomlToVal (Just t) = repeatEventTomlToVal t
 {-# INLINEABLE mRepeatEventTomlToVal #-}
@@ -93,16 +92,16 @@ errorNoteOptDecoder :: Decoder (Maybe ErrorNoteToml)
 errorNoteOptDecoder = getFieldOptWith tomlDecoder "error-events"
 
 -- | Constructs a mutable 'ErrorNote' from 'ErrorNoteToml'.
-errorNoteTomlToVal :: MonadMutRef ref m => ErrorNoteToml -> m (ErrorNote ref)
+errorNoteTomlToVal :: MonadIORef m => ErrorNoteToml -> m ErrorNote
 errorNoteTomlToVal NoErrNoteToml = pure NoErrNote
 errorNoteTomlToVal ErrNoteAllowRepeatsToml = pure $ AllowErrNote AllowRepeats
-errorNoteTomlToVal ErrNoteNoRepeatsToml = AllowErrNote . NoRepeats <$> newRef Nothing
+errorNoteTomlToVal ErrNoteNoRepeatsToml = AllowErrNote . NoRepeats <$> newIORef Nothing
 {-# INLINEABLE errorNoteTomlToVal #-}
 
 -- | Constructs a mutable 'ErrorNote' from 'ErrorNoteToml'. If none is
 -- provided, defaults to 'ErrNoteNoRepeatsToml', i.e., we /do/ send
 -- notifications for errors, but we do not send repeats.
-mErrorNoteTomlToVal :: MonadMutRef ref m => Maybe ErrorNoteToml -> m (ErrorNote ref)
+mErrorNoteTomlToVal :: MonadIORef m => Maybe ErrorNoteToml -> m ErrorNote
 mErrorNoteTomlToVal Nothing = errorNoteTomlToVal ErrNoteNoRepeatsToml
 mErrorNoteTomlToVal (Just t) = errorNoteTomlToVal t
 {-# INLINEABLE mErrorNoteTomlToVal #-}

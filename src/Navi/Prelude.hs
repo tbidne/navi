@@ -70,7 +70,6 @@ import Data.Eq as X (Eq (..))
 import Data.Foldable as X (Foldable (..), for_, length, traverse_)
 import Data.Function as X (const, flip, id, ($), (.))
 import Data.Functor as X (Functor (..), ($>), (<$>), (<&>))
-import Data.IORef as X (IORef, modifyIORef', newIORef, readIORef, writeIORef)
 import Data.Int as X (Int32)
 import Data.Kind as X (Constraint, Type)
 import Data.List as X (all, filter, replicate, zipWith)
@@ -96,6 +95,11 @@ import Effects.MonadCallStack as X
     try,
   )
 import Effects.MonadFsReader as X (MonadFsReader)
+import Effects.MonadIORef as X
+  ( IORef,
+    MonadIORef (modifyIORef', newIORef, readIORef, writeIORef),
+  )
+import Effects.MonadSTM as X (MonadTBQueue (readTBQueueM, writeTBQueueM))
 import Effects.MonadThread as X (MonadThread)
 import GHC.Enum as X (Bounded (..))
 import GHC.Err as X (undefined)

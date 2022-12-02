@@ -25,22 +25,22 @@ import Navi.Services.Types (ServiceType)
 -- | Determines if we are allowed to send off duplicate notifications
 -- simultaneously. If we are not, then 'NoRepeats' holds the last trigger
 -- so that we can detect duplicates.
-data RepeatEvent ref a
-  = NoRepeats !(ref (Maybe a))
+data RepeatEvent a
+  = NoRepeats !(IORef (Maybe a))
   | AllowRepeats
 
 makePrisms ''RepeatEvent
 
-instance Show (RepeatEvent ref a) where
+instance Show (RepeatEvent a) where
   show (NoRepeats _) = "NoRepeats <ref>"
   show AllowRepeats = "AllowRepeats"
   {-# INLINEABLE show #-}
 
 -- | Determines if we should send notifications for errors and, if so, if we
 -- allow repeats.
-data ErrorNote ref
+data ErrorNote
   = NoErrNote
-  | AllowErrNote !(RepeatEvent ref ())
+  | AllowErrNote !(RepeatEvent ())
   deriving stock (Show)
 
 makePrisms ''ErrorNote
@@ -64,7 +64,7 @@ makeFieldLabelsNoPrefix ''EventError
 -- 1. Query for information (i.e. run a shell command).
 -- 2. Parse the result.
 -- 3. Raise an alert if the result matches some condition.
-data Event ref result = MkEvent
+data Event result = MkEvent
   { -- | The name of this event.
     name :: !Text,
     -- | The service to run.
@@ -74,14 +74,14 @@ data Event ref result = MkEvent
     -- | Conditionally raises an alert based on the result.
     raiseAlert :: result -> Maybe NaviNote,
     -- | Determines how we handle repeat alerts.
-    repeatEvent :: !(RepeatEvent ref result),
+    repeatEvent :: !(RepeatEvent result),
     -- | Determines how we handle errors.
-    errorNote :: !(ErrorNote ref)
+    errorNote :: !ErrorNote
   }
 
 makeFieldLabelsNoPrefix ''Event
 
-instance Show (Event ref result) where
+instance Show (Event result) where
   show event =
     "MkEvent {name = "
       <> unpack (event ^. #name)
@@ -94,8 +94,8 @@ instance Show (Event ref result) where
 
 -- | Existentially quantifies result type on an 'Event'. Used so that we can
 -- store different events in the same list.
-type AnyEvent :: (Type -> Type) -> Type
-data AnyEvent ref where
-  MkAnyEvent :: (Eq result, Show result) => Event ref result -> AnyEvent ref
+type AnyEvent :: Type
+data AnyEvent where
+  MkAnyEvent :: (Eq result, Show result) => Event result -> AnyEvent
 
-deriving stock instance Show (AnyEvent ref)
+deriving stock instance Show AnyEvent

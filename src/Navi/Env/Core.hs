@@ -20,8 +20,8 @@ import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
 
 -- | Retrieves the events.
-class HasEvents ref env | env -> ref where
-  getEvents :: env -> NonEmpty (AnyEvent ref)
+class HasEvents env where
+  getEvents :: env -> NonEmpty AnyEvent
 
 -- | Retrieves the log environment.
 class HasLogEnv env where
@@ -37,8 +37,8 @@ class HasNoteQueue env where
   getNoteQueue :: env -> TBQueue NaviNote
 
 -- | 'Env' holds all of our environment data that is used while running navi.
-data Env ref = MkEnv
-  { events :: !(NonEmpty (AnyEvent ref)),
+data Env = MkEnv
+  { events :: !(NonEmpty AnyEvent),
     logEnv :: !LogEnv,
     logQueue :: !(TBQueue LogStr),
     noteQueue :: !(TBQueue NaviNote)
@@ -46,20 +46,20 @@ data Env ref = MkEnv
 
 makeFieldLabelsNoPrefix ''Env
 
-instance HasEvents ref (Env ref) where
+instance HasEvents Env where
   getEvents = view #events
   {-# INLINEABLE getEvents #-}
 
-instance HasLogEnv (Env ref) where
+instance HasLogEnv Env where
   getLogEnv = view #logEnv
   {-# INLINEABLE getLogEnv #-}
   localLogEnv = over' #logEnv
   {-# INLINEABLE localLogEnv #-}
 
-instance HasLogQueue (Env ref) where
+instance HasLogQueue Env where
   getLogQueue = view #logQueue
   {-# INLINEABLE getLogQueue #-}
 
-instance HasNoteQueue (Env ref) where
+instance HasNoteQueue Env where
   getNoteQueue = view #noteQueue
   {-# INLINEABLE getNoteQueue #-}

@@ -46,7 +46,7 @@ main = do
       let mFinalizer = env ^? #logFile %? #finalizer
       fromMaybe (pure ()) mFinalizer
 
-tryParseConfig :: Args Identity -> IO (Config IORef)
+tryParseConfig :: Args Identity -> IO Config
 tryParseConfig =
   readConfig
     . runIdentity

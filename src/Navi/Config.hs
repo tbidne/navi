@@ -28,7 +28,6 @@ import Navi.Config.Types
     defaultLogging,
     defaultNoteSystem,
   )
-import Navi.Effects (MonadMutRef)
 import Navi.Prelude
 import Navi.Services.Battery.Percentage qualified as BattState
 import Navi.Services.Battery.Status qualified as BattChargeStatus
@@ -41,11 +40,11 @@ import Navi.Services.Network.NetInterfaces qualified as NetConn
 readConfig ::
   ( HasCallStack,
     MonadCallStack m,
-    MonadMutRef ref m,
+    MonadIORef m,
     MonadFsReader m
   ) =>
   FilePath ->
-  m (Config ref)
+  m Config
 readConfig =
   readFile >=> \contents ->
     case TEnc.decodeUtf8' contents of
@@ -59,10 +58,10 @@ readConfig =
 tomlToConfig ::
   ( HasCallStack,
     MonadCallStack m,
-    MonadMutRef ref m
+    MonadIORef m
   ) =>
   ConfigToml ->
-  m (Config ref)
+  m Config
 tomlToConfig toml = do
   singleEvents <- traverse Single.toEvent singleToml
   multipleEvents <- traverse Multiple.toEvent multipleToml

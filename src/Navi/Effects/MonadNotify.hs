@@ -6,7 +6,6 @@ module Navi.Effects.MonadNotify
 where
 
 import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Env.Core (HasNoteQueue (..))
 import Navi.Prelude
 
@@ -21,9 +20,9 @@ instance MonadNotify m => MonadNotify (ReaderT e m) where
 -- | Convenience function for retrieving a 'TBQueue'
 -- 'NaviNote' from the @env@ and sending the note.
 sendNoteQueue ::
-  (HasNoteQueue env, MonadQueue m, MonadReader env m) =>
+  (HasNoteQueue env, MonadTBQueue m, MonadReader env m) =>
   NaviNote ->
   m ()
 sendNoteQueue naviNote =
-  asks getNoteQueue >>= (`writeQueue` naviNote)
+  asks getNoteQueue >>= (`writeTBQueueM` naviNote)
 {-# INLINEABLE sendNoteQueue #-}

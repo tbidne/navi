@@ -49,9 +49,7 @@ library
     Navi.Data.NaviNote
     Navi.Data.PollInterval
     Navi.Effects
-    Navi.Effects.MonadMutRef
     Navi.Effects.MonadNotify
-    Navi.Effects.MonadQueue
     Navi.Effects.MonadSystemInfo
     Navi.Env.Core
     Navi.Env.DBus
@@ -87,8 +85,10 @@ library
     , gitrev                  >=1.2.0     && <1.4
     , monad-callstack         ^>=0.1
     , monad-fs-reader         ^>=0.1
+    , monad-ioref             ^>=0.1
     , monad-logger            ^>=0.3.30
     , monad-logger-namespace  ^>=0.1
+    , monad-stm               ^>=0.1
     , monad-thread            ^>=0.1
     , monad-time              ^>=0.1
     , mtl                     >=2.2.2     && <2.4

@@ -10,7 +10,6 @@ import Data.Map.Strict qualified as Map
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.PollInterval (PollInterval (..))
-import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
   ( AnyEvent (..),
@@ -24,7 +23,7 @@ import Navi.Services.Types (ServiceType (..))
 import Pythia.Data.Command (Command)
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
-toEvent :: (MonadMutRef ref m) => MultipleToml -> m (AnyEvent ref)
+toEvent :: (MonadIORef m) => MultipleToml -> m AnyEvent
 toEvent toml = do
   repeatEvent <- EventToml.mRepeatEventTomlToVal (toml ^. #repeatEventCfg)
   errorNote <- EventToml.mErrorNoteTomlToVal (toml ^. #errEventCfg)
@@ -48,9 +47,9 @@ mkMultipleEvent ::
   Command ->
   NonEmpty (Text, NaviNote) ->
   PollInterval ->
-  RepeatEvent ref Text ->
-  ErrorNote ref ->
-  Event ref Text
+  RepeatEvent Text ->
+  ErrorNote ->
+  Event Text
 mkMultipleEvent mname cmd noteList pi re en =
   MkEvent
     { name = name',

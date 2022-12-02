@@ -33,13 +33,13 @@ class HasDBusClient env where
 
 -- | Concrete dbus environment. Adds the dbus client.
 data DBusEnv = MkDBusEnv
-  { coreEnv :: !(Env IORef),
+  { coreEnv :: !Env,
     dbusClient :: !Client
   }
 
 makeFieldLabelsNoPrefix ''DBusEnv
 
-instance HasEvents IORef DBusEnv where
+instance HasEvents DBusEnv where
   getEvents = view (#coreEnv % #events)
   {-# INLINEABLE getEvents #-}
 
@@ -65,7 +65,7 @@ instance HasDBusClient DBusEnv where
 mkDBusEnv ::
   MonadIO m =>
   LogEnv ->
-  Config IORef ->
+  Config ->
   m DBusEnv
 mkDBusEnv logEnv config = do
   client <- liftIO DBusN.connectSession

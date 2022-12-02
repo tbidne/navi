@@ -21,9 +21,7 @@ import Effects.MonadLoggerNamespace
   )
 import Effects.MonadThread (sleep)
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
-import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..), sendNoteQueue)
-import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
   ( HasEvents (..),
@@ -39,17 +37,17 @@ import UnliftIO.Async qualified as Async
 
 -- | Entry point for the application.
 runNavi ::
-  forall ref env m.
+  forall env m.
   ( HasCallStack,
-    HasEvents ref env,
+    HasEvents env,
     HasLogEnv env,
     HasLogQueue env,
     HasNoteQueue env,
     MonadCallStack m,
     MonadLoggerNamespace m,
-    MonadMutRef ref m,
+    MonadIORef m,
     MonadNotify m,
-    MonadQueue m,
+    MonadTBQueue m,
     MonadThread m,
     MonadSystemInfo m,
     MonadReader env m,
@@ -65,7 +63,7 @@ runNavi = do
             timeout = Just $ Seconds 10
           }
   sendNoteQueue welcome
-  events <- asks (getEvents @ref)
+  events <- asks getEvents
   res <- runAllAsync events
   pure $ either (either id id) NE.head res
   where
@@ -94,17 +92,17 @@ runNavi = do
 {-# INLINEABLE runNavi #-}
 
 processEvent ::
-  forall m ref env.
+  forall m env.
   ( HasNoteQueue env,
     MonadLoggerNamespace m,
-    MonadMutRef ref m,
-    MonadQueue m,
+    MonadIORef m,
+    MonadTBQueue m,
     MonadReader env m,
     MonadSystemInfo m,
     MonadThread m,
     MonadUnliftIO m
   ) =>
-  AnyEvent ref ->
+  AnyEvent ->
   m Void
 processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
   let pi = event ^. (#pollInterval % #unPollInterval)
@@ -175,13 +173,13 @@ pollNoteQueue ::
   ( HasNoteQueue env,
     MonadLoggerNamespace m,
     MonadNotify m,
-    MonadQueue m,
+    MonadTBQueue m,
     MonadReader env m
   ) =>
   m Void
 pollNoteQueue = addNamespace "note-poller" $ do
   queue <- asks getNoteQueue
-  forever $ readQueue queue >>= sendNote
+  forever $ readTBQueueM queue >>= sendNote
 {-# INLINEABLE pollNoteQueue #-}
 
 pollLogQueue ::
@@ -189,7 +187,7 @@ pollLogQueue ::
     HasLogEnv env,
     MonadIO m,
     MonadLoggerNamespace m,
-    MonadQueue m,
+    MonadTBQueue m,
     MonadReader env m
   ) =>
   m Void
@@ -198,7 +196,7 @@ pollLogQueue = addNamespace "logger" $ do
   mfileHandle <- asks (preview (#logFile % _Just % #handle) . getLogEnv)
   let sendFn = maybe BS.putStr toFile mfileHandle
   forever $ do
-    logStr <- logStrToBs <$> readQueue queue
+    logStr <- logStrToBs <$> readTBQueueM queue
     liftIO $ sendFn logStr
   where
     toFile h bs = hPut h bs *> hFlush h

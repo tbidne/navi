@@ -16,9 +16,7 @@ import Effects.MonadLoggerNamespace
     formatLog,
   )
 import Effects.MonadTime (MonadTime (..))
-import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
-import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
   ( HasLogEnv (..),
@@ -39,7 +37,8 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       MonadCallStack,
       MonadFsReader,
       MonadIO,
-      MonadQueue,
+      MonadIORef,
+      MonadTBQueue,
       MonadReader e,
       MonadThread,
       MonadUnliftIO
@@ -89,7 +88,7 @@ instance
     logLevel <- asks (view #logLevel . getLogEnv)
     when (logLevel <= lvl) $ do
       formatted <- formatLog (defaultLogFormatter loc) lvl msg
-      writeQueue logQueue formatted
+      writeTBQueueM logQueue formatted
 
 instance
   ( HasLogEnv env,
@@ -104,14 +103,6 @@ instance MonadTime (NaviT env IO) where
   getSystemTime = lift getSystemTime
   getSystemZonedTime = lift getSystemZonedTime
   getTimeSpec = lift getTimeSpec
-
-instance MonadMutRef ref m => MonadMutRef ref (NaviT e m) where
-  newRef = lift . newRef
-  {-# INLINEABLE newRef #-}
-  readRef = lift . readRef
-  {-# INLINEABLE readRef #-}
-  writeRef ref = lift . writeRef ref
-  {-# INLINEABLE writeRef #-}
 
 -- | Runs 'NaviT'.
 runNaviT :: NaviT env m a -> env -> m a

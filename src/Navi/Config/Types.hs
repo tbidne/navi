@@ -74,9 +74,9 @@ defaultLogging = MkLogging (Just LevelError) (Just DefPath)
 
 -- | 'Config' holds the data from 'Navi.Config.Toml.ConfigToml' once it has been processed
 -- (e.g., all user defined Events are parsed).
-data Config ref = MkConfig
+data Config = MkConfig
   { -- | The notification events.
-    events :: !(NonEmpty (AnyEvent ref)),
+    events :: !(NonEmpty AnyEvent),
     -- | Logging configuration.
     logging :: !Logging,
     -- | The notification system to use.
@@ -85,7 +85,7 @@ data Config ref = MkConfig
 
 makeFieldLabelsNoPrefix ''Config
 
-instance Show (Config ref) where
+instance Show Config where
   show config =
     "MkConfig {events = "
       <> show (config ^. #events)

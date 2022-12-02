@@ -16,9 +16,7 @@ import Integration.Prelude
 import Navi.Config (Config)
 import Navi.Data.NaviLog (LogEnv (MkLogEnv))
 import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Effects.MonadMutRef (MonadMutRef (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
-import Navi.Effects.MonadQueue (MonadQueue (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
   ( HasEvents (..),
@@ -36,7 +34,7 @@ import Pythia.Services.Battery (Battery (..), BatteryStatus (..), Percentage (..
 
 -- | Mock configuration.
 data MockEnv = MkMockEnv
-  { events :: !(NonEmpty (AnyEvent IORef)),
+  { events :: !(NonEmpty AnyEvent),
     logQueue :: !(TBQueue LogStr),
     noteQueue :: !(TBQueue NaviNote),
     -- | "Sent" notifications are captured in this ref rather than
@@ -49,7 +47,7 @@ data MockEnv = MkMockEnv
 
 makeFieldLabelsNoPrefix ''MockEnv
 
-instance HasEvents IORef MockEnv where
+instance HasEvents MockEnv where
   getEvents = view #events
 
 instance HasLogEnv MockEnv where
@@ -70,8 +68,8 @@ newtype IntTestIO a = MkIntTestIO (IO a)
       MonadCallStack,
       MonadFsReader,
       MonadIO,
-      MonadQueue,
-      MonadMutRef IORef,
+      MonadTBQueue,
+      MonadIORef,
       MonadThread,
       MonadUnliftIO
     )
@@ -122,7 +120,7 @@ instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
 runMockApp :: (NaviT MockEnv IntTestIO) a -> MockEnv -> IO a
 runMockApp nt = view _MkIntTestIO . runNaviT nt
 
-configToMockEnv :: Config IORef -> IO MockEnv
+configToMockEnv :: Config -> IO MockEnv
 configToMockEnv config = do
   sentNotesRef <- newIORef []
 

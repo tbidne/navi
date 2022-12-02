@@ -6,7 +6,6 @@ where
 
 import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Data.PollInterval (PollInterval (..))
-import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), Event (..))
 import Navi.Prelude
@@ -20,9 +19,9 @@ import Pythia.Services.NetInterface
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent ::
-  (MonadMutRef ref m) =>
+  (MonadIORef m) =>
   NetInterfacesToml ->
-  m (AnyEvent ref)
+  m AnyEvent
 toEvent toml = do
   repeatEvent <- EventToml.mRepeatEventTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote

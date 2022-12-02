@@ -10,7 +10,6 @@ import Data.Map (Map)
 import Data.Map qualified as Map
 import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Data.PollInterval (PollInterval (..))
-import Navi.Effects (MonadMutRef)
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), ErrorNote, Event (..), RepeatEvent)
 import Navi.Prelude
@@ -25,7 +24,7 @@ import Pythia.Services.Battery
   )
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
-toEvent :: (MonadMutRef ref m) => BatteryPercentageToml -> m (AnyEvent ref)
+toEvent :: (MonadIORef m) => BatteryPercentageToml -> m AnyEvent
 toEvent toml = do
   repeatEvent <- EventToml.mRepeatEventTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
@@ -59,9 +58,9 @@ mkBatteryEvent ::
   NonEmpty (Percentage, NaviNote) ->
   BatteryApp ->
   PollInterval ->
-  RepeatEvent ref Battery ->
-  ErrorNote ref ->
-  Event ref Battery
+  RepeatEvent Battery ->
+  ErrorNote ->
+  Event Battery
 mkBatteryEvent percentNoteList batteryProgram pi re en =
   MkEvent
     { name = "battery-percentage",
