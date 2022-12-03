@@ -94,7 +94,7 @@ import Effects.MonadCallStack as X
     prettyAnnotated,
     try,
   )
-import Effects.MonadFsReader as X (MonadFsReader)
+import Effects.MonadFs as X (MonadFsReader)
 import Effects.MonadIORef as X
   ( IORef,
     MonadIORef (modifyIORef', newIORef, readIORef, writeIORef),

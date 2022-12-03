@@ -84,7 +84,7 @@ library
     , filepath                ^>=1.4.2.1
     , gitrev                  >=1.2.0     && <1.4
     , monad-callstack         ^>=0.1
-    , monad-fs-reader         ^>=0.1
+    , monad-fs                ^>=0.1
     , monad-ioref             ^>=0.1
     , monad-logger            ^>=0.3.30
     , monad-logger-namespace  ^>=0.1

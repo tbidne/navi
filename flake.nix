@@ -124,9 +124,9 @@
                   final.callCabal2nix "monad-callstack"
                     "${monad-effects}/monad-callstack"
                     { };
-                monad-fs-reader =
-                  final.callCabal2nix "monad-fs-reader"
-                    "${monad-effects}/monad-fs-reader"
+                monad-fs =
+                  final.callCabal2nix "monad-fs"
+                    "${monad-effects}/monad-fs"
                     { };
                 monad-ioref =
                   final.callCabal2nix "monad-ioref"

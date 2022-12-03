@@ -17,7 +17,7 @@ where
 
 import Data.Maybe (catMaybes)
 import Data.Text.Encoding qualified as TEnc
-import Effects.MonadFsReader (MonadFsReader (readFile))
+import Effects.MonadFs (MonadFsReader (readFile))
 import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Types
   ( Config (..),
