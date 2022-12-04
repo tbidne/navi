@@ -16,8 +16,7 @@ module Navi.Config
 where
 
 import Data.Maybe (catMaybes)
-import Data.Text.Encoding qualified as TEnc
-import Effects.MonadFs (MonadFsReader (readFile))
+import Effects.MonadFs (readFileUtf8ThrowM)
 import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Types
   ( Config (..),
@@ -46,14 +45,12 @@ readConfig ::
   FilePath ->
   m Config
 readConfig =
-  readFile >=> \contents ->
-    case TEnc.decodeUtf8' contents of
-      Left ex -> throwWithCallStack ex
-      Right tomlContents -> do
-        case decode tomlContents of
-          Left tomlErr -> throwWithCallStack $ TomlError tomlErr
-          Right cfg -> tomlToConfig cfg
-{-# INLINEABLE readConfig #-}
+  readFileUtf8ThrowM >=> \contents -> do
+    -- FIXME: Unused keys do not cause errors. This should probably be addressed
+    -- upstream. See https://github.com/brandonchinn178/toml-reader/issues/12
+    case decode contents of
+      Left tomlErr -> throwWithCallStack $ TomlError tomlErr
+      Right cfg -> tomlToConfig cfg
 
 tomlToConfig ::
   ( HasCallStack,
@@ -96,4 +93,3 @@ tomlToConfig toml = do
     batteryPercentageToml = toml ^. #batteryPercentageToml
     batteryStatusToml = toml ^. #batteryStatusToml
     netInterfacesToml = toml ^. #netInterfacesToml
-{-# INLINEABLE tomlToConfig #-}

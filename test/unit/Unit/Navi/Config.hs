@@ -20,7 +20,7 @@ tests =
       DBus @=? cfg ^. #noteSystem
       Just LevelDebug @=? cfg ^. #logging % #severity
       Nothing @=? cfg ^. #logging % #location
-      3 @=? length (cfg ^. #events)
+      5 @=? length (cfg ^. #events)
 
     verifySimple cfg = do
       NotifySend @=? cfg ^. #noteSystem

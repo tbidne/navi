@@ -29,7 +29,7 @@ import Unit.Prelude hiding (($))
 
 -- | Runs unit tests.
 main :: IO ()
-main = do
+main =
   Tasty.defaultMain $
     Tasty.testGroup
       "Unit tests"

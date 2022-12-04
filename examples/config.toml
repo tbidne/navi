@@ -72,3 +72,13 @@ summary = "Temperature"
 body = "We're hot!"
 urgency = "critical"
 timeout = 10
+
+[[net-interface]]
+app = "nmcli"
+poll-interval = 30
+device = "wifi-device"
+
+[[net-interface]]
+app = "nmcli"
+poll-interval = 60
+device = "eth-device"
