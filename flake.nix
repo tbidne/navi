@@ -6,7 +6,6 @@
       url = "github:edolstra/flake-compat";
       flake = false;
     };
-    flake-utils.url = "github:numtide/flake-utils";
     flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
@@ -14,19 +13,19 @@
     algebra-simple = {
       url = "github:tbidne/algebra-simple";
       inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
+      inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     bounds = {
       url = "github:tbidne/bounds";
       inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
+      inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     byte-types = {
       url = "github:tbidne/byte-types";
       inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
+      inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
 
       inputs.algebra-simple.follows = "algebra-simple";
@@ -41,19 +40,20 @@
     pythia = {
       url = "github:tbidne/pythia";
       inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
+      inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
 
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
       inputs.byte-types.follows = "byte-types";
+      inputs.monad-effects.follows = "monad-effects";
       inputs.smart-math.follows = "smart-math";
       inputs.time-conv.follows = "time-conv";
     };
     relative-time = {
       url = "github:tbidne/relative-time";
       inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
+      inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
 
       inputs.algebra-simple.follows = "algebra-simple";
@@ -62,7 +62,7 @@
     smart-math = {
       url = "github:tbidne/smart-math";
       inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
+      inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
 
       inputs.algebra-simple.follows = "algebra-simple";
@@ -71,11 +71,10 @@
     time-conv = {
       url = "github:tbidne/time-conv";
       inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
+      inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
 
-      inputs.algebra-simple.follows = "algebra-simple";
-      inputs.bounds.follows = "bounds";
+      inputs.monad-effects.follows = "monad-effects";
     };
   };
   outputs =
@@ -84,7 +83,6 @@
     , byte-types
     , flake-compat
     , flake-parts
-    , flake-utils
     , monad-effects
     , nixpkgs
     , pythia
@@ -105,8 +103,14 @@
             ghcid
             haskell-language-server
           ];
-          ghc-version = "ghc924";
-          compiler = pkgs.haskell.packages."${ghc-version}";
+          ghc-version = "ghc925";
+          compiler = pkgs.haskell.packages."${ghc-version}".override {
+            overrides = final: prev: {
+              # https://github.com/ddssff/listlike/issues/23
+              ListLike = hlib.dontCheck prev.ListLike;
+            };
+          };
+          hlib = pkgs.haskell.lib;
           mkPkg = returnShellEnv: withDevTools:
             compiler.developPackage {
               inherit returnShellEnv;
@@ -120,6 +124,7 @@
                 algebra-simple = final.callCabal2nix "algebra-simple" algebra-simple { };
                 bounds = final.callCabal2nix "bounds" bounds { };
                 byte-types = final.callCabal2nix "byte-types" byte-types { };
+                hedgehog = prev.hedgehog_1_2;
                 monad-callstack =
                   final.callCabal2nix "monad-callstack"
                     "${monad-effects}/monad-callstack"
@@ -153,7 +158,7 @@
                 relative-time = final.callCabal2nix "relative-time" relative-time { };
                 smart-math = final.callCabal2nix "smart-math" smart-math { };
                 time-conv = final.callCabal2nix "time-conv" time-conv { };
-                tasty-hedgehog = prev.tasty-hedgehog_1_3_1_0;
+                tasty-hedgehog = prev.tasty-hedgehog_1_4_0_0;
               };
             };
         in

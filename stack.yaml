@@ -12,11 +12,11 @@ extra-deps:
 - package-version-0.1.0.0@sha256:bb9fc93e905540aa8e1b32f80c2dc82756a4481c63779bd92e3796ed8085ab98,2854
 - toml-reader-0.1.0.0@sha256:66e2b4261739559e6d1be50391af7038610c3898bc748ce7985c4e4037b623ea,3559
 - git: https://github.com/tbidne/algebra-simple.git
-  commit: c8aaa4495964ecea9bb898c4fcb8b1c718ecc813
+  commit: 2c8a79e8d3bf67c99e4851c557bf68a44c512307
 - git: https://github.com/tbidne/bounds.git
-  commit: 7a8832ef4a55d565e72fab553a4d485329235bf7
+  commit: 004f03aec46f29069fd0bf5115a384cd2b3141b3
 - git: https://github.com/tbidne/byte-types.git
-  commit: cc0e1323b51f1ec3441ddc6578a05e9d7fcdb977
+  commit: be3e764d76c530fd3641c133ed2d53adfc8f046d
 - git: https://github.com/tbidne/monad-effects.git
   commit: b3d1b6b414d9a0561da5ed529a9ff663a0345270
   subdirs:
@@ -28,12 +28,12 @@ extra-deps:
   - monad-thread
   - monad-time
 - git: https://github.com/tbidne/pythia.git
-  commit: b8a942f5136ee247facb1e7be4749facd8939199
+  commit: e72414325bf25a1eeb20b41fac3d71cb0a035902
 - git: https://github.com/tbidne/relative-time.git
   commit: dd4bf2a37bc22763eed6c9bf80ada9b323fb7a22
 - git: https://github.com/tbidne/smart-math.git
-  commit: 49c8269089372c989426b57ad0574ec0ef63bad0
+  commit: e88d85948eb7de24ebb567ca10e06257fc5dbd49
 - git: https://github.com/tbidne/time-conv.git
-  commit: 02498efe9f6185bc14db55a6d0068c05a473b13f
+  commit: e5c541fabd9fb5b35ad578634843492c6a8b3871
 nix:
   shell-file: nix/stack.nix
