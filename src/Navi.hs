@@ -14,6 +14,7 @@ where
 import DBus.Notify (UrgencyLevel (..))
 import Data.ByteString qualified as BS
 import Data.List.NonEmpty qualified as NE
+import Effects.MonadFs (MonadFsWriter (hPut))
 import Effects.MonadLoggerNamespace
   ( MonadLoggerNamespace,
     addNamespace,
@@ -87,7 +88,7 @@ runNavi = do
           )
 
     logExAndRethrow prefix io = catchAny io $ \ex -> do
-      $(logError) (prefix <> pack (prettyAnnotated ex))
+      $(logError) (prefix <> pack (displayCallStack ex))
       throwWithCallStack ex
 {-# INLINEABLE runNavi #-}
 

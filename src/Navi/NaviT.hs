@@ -39,6 +39,7 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       MonadIO,
       MonadIORef,
       MonadTBQueue,
+      MonadTime,
       MonadReader e,
       MonadThread,
       MonadUnliftIO
@@ -98,11 +99,6 @@ instance
   where
   getNamespace = asks (view #logNamespace . getLogEnv)
   localNamespace f = local (localLogEnv (over' #logNamespace f))
-
-instance MonadTime (NaviT env IO) where
-  getSystemTime = lift getSystemTime
-  getSystemZonedTime = lift getSystemZonedTime
-  getTimeSpec = lift getTimeSpec
 
 -- | Runs 'NaviT'.
 runNaviT :: NaviT env m a -> env -> m a

@@ -26,7 +26,7 @@ import System.IO qualified as IO
 
 main :: IO ()
 main = do
-  setUncaughtExceptionHandler (putStrLn . prettyAnnotated)
+  setUncaughtExceptionHandler (putStrLn . displayCallStack)
 
   args <- getArgs
   config <-

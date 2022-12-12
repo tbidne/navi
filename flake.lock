@@ -118,22 +118,14 @@
         "type": "github"
       }
     },
-    "flake-utils": {
-      "locked": {
-        "lastModified": 1667395993,
-        "narHash": "sha256-nuEHfE/LcWyuSWnS8t12N1wc105Qtau+/OdUAjtQ0rA=",
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "rev": "5aed5285a952e0b949eb3ba02c12fa4fcfef535f",
-        "type": "github"
-      },
-      "original": {
-        "id": "flake-utils",
-        "type": "indirect"
-      }
-    },
     "monad-effects": {
       "inputs": {
+        "algebra-simple": [
+          "algebra-simple"
+        ],
+        "bounds": [
+          "bounds"
+        ],
         "flake-compat": [
           "flake-compat"
         ],
@@ -145,11 +137,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1670093131,
-        "narHash": "sha256-97xFvQAO+fl/15Iwr3Yv/O2T7BbpAEwUQOtV42RqAbY=",
+        "lastModified": 1670798210,
+        "narHash": "sha256-c3gMbOFAtqXfWdFXTUZ1qkSEIFyA5O/4jl55UPznrp0=",
         "owner": "tbidne",
         "repo": "monad-effects",
-        "rev": "b3d1b6b414d9a0561da5ed529a9ff663a0345270",
+        "rev": "3fddc571755e7b01a0c665058e9e0503b5c07250",
         "type": "github"
       },
       "original": {
@@ -223,11 +215,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1670398759,
-        "narHash": "sha256-7hcv/+xI3ig0g1C3Oci9aLPyVzAO0KyjjrUa4nh+fyw=",
+        "lastModified": 1670803183,
+        "narHash": "sha256-raFkmR1h9SvDhNQWo+xMNyirMLQsEVkskhbVOuPPXSs=",
         "owner": "tbidne",
         "repo": "pythia",
-        "rev": "e72414325bf25a1eeb20b41fac3d71cb0a035902",
+        "rev": "6516603d692314b5ac2b18a6de242102e2ffa35e",
         "type": "github"
       },
       "original": {
@@ -275,7 +267,6 @@
         "byte-types": "byte-types",
         "flake-compat": "flake-compat",
         "flake-parts": "flake-parts",
-        "flake-utils": "flake-utils",
         "monad-effects": "monad-effects",
         "nixpkgs": "nixpkgs",
         "pythia": "pythia",
@@ -332,11 +323,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1670394836,
-        "narHash": "sha256-Zwbtm3PlxUk9muJgIkAZPnQyUQmCZDfXMwBHBcJOPFg=",
+        "lastModified": 1670801745,
+        "narHash": "sha256-PAWb/c1l6wFc7UibMyR3rOmryoR5px3VYTYsrb3lY5U=",
         "owner": "tbidne",
         "repo": "time-conv",
-        "rev": "e5c541fabd9fb5b35ad578634843492c6a8b3871",
+        "rev": "147a0b9f98e8bf558735cf49c63071564d11681f",
         "type": "github"
       },
       "original": {

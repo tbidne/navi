@@ -12,11 +12,6 @@ module Navi.Prelude
   ( -- * Total versions of partial functions
     headMaybe,
 
-    -- * Text
-    readFileUtf8Lenient,
-    writeFileUtf8,
-    decodeUtf8Lenient,
-
     -- * Exceptions
     catchAny,
 
@@ -62,8 +57,7 @@ import Control.Monad.Reader as X (MonadReader (..), ReaderT (..), asks)
 import Control.Monad.Trans as X (MonadTrans (..))
 import Data.Bifunctor as X (Bifunctor (..))
 import Data.Bool as X (Bool (..), not, otherwise, (&&), (||))
-import Data.ByteString as X (ByteString, hPut)
-import Data.ByteString qualified as BS
+import Data.ByteString as X (ByteString)
 import Data.Char as X (Char)
 import Data.Either as X (Either (..), either)
 import Data.Eq as X (Eq (..))
@@ -82,8 +76,6 @@ import Data.Semigroup as X (Semigroup (..))
 import Data.Sequence as X (Seq, (<|), (|>))
 import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text, concat, pack, unpack)
-import Data.Text.Encoding qualified as TextEnc
-import Data.Text.Encoding.Error qualified as TextEncErr
 import Data.Traversable as X (Traversable (..))
 import Data.Tuple as X (fst, snd, uncurry)
 import Data.Void as X (Void, absurd)
@@ -91,10 +83,10 @@ import Data.Word as X (Word16, Word8)
 import Effects.MonadCallStack as X
   ( MonadCallStack (throwWithCallStack),
     catch,
-    prettyAnnotated,
+    displayCallStack,
     try,
   )
-import Effects.MonadFs as X (MonadFsReader)
+import Effects.MonadFs as X (MonadFsReader, MonadFsWriter, writeFileUtf8)
 import Effects.MonadIORef as X
   ( IORef,
     MonadIORef (modifyIORef', newIORef, readIORef, writeIORef),
@@ -210,27 +202,6 @@ infixr 8 >.>
 {-# INLINEABLE (<<$>>) #-}
 
 infixl 4 <<$>>
-
--- | Writes the text to the file.
---
--- @since 0.1
-writeFileUtf8 :: FilePath -> Text -> IO ()
-writeFileUtf8 fp = BS.writeFile fp . TextEnc.encodeUtf8
-{-# INLINEABLE writeFileUtf8 #-}
-
--- | Strictly reads a file and leniently converts the contents to UTF8.
---
--- @since 0.1
-readFileUtf8Lenient :: MonadIO m => FilePath -> m Text
-readFileUtf8Lenient = fmap decodeUtf8Lenient . liftIO . BS.readFile
-{-# INLINEABLE readFileUtf8Lenient #-}
-
--- | Lenient UTF8 decode.
---
--- @since 0.1
-decodeUtf8Lenient :: ByteString -> Text
-decodeUtf8Lenient = TextEnc.decodeUtf8With TextEncErr.lenientDecode
-{-# INLINEABLE decodeUtf8Lenient #-}
 
 -- | @since 0.1
 catchAny ::
