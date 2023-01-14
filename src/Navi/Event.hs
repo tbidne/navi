@@ -35,8 +35,9 @@ import Navi.Prelude
 -- 1. Queries the system via 'MonadSystemInfo'.
 -- 2. Returns the parsed result.
 runEvent ::
-  ( MonadLoggerNamespace m,
-    MonadTBQueue m,
+  ( HasCallStack,
+    MonadLoggerNamespace m,
+    MonadSTM m,
     MonadSystemInfo m,
     Show result
   ) =>

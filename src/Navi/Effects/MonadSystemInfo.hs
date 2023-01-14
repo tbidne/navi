@@ -15,7 +15,7 @@ import Pythia.Internal.ShellApp qualified as ShellApp
 
 -- | This class represents an effect of querying system information.
 class Monad m => MonadSystemInfo m where
-  query :: ServiceType result -> m result
+  query :: HasCallStack => ServiceType result -> m result
 
 instance MonadSystemInfo IO where
   query :: ServiceType result -> IO result

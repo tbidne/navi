@@ -84,4 +84,4 @@ haddockc:
 	-m Navi.Data.NaviQueue 80 \
 	-m Navi.Event.Toml 60 \
 	-m Navi.Event.Types 55 \
-	-m Navi.Prelude 90
+	-m Navi.Prelude 85

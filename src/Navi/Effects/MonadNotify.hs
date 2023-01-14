@@ -11,7 +11,7 @@ import Navi.Prelude
 
 -- | This class represents sending desktop notifications.
 class Monad m => MonadNotify m where
-  sendNote :: NaviNote -> m ()
+  sendNote :: HasCallStack => NaviNote -> m ()
 
 instance MonadNotify m => MonadNotify (ReaderT e m) where
   sendNote = lift . sendNote
@@ -20,7 +20,11 @@ instance MonadNotify m => MonadNotify (ReaderT e m) where
 -- | Convenience function for retrieving a 'TBQueue'
 -- 'NaviNote' from the @env@ and sending the note.
 sendNoteQueue ::
-  (HasNoteQueue env, MonadTBQueue m, MonadReader env m) =>
+  ( HasCallStack,
+    HasNoteQueue env,
+    MonadReader env m,
+    MonadSTM m
+  ) =>
   NaviNote ->
   m ()
 sendNoteQueue naviNote =

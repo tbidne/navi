@@ -4,6 +4,8 @@
 module Main (main) where
 
 import Data.Functor.Identity (Identity (..))
+import Effects.FileSystem.MonadPathReader qualified as Dir
+import Effects.FileSystem.MonadPathWriter qualified as Dir
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
 import Navi (runNavi, runNaviT)
 import Navi.Args (Args (..), getArgs)
@@ -18,11 +20,7 @@ import Navi.Data.NaviLog
 import Navi.Env.DBus (mkDBusEnv)
 import Navi.Env.NotifySend (mkNotifySendEnv)
 import Navi.Prelude
-import System.Directory (XdgDirectory (XdgConfig))
-import System.Directory qualified as Dir
 import System.Exit qualified as Exit
-import System.FilePath ((</>))
-import System.IO qualified as IO
 
 main :: IO ()
 main = do
@@ -57,25 +55,25 @@ mkLogEnv logging = do
   logFile <- case logLoc' of
     -- Use the default log path: xdgConfig </> navi/navi.log
     DefPath -> do
-      xdgBase <- Dir.getXdgDirectory XdgConfig "navi/"
+      xdgBase <- Dir.getXdgConfig "navi/"
       let logFile = xdgBase </> "navi.log"
       renameIfExists logFile
-      h <- openFile logFile AppendMode
+      h <- openBinaryFile logFile AppendMode
       pure $
         Just $
           MkLogFile
             { handle = h,
-              finalizer = IO.hFlush h `finally` IO.hClose h
+              finalizer = hFlush h `finally` hClose h
             }
     -- Custom log path.
     File f -> do
       renameIfExists f
-      h <- openFile f AppendMode
+      h <- openBinaryFile f AppendMode
       pure $
         Just $
           MkLogFile
             { handle = h,
-              finalizer = IO.hFlush h `finally` IO.hClose h
+              finalizer = hFlush h `finally` hClose h
             }
     -- Log location defined in config file as stdout.
     Stdout -> pure Nothing
@@ -91,23 +89,23 @@ mkLogEnv logging = do
 
 writeConfigErr :: SomeException -> IO void
 writeConfigErr ex = do
-  xdgBase <- Dir.getXdgDirectory XdgConfig "navi/"
+  xdgBase <- Dir.getXdgConfig "navi/"
   let logFile = xdgBase </> "config_fatal.log"
   renameIfExists logFile
   writeFileUtf8 logFile $ "Couldn't read config: " <> pack (displayException ex)
   throwWithCallStack ex
 
-renameIfExists :: FilePath -> IO ()
+renameIfExists :: Path -> IO ()
 renameIfExists fp = do
   fileExists <- Dir.doesFileExist fp
   when fileExists $ do
     fp' <- uniqName fp
     Dir.renameFile fp fp'
 
-uniqName :: FilePath -> IO FilePath
+uniqName :: Path -> IO Path
 uniqName fp = go 1
   where
-    go :: Word16 -> IO FilePath
+    go :: Word16 -> IO Path
     go !counter
       | counter == maxBound = Exit.die $ "Failed renaming file: " <> fp
       | otherwise = do

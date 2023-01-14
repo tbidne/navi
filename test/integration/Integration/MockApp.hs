@@ -9,8 +9,6 @@ module Integration.MockApp
   )
 where
 
-import Control.Concurrent.STM qualified as STM
-import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace (..))
 import Integration.Prelude
 import Navi.Config (Config)
@@ -65,13 +63,17 @@ newtype IntTestIO a = MkIntTestIO (IO a)
     ( Functor,
       Applicative,
       Monad,
+      MonadAsync,
       MonadCallStack,
-      MonadFsReader,
+      MonadCatch,
+      MonadFileReader,
+      MonadHandleWriter,
       MonadIO,
-      MonadTBQueue,
       MonadIORef,
+      MonadSTM,
+      MonadTerminal,
       MonadThread,
-      MonadUnliftIO
+      MonadThrow
     )
     via IO
 
@@ -125,8 +127,8 @@ configToMockEnv config = do
   sentNotesRef <- newIORef []
 
   lastPercentageRef <- newIORef $ MkPercentage $ Interval.unsafeLRInterval 6
-  logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
-  noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
+  logQueue <- newTBQueueM 1000
+  noteQueue <- newTBQueueM 1000
 
   pure $
     MkMockEnv

@@ -16,7 +16,6 @@ module Navi.Config
 where
 
 import Data.Maybe (catMaybes)
-import Effects.MonadFs (readFileUtf8ThrowM)
 import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Types
   ( Config (..),
@@ -39,10 +38,10 @@ import Navi.Services.Network.NetInterfaces qualified as NetConn
 readConfig ::
   ( HasCallStack,
     MonadCallStack m,
-    MonadIORef m,
-    MonadFsReader m
+    MonadFileReader m,
+    MonadIORef m
   ) =>
-  FilePath ->
+  Path ->
   m Config
 readConfig =
   readFileUtf8ThrowM >=> \contents -> do

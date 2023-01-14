@@ -32,6 +32,17 @@ where
 
 import Control.Applicative as X (Alternative (..), Applicative (..), (<**>))
 import Control.DeepSeq as X (NFData)
+import Control.Exception.Safe as X
+  ( Exception (..),
+    MonadCatch,
+    MonadThrow,
+    SomeException,
+    bracket,
+    finally,
+    handle,
+    throwIO,
+    tryAny,
+  )
 import Control.Monad as X
   ( Monad (..),
     forever,
@@ -80,18 +91,37 @@ import Data.Traversable as X (Traversable (..))
 import Data.Tuple as X (fst, snd, uncurry)
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word16, Word8)
+import Effects.FileSystem.MonadFileReader as X
+  ( MonadFileReader,
+    readFileUtf8ThrowM,
+  )
+import Effects.FileSystem.MonadFileWriter as X (MonadFileWriter, writeFileUtf8)
+import Effects.FileSystem.MonadHandleWriter as X
+  ( Handle,
+    IOMode (..),
+    MonadHandleWriter (hClose, hFlush, hPut, openBinaryFile),
+  )
+import Effects.FileSystem.MonadPathReader as X (MonadPathReader)
+import Effects.FileSystem.Path as X (Path, (</>))
+import Effects.MonadAsync as X (MonadAsync)
 import Effects.MonadCallStack as X
   ( MonadCallStack (throwWithCallStack),
     catch,
     displayCallStack,
     try,
   )
-import Effects.MonadFs as X (MonadFsReader, MonadFsWriter, writeFileUtf8)
 import Effects.MonadIORef as X
   ( IORef,
     MonadIORef (modifyIORef', newIORef, readIORef, writeIORef),
   )
-import Effects.MonadSTM as X (MonadTBQueue (readTBQueueM, writeTBQueueM))
+import Effects.MonadSTM as X
+  ( MonadSTM,
+    TBQueue,
+    newTBQueueM,
+    readTBQueueM,
+    writeTBQueueM,
+  )
+import Effects.MonadTerminal as X (MonadTerminal, putStrLn)
 import Effects.MonadThread as X (MonadThread)
 import GHC.Enum as X (Bounded (..))
 import GHC.Err as X (undefined)
@@ -123,15 +153,7 @@ import Optics.Core as X
     _Just,
   )
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
-import System.IO as X
-  ( FilePath,
-    Handle,
-    IO,
-    IOMode (AppendMode),
-    hFlush,
-    openFile,
-    putStrLn,
-  )
+import System.IO as X (IO)
 import TOML as X
   ( DecodeTOML (..),
     TOMLError (..),
@@ -148,17 +170,6 @@ import TOML as X
     typeMismatch,
   )
 import TOML.Decode as X (Decoder)
-import UnliftIO as X (MonadUnliftIO)
-import UnliftIO.Exception as X
-  ( Exception (..),
-    SomeException,
-    bracket,
-    finally,
-    handle,
-    throwIO,
-    tryAny,
-  )
-import UnliftIO.STM as X (TBQueue)
 import Prelude as X (Integer, seq)
 import Prelude qualified as P
 
@@ -206,7 +217,7 @@ infixl 4 <<$>>
 -- | @since 0.1
 catchAny ::
   ( HasCallStack,
-    MonadUnliftIO m
+    MonadCatch m
   ) =>
   m a ->
   (SomeException -> m a) ->

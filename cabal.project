@@ -28,20 +28,22 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/monad-effects.git
-    tag: 3fddc571755e7b01a0c665058e9e0503b5c07250
+    tag: 1b78e11e4265312451d6d6ee5b875bb7a4f600e7
     subdir:
         monad-callstack
+        monad-async
         monad-fs
         monad-ioref
         monad-logger-namespace
         monad-stm
+        monad-system-time
+        monad-terminal
         monad-thread
-        monad-time
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/pythia.git
-    tag: 6516603d692314b5ac2b18a6de242102e2ffa35e
+    tag: cb1ca38a3544e6d9ab521290ba4bdd22fc0b6f8b
 
 source-repository-package
     type: git
@@ -51,11 +53,11 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/smart-math.git
-    tag: e88d85948eb7de24ebb567ca10e06257fc5dbd49
+    tag: 0a8a6a741c999be1183b810ea8b1cd9438cb0d8e
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/time-conv.git
-    tag: 147a0b9f98e8bf558735cf49c63071564d11681f
+    tag: 11ed25cce5b931b2b04bfda80758aea94b635ac0
 
 allow-newer: dbus:template-haskell

@@ -79,18 +79,18 @@ library
     , containers              >=0.5.11.0  && <0.7
     , dbus                    ^>=1.2.14
     , deepseq                 ^>=1.4.6.0
-    , directory               ^>=1.3.5.0
     , fdo-notify              ^>=0.3.1
-    , filepath                ^>=1.4.2.1
     , gitrev                  >=1.2.0     && <1.4
+    , monad-async             ^>=0.1
     , monad-callstack         ^>=0.1
     , monad-fs                ^>=0.1
     , monad-ioref             ^>=0.1
     , monad-logger            ^>=0.3.30
     , monad-logger-namespace  ^>=0.1
     , monad-stm               ^>=0.1
+    , monad-system-time       ^>=0.1
+    , monad-terminal          ^>=0.1
     , monad-thread            ^>=0.1
-    , monad-time              ^>=0.1
     , mtl                     >=2.2.2     && <2.4
     , optics-core             ^>=0.4
     , optics-th               ^>=0.4
@@ -99,11 +99,11 @@ library
     , process                 ^>=1.6.9.0
     , pythia                  ^>=0.1
     , relative-time           ^>=0.1
+    , safe-exceptions         ^>=0.1.7.0
     , smart-math              ^>=0.1
     , stm                     ^>=2.5.0
     , text                    >=1.2.3.2   && <2.1
     , toml-reader             ^>=0.1.0.0
-    , unliftio                ^>=0.2.0.0
 
   hs-source-dirs:   src
   default-language: GHC2021
@@ -113,8 +113,7 @@ executable navi
   main-is:          Main.hs
   build-depends:
     , base
-    , directory
-    , filepath
+    , monad-fs
     , navi
 
   hs-source-dirs:   app
@@ -158,18 +157,16 @@ test-suite integration
 
   build-depends:
     , base
-    , directory
     , fdo-notify
-    , filepath
+    , monad-async
+    , monad-fs
     , monad-logger-namespace
     , navi
     , pythia
     , smart-math
-    , stm
     , tasty
     , tasty-hunit
     , text
-    , unliftio
 
   hs-source-dirs:   test/integration
   default-language: GHC2021

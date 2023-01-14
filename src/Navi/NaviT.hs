@@ -34,15 +34,19 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
     ( Functor,
       Applicative,
       Monad,
+      MonadAsync,
       MonadCallStack,
-      MonadFsReader,
+      MonadCatch,
+      MonadFileReader,
+      MonadHandleWriter,
       MonadIO,
       MonadIORef,
-      MonadTBQueue,
-      MonadTime,
       MonadReader e,
+      MonadSTM,
+      MonadTerminal,
       MonadThread,
-      MonadUnliftIO
+      MonadThrow,
+      MonadTime
     )
     via (ReaderT e m)
   deriving (MonadTrans) via (ReaderT e)

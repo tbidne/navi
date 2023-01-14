@@ -34,7 +34,7 @@ tests =
       Just DefPath @=? cfg ^. #logging % #location
       1 @=? length (cfg ^. #events)
 
-readsExample :: (Config -> IO ()) -> FilePath -> TestTree
+readsExample :: (Config -> IO ()) -> Path -> TestTree
 readsExample verifyCfg fp =
   testCase ("Reads " <> fp) $
     Config.readConfig fp >>= verifyCfg

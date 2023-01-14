@@ -13,16 +13,16 @@ module Main (main) where
 import Control.Concurrent qualified as CC
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
+import Effects.FileSystem.MonadPathReader qualified as Dir
+import Effects.FileSystem.MonadPathWriter qualified as Dir
+import Effects.MonadAsync qualified as Async
 import Integration.MockApp (MockEnv (..), configToMockEnv, runMockApp)
 import Integration.Prelude
 import Navi (runNavi)
 import Navi.Config (readConfig)
 import Navi.Data.NaviNote (NaviNote (..))
 import Navi.Event (EventError (MkEventError))
-import System.Directory qualified as Dir
-import System.FilePath ((</>))
 import Test.Tasty qualified as Tasty
-import UnliftIO.Async qualified as Async
 
 -- | Runs integration tests.
 main :: IO ()

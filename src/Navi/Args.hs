@@ -15,14 +15,12 @@ import Data.Functor.Identity (Identity (..))
 import Data.List qualified as L
 import Data.Version.Package qualified as PV
 import Development.GitRev qualified as GitRev
+import Effects.FileSystem.MonadPathReader qualified as Dir
 import Navi.Prelude
 import Options.Applicative (Parser, ParserInfo (..))
 import Options.Applicative qualified as OptApp
 import Options.Applicative.Help.Chunk (Chunk (..))
 import Options.Applicative.Types (ArgPolicy (..))
-import System.Directory (XdgDirectory (..))
-import System.Directory qualified as Dir
-import System.FilePath ((</>))
 
 -- | Represents command-line arguments. We use the \"higher-kinded data\"
 -- approach for:
@@ -31,7 +29,7 @@ import System.FilePath ((</>))
 -- 2. Filling missing arguments with defaults (@'Args' 'Identity'@).
 newtype Args f = MkArgs
   { -- | Path to the configuration file.
-    configFile :: f FilePath
+    configFile :: f Path
   }
 
 makeFieldLabelsNoPrefix ''Args
@@ -65,7 +63,7 @@ fillMissingDefaults args = do
       }
   where
     configFile = args ^. #configFile
-    defaultXdg = Dir.getXdgDirectory XdgConfig "navi/"
+    defaultXdg = Dir.getXdgConfig "navi/"
     defConfigName = "config.toml"
 {-# INLINEABLE fillMissingDefaults #-}
 

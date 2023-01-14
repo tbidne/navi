@@ -35,7 +35,7 @@ import Navi.Prelude
 data LogLoc
   = DefPath
   | Stdout
-  | File !FilePath
+  | File !Path
   deriving stock (Eq, Show)
 
 makePrisms ''LogLoc
