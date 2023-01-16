@@ -11,14 +11,17 @@ module Navi
   )
 where
 
+import Control.Exception.Safe (mask)
+import DBus.Client (ClientError (clientErrorFatal))
 import DBus.Notify (UrgencyLevel (..))
-import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
 import Effects.MonadAsync qualified as Async
 import Effects.MonadLoggerNamespace
   ( MonadLoggerNamespace,
     addNamespace,
     logStrToBs,
   )
+import Effects.MonadSTM (flushTBQueueM)
 import Effects.MonadTerminal (MonadTerminal (putBinary))
 import Effects.MonadThread (sleep)
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
@@ -31,7 +34,7 @@ import Navi.Env.Core
     HasNoteQueue (..),
   )
 import Navi.Event qualified as Event
-import Navi.Event.Types (AnyEvent (..), EventError (..))
+import Navi.Event.Types (AnyEvent (..), EventError (..), EventSuccess (..))
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Prelude
 
@@ -44,11 +47,10 @@ runNavi ::
     HasLogQueue env,
     HasNoteQueue env,
     MonadAsync m,
-    MonadCallStack m,
-    MonadCatch m,
     MonadHandleWriter m,
     MonadIORef m,
     MonadLoggerNamespace m,
+    MonadMask m,
     MonadNotify m,
     MonadSTM m,
     MonadSystemInfo m,
@@ -67,36 +69,54 @@ runNavi = do
           }
   sendNoteQueue welcome
   events <- asks getEvents
-  res <- runAllAsync events
-  pure $ either (either id id) NE.head res
+  runAllAsync events
   where
-    -- We use race so that we do not swallow exceptions. If any of these
-    -- throw an exception we want to die:
-    --
-    -- 1. Logging: something is really wrong.
-    -- 2. Notify: something is really wrong.
-    -- 3. processEvent: should be catching and logging its own exceptions,
-    --    so if an exception escapes then something is really wrong.
+    runAllAsync ::
+      ( HasCallStack,
+        Traversable t
+      ) =>
+      t AnyEvent ->
+      m Void
     runAllAsync evts =
-      -- no logging here since logging itself is broken
-      pollLogQueue
-        -- log and rethrow notify exceptions
-        `Async.race` logExAndRethrow "Notify: " pollNoteQueue
-        -- log and rethrow anything that escaped the exception handling in
-        -- processEvent
-        `Async.race` logExAndRethrow
-          "Event processing: "
-          ( Async.mapConcurrently processEvent evts
-          )
+      Async.withAsync pollLogQueue $ \logThread -> do
+        -- NOTE: Need the link here _before_ we run the other two threads.
+        -- This ensures that a logger exception successfully kills the entire
+        -- app.
+        Async.link logThread
+        runEvents evts
+          `catchAny` \e -> do
+            Async.cancel logThread
+            -- handle remaining logs
+            queue <- asks getLogQueue
+            sendFn <- getLoggerFn
+            flushTBQueueM queue >>= traverse_ (sendFn . logStrToBs)
+            throwIO e
+    {-# INLINEABLE runAllAsync #-}
 
+    -- run events and notify threads
+    runEvents :: (HasCallStack, Traversable t) => t AnyEvent -> m Void
+    runEvents evts =
+      Async.withAsync (logExAndRethrow "Notify: " pollNoteQueue) $ \noteThread ->
+        Async.withAsync
+          ( logExAndRethrow
+              "Event processing: "
+              ( Async.mapConcurrently processEvent evts
+              )
+          )
+          (fmap fst . Async.waitBoth noteThread)
+    {-# INLINEABLE runEvents #-}
+
+    logExAndRethrow :: HasCallStack => Text -> m a -> m a
     logExAndRethrow prefix io = catchAny io $ \ex -> do
       $(logError) (prefix <> pack (displayCallStack ex))
-      throwWithCallStack ex
+      throwIO ex
+    {-# INLINEABLE logExAndRethrow #-}
 {-# INLINEABLE runNavi #-}
 
 processEvent ::
   forall m env.
-  ( HasNoteQueue env,
+  ( HasCallStack,
+    HasNoteQueue env,
     MonadCatch m,
     MonadIORef m,
     MonadLoggerNamespace m,
@@ -117,39 +137,48 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
     sleep pi
   where
     name = event ^. #name
-    repeatEvent = event ^. #repeatEvent
     errorNote = event ^. #errorNote
-    raiseAlert = event ^. #raiseAlert
 
-    handleSuccess result = addNamespace "handleSuccess" $ do
-      case raiseAlert result of
-        Nothing -> do
-          $(logDebug) ("No alert to raise " <> showt result)
-          Event.updatePrevTrigger repeatEvent result
-        Just note -> do
-          blocked <- Event.blockRepeat repeatEvent result
-          if blocked
-            then $(logDebug) ("Alert blocked " <> showt result)
-            else do
-              $(logInfo) ("Sending note " <> showt note)
-              Event.updatePrevTrigger repeatEvent result
-              sendNoteQueue note
+    handleSuccess ::
+      (HasCallStack, Eq result, Show result) =>
+      EventSuccess result ->
+      m ()
+    handleSuccess (MkEventSuccess result repeatEvent raiseAlert) =
+      addNamespace "handleSuccess" $ do
+        case raiseAlert result of
+          Nothing -> do
+            $(logDebug) ("No alert to raise " <> showt result)
+            Event.updatePrevTrigger repeatEvent result
+          Just note -> do
+            blocked <- Event.blockRepeat repeatEvent result
+            if blocked
+              then $(logDebug) ("Alert blocked " <> showt result)
+              else do
+                $(logInfo) ("Sending note " <> showt note)
+                Event.updatePrevTrigger repeatEvent result
+                sendNoteQueue note
 
+    {-# INLINEABLE handleSuccess #-}
+
+    handleEventError :: HasCallStack => EventError -> m ()
     handleEventError =
       addNamespace "handleEventError"
         . handleErr eventErrToNote
+    {-# INLINEABLE handleEventError #-}
 
+    handleSomeException :: HasCallStack => SomeException -> m ()
     handleSomeException =
       addNamespace "handleSomeException"
         . handleErr exToNote
 
-    handleErr :: Exception e => (e -> NaviNote) -> e -> m ()
+    handleErr :: (HasCallStack, Exception e) => (e -> NaviNote) -> e -> m ()
     handleErr toNote e = do
       blockErrEvent <- Event.blockErr errorNote
       $(logError) (pack $ displayException e)
       if blockErrEvent
         then $(logDebug) "Error note blocked"
         else sendNoteQueue (toNote e)
+    {-# INLINEABLE handleErr #-}
 {-# INLINEABLE processEvent #-}
 
 eventErrToNote :: EventError -> NaviNote
@@ -173,7 +202,9 @@ exToNote ex =
 {-# INLINEABLE exToNote #-}
 
 pollNoteQueue ::
-  ( HasNoteQueue env,
+  ( HasCallStack,
+    HasNoteQueue env,
+    MonadCatch m,
     MonadLoggerNamespace m,
     MonadNotify m,
     MonadReader env m,
@@ -182,14 +213,26 @@ pollNoteQueue ::
   m Void
 pollNoteQueue = addNamespace "note-poller" $ do
   queue <- asks getNoteQueue
-  forever $ readTBQueueM queue >>= sendNote
+  forever $
+    readTBQueueM queue >>= \nn ->
+      sendNote nn `catch` \ce ->
+        -- NOTE: Rethrow all exceptions except:
+        --
+        -- 1. Non-fatal dbus errors e.g. quickly sending the same notif twice.
+        if clientErrorFatal ce
+          then throwIO ce
+          else
+            $(logError) $
+              "Received non-fatal dbus error: " <> T.pack (displayCallStack ce)
 {-# INLINEABLE pollNoteQueue #-}
 
 pollLogQueue ::
-  ( HasLogQueue env,
+  ( HasCallStack,
+    HasLogQueue env,
     HasLogEnv env,
     MonadLoggerNamespace m,
     MonadHandleWriter m,
+    MonadMask m,
     MonadReader env m,
     MonadSTM m,
     MonadTerminal m
@@ -197,11 +240,59 @@ pollLogQueue ::
   m Void
 pollLogQueue = addNamespace "logger" $ do
   queue <- asks getLogQueue
+  sendFn <- getLoggerFn
+  forever $
+    -- NOTE: Rethrow all exceptions
+    atomicReadWrite queue (sendFn . logStrToBs)
+{-# INLINEABLE pollLogQueue #-}
+
+getLoggerFn ::
+  ( HasCallStack,
+    HasLogEnv env,
+    MonadHandleWriter m,
+    MonadReader env m,
+    MonadTerminal m
+  ) =>
+  m (ByteString -> m ())
+getLoggerFn = do
   mfileHandle <- asks (preview (#logFile % _Just % #handle) . getLogEnv)
-  let sendFn = maybe putBinary toFile mfileHandle
-  forever $ do
-    logStr <- logStrToBs <$> readTBQueueM queue
-    sendFn logStr
+  pure $ maybe putBinary toFile mfileHandle
   where
     toFile h bs = hPut h bs *> hFlush h
-{-# INLINEABLE pollLogQueue #-}
+
+atomicReadWrite ::
+  ( HasCallStack,
+    MonadMask m,
+    MonadSTM m
+  ) =>
+  -- | Queue from which to read.
+  TBQueue a ->
+  -- | Function to apply.
+  (a -> m b) ->
+  m ()
+atomicReadWrite queue logAction =
+  -- NOTE: There are several options we could take here:
+  --
+  -- 1. uninterruptibleMask_ $ tryReadTBQueueM queue >>= traverse_ logAction
+  --
+  --    This gives us guaranteed atomicity, at the risk of a possible deadlock,
+  --    if either the read or logAction blocks indefinitely. IMPORTANT: If we
+  --    go this route, readTBQueueM _must_ be swapped for tryReadTBQueueM, as
+  --    the former relies on cancellation via an async exception i.e.
+  --    uninterruptibleMask_ + readTBQueueM = deadlock.
+  --
+  -- 2. mask $ \restore -> restore (readTBQueueM queue) >>= void . logAction
+  --
+  --    This does not give us absolute atomicity, as logAction could be
+  --    interrupted if it is actually blocking; but that is probably the right
+  --    choice (responsiveness), and we have atomicity as long as logAction
+  --    does not block.
+  --
+  -- 3. mask_ $ readTBQueueM queue >>= void . logAction
+  --
+  --    Slightly simpler than 2, has the same caveat regarding atomicity.
+  --    The difference is that in the latter, readTBQueueM is also masked
+  --    as long as it is not blocking. There really is no reason for this,
+  --    as the invariant we care about is _if_ successful read then
+  --    successful handle.
+  mask $ \restore -> restore (readTBQueueM queue) >>= void . logAction

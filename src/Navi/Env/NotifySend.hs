@@ -9,8 +9,6 @@ module Navi.Env.NotifySend
   )
 where
 
-import Control.Concurrent.STM qualified as STM
-import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import DBus.Notify (UrgencyLevel (..))
 import Navi.Config.Types (Config)
 import Navi.Data.NaviLog (LogEnv)
@@ -52,13 +50,13 @@ instance HasNoteQueue NotifySendEnv where
 -- | Creates a 'NotifySendEnv' from the provided log types and configuration
 -- data.
 mkNotifySendEnv ::
-  MonadIO m =>
+  MonadSTM m =>
   LogEnv ->
   Config ->
   m NotifySendEnv
 mkNotifySendEnv logEnv config = do
-  logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
-  noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
+  logQueue <- newTBQueueM 1000
+  noteQueue <- newTBQueueM 1000
   pure $
     MkNotifySendEnv
       { coreEnv =

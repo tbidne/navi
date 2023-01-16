@@ -16,6 +16,7 @@ import Data.Text qualified as T
 import Effects.FileSystem.MonadPathReader qualified as Dir
 import Effects.FileSystem.MonadPathWriter qualified as Dir
 import Effects.MonadAsync qualified as Async
+import Integration.Exceptions qualified as Exceptions
 import Integration.MockApp (MockEnv (..), configToMockEnv, runMockApp)
 import Integration.Prelude
 import Navi (runNavi)
@@ -36,7 +37,8 @@ main = do
         testNoDuplicateErrs,
         testSwallowErrs,
         testSendsMultipleErrs,
-        testSendExceptionDies
+        testSendExceptionDies,
+        Exceptions.tests
       ]
 
 testMultiNotifs :: TestTree

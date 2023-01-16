@@ -20,6 +20,7 @@ import Navi.Prelude
 -- @since 0.1
 newtype PollInterval = MkPollInterval {unPollInterval :: Natural}
   deriving stock (Eq, Ord, Show)
+  deriving (Num) via Natural
 
 -- | @since 0.1
 makeFieldLabelsNoPrefix ''PollInterval

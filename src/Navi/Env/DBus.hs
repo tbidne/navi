@@ -10,8 +10,6 @@ module Navi.Env.DBus
   )
 where
 
-import Control.Concurrent.STM qualified as STM
-import Control.Concurrent.STM.TBQueue qualified as TBQueue
 import DBus.Client (Client)
 import DBus.Notify (Hint (Urgency), Note)
 import DBus.Notify qualified as DBusN
@@ -63,14 +61,14 @@ instance HasDBusClient DBusEnv where
 
 -- | Creates a 'DBusEnv' from the provided log types and configuration data.
 mkDBusEnv ::
-  MonadIO m =>
+  (HasCallStack, MonadIO m, MonadSTM m) =>
   LogEnv ->
   Config ->
   m DBusEnv
 mkDBusEnv logEnv config = do
   client <- liftIO DBusN.connectSession
-  logQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
-  noteQueue <- liftIO $ STM.atomically $ TBQueue.newTBQueue 1000
+  logQueue <- newTBQueueM 1000
+  noteQueue <- newTBQueueM 1000
   pure $
     MkDBusEnv
       { coreEnv =

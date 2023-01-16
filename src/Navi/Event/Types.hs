@@ -14,6 +14,7 @@ module Navi.Event.Types
     _NoErrNote,
     _AllowErrNote,
     EventError (..),
+    EventSuccess (..),
   )
 where
 
@@ -99,3 +100,14 @@ data AnyEvent where
   MkAnyEvent :: (Eq result, Show result) => Event result -> AnyEvent
 
 deriving stock instance Show AnyEvent
+
+-- | Holds the 'Event' data used after an event is successfully run.
+--
+-- @since 0.1
+data EventSuccess result = MkEventSuccess
+  { result :: result,
+    repeatEvent :: RepeatEvent result,
+    raiseAlert :: result -> Maybe NaviNote
+  }
+
+makeFieldLabelsNoPrefix ''EventSuccess

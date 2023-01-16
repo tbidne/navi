@@ -35,6 +35,7 @@ import Control.DeepSeq as X (NFData)
 import Control.Exception.Safe as X
   ( Exception (..),
     MonadCatch,
+    MonadMask,
     MonadThrow,
     SomeException,
     bracket,
@@ -62,6 +63,7 @@ import Control.Monad.Logger as X
     logDebug,
     logError,
     logInfo,
+    logOther,
     logWarn,
   )
 import Control.Monad.Reader as X (MonadReader (..), ReaderT (..), asks)
@@ -84,7 +86,7 @@ import Data.Monoid as X (Monoid (..))
 import Data.Ord as X (Ord (..))
 import Data.Proxy as X (Proxy (..))
 import Data.Semigroup as X (Semigroup (..))
-import Data.Sequence as X (Seq, (<|), (|>))
+import Data.Sequence as X (Seq ((:<|), (:|>)))
 import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text, concat, pack, unpack)
 import Data.Traversable as X (Traversable (..))
@@ -105,7 +107,7 @@ import Effects.FileSystem.MonadPathReader as X (MonadPathReader)
 import Effects.FileSystem.Path as X (Path, (</>))
 import Effects.MonadAsync as X (MonadAsync)
 import Effects.MonadCallStack as X
-  ( MonadCallStack (throwWithCallStack),
+  ( MonadCallStack (addCallStack, throwWithCallStack),
     catch,
     displayCallStack,
     try,
@@ -119,6 +121,7 @@ import Effects.MonadSTM as X
     TBQueue,
     newTBQueueM,
     readTBQueueM,
+    tryReadTBQueueM,
     writeTBQueueM,
   )
 import Effects.MonadTerminal as X (MonadTerminal, putStrLn)
@@ -157,7 +160,7 @@ import System.IO as X (IO)
 import TOML as X
   ( DecodeTOML (..),
     TOMLError (..),
-    Value (..),
+    Value (Integer, String),
     decode,
     getArrayOf,
     getField,

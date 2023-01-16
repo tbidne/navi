@@ -15,6 +15,7 @@ import Effects.MonadLoggerNamespace
     defaultLogFormatter,
     formatLog,
   )
+import Effects.MonadTerminal (MonadTerminal (..))
 import Effects.MonadTime (MonadTime (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
@@ -41,15 +42,28 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       MonadHandleWriter,
       MonadIO,
       MonadIORef,
+      MonadMask,
       MonadReader e,
       MonadSTM,
-      MonadTerminal,
       MonadThread,
-      MonadThrow,
-      MonadTime
+      MonadThrow
     )
     via (ReaderT e m)
   deriving (MonadTrans) via (ReaderT e)
+
+-- Manual instances so tests can roll their own
+instance MonadTerminal (NaviT env IO) where
+  getChar = liftIO getChar
+  getLine = liftIO getLine
+  getContents' = liftIO getContents'
+  getTerminalSize = liftIO getTerminalSize
+  putBinary = liftIO . putBinary
+  putStr = liftIO . putStr
+  putStrLn = liftIO . putStrLn
+
+instance MonadTime (NaviT env IO) where
+  getSystemZonedTime = liftIO getSystemZonedTime
+  getMonotonicTime = liftIO getMonotonicTime
 
 -- Concrete IO rather than MonadIO so that we can write instances over
 -- other MonadIOs (i.e. in tests)
@@ -63,7 +77,7 @@ instance MonadNotify (NaviT DBusEnv IO) where
   sendNote naviNote = addNamespace "dbus" $ do
     $(logDebug) (showt note)
     client <- asks getClient
-    liftIO $ sendDbus client note
+    liftIO $ addCallStack $ sendDbus client note
     where
       note = naviToDBus naviNote
       sendDbus c = void . DBusN.notify c
@@ -74,7 +88,7 @@ instance MonadNotify (NaviT DBusEnv IO) where
 instance MonadNotify (NaviT NotifySendEnv IO) where
   sendNote naviNote = addNamespace "notify-send" $ do
     $(logDebug) noteTxt
-    liftIO $ void $ Proc.readCreateProcess cp "notify-send"
+    liftIO $ addCallStack $ void $ Proc.readCreateProcess cp "notify-send"
     where
       noteTxt = naviToNotifySend naviNote
       cp = Proc.shell $ unpack noteTxt

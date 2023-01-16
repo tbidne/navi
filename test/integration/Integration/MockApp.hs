@@ -10,6 +10,7 @@ module Integration.MockApp
 where
 
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace (..))
+import Effects.MonadTerminal (MonadTerminal (..))
 import Integration.Prelude
 import Navi.Config (Config)
 import Navi.Data.NaviLog (LogEnv (MkLogEnv))
@@ -70,6 +71,7 @@ newtype IntTestIO a = MkIntTestIO (IO a)
       MonadHandleWriter,
       MonadIO,
       MonadIORef,
+      MonadMask,
       MonadSTM,
       MonadTerminal,
       MonadThread,
@@ -83,6 +85,15 @@ instance MonadLogger (NaviT MockEnv IntTestIO) where
   -- if we ever decide to test logs, we can capture them similar to the
   -- MonadNotify instance.
   monadLoggerLog _loc _src _lvl _msg = pure ()
+
+instance MonadTerminal (NaviT MockEnv IntTestIO) where
+  getChar = liftIO getChar
+  getLine = liftIO getLine
+  getContents' = liftIO getContents'
+  getTerminalSize = liftIO getTerminalSize
+  putBinary = liftIO . putBinary
+  putStr = liftIO . putStr
+  putStrLn = liftIO . putStrLn
 
 instance MonadLoggerNamespace (NaviT MockEnv IntTestIO) where
   getNamespace = pure ""

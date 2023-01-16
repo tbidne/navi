@@ -101,7 +101,6 @@ library
     , relative-time           ^>=0.1
     , safe-exceptions         ^>=0.1.7.0
     , smart-math              ^>=0.1
-    , stm                     ^>=2.5.0
     , text                    >=1.2.3.2   && <2.1
     , toml-reader             ^>=0.1.0.0
 
@@ -152,6 +151,7 @@ test-suite integration
   type:             exitcode-stdio-1.0
   main-is:          Main.hs
   other-modules:
+    Integration.Exceptions
     Integration.MockApp
     Integration.Prelude
 
@@ -159,14 +159,20 @@ test-suite integration
     , base
     , fdo-notify
     , monad-async
+    , monad-callstack
     , monad-fs
     , monad-logger-namespace
+    , monad-system-time
+    , monad-terminal
+    , monad-thread
     , navi
     , pythia
+    , safe-exceptions
     , smart-math
     , tasty
     , tasty-hunit
     , text
+    , time                    >=1.9.3 && <1.14
 
   hs-source-dirs:   test/integration
   default-language: GHC2021

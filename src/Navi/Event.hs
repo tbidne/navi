@@ -8,6 +8,7 @@ module Navi.Event
     runEvent,
 
     -- * Results
+    EventSuccess (..),
     EventError (..),
 
     -- * Caching previous events/errors
@@ -26,6 +27,7 @@ import Navi.Event.Types
     ErrorNote (..),
     Event (..),
     EventError (..),
+    EventSuccess (..),
     RepeatEvent (..),
   )
 import Navi.Prelude
@@ -42,11 +44,16 @@ runEvent ::
     Show result
   ) =>
   Event result ->
-  m result
+  m (EventSuccess result)
 runEvent event = addNamespace "runEvent" $ do
   result <- query $ event ^. #serviceType
   $(logInfo) ("Shell returned: " <> showt result)
-  pure result
+  pure $
+    MkEventSuccess
+      { result,
+        repeatEvent = event ^. #repeatEvent,
+        raiseAlert = event ^. #raiseAlert
+      }
 {-# INLINEABLE runEvent #-}
 
 -- | Determines if we should block the event. The semantics are:

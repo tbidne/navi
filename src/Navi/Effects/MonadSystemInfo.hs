@@ -37,7 +37,7 @@ rethrowPythia n io =
       MkEventError
         { name = n,
           short = "PythiaException",
-          long = pack $ displayException e
+          long = pack $ displayCallStack e
         }
 {-# INLINEABLE rethrowPythia #-}
 
