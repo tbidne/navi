@@ -110,7 +110,7 @@ version = OptApp.infoOption txt (OptApp.long "version" <> OptApp.short 'v')
     txt =
       L.intercalate
         "\n"
-        [ "Pythia",
+        [ "Navi",
           versNum,
           "Revision: " <> $(GitRev.gitHash),
           "Date: " <> $(GitRev.gitCommitDate)
