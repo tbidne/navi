@@ -14,8 +14,8 @@ import Control.Concurrent qualified as CC
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
 import Effects.Concurrent.Async qualified as Async
-import Effects.FileSystem.PathWriter qualified as Dir
 import Effects.FileSystem.PathReader qualified as Dir
+import Effects.FileSystem.PathWriter qualified as Dir
 import Integration.Exceptions qualified as Exceptions
 import Integration.MockApp (MockEnv (..), configToMockEnv, runMockApp)
 import Integration.Prelude
