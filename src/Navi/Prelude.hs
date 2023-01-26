@@ -12,9 +12,6 @@ module Navi.Prelude
   ( -- * Total versions of partial functions
     headMaybe,
 
-    -- * Exceptions
-    catchAny,
-
     -- * Misc utilities
     (>.>),
     (<<$>>),
@@ -32,18 +29,6 @@ where
 
 import Control.Applicative as X (Alternative (..), Applicative (..), (<**>))
 import Control.DeepSeq as X (NFData)
-import Control.Exception.Safe as X
-  ( Exception (..),
-    MonadCatch,
-    MonadMask,
-    MonadThrow,
-    SomeException,
-    bracket,
-    finally,
-    handle,
-    throwIO,
-    tryAny,
-  )
 import Control.Monad as X
   ( Monad (..),
     forever,
@@ -93,30 +78,8 @@ import Data.Traversable as X (Traversable (..))
 import Data.Tuple as X (fst, snd, uncurry)
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word16, Word8)
-import Effects.FileSystem.MonadFileReader as X
-  ( MonadFileReader,
-    readFileUtf8ThrowM,
-  )
-import Effects.FileSystem.MonadFileWriter as X (MonadFileWriter, writeFileUtf8)
-import Effects.FileSystem.MonadHandleWriter as X
-  ( Handle,
-    IOMode (..),
-    MonadHandleWriter (hClose, hFlush, hPut, openBinaryFile),
-  )
-import Effects.FileSystem.MonadPathReader as X (MonadPathReader)
-import Effects.FileSystem.Path as X (Path, (</>))
-import Effects.MonadAsync as X (MonadAsync)
-import Effects.MonadCallStack as X
-  ( MonadCallStack (addCallStack, throwWithCallStack),
-    catch,
-    displayCallStack,
-    try,
-  )
-import Effects.MonadIORef as X
-  ( IORef,
-    MonadIORef (modifyIORef', newIORef, readIORef, writeIORef),
-  )
-import Effects.MonadSTM as X
+import Effects.Concurrent.Async as X (MonadAsync)
+import Effects.Concurrent.STM as X
   ( MonadSTM,
     TBQueue,
     newTBQueueM,
@@ -124,8 +87,39 @@ import Effects.MonadSTM as X
     tryReadTBQueueM,
     writeTBQueueM,
   )
-import Effects.MonadTerminal as X (MonadTerminal, putStrLn)
-import Effects.MonadThread as X (MonadThread)
+import Effects.Concurrent.Thread as X (MonadThread)
+import Effects.Exception as X
+  ( Exception (..),
+    MonadCatch,
+    MonadMask,
+    MonadThrow,
+    SomeException,
+    addCS,
+    bracket,
+    catchAny,
+    catchWithCS,
+    finally,
+    mask,
+    throwM,
+    throwWithCS,
+  )
+import Effects.FileSystem.FileReader as X
+  ( MonadFileReader,
+    readFileUtf8ThrowM,
+  )
+import Effects.FileSystem.FileWriter as X (MonadFileWriter, writeFileUtf8)
+import Effects.FileSystem.HandleWriter as X
+  ( Handle,
+    IOMode (..),
+    MonadHandleWriter (hClose, hFlush, hPut, openBinaryFile),
+  )
+import Effects.FileSystem.Path as X (Path, (</>))
+import Effects.FileSystem.PathReader as X (MonadPathReader)
+import Effects.IORef as X
+  ( IORef,
+    MonadIORef (modifyIORef', newIORef, readIORef, writeIORef),
+  )
+import Effects.System.Terminal as X (MonadTerminal, putStrLn)
 import GHC.Enum as X (Bounded (..))
 import GHC.Err as X (undefined)
 import GHC.Generics as X (Generic)
@@ -216,13 +210,3 @@ infixr 8 >.>
 {-# INLINEABLE (<<$>>) #-}
 
 infixl 4 <<$>>
-
--- | @since 0.1
-catchAny ::
-  ( HasCallStack,
-    MonadCatch m
-  ) =>
-  m a ->
-  (SomeException -> m a) ->
-  m a
-catchAny = catch @SomeException

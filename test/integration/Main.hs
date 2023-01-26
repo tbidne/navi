@@ -13,9 +13,9 @@ module Main (main) where
 import Control.Concurrent qualified as CC
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
-import Effects.FileSystem.MonadPathReader qualified as Dir
-import Effects.FileSystem.MonadPathWriter qualified as Dir
-import Effects.MonadAsync qualified as Async
+import Effects.Concurrent.Async qualified as Async
+import Effects.FileSystem.PathWriter qualified as Dir
+import Effects.FileSystem.PathReader qualified as Dir
 import Integration.Exceptions qualified as Exceptions
 import Integration.MockApp (MockEnv (..), configToMockEnv, runMockApp)
 import Integration.Prelude
@@ -107,7 +107,7 @@ testSendExceptionDies :: TestTree
 testSendExceptionDies = testCase "Exception in send kills program" $ do
   result <-
     (runMock 3 sendExceptionConfig $> Nothing)
-      `catch` (pure . Just)
+      `catchWithCS` (pure . Just)
 
   expected @=? result
   where

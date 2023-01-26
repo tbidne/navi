@@ -82,7 +82,7 @@ library
     , fdo-notify              ^>=0.3.1
     , gitrev                  >=1.2.0     && <1.4
     , monad-async             ^>=0.1
-    , monad-callstack         ^>=0.1
+    , monad-exceptions        ^>=0.1
     , monad-fs                ^>=0.1
     , monad-ioref             ^>=0.1
     , monad-logger            ^>=0.3.30
@@ -99,7 +99,6 @@ library
     , process                 ^>=1.6.9.0
     , pythia                  ^>=0.1
     , relative-time           ^>=0.1
-    , safe-exceptions         ^>=0.1.7.0
     , smart-math              ^>=0.1
     , text                    >=1.2.3.2   && <2.1
     , toml-reader             ^>=0.1.0.0
@@ -159,7 +158,7 @@ test-suite integration
     , base
     , fdo-notify
     , monad-async
-    , monad-callstack
+    , monad-exceptions
     , monad-fs
     , monad-logger-namespace
     , monad-system-time
@@ -167,7 +166,6 @@ test-suite integration
     , monad-thread
     , navi
     , pythia
-    , safe-exceptions
     , smart-math
     , tasty
     , tasty-hunit

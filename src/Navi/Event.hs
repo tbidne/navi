@@ -20,7 +20,7 @@ module Navi.Event
   )
 where
 
-import Effects.MonadLoggerNamespace (MonadLoggerNamespace (..), addNamespace)
+import Effects.LoggerNamespace (MonadLoggerNamespace (..), addNamespace)
 import Navi.Effects (MonadSystemInfo (..))
 import Navi.Event.Types
   ( AnyEvent (..),

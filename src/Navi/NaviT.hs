@@ -9,14 +9,14 @@ module Navi.NaviT
 where
 
 import DBus.Notify qualified as DBusN
-import Effects.MonadLoggerNamespace
+import Effects.LoggerNamespace
   ( MonadLoggerNamespace (..),
     addNamespace,
     defaultLogFormatter,
     formatLog,
   )
-import Effects.MonadTerminal (MonadTerminal (..))
-import Effects.MonadTime (MonadTime (..))
+import Effects.System.Terminal (MonadTerminal (..))
+import Effects.Time (MonadTime (..))
 import Navi.Effects.MonadNotify (MonadNotify (..))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
 import Navi.Env.Core
@@ -36,7 +36,6 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       Applicative,
       Monad,
       MonadAsync,
-      MonadCallStack,
       MonadCatch,
       MonadFileReader,
       MonadHandleWriter,
@@ -77,7 +76,7 @@ instance MonadNotify (NaviT DBusEnv IO) where
   sendNote naviNote = addNamespace "dbus" $ do
     $(logDebug) (showt note)
     client <- asks getClient
-    liftIO $ addCallStack $ sendDbus client note
+    liftIO $ addCS $ sendDbus client note
     where
       note = naviToDBus naviNote
       sendDbus c = void . DBusN.notify c
@@ -88,7 +87,7 @@ instance MonadNotify (NaviT DBusEnv IO) where
 instance MonadNotify (NaviT NotifySendEnv IO) where
   sendNote naviNote = addNamespace "notify-send" $ do
     $(logDebug) noteTxt
-    liftIO $ addCallStack $ void $ Proc.readCreateProcess cp "notify-send"
+    liftIO $ addCS $ void $ Proc.readCreateProcess cp "notify-send"
     where
       noteTxt = naviToNotifySend naviNote
       cp = Proc.shell $ unpack noteTxt

@@ -37,9 +37,9 @@ import Navi.Services.Network.NetInterfaces qualified as NetConn
 -- anything goes wrong.
 readConfig ::
   ( HasCallStack,
-    MonadCallStack m,
     MonadFileReader m,
-    MonadIORef m
+    MonadIORef m,
+    MonadThrow m
   ) =>
   Path ->
   m Config
@@ -48,13 +48,13 @@ readConfig =
     -- FIXME: Unused keys do not cause errors. This should probably be addressed
     -- upstream. See https://github.com/brandonchinn178/toml-reader/issues/12
     case decode contents of
-      Left tomlErr -> throwWithCallStack $ TomlError tomlErr
+      Left tomlErr -> throwWithCS $ TomlError tomlErr
       Right cfg -> tomlToConfig cfg
 
 tomlToConfig ::
   ( HasCallStack,
-    MonadCallStack m,
-    MonadIORef m
+    MonadIORef m,
+    MonadThrow m
   ) =>
   ConfigToml ->
   m Config
@@ -76,7 +76,7 @@ tomlToConfig toml = do
       allEvts = maybeEvts <> multipleEvts
 
   case allEvts of
-    [] -> throwWithCallStack NoEvents
+    [] -> throwWithCS NoEvents
     (e : es) ->
       pure $
         MkConfig

@@ -133,9 +133,9 @@
                   final.callCabal2nix "monad-async"
                     "${monad-effects}/monad-async"
                     { };
-                monad-callstack =
-                  final.callCabal2nix "monad-callstack"
-                    "${monad-effects}/monad-callstack"
+                monad-exceptions =
+                  final.callCabal2nix "monad-exceptions"
+                    "${monad-effects}/monad-exceptions"
                     { };
                 monad-fs =
                   final.callCabal2nix "monad-fs"
@@ -164,6 +164,10 @@
                 monad-thread =
                   final.callCabal2nix "monad-thread"
                     "${monad-effects}/monad-thread"
+                    { };
+                monad-typed-process =
+                  final.callCabal2nix "monad-typed-process"
+                    "${monad-effects}/monad-typed-process"
                     { };
                 package-version = pkgs.haskell.lib.doJailbreak prev.package-version;
                 pythia = final.callCabal2nix "pythia" pythia { };

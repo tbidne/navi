@@ -11,19 +11,18 @@ module Navi
   )
 where
 
-import Control.Exception.Safe (mask)
 import DBus.Client (ClientError (clientErrorFatal))
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
-import Effects.MonadAsync qualified as Async
-import Effects.MonadLoggerNamespace
+import Effects.Concurrent.Async qualified as Async
+import Effects.Concurrent.STM (flushTBQueueM)
+import Effects.Concurrent.Thread (sleep)
+import Effects.LoggerNamespace
   ( MonadLoggerNamespace,
     addNamespace,
     logStrToBs,
   )
-import Effects.MonadSTM (flushTBQueueM)
-import Effects.MonadTerminal (MonadTerminal (putBinary))
-import Effects.MonadThread (sleep)
+import Effects.System.Terminal (MonadTerminal (putBinary))
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Effects.MonadNotify (MonadNotify (..), sendNoteQueue)
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
@@ -90,7 +89,7 @@ runNavi = do
             queue <- asks getLogQueue
             sendFn <- getLoggerFn
             flushTBQueueM queue >>= traverse_ (sendFn . logStrToBs)
-            throwIO e
+            throwM e
     {-# INLINEABLE runAllAsync #-}
 
     -- run events and notify threads
@@ -106,10 +105,10 @@ runNavi = do
           (fmap fst . Async.waitBoth noteThread)
     {-# INLINEABLE runEvents #-}
 
-    logExAndRethrow :: HasCallStack => Text -> m a -> m a
+    logExAndRethrow :: Text -> m a -> m a
     logExAndRethrow prefix io = catchAny io $ \ex -> do
-      $(logError) (prefix <> pack (displayCallStack ex))
-      throwIO ex
+      $(logError) (prefix <> pack (displayException ex))
+      throwM ex
     {-# INLINEABLE logExAndRethrow #-}
 {-# INLINEABLE runNavi #-}
 
@@ -132,7 +131,7 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
   forever $ do
     $(logInfo) ("Checking " <> name)
     (Event.runEvent event >>= handleSuccess)
-      `catch` handleEventError
+      `catchWithCS` handleEventError
       `catchAny` handleSomeException
     sleep pi
   where
@@ -215,15 +214,15 @@ pollNoteQueue = addNamespace "note-poller" $ do
   queue <- asks getNoteQueue
   forever $
     readTBQueueM queue >>= \nn ->
-      sendNote nn `catch` \ce ->
+      sendNote nn `catchWithCS` \ce ->
         -- NOTE: Rethrow all exceptions except:
         --
         -- 1. Non-fatal dbus errors e.g. quickly sending the same notif twice.
         if clientErrorFatal ce
-          then throwIO ce
+          then throwM ce
           else
             $(logError) $
-              "Received non-fatal dbus error: " <> T.pack (displayCallStack ce)
+              "Received non-fatal dbus error: " <> T.pack (displayException ce)
 {-# INLINEABLE pollNoteQueue #-}
 
 pollLogQueue ::

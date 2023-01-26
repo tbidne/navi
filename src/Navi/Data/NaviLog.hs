@@ -8,7 +8,7 @@ module Navi.Data.NaviLog
   )
 where
 
-import Effects.MonadLoggerNamespace (Namespace)
+import Effects.LoggerNamespace (Namespace)
 import Navi.Prelude
 
 -- | Data for file logging.

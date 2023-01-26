@@ -4,8 +4,8 @@
 module Main (main) where
 
 import Data.Functor.Identity (Identity (..))
-import Effects.FileSystem.MonadPathReader qualified as Dir
-import Effects.FileSystem.MonadPathWriter qualified as Dir
+import Effects.FileSystem.PathReader qualified as Dir
+import Effects.FileSystem.PathWriter qualified as Dir
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
 import Navi (runNavi, runNaviT)
 import Navi.Args (Args (..), getArgs)
@@ -24,7 +24,7 @@ import System.Exit qualified as Exit
 
 main :: IO ()
 main = do
-  setUncaughtExceptionHandler (putStrLn . displayCallStack)
+  setUncaughtExceptionHandler (putStrLn . displayException)
 
   args <- getArgs
   config <-
@@ -93,7 +93,7 @@ writeConfigErr ex = do
   let logFile = xdgBase </> "config_fatal.log"
   renameIfExists logFile
   writeFileUtf8 logFile $ "Couldn't read config: " <> pack (displayException ex)
-  throwWithCallStack ex
+  throwWithCS ex
 
 renameIfExists :: Path -> IO ()
 renameIfExists fp = do

@@ -15,7 +15,7 @@ import Data.Functor.Identity (Identity (..))
 import Data.List qualified as L
 import Data.Version.Package qualified as PV
 import Development.GitRev qualified as GitRev
-import Effects.FileSystem.MonadPathReader qualified as Dir
+import Effects.FileSystem.PathReader qualified as Dir
 import Navi.Prelude
 import Options.Applicative (Parser, ParserInfo (..))
 import Options.Applicative qualified as OptApp

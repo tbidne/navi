@@ -9,8 +9,8 @@ module Integration.MockApp
   )
 where
 
-import Effects.MonadLoggerNamespace (MonadLoggerNamespace (..))
-import Effects.MonadTerminal (MonadTerminal (..))
+import Effects.LoggerNamespace (MonadLoggerNamespace (..))
+import Effects.System.Terminal (MonadTerminal (..))
 import Integration.Prelude
 import Navi.Config (Config)
 import Navi.Data.NaviLog (LogEnv (MkLogEnv))
@@ -65,7 +65,6 @@ newtype IntTestIO a = MkIntTestIO (IO a)
       Applicative,
       Monad,
       MonadAsync,
-      MonadCallStack,
       MonadCatch,
       MonadFileReader,
       MonadHandleWriter,
@@ -102,7 +101,7 @@ instance MonadLoggerNamespace (NaviT MockEnv IntTestIO) where
 instance MonadNotify (NaviT MockEnv IntTestIO) where
   sendNote note =
     if note ^. #summary == "SentException"
-      then throwIO $ MkEventError "SentException" "sending mock exception" ""
+      then throwM $ MkEventError "SentException" "sending mock exception" ""
       else do
         notes <- asks (view #sentNotes)
         liftIO $ modifyIORef' notes (note :)
@@ -124,7 +123,7 @@ instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
   query (BatteryStatus _) = pure Charging
   -- Service error. Can test error behavior.
   query (NetworkInterface _ _) =
-    throwIO $ MkCommandException "nmcli" "Nmcli error"
+    throwM $ MkCommandException "nmcli" "Nmcli error"
   -- Constant service. Can test duplicate behavior.
   query (Single _) = pure "single trigger"
   -- Constant service. Can test duplicate behavior.

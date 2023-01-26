@@ -6,20 +6,20 @@
 -- | Tests fatal exceptions.
 module Integration.Exceptions (tests) where
 
-import Control.Exception.Safe (tryAsync)
+import Control.Exception qualified as UnsafeEx
 import Data.Time.Calendar.OrdinalDate (fromOrdinalDate)
 import Data.Time.LocalTime (LocalTime (..), TimeOfDay (TimeOfDay), utc)
-import Effects.MonadAsync (ExceptionInLinkedThread (..))
-import Effects.MonadAsync qualified as Async
-import Effects.MonadCallStack (AnnotatedException (..))
-import Effects.MonadLoggerNamespace
+import Effects.Concurrent.Async (ExceptionInLinkedThread (..))
+import Effects.Concurrent.Async qualified as Async
+import Effects.Concurrent.Thread (sleep)
+import Effects.Exception (ExceptionCS (..))
+import Effects.LoggerNamespace
   ( MonadLoggerNamespace (..),
     defaultLogFormatter,
     formatLog,
   )
-import Effects.MonadTerminal (MonadTerminal (..))
-import Effects.MonadThread (sleep)
-import Effects.MonadTime (MonadTime (..), ZonedTime (..))
+import Effects.System.Terminal (MonadTerminal (..))
+import Effects.Time (MonadTime (..), ZonedTime (..))
 import Integration.Prelude
 import Navi (runNavi)
 import Navi.Data.NaviLog (LogEnv (..))
@@ -72,7 +72,6 @@ newtype ExceptionIO a = MkExceptionIO (IO a)
       Applicative,
       Monad,
       MonadAsync,
-      MonadCallStack,
       MonadCatch,
       MonadHandleWriter,
       MonadIORef,
@@ -100,7 +99,7 @@ instance MonadTerminal (NaviT ExceptionEnv ExceptionIO) where
       NotifyThread -> do
         logsRef <- asks (view #logsRef)
         modifyIORef' logsRef (bs :<|)
-      LogThread -> sleep 2 *> throwIO (MkTestE "logger dying")
+      LogThread -> sleep 2 *> throwM (MkTestE "logger dying")
 
 instance MonadSystemInfo (NaviT ExceptionEnv ExceptionIO) where
   query = \case
@@ -141,7 +140,7 @@ instance MonadNotify (NaviT ExceptionEnv ExceptionIO) where
   sendNote _ = do
     asks (view #badThread) >>= \case
       LogThread -> pure ()
-      NotifyThread -> sleep 2 *> throwIO (MkTestE "notify dying")
+      NotifyThread -> sleep 2 *> throwM (MkTestE "notify dying")
 
 -- | Runs integration tests.
 tests :: TestTree
@@ -159,11 +158,11 @@ badLoggerDies = testCase "Logger exception kills Navi" $ do
 
 badNotifierDies :: TestTree
 badNotifierDies = testCase "Notify exception kills Navi" $ do
-  (AnnotatedException _ ex, logs) <- runExceptionApp NotifyThread
-  "MkTestE \"notify dying\"" @=? displayCallStack @SomeException ex
+  (MkExceptionCS ex _, logs) <- runExceptionApp NotifyThread
+  "MkTestE \"notify dying\"" @=? displayException @SomeException ex
   assertBool (show logs) $ errLog `elem` logs
   where
-    errLog = "[2022-02-08 10:20:05][int-ex-test][Error][src/Navi.hs:111:8] Notify: MkTestE \"notify dying\"\n"
+    errLog = "[2022-02-08 10:20:05][int-ex-test][Error][src/Navi.hs:110:8] Notify: MkTestE \"notify dying\"\n"
 
 runExceptionApp ::
   forall e.
@@ -205,7 +204,9 @@ runExceptionApp badThread = do
       -- NOTE: timeout after 10 seconds
       MkExceptionIO testRun = Async.race (sleep 10_000_000) (runNaviT runNavi env)
 
-  tryAsync @_ @e testRun >>= \case
+  -- NOTE: The try that is in scope only works on sync exceptions, so we use
+  -- the one from base.
+  UnsafeEx.try @e testRun >>= \case
     Left ex -> do
       logs <- readIORef logsRef
       pure (ex, logs)
