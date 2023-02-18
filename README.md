@@ -90,6 +90,7 @@ Navi currently supports:
 
     * [deadd-notification-center](https://github.com/phuhl/linux_notification_center)
     * [dunst](https://dunst-project.org/)
+    * [KDE Plasma](https://kde.org/plasma-desktop/)
 
 * Libnotify
 
