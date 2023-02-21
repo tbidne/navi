@@ -126,7 +126,7 @@ configFileParser =
   A.optional
     ( OptApp.strOption
         ( OptApp.long "config-file"
-            <> OptApp.short 'f'
+            <> OptApp.short 'c'
             <> OptApp.help helpTxt
             <> OptApp.metavar "PATH"
         )

@@ -103,12 +103,12 @@ Navi has the following usage:
 ```
 Navi: A program for monitoring system status via desktop notifications.
 
-Usage: navi [-f|--config-file PATH] [-v|--version]
+Usage: navi [-c|--config-file PATH] [-v|--version]
 
 Navi allows one to easily define custom notification 'services' that hook into a running notification server. For example, one can provide a bash script that, say, queries the connection status of a given network device. Navi will periodically run this query and send a desktop notification if the status has changed. See github.com/tbidne/navi#README for full documentation.
 
 Available options:
-  -f,--config-file PATH    Path to config file. Defaults to
+  -c,--config-file PATH    Path to config file. Defaults to
                            <xdgConfig>/navi/navi-config.toml.
   -h,--help                Show this help text
 
