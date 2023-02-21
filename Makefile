@@ -1,5 +1,4 @@
-.PHONY: build clean repl watch ;\
-	test unit integration functional ;\
+.PHONY: build repl watch ;\
 	cic ci formatc format lint lintc ;\
 	haddock hackage
 
@@ -13,22 +12,6 @@ build:
 	else \
 		cabal build $(T); \
 	fi
-
-clean:
-	cabal clean
-
-test:
-	if [ -z "$(T)" ]; then \
-		cabal test; \
-	else \
-		cabal test $(T); \
-	fi
-
-unit:
-	cabal test unit
-
-integration:
-	cabal test integration
 
 repl:
 	if [ -z "$(T)" ]; then \
