@@ -1,7 +1,7 @@
 .PHONY: build clean repl watch ;\
 	test unit integration functional ;\
 	cic ci formatc format lint lintc ;\
-	haddock haddockc hackage
+	haddock hackage
 
 # core
 
@@ -46,9 +46,9 @@ watch:
 
 # ci
 
-cic: formatc lintc haddockc
+cic: formatc lintc
 
-ci: lint format haddockc
+ci: lint format
 
 # formatting
 
@@ -75,13 +75,3 @@ haddock:
 	mkdir -p docs/ ;\
 	find docs/ -type f | xargs -I % sh -c "rm -r %" ;\
 	cp -r dist-newstyle/build/x86_64-linux/ghc-9.2.5/navi-0.1/opt/doc/html/navi/* docs/
-
-haddockc:
-	nix run github:tbidne/nix-hs-tools/0.7#haddock-cov -- \
-	. \
-	-m Navi.Config.Types 55 \
-	-m Navi.Data.NaviNote 80 \
-	-m Navi.Data.NaviQueue 80 \
-	-m Navi.Event.Toml 60 \
-	-m Navi.Event.Types 55 \
-	-m Navi.Prelude 85

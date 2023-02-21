@@ -115,7 +115,7 @@
             };
           };
           hlib = pkgs.haskell.lib;
-          mkPkg = returnShellEnv: withDevTools:
+          mkPkg = returnShellEnv:
             compiler.developPackage {
               inherit returnShellEnv;
               name = "navi";
@@ -123,7 +123,7 @@
               modifier = drv:
                 pkgs.haskell.lib.addBuildTools drv
                   (buildTools compiler ++
-                    (if withDevTools then devTools compiler else [ ]));
+                    (if returnShellEnv then devTools compiler else [ ]));
               overrides = final: prev: with compiler; {
                 algebra-simple = final.callCabal2nix "algebra-simple" algebra-simple { };
                 bounds = final.callCabal2nix "bounds" bounds { };
@@ -179,9 +179,8 @@
             };
         in
         {
-          packages.default = mkPkg false false;
-          devShells.default = mkPkg true true;
-          devShells.ci = mkPkg true false;
+          packages.default = mkPkg false;
+          devShells.default = mkPkg true;
         };
       systems = [
         "x86_64-linux"
