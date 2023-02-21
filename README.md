@@ -129,7 +129,7 @@ Navi is configured via a toml file, by default located at `xdgBase/navi/config.t
 
 * `note-system`: Optional. One of `["dbus"|"notify-send"]`.
 * `logging.severity`: Optional. One of `["debug"|"info"|"error"]`. Controls the logging level. Defaults to `error`.
-* `logging.location`: Optional. Either `"default"`, `"stdout"` or `"<filename>"`. No option or `default` uses `xdgState/navi/log` e.g. `~/.local/state/navi/log`.
+* `logging.location`: Optional. Either `"default"`, `"stdout"` or `"<filename>"`. No option or `default` uses `xdgState/navi/<timestamp>.log` e.g. `~/.local/state/navi/<timestamp>.log`.
 
 ##### Example
 

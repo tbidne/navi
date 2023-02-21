@@ -6,6 +6,7 @@ module Main (main) where
 import Data.Functor.Identity (Identity (..))
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter qualified as Dir
+import Effects.Time qualified as Time
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
 import Navi (runNavi, runNaviT)
 import Navi.Args (Args (..), getArgs)
@@ -56,7 +57,8 @@ mkLogEnv logging = do
     -- Use the default log path: xdgState </> navi/log
     DefPath -> do
       xdgState <- Dir.getXdgState "navi/"
-      let logFile = xdgState </> "log"
+      currTime <- fmap replaceSpc <$> Time.getSystemTimeString
+      let logFile = xdgState </> (currTime <> ".log")
       stateExists <- Dir.doesDirectoryExist xdgState
       unless stateExists (Dir.createDirectoryIfMissing True xdgState)
       renameIfExists logFile
@@ -88,6 +90,9 @@ mkLogEnv logging = do
   where
     logLevel = fromMaybe LevelError (logging ^. #severity)
     logLoc' = fromMaybe DefPath (logging ^. #location)
+
+    replaceSpc ' ' = '_'
+    replaceSpc x = x
 
 writeConfigErr :: SomeException -> IO void
 writeConfigErr ex = do

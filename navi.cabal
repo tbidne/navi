@@ -112,6 +112,7 @@ executable navi
   build-depends:
     , base
     , monad-fs
+    , monad-system-time
     , navi
 
   hs-source-dirs:   app
