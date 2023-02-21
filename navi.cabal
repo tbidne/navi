@@ -101,7 +101,7 @@ library
     , relative-time           ^>=0.1
     , smart-math              ^>=0.1
     , text                    >=1.2.3.2   && <2.1
-    , toml-reader             ^>=0.1.0.0
+    , toml-reader             >=0.1.0.0   && <0.3
 
   hs-source-dirs:   src
   default-language: GHC2021

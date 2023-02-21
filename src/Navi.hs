@@ -133,7 +133,7 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
   forever $ do
     $(logInfo) ("Checking " <> name)
     (Event.runEvent event >>= handleSuccess)
-      `catchWithCS` handleEventError
+      `catchCS` handleEventError
       `catchAny` handleSomeException
     sleep pi
   where
@@ -216,7 +216,7 @@ pollNoteQueue = addNamespace "note-poller" $ do
   queue <- asks getNoteQueue
   forever $
     readTBQueueM queue >>= \nn ->
-      sendNote nn `catchWithCS` \ce ->
+      sendNote nn `catchCS` \ce ->
         -- NOTE: Rethrow all exceptions except:
         --
         -- 1. Non-fatal dbus errors e.g. quickly sending the same notif twice.

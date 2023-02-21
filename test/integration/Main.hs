@@ -107,7 +107,7 @@ testSendExceptionDies :: TestTree
 testSendExceptionDies = testCase "Exception in send kills program" $ do
   result <-
     (runMock 3 sendExceptionConfig $> Nothing)
-      `catchWithCS` (pure . Just)
+      `catchCS` (pure . Just)
 
   expected @=? result
   where

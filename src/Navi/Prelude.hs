@@ -97,11 +97,11 @@ import Effects.Exception as X
     addCS,
     bracket,
     catchAny,
-    catchWithCS,
+    catchCS,
     finally,
     mask,
+    throwCS,
     throwM,
-    throwWithCS,
   )
 import Effects.FileSystem.FileReader as X
   ( MonadFileReader,

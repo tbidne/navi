@@ -82,7 +82,7 @@
     };
   };
   outputs =
-    { algebra-simple
+    inputs@{ algebra-simple
     , bounds
     , byte-types
     , flake-compat
@@ -95,7 +95,7 @@
     , smart-math
     , time-conv
     }:
-    flake-parts.lib.mkFlake { inherit self; } {
+    flake-parts.lib.mkFlake { inherit inputs; } {
       perSystem = { pkgs, ... }:
         let
           buildTools = c: with c; [
@@ -104,10 +104,18 @@
             pkgs.zlib
           ];
           devTools = c: with c; [
-            ghcid
-            haskell-language-server
+            (pkgs.haskell.lib.dontCheck ghcid)
+            (hlib.overrideCabal haskell-language-server (old: {
+              configureFlags = (old.configureFlags or [ ]) ++
+                [
+                  "-f -brittany"
+                  "-f -floskell"
+                  "-f -fourmolu"
+                  "-f -stylishhaskell"
+                ];
+            }))
           ];
-          ghc-version = "ghc925";
+          ghc-version = "ghc944";
           compiler = pkgs.haskell.packages."${ghc-version}".override {
             overrides = final: prev: {
               # https://github.com/ddssff/listlike/issues/23
