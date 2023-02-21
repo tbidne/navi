@@ -119,7 +119,7 @@ Version: 0.1
 
 This argument overrides where Navi searches for the configuration file.
 
-The default path to the config file is based on the [XDG base directory](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html). Given `xdgBase`, by default, Navi will look for `xdgBase/navi/config.toml` e.g. `~/.config/navi/config.toml`.
+The default path to the config file is based on the [XDG config directory](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html). Given `xdgConfig`, by default, Navi will look for `xdgConfig/navi/config.toml` e.g. `~/.config/navi/config.toml`.
 
 # Configuration
 
@@ -129,7 +129,7 @@ Navi is configured via a toml file, by default located at `xdgBase/navi/config.t
 
 * `note-system`: Optional. One of `["dbus"|"notify-send"]`.
 * `logging.severity`: Optional. One of `["debug"|"info"|"error"]`. Controls the logging level. Defaults to `error`.
-* `logging.location`: Optional. Either `"default"`, `"stdout"` or `"<filename>"`. No option or `default` uses `xdgBase/navi/navi.log`.
+* `logging.location`: Optional. Either `"default"`, `"stdout"` or `"<filename>"`. No option or `default` uses `xdgState/navi/log` e.g. `~/.local/state/navi/log`.
 
 ##### Example
 

@@ -53,12 +53,14 @@ tryParseConfig =
 mkLogEnv :: Logging -> IO LogEnv
 mkLogEnv logging = do
   logFile <- case logLoc' of
-    -- Use the default log path: xdgConfig </> navi/navi.log
+    -- Use the default log path: xdgState </> navi/log
     DefPath -> do
-      xdgBase <- Dir.getXdgConfig "navi/"
-      let logFile = xdgBase </> "navi.log"
+      xdgState <- Dir.getXdgState "navi/"
+      let logFile = xdgState </> "log"
+      stateExists <- Dir.doesDirectoryExist xdgState
+      unless stateExists (Dir.createDirectoryIfMissing True xdgState)
       renameIfExists logFile
-      h <- openBinaryFile logFile AppendMode
+      h <- openBinaryFile logFile WriteMode
       pure $
         Just $
           MkLogFile
@@ -68,7 +70,7 @@ mkLogEnv logging = do
     -- Custom log path.
     File f -> do
       renameIfExists f
-      h <- openBinaryFile f AppendMode
+      h <- openBinaryFile f WriteMode
       pure $
         Just $
           MkLogFile
@@ -89,7 +91,7 @@ mkLogEnv logging = do
 
 writeConfigErr :: SomeException -> IO void
 writeConfigErr ex = do
-  xdgBase <- Dir.getXdgConfig "navi/"
+  xdgBase <- Dir.getXdgState "navi/"
   let logFile = xdgBase </> "config_fatal.log"
   renameIfExists logFile
   writeFileUtf8 logFile $ "Couldn't read config: " <> pack (displayException ex)
