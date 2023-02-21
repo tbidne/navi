@@ -171,7 +171,7 @@ import Prelude as X (Integer, seq)
 import Prelude qualified as P
 
 -- | 'Text' version of 'P.show'.
-showt :: P.Show a => a -> Text
+showt :: (P.Show a) => a -> Text
 showt = pack . P.show
 {-# INLINEABLE showt #-}
 
@@ -193,7 +193,7 @@ maybeToEither _ (Just x) = Right x
 {-# INLINEABLE maybeToEither #-}
 
 -- | Convenience function for mapping @(a -> b)@ over a monomorphic bifunctor.
-monoBimap :: Bifunctor p => (a -> b) -> p a a -> p b b
+monoBimap :: (Bifunctor p) => (a -> b) -> p a a -> p b b
 monoBimap f = bimap f f
 {-# INLINEABLE monoBimap #-}
 

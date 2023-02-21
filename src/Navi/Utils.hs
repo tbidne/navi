@@ -27,7 +27,7 @@ import Pythia.Data.Command (Command (..))
 -- 'Nothing'.
 --
 -- @since 0.1
-getFieldOptArrayOf :: DecodeTOML a => Text -> Decoder [a]
+getFieldOptArrayOf :: (DecodeTOML a) => Text -> Decoder [a]
 getFieldOptArrayOf =
   fmap (fromMaybe [])
     . getFieldOptWith (getArrayOf tomlDecoder)

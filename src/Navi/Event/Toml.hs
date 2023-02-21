@@ -46,14 +46,14 @@ repeatEventOptDecoder :: Decoder (Maybe RepeatEventToml)
 repeatEventOptDecoder = getFieldOptWith tomlDecoder "repeat-events"
 
 -- | Constructs a mutable 'RepeatEvent' from 'RepeatEventToml'.
-repeatEventTomlToVal :: MonadIORef m => RepeatEventToml -> m (RepeatEvent a)
+repeatEventTomlToVal :: (MonadIORef m) => RepeatEventToml -> m (RepeatEvent a)
 repeatEventTomlToVal AllowRepeatsToml = pure AllowRepeats
 repeatEventTomlToVal NoRepeatsToml = NoRepeats <$> newIORef Nothing
 {-# INLINEABLE repeatEventTomlToVal #-}
 
 -- | Constructs a mutable 'RepeatEvent' from 'RepeatEventToml'. If none is
 -- provided, defaults to 'NoRepeatsToml', i.e., no repeats.
-mRepeatEventTomlToVal :: MonadIORef m => Maybe RepeatEventToml -> m (RepeatEvent a)
+mRepeatEventTomlToVal :: (MonadIORef m) => Maybe RepeatEventToml -> m (RepeatEvent a)
 mRepeatEventTomlToVal Nothing = repeatEventTomlToVal NoRepeatsToml
 mRepeatEventTomlToVal (Just t) = repeatEventTomlToVal t
 {-# INLINEABLE mRepeatEventTomlToVal #-}
@@ -92,7 +92,7 @@ errorNoteOptDecoder :: Decoder (Maybe ErrorNoteToml)
 errorNoteOptDecoder = getFieldOptWith tomlDecoder "error-events"
 
 -- | Constructs a mutable 'ErrorNote' from 'ErrorNoteToml'.
-errorNoteTomlToVal :: MonadIORef m => ErrorNoteToml -> m ErrorNote
+errorNoteTomlToVal :: (MonadIORef m) => ErrorNoteToml -> m ErrorNote
 errorNoteTomlToVal NoErrNoteToml = pure NoErrNote
 errorNoteTomlToVal ErrNoteAllowRepeatsToml = pure $ AllowErrNote AllowRepeats
 errorNoteTomlToVal ErrNoteNoRepeatsToml = AllowErrNote . NoRepeats <$> newIORef Nothing
@@ -101,7 +101,7 @@ errorNoteTomlToVal ErrNoteNoRepeatsToml = AllowErrNote . NoRepeats <$> newIORef 
 -- | Constructs a mutable 'ErrorNote' from 'ErrorNoteToml'. If none is
 -- provided, defaults to 'ErrNoteNoRepeatsToml', i.e., we /do/ send
 -- notifications for errors, but we do not send repeats.
-mErrorNoteTomlToVal :: MonadIORef m => Maybe ErrorNoteToml -> m ErrorNote
+mErrorNoteTomlToVal :: (MonadIORef m) => Maybe ErrorNoteToml -> m ErrorNote
 mErrorNoteTomlToVal Nothing = errorNoteTomlToVal ErrNoteNoRepeatsToml
 mErrorNoteTomlToVal (Just t) = errorNoteTomlToVal t
 {-# INLINEABLE mErrorNoteTomlToVal #-}

@@ -13,9 +13,11 @@ import Pythia.Data.Command (Command (..))
 import Pythia.Internal.ShellApp (SimpleShell (..))
 import Pythia.Internal.ShellApp qualified as ShellApp
 
+{- HLINT ignore MonadSystemInfo "Redundant bracket" -}
+
 -- | This class represents an effect of querying system information.
-class Monad m => MonadSystemInfo m where
-  query :: HasCallStack => ServiceType result -> m result
+class (Monad m) => MonadSystemInfo m where
+  query :: (HasCallStack) => ServiceType result -> m result
 
 instance MonadSystemInfo IO where
   query :: ServiceType result -> IO result
@@ -41,7 +43,7 @@ rethrowPythia n io =
         }
 {-# INLINEABLE rethrowPythia #-}
 
-instance MonadSystemInfo m => MonadSystemInfo (ReaderT e m) where
+instance (MonadSystemInfo m) => MonadSystemInfo (ReaderT e m) where
   query = lift . query
   {-# INLINEABLE query #-}
 

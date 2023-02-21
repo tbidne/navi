@@ -166,7 +166,7 @@ badNotifierDies = testCase "Notify exception kills Navi" $ do
 
 runExceptionApp ::
   forall e.
-  Exception e =>
+  (Exception e) =>
   BadThread ->
   IO (e, Seq ByteString)
 runExceptionApp badThread = do

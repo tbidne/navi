@@ -42,7 +42,7 @@ instance DecodeTOML PollInterval where
     Integer i -> ltRelTimeBounds (fromIntegral i)
     badTy -> typeMismatch badTy
 
-ltRelTimeBounds :: MonadFail f => Natural -> f PollInterval
+ltRelTimeBounds :: (MonadFail f) => Natural -> f PollInterval
 ltRelTimeBounds n
   | MkPollInterval n <= maxBound = pure $ MkPollInterval n
   | otherwise =

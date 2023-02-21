@@ -50,7 +50,7 @@ instance HasNoteQueue NotifySendEnv where
 -- | Creates a 'NotifySendEnv' from the provided log types and configuration
 -- data.
 mkNotifySendEnv ::
-  MonadSTM m =>
+  (MonadSTM m) =>
   LogEnv ->
   Config ->
   m NotifySendEnv

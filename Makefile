@@ -5,23 +5,23 @@
 
 # core
 
-ARGS = ""
+T = ""
 
 build:
-	if [ -z "$(ARGS)" ]; then \
+	if [ -z "$(T)" ]; then \
 		cabal build; \
 	else \
-		cabal build $(ARGS); \
+		cabal build $(T); \
 	fi
 
 clean:
 	cabal clean
 
 test:
-	if [ -z "$(ARGS)" ]; then \
+	if [ -z "$(T)" ]; then \
 		cabal test; \
 	else \
-		cabal test $(ARGS); \
+		cabal test $(T); \
 	fi
 
 unit:
@@ -31,17 +31,17 @@ integration:
 	cabal test integration
 
 repl:
-	if [ -z "$(ARGS)" ]; then \
+	if [ -z "$(T)" ]; then \
 		cabal repl navi; \
 	else \
-		cabal repl $(ARGS); \
+		cabal repl $(T); \
 	fi
 
 watch:
-	if [ -z "$(ARGS)" ]; then \
+	if [ -z "$(T)" ]; then \
 		ghcid --command "cabal repl navi"; \
 	else \
-		ghcid --command "cabal repl $(ARGS)"; \
+		ghcid --command "cabal repl $(T)"; \
 	fi
 
 # ci
@@ -53,22 +53,22 @@ ci: lint format
 # formatting
 
 formatc:
-	nix run github:tbidne/nix-hs-tools/0.7#nixpkgs-fmt -- --check ;\
-	nix run github:tbidne/nix-hs-tools/0.7#cabal-fmt -- --check ;\
-	nix run github:tbidne/nix-hs-tools/0.7#ormolu -- --mode check
+	nix run github:tbidne/nix-hs-tools/0.8#nixpkgs-fmt -- --check ;\
+	nix run github:tbidne/nix-hs-tools/0.8#cabal-fmt -- --check ;\
+	nix run github:tbidne/nix-hs-tools/0.8#ormolu -- --mode check
 
 format:
-	nix run github:tbidne/nix-hs-tools/0.7#nixpkgs-fmt ;\
-	nix run github:tbidne/nix-hs-tools/0.7#cabal-fmt -- --inplace ;\
-	nix run github:tbidne/nix-hs-tools/0.7#ormolu -- --mode inplace
+	nix run github:tbidne/nix-hs-tools/0.8#nixpkgs-fmt ;\
+	nix run github:tbidne/nix-hs-tools/0.8#cabal-fmt -- --inplace ;\
+	nix run github:tbidne/nix-hs-tools/0.8#ormolu -- --mode inplace
 
 # linting
 
 lint:
-	nix run github:tbidne/nix-hs-tools/0.7#hlint -- --refact
+	nix run github:tbidne/nix-hs-tools/0.8#hlint -- --refact
 
 lintc:
-	nix run github:tbidne/nix-hs-tools/0.7#hlint
+	nix run github:tbidne/nix-hs-tools/0.8#hlint
 
 haddock:
 	cabal haddock --haddock-hyperlink-source --haddock-quickjump ;\

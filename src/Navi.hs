@@ -112,6 +112,8 @@ runNavi = do
     {-# INLINEABLE logExAndRethrow #-}
 {-# INLINEABLE runNavi #-}
 
+{- HLINT ignore module "Redundant bracket" -}
+
 processEvent ::
   forall m env.
   ( HasCallStack,
@@ -159,13 +161,13 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
 
     {-# INLINEABLE handleSuccess #-}
 
-    handleEventError :: HasCallStack => EventError -> m ()
+    handleEventError :: (HasCallStack) => EventError -> m ()
     handleEventError =
       addNamespace "handleEventError"
         . handleErr eventErrToNote
     {-# INLINEABLE handleEventError #-}
 
-    handleSomeException :: HasCallStack => SomeException -> m ()
+    handleSomeException :: (HasCallStack) => SomeException -> m ()
     handleSomeException =
       addNamespace "handleSomeException"
         . handleErr exToNote
