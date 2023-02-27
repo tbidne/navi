@@ -202,11 +202,11 @@ handleLogSize naviState sizeMode = do
   let totalBytes' = MkBytes @B @Natural (fromInteger totalBytes)
 
   case sizeMode of
-    FileSizeModeWarn warnSize ->
+    FilesSizeModeWarn warnSize ->
       when (totalBytes' > warnSize) $
         putTextLn $
           sizeWarning warnSize naviState totalBytes'
-    FileSizeModeDelete delSize ->
+    FilesSizeModeDelete delSize ->
       when (totalBytes' > delSize) $ do
         putTextLn $ sizeWarning delSize naviState totalBytes' <> " Deleting logs."
         Dir.removeDirectoryRecursive naviState

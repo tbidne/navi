@@ -38,15 +38,10 @@ data LogLoc
 -- threshold.
 data FilesSizeMode
   = -- | Print a warning.
-    FileSizeModeWarn (Bytes B Natural)
+    FilesSizeModeWarn (Bytes B Natural)
   | -- | Delete the file.
-    FileSizeModeDelete (Bytes B Natural)
-  deriving stock
-    ( -- | @since 0.5
-      Eq,
-      -- | @since 0.5
-      Show
-    )
+    FilesSizeModeDelete (Bytes B Natural)
+  deriving stock (Eq, Show)
 
 -- | Logging configuration.
 data Logging = MkLogging
@@ -81,11 +76,10 @@ defaultLogging =
     (Just LevelError)
     (Just DefPath)
     (Just defaultSizeMode)
-  where
 
 -- | @since 0.1
 defaultSizeMode :: FilesSizeMode
-defaultSizeMode = FileSizeModeDelete $ Bytes.convert Proxy fiftyMb
+defaultSizeMode = FilesSizeModeDelete $ Bytes.convert Proxy fiftyMb
   where
     fiftyMb = MkBytes @M 50
 

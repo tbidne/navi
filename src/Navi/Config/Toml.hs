@@ -99,12 +99,12 @@ sizeModeDecoder = do
   txt <- tomlDecoder
   let (m, byteTxt) = T.break Ch.isSpace txt
   cons <- case m of
-    "warn" -> pure FileSizeModeWarn
-    "delete" -> pure FileSizeModeDelete
-    bad -> fail $ "Unrecognized file-log-size-mode: " <> unpack bad
+    "warn" -> pure FilesSizeModeWarn
+    "delete" -> pure FilesSizeModeDelete
+    bad -> fail $ "Unrecognized size-mode: " <> unpack bad
   case parseByteText byteTxt of
     Right b -> pure $ cons b
-    Left err -> fail $ "Could not parse --file-log-size-mode size: " <> unpack err
+    Left err -> fail $ "Could not parse size-mode size: " <> unpack err
   where
     parseByteText :: Text -> Either Text (Bytes B Natural)
     parseByteText txt =

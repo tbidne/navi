@@ -75,7 +75,7 @@ expectedFull =
           MkLogging
             { severity = Just LevelDebug,
               location = Just $ File "some-file",
-              sizeMode = Just (FileSizeModeWarn (MkBytes 50_000_000))
+              sizeMode = Just (FilesSizeModeWarn (MkBytes 50_000_000))
             },
       noteSystemToml = Nothing,
       singleToml = expectedSingle,
