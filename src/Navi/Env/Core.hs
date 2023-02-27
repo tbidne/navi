@@ -48,18 +48,13 @@ makeFieldLabelsNoPrefix ''Env
 
 instance HasEvents Env where
   getEvents = view #events
-  {-# INLINEABLE getEvents #-}
 
 instance HasLogEnv Env where
   getLogEnv = view #logEnv
-  {-# INLINEABLE getLogEnv #-}
   localLogEnv = over' #logEnv
-  {-# INLINEABLE localLogEnv #-}
 
 instance HasLogQueue Env where
   getLogQueue = view #logQueue
-  {-# INLINEABLE getLogQueue #-}
 
 instance HasNoteQueue Env where
   getNoteQueue = view #noteQueue
-  {-# INLINEABLE getNoteQueue #-}

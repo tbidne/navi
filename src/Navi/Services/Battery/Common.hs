@@ -24,4 +24,3 @@ batteryAppDecoder =
               bad,
               ". Expected one of <acpi | sysfs | upower>."
             ]
-{-# INLINEABLE batteryAppDecoder #-}

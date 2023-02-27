@@ -52,7 +52,6 @@ tomlToNote toml =
       Just $
         showt (Interval.unLRInterval $ percentage ^. #unPercentage)
           <> "%"
-{-# INLINEABLE tomlToNote #-}
 
 mkBatteryEvent ::
   NonEmpty (Percentage, NaviNote) ->
@@ -72,10 +71,8 @@ mkBatteryEvent percentNoteList batteryProgram pi re en =
     }
   where
     percentNoteMap = Map.fromList $ NE.toList percentNoteList
-{-# INLINEABLE mkBatteryEvent #-}
 
 lookupPercent :: Map Percentage NaviNote -> Battery -> Maybe NaviNote
 lookupPercent percentNoteMap state = case state ^. #status of
   Discharging -> Map.lookup (state ^. #percentage) percentNoteMap
   _ -> Nothing
-{-# INLINEABLE lookupPercent #-}

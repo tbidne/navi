@@ -5,8 +5,6 @@
 module Navi.Data.NaviNote
   ( NaviNote (..),
     Timeout (..),
-    _Never,
-    _Seconds,
     timeoutOptDecoder,
   )
 where
@@ -23,9 +21,6 @@ data Timeout
   = Never
   | Seconds !Word16
   deriving stock (Eq, Show)
-
--- | @since 0.1
-makePrisms ''Timeout
 
 -- | @since 0.1
 instance DecodeTOML Timeout where

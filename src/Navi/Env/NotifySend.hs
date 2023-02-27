@@ -31,21 +31,16 @@ makeFieldLabelsNoPrefix ''NotifySendEnv
 
 instance HasEvents NotifySendEnv where
   getEvents = view (#coreEnv % #events)
-  {-# INLINEABLE getEvents #-}
 
 instance HasLogEnv NotifySendEnv where
   getLogEnv = view (#coreEnv % #logEnv)
-  {-# INLINEABLE getLogEnv #-}
   localLogEnv = over' (#coreEnv % #logEnv)
-  {-# INLINEABLE localLogEnv #-}
 
 instance HasLogQueue NotifySendEnv where
   getLogQueue = view (#coreEnv % #logQueue)
-  {-# INLINEABLE getLogQueue #-}
 
 instance HasNoteQueue NotifySendEnv where
   getNoteQueue = view (#coreEnv % #noteQueue)
-  {-# INLINEABLE getNoteQueue #-}
 
 -- | Creates a 'NotifySendEnv' from the provided log types and configuration
 -- data.
@@ -90,4 +85,3 @@ naviToNotifySend naviNote = txt
         " --expire-time "
           <> show (s * 1_000)
           <> " "
-{-# INLINEABLE naviToNotifySend #-}

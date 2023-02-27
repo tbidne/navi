@@ -39,25 +39,19 @@ makeFieldLabelsNoPrefix ''DBusEnv
 
 instance HasEvents DBusEnv where
   getEvents = view (#coreEnv % #events)
-  {-# INLINEABLE getEvents #-}
 
 instance HasLogEnv DBusEnv where
   getLogEnv = view (#coreEnv % #logEnv)
-  {-# INLINEABLE getLogEnv #-}
   localLogEnv = over' (#coreEnv % #logEnv)
-  {-# INLINEABLE localLogEnv #-}
 
 instance HasLogQueue DBusEnv where
   getLogQueue = view (#coreEnv % #logQueue)
-  {-# INLINEABLE getLogQueue #-}
 
 instance HasNoteQueue DBusEnv where
   getNoteQueue = view (#coreEnv % #noteQueue)
-  {-# INLINEABLE getNoteQueue #-}
 
 instance HasDBusClient DBusEnv where
   getClient = view #dbusClient
-  {-# INLINEABLE getClient #-}
 
 -- | Creates a 'DBusEnv' from the provided log types and configuration data.
 mkDBusEnv ::
@@ -98,7 +92,6 @@ naviToDBus naviNote =
     hints = maybeToList $ Urgency <$> naviNote ^. #urgency
     timeout = maybe defTimeout naviToDBusTimeout $ naviNote ^. #timeout
     defTimeout = DBusN.Milliseconds 10_000
-{-# INLINEABLE naviToDBus #-}
 
 naviToDBusTimeout :: Timeout -> DBusN.Timeout
 naviToDBusTimeout Never = DBusN.Never
@@ -106,4 +99,3 @@ naviToDBusTimeout (Seconds s) = DBusN.Milliseconds $ (* 1_000) $ w16ToInt32 s
   where
     w16ToInt32 :: Word16 -> Int32
     w16ToInt32 = fromIntegral
-{-# INLINEABLE naviToDBusTimeout #-}

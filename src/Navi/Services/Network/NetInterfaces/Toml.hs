@@ -64,4 +64,3 @@ decodeNetInterfaceApp =
               bad,
               ". Expected one of <nmcli | ip>."
             ]
-{-# INLINEABLE decodeNetInterfaceApp #-}

@@ -176,40 +176,33 @@ import Prelude qualified as P
 -- | 'Text' version of 'P.show'.
 showt :: (P.Show a) => a -> Text
 showt = pack . P.show
-{-# INLINEABLE showt #-}
 
 -- | 'Text' version of 'error'.
 error :: Text -> a
 error = P.error . unpack
-{-# INLINEABLE error #-}
 
 -- | Safe @head@.
 headMaybe :: [a] -> Maybe a
 headMaybe [] = Nothing
 headMaybe (x : _) = Just x
-{-# INLINEABLE headMaybe #-}
 
 -- | Transforms 'Maybe' to 'Either'.
 maybeToEither :: e -> Maybe a -> Either e a
 maybeToEither e Nothing = Left e
 maybeToEither _ (Just x) = Right x
-{-# INLINEABLE maybeToEither #-}
 
 -- | Convenience function for mapping @(a -> b)@ over a monomorphic bifunctor.
 monoBimap :: (Bifunctor p) => (a -> b) -> p a a -> p b b
 monoBimap f = bimap f f
-{-# INLINEABLE monoBimap #-}
 
 -- | Flipped version of '(.)'.
 (>.>) :: (a -> b) -> (b -> c) -> a -> c
 (>.>) = flip (.)
-{-# INLINEABLE (>.>) #-}
 
 infixr 8 >.>
 
 -- | Composed 'fmap'.
 (<<$>>) :: (Functor f, Functor g) => (a -> b) -> g (f a) -> g (f b)
 (<<$>>) = fmap . fmap
-{-# INLINEABLE (<<$>>) #-}
 
 infixl 4 <<$>>

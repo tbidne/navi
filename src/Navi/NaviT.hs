@@ -68,7 +68,6 @@ instance MonadTime (NaviT env IO) where
 -- other MonadIOs (i.e. in tests)
 instance MonadSystemInfo (NaviT env IO) where
   query = liftIO . query
-  {-# INLINEABLE query #-}
 
 -- Concrete IO rather than MonadIO so that we can write instances over
 -- other MonadIOs (i.e. in tests)
@@ -80,7 +79,6 @@ instance MonadNotify (NaviT DBusEnv IO) where
     where
       note = naviToDBus naviNote
       sendDbus c = void . DBusN.notify c
-  {-# INLINEABLE sendNote #-}
 
 -- Concrete IO rather than MonadIO so that we can write instances over
 -- other MonadIOs (i.e. in tests)
@@ -91,7 +89,6 @@ instance MonadNotify (NaviT NotifySendEnv IO) where
     where
       noteTxt = naviToNotifySend naviNote
       cp = Proc.shell $ unpack noteTxt
-  {-# INLINEABLE sendNote #-}
 
 -- Concrete IO rather than MonadIO so that we can write instances over
 -- other MonadIOs (i.e. in tests)

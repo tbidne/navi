@@ -8,11 +8,7 @@ module Navi.Event.Types
   ( Event (..),
     AnyEvent (..),
     RepeatEvent (..),
-    _NoRepeats,
-    _AllowRepeats,
     ErrorNote (..),
-    _NoErrNote,
-    _AllowErrNote,
     EventError (..),
     EventSuccess (..),
   )
@@ -30,12 +26,9 @@ data RepeatEvent a
   = NoRepeats !(IORef (Maybe a))
   | AllowRepeats
 
-makePrisms ''RepeatEvent
-
 instance Show (RepeatEvent a) where
   show (NoRepeats _) = "NoRepeats <ref>"
   show AllowRepeats = "AllowRepeats"
-  {-# INLINEABLE show #-}
 
 -- | Determines if we should send notifications for errors and, if so, if we
 -- allow repeats.
@@ -43,8 +36,6 @@ data ErrorNote
   = NoErrNote
   | AllowErrNote !(RepeatEvent ())
   deriving stock (Show)
-
-makePrisms ''ErrorNote
 
 -- | Represents an error when querying an 'Event'.
 data EventError = MkEventError
@@ -91,7 +82,6 @@ instance Show (Event result) where
       <> ", errorNote = "
       <> show (event ^. #errorNote)
       <> "}"
-  {-# INLINEABLE show #-}
 
 -- | Existentially quantifies result type on an 'Event'. Used so that we can
 -- store different events in the same list.

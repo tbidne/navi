@@ -28,9 +28,7 @@ makeFieldLabelsNoPrefix ''PollInterval
 -- | @since 0.1
 instance Bounded PollInterval where
   minBound = MkPollInterval 0
-  {-# INLINEABLE minBound #-}
   maxBound = maxPollInterval
-  {-# INLINEABLE maxBound #-}
 
 -- | @since 0.1
 instance DecodeTOML PollInterval where
@@ -67,7 +65,6 @@ pollIntervalOptDecoder = getFieldOptWith tomlDecoder "poll-interval"
 -- @since 0.1
 toSleepTime :: PollInterval -> Int
 toSleepTime = fromIntegral . (* 1_000_000) . view #unPollInterval
-{-# INLINEABLE toSleepTime #-}
 
 maxPollInterval :: PollInterval
 maxPollInterval = MkPollInterval (fromIntegral mx)
@@ -77,4 +74,3 @@ maxPollInterval = MkPollInterval (fromIntegral mx)
     -- by 1_000_000, thus the maximum value we can safely store is
     -- (maxInt / 1_000_000).
     mx = (maxBound :: Int) `div` 1_000_000
-{-# INLINEABLE maxPollInterval #-}

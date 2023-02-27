@@ -57,4 +57,3 @@ mkSingleEvent mname cmd pi (triggerVal, note) re en =
     }
   where
     name' = fromMaybe "single" mname
-{-# INLINEABLE mkSingleEvent #-}

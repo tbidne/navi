@@ -62,4 +62,3 @@ mkMultipleEvent mname cmd noteList pi re en =
   where
     noteMap = Map.fromList $ NE.toList noteList
     name' = fromMaybe "multiple" mname
-{-# INLINEABLE mkMultipleEvent #-}

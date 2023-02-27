@@ -59,4 +59,3 @@ toNote noteToml conn =
       NetStateUp -> " is connected to: " <> nameTxt
       NetStateDown -> " is disconnected from: " <> nameTxt
       NetStateUnknown txt -> " is in an unknown state: " <> txt
-{-# INLINEABLE toNote #-}
