@@ -127,9 +127,10 @@ Navi is configured via a toml file, by default located at `xdgBase/navi/config.t
 
 ## General Options
 
-* `note-system`: Optional. One of `["dbus"|"notify-send"]`.
+* `note-system`: Optional. One of `["dbus"|"notify-send"]`. Defaults to `"dbus"`.
 * `logging.severity`: Optional. One of `["debug"|"info"|"error"]`. Controls the logging level. Defaults to `error`.
 * `logging.location`: Optional. Either `"default"`, `"stdout"` or `"<filename>"`. No option or `default` uses `xdgState/navi/<timestamp>.log` e.g. `~/.local/state/navi/<timestamp>.log`.
+* `logging.size-mode`: Optional. Sets a size threshold for the file log directory, upon which we either print a warning or delete all prior logs, if the threshold is exceeded. The `SIZE` should include the value and units e.g. `warn 10 mb`, `warn 5 gigabytes`, `delete 20.5B`. Defaults to `delete 50 mb`. This only affects the _default_ log path e.g. `~/.local/state/navi`.
 
 ##### Example
 
@@ -139,6 +140,7 @@ note-system = "dbus"
 [logging]
 severity = "debug"
 location = "stdout"
+size-mode = "warn 10 mb"
 ```
 
 ## Notification Options

@@ -6,7 +6,7 @@ where
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
 import Navi.Config.Toml (ConfigToml (..))
-import Navi.Config.Types (LogLoc (..), Logging (..))
+import Navi.Config.Types (FilesSizeMode (..), LogLoc (..), Logging (..))
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
 import Navi.Data.PollInterval (PollInterval (..))
 import Navi.Services.Battery.Percentage.Toml
@@ -47,7 +47,8 @@ logTests =
             Just $
               MkLogging
                 { severity = Just LevelDebug,
-                  location = Nothing
+                  location = Nothing,
+                  sizeMode = Nothing
                 },
           noteSystemToml = Nothing,
           singleToml = [],
@@ -73,7 +74,8 @@ expectedFull =
         Just $
           MkLogging
             { severity = Just LevelDebug,
-              location = Just $ File "some-file"
+              location = Just $ File "some-file",
+              sizeMode = Just (FileSizeModeWarn (MkBytes 50_000_000))
             },
       noteSystemToml = Nothing,
       singleToml = expectedSingle,
@@ -157,6 +159,7 @@ fullConfig =
     [ "[logging]",
       "severity = \"debug\"",
       "location = \"some-file\"",
+      "size-mode = \"warn 50 mb\"",
       "",
       "[battery-status]",
       "app = \"acpi\"",

@@ -3,6 +3,7 @@ note-system = "notify-send"
 [logging]
 severity = "debug"
 location = "stdout"
+size-mode = "warn 52 kilobytes"
 
 [[single]]
 name = "trivial-service"

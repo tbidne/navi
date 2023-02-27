@@ -8,7 +8,17 @@ module Navi.Config.Toml
   )
 where
 
-import Navi.Config.Types (LogLoc (..), Logging (..), NoteSystem (..))
+import Data.Bytes (SomeSize)
+import Data.Bytes qualified as Bytes
+import Data.Char qualified as Ch
+import Data.Text qualified as T
+import GHC.Real (truncate)
+import Navi.Config.Types
+  ( FilesSizeMode (..),
+    LogLoc (..),
+    Logging (..),
+    NoteSystem (..),
+  )
 import Navi.Prelude
 import Navi.Services.Battery.Percentage.Toml (BatteryPercentageToml)
 import Navi.Services.Battery.Status.Toml (BatteryStatusToml)
@@ -51,6 +61,7 @@ logDecoder =
   MkLogging
     <$> severityDecoderOpt
     <*> locationDecoderOpt
+    <*> sizeModeDecoderOpt
 
 severityDecoderOpt :: Decoder (Maybe LogLevel)
 severityDecoderOpt = getFieldOptWith severityDecoder "severity"
@@ -79,3 +90,32 @@ noteSystemDecoder =
     "dbus" -> pure DBus
     "notify-send" -> pure NotifySend
     bad -> fail $ unpack $ "Unsupported NoteSystem: " <> bad
+
+sizeModeDecoderOpt :: Decoder (Maybe FilesSizeMode)
+sizeModeDecoderOpt = getFieldOptWith sizeModeDecoder "size-mode"
+
+sizeModeDecoder :: Decoder FilesSizeMode
+sizeModeDecoder = do
+  {-tomlDecoder >>= \case
+    "default" -> pure DefPath
+    "stdout" -> pure Stdout
+    f -> pure $ File $ unpack f-}
+  txt <- tomlDecoder
+  let (m, byteTxt) = T.break Ch.isSpace txt
+  cons <- case m of
+    "warn" -> pure FileSizeModeWarn
+    "delete" -> pure FileSizeModeDelete
+    bad -> fail $ "Unrecognized file-log-size-mode: " <> unpack bad
+  case parseByteText byteTxt of
+    Right b -> pure $ cons b
+    Left err -> fail $ "Could not parse --file-log-size-mode size: " <> unpack err
+  where
+    parseByteText :: Text -> Either Text (Bytes B Natural)
+    parseByteText txt =
+      -- NOTE: Try conversion to natural first for more precision. Fall back
+      -- to double if that fails.
+      case Bytes.parse @(SomeSize Natural) txt of
+        Right b -> Right $ Bytes.convert (Proxy @B) b
+        Left _ -> case Bytes.parse @(SomeSize Double) txt of
+          Right b -> Right (truncate <$> Bytes.convert (Proxy @B) b)
+          Left err -> Left err

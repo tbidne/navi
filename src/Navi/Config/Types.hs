@@ -7,27 +7,23 @@ module Navi.Config.Types
   ( -- * Config
     Config (..),
     ConfigErr (..),
-    _FileErr,
-    _TomlError,
-    _NoEvents,
 
     -- * Logging
     Logging (..),
     LogLoc (..),
-    _DefPath,
-    _Stdout,
-    _File,
+    FilesSizeMode (..),
     defaultLogging,
+    defaultSizeMode,
 
     -- * Note System
     NoteSystem (..),
-    _DBus,
-    _NotifySend,
     defaultNoteSystem,
   )
 where
 
-import Data.List.NonEmpty
+import Data.Bytes (Size (M))
+import Data.Bytes qualified as Bytes
+import Data.List.NonEmpty ()
 import Navi.Event (AnyEvent (..))
 import Navi.Prelude
 
@@ -38,14 +34,28 @@ data LogLoc
   | File !Path
   deriving stock (Eq, Show)
 
-makePrisms ''LogLoc
+-- | Determines what to do if the log file surpasses the given size
+-- threshold.
+data FilesSizeMode
+  = -- | Print a warning.
+    FileSizeModeWarn (Bytes B Natural)
+  | -- | Delete the file.
+    FileSizeModeDelete (Bytes B Natural)
+  deriving stock
+    ( -- | @since 0.5
+      Eq,
+      -- | @since 0.5
+      Show
+    )
 
 -- | Logging configuration.
 data Logging = MkLogging
   { -- | Determines the log level.
     severity :: !(Maybe LogLevel),
-    -- | Deterines the log location (i.e. file or stdout).
-    location :: !(Maybe LogLoc)
+    -- | Determines the log location (i.e. file or stdout).
+    location :: !(Maybe LogLoc),
+    -- | Determines whether to warn/delete large log files.
+    sizeMode :: !(Maybe FilesSizeMode)
   }
   deriving stock (Eq, Show)
 
@@ -60,17 +70,24 @@ data NoteSystem
     NotifySend
   deriving stock (Eq, Show)
 
-makePrisms ''NoteSystem
-
 -- | Default notification system i.e. DBus.
 defaultNoteSystem :: NoteSystem
 defaultNoteSystem = DBus
-{-# INLINEABLE defaultNoteSystem #-}
 
 -- | Default logging i.e. log errors and use the default path.
 defaultLogging :: Logging
-defaultLogging = MkLogging (Just LevelError) (Just DefPath)
-{-# INLINEABLE defaultLogging #-}
+defaultLogging =
+  MkLogging
+    (Just LevelError)
+    (Just DefPath)
+    (Just defaultSizeMode)
+  where
+
+-- | @since 0.1
+defaultSizeMode :: FilesSizeMode
+defaultSizeMode = FileSizeModeDelete $ Bytes.convert Proxy fiftyMb
+  where
+    fiftyMb = MkBytes @M 50
 
 -- | 'Config' holds the data from 'Navi.Config.Toml.ConfigToml' once it has been processed
 -- (e.g., all user defined Events are parsed).
@@ -82,17 +99,9 @@ data Config = MkConfig
     -- | The notification system to use.
     noteSystem :: !NoteSystem
   }
+  deriving stock (Show)
 
 makeFieldLabelsNoPrefix ''Config
-
-instance Show Config where
-  show config =
-    "MkConfig {events = "
-      <> show (config ^. #events)
-      <> ", logging = "
-      <> show (config ^. #logging)
-      <> "}"
-  {-# INLINEABLE show #-}
 
 -- | 'ConfigErr' represents the errors we can encounter when attempting to
 -- parse a config file.
@@ -106,6 +115,3 @@ instance Exception ConfigErr where
   displayException (FileErr ex) = "Error reading file: <" <> displayException ex <> ">"
   displayException NoEvents = "No events found"
   displayException (TomlError err) = unpack $ renderTOMLError err
-  {-# INLINEABLE displayException #-}
-
-makePrisms ''ConfigErr

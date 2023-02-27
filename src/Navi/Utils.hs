@@ -10,12 +10,19 @@ module Navi.Utils
     -- ** Specific decoders
     commandDecoder,
     urgencyLevelOptDecoder,
+
+    -- * Misc
+    whenJust,
   )
 where
 
 import DBus.Notify (UrgencyLevel (..))
 import Navi.Prelude
 import Pythia.Data.Command (Command (..))
+
+-- | @since 0.1
+whenJust :: (Applicative f) => Maybe a -> (a -> f ()) -> f ()
+whenJust m action = maybe (pure ()) action m
 
 -- | Decodes an optional list. This is morally
 --
