@@ -28,23 +28,23 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/monad-effects.git
-    tag: be76809b9ec7e1fba4e003c1c8784f1d3382d4d2
+    tag: fdae8d71d67e490aeeaaf9207ffcad8e3914189d
     subdir:
-        monad-exceptions
-        monad-async
-        monad-fs
-        monad-ioref
-        monad-logger-namespace
-        monad-stm
-        monad-system-time
-        monad-terminal
-        monad-thread
-        monad-typed-process
+        effects-exceptions
+        effects-async
+        effects-fs
+        effects-ioref
+        effects-logger-ns
+        effects-stm
+        effects-time
+        effects-terminal
+        effects-thread
+        effects-typed-process
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/pythia.git
-    tag: 9666d990acfd7595538cef0e0ff1ebabe76f7062
+    tag: 5ef4af9637fef47a91fd382ff112ea16a37ac18d
 
 source-repository-package
     type: git
@@ -59,6 +59,6 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/time-conv.git
-    tag: b4628f6fe2f475ac57174a01b52ab15638a1329d
+    tag: 0b3aec465a90e15a61fbf54c42220c45f24d5e61
 
 allow-newer: dbus:template-haskell

@@ -17,8 +17,8 @@ import Data.Text qualified as T
 import Effects.Concurrent.Async qualified as Async
 import Effects.Concurrent.STM (flushTBQueueM)
 import Effects.Concurrent.Thread (sleep)
-import Effects.LoggerNamespace
-  ( MonadLoggerNamespace,
+import Effects.LoggerNS
+  ( MonadLoggerNS,
     addNamespace,
     logStrToBs,
   )
@@ -48,7 +48,7 @@ runNavi ::
     MonadAsync m,
     MonadHandleWriter m,
     MonadIORef m,
-    MonadLoggerNamespace m,
+    MonadLoggerNS m,
     MonadMask m,
     MonadNotify m,
     MonadSTM m,
@@ -120,7 +120,7 @@ processEvent ::
     HasNoteQueue env,
     MonadCatch m,
     MonadIORef m,
-    MonadLoggerNamespace m,
+    MonadLoggerNS m,
     MonadReader env m,
     MonadSTM m,
     MonadSystemInfo m,
@@ -206,7 +206,7 @@ pollNoteQueue ::
   ( HasCallStack,
     HasNoteQueue env,
     MonadCatch m,
-    MonadLoggerNamespace m,
+    MonadLoggerNS m,
     MonadNotify m,
     MonadReader env m,
     MonadSTM m
@@ -231,7 +231,7 @@ pollLogQueue ::
   ( HasCallStack,
     HasLogQueue env,
     HasLogEnv env,
-    MonadLoggerNamespace m,
+    MonadLoggerNS m,
     MonadHandleWriter m,
     MonadMask m,
     MonadReader env m,

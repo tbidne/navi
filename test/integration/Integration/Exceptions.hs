@@ -13,8 +13,8 @@ import Effects.Concurrent.Async (ExceptionInLinkedThread (..))
 import Effects.Concurrent.Async qualified as Async
 import Effects.Concurrent.Thread (sleep)
 import Effects.Exception (ExceptionCS (..))
-import Effects.LoggerNamespace
-  ( MonadLoggerNamespace (..),
+import Effects.LoggerNS
+  ( MonadLoggerNS (..),
     defaultLogFormatter,
     formatLog,
   )
@@ -117,7 +117,7 @@ instance MonadLogger (NaviT ExceptionEnv ExceptionIO) where
       formatted <- formatLog (defaultLogFormatter loc) lvl msg
       writeTBQueueM logQueue formatted
 
-instance MonadLoggerNamespace (NaviT ExceptionEnv ExceptionIO) where
+instance MonadLoggerNS (NaviT ExceptionEnv ExceptionIO) where
   getNamespace = asks (view #logNamespace . getLogEnv)
   localNamespace f = local (localLogEnv (over' #logNamespace f))
 

@@ -9,7 +9,7 @@ module Integration.MockApp
   )
 where
 
-import Effects.LoggerNamespace (MonadLoggerNamespace (..))
+import Effects.LoggerNS (MonadLoggerNS (..))
 import Effects.System.Terminal (MonadTerminal (..))
 import Integration.Prelude
 import Navi.Config (Config)
@@ -94,7 +94,7 @@ instance MonadTerminal (NaviT MockEnv IntTestIO) where
   putStr = liftIO . putStr
   putStrLn = liftIO . putStrLn
 
-instance MonadLoggerNamespace (NaviT MockEnv IntTestIO) where
+instance MonadLoggerNS (NaviT MockEnv IntTestIO) where
   getNamespace = pure ""
   localNamespace _ = id
 

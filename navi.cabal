@@ -74,34 +74,34 @@ library
     Navi.Utils
 
   build-depends:
-    , base                    >=4.14.1.0  && <4.18
-    , bytestring              >=0.10.10.0 && <0.12
-    , containers              >=0.5.11.0  && <0.7
-    , dbus                    ^>=1.2.14
-    , deepseq                 ^>=1.4.6.0
-    , fdo-notify              ^>=0.3.1
-    , gitrev                  >=1.2.0     && <1.4
-    , monad-async             ^>=0.1
-    , monad-exceptions        ^>=0.1
-    , monad-fs                ^>=0.1
-    , monad-ioref             ^>=0.1
-    , monad-logger            ^>=0.3.30
-    , monad-logger-namespace  ^>=0.1
-    , monad-stm               ^>=0.1
-    , monad-system-time       ^>=0.1
-    , monad-terminal          ^>=0.1
-    , monad-thread            ^>=0.1
-    , mtl                     >=2.2.2     && <2.4
-    , optics-core             ^>=0.4
-    , optics-th               ^>=0.4
-    , optparse-applicative    >=0.16.1.0  && <0.18
-    , package-version         >=0.1.0.0   && <0.4
-    , process                 ^>=1.6.9.0
-    , pythia                  ^>=0.1
-    , relative-time           ^>=0.1
-    , smart-math              ^>=0.1
-    , text                    >=1.2.3.2   && <2.1
-    , toml-reader             >=0.1.0.0   && <0.3
+    , base                  >=4.14.1.0  && <4.18
+    , bytestring            >=0.10.10.0 && <0.12
+    , containers            >=0.5.11.0  && <0.7
+    , dbus                  ^>=1.2.14
+    , deepseq               ^>=1.4.6.0
+    , effects-async         ^>=0.1
+    , effects-exceptions    ^>=0.1
+    , effects-fs            ^>=0.1
+    , effects-ioref         ^>=0.1
+    , effects-logger-ns     ^>=0.1
+    , effects-stm           ^>=0.1
+    , effects-terminal      ^>=0.1
+    , effects-thread        ^>=0.1
+    , effects-time          ^>=0.1
+    , fdo-notify            ^>=0.3.1
+    , gitrev                >=1.2.0     && <1.4
+    , monad-logger          ^>=0.3.30
+    , mtl                   >=2.2.2     && <2.4
+    , optics-core           ^>=0.4
+    , optics-th             ^>=0.4
+    , optparse-applicative  >=0.16.1.0  && <0.18
+    , package-version       >=0.1.0.0   && <0.4
+    , process               ^>=1.6.9.0
+    , pythia                ^>=0.1
+    , relative-time         ^>=0.1
+    , smart-math            ^>=0.1
+    , text                  >=1.2.3.2   && <2.1
+    , toml-reader           >=0.1.0.0   && <0.3
 
   hs-source-dirs:   src
   default-language: GHC2021
@@ -111,8 +111,8 @@ executable navi
   main-is:          Main.hs
   build-depends:
     , base
-    , monad-fs
-    , monad-system-time
+    , effects-fs
+    , effects-time
     , navi
 
   hs-source-dirs:   app
@@ -157,21 +157,21 @@ test-suite integration
 
   build-depends:
     , base
+    , effects-async
+    , effects-exceptions
+    , effects-fs
+    , effects-logger-ns
+    , effects-terminal
+    , effects-thread
+    , effects-time
     , fdo-notify
-    , monad-async
-    , monad-exceptions
-    , monad-fs
-    , monad-logger-namespace
-    , monad-system-time
-    , monad-terminal
-    , monad-thread
     , navi
     , pythia
     , smart-math
     , tasty
     , tasty-hunit
     , text
-    , time                    >=1.9.3 && <1.14
+    , time                >=1.9.3 && <1.14
 
   hs-source-dirs:   test/integration
   default-language: GHC2021

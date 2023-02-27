@@ -9,8 +9,8 @@ module Navi.NaviT
 where
 
 import DBus.Notify qualified as DBusN
-import Effects.LoggerNamespace
-  ( MonadLoggerNamespace (..),
+import Effects.LoggerNS
+  ( MonadLoggerNS (..),
     addNamespace,
     defaultLogFormatter,
     formatLog,
@@ -112,7 +112,7 @@ instance
   ( HasLogEnv env,
     HasLogQueue env
   ) =>
-  MonadLoggerNamespace (NaviT env IO)
+  MonadLoggerNS (NaviT env IO)
   where
   getNamespace = asks (view #logNamespace . getLogEnv)
   localNamespace f = local (localLogEnv (over' #logNamespace f))
