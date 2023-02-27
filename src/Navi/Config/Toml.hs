@@ -96,10 +96,6 @@ sizeModeDecoderOpt = getFieldOptWith sizeModeDecoder "size-mode"
 
 sizeModeDecoder :: Decoder FilesSizeMode
 sizeModeDecoder = do
-  {-tomlDecoder >>= \case
-    "default" -> pure DefPath
-    "stdout" -> pure Stdout
-    f -> pure $ File $ unpack f-}
   txt <- tomlDecoder
   let (m, byteTxt) = T.break Ch.isSpace txt
   cons <- case m of
