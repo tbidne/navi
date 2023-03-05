@@ -156,7 +156,7 @@ The full list of notification options are:
 
 Individual services have their own options, but there are a few that are common to most.
 
-* `poll-interval`: Optional. One of `["never"|<seconds>]`. Determines how often we query the system for the particular service, in seconds. Each service defines its own default.
+* `poll-interval`: Optional. One of `[NATURAL | STRING]`. The provided interval be either a raw natural (interpreted as seconds), or a "time string" e.g. 1d2m3h4s, 3h20s. Determines how often a service is polled.
 * `repeat-events`: One of `[true|false]`. Determines if we send off the same notification twice in a row. Defaults to `false` (i.e. no repeats) unless stated otherwise.
 * `error-events`: One of `["none"|"repeats"|"no-repeats">`. Determines if we send off notifications for errors, and how we handle repeats. Defaults to `"no-repeats"` unless stated otherwise i.e. we send error notifications but no repeats.
 
