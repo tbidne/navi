@@ -192,7 +192,7 @@ runExceptionApp badThread = do
             events = [event],
             logEnv =
               MkLogEnv
-                { logFile = Nothing,
+                { logHandle = Nothing,
                   logLevel = LevelDebug,
                   logNamespace = "int-ex-test"
                 },

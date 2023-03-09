@@ -1,13 +1,10 @@
-{-# LANGUAGE PartialTypeSignatures #-}
-{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
-
 module Main (main) where
 
 import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (..))
 import Data.Functor.Identity (Identity (..))
 import Data.Text qualified as T
-import Effects.FileSystem.HandleWriter (die)
+import Effects.FileSystem.HandleWriter (MonadHandleWriter (withBinaryFile), die)
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter (MonadPathWriter)
 import Effects.FileSystem.PathWriter qualified as Dir
@@ -24,13 +21,7 @@ import Navi.Config
     readConfig,
   )
 import Navi.Config.Types (FilesSizeMode (..), defaultSizeMode)
-import Navi.Data.NaviLog
-  ( LogEnv (MkLogEnv),
-    LogFile (MkLogFile, finalizer, handle),
-    logFile,
-    logLevel,
-    logNamespace,
-  )
+import Navi.Data.NaviLog (LogEnv (..))
 import Navi.Env.DBus (mkDBusEnv)
 import Navi.Env.NotifySend (mkNotifySendEnv)
 import Navi.Prelude
@@ -44,18 +35,14 @@ main = do
     tryParseConfig args
       `catchAny` writeConfigErr
 
-  let mkLogEnvFn = mkLogEnv (config ^. #logging)
-  bracket mkLogEnvFn closeLogging $ \logEnv -> do
-    let mkNaviEnv :: forall env. _ -> IO env
+  withLogEnv (config ^. #logging) $ \logEnv -> do
+    let mkNaviEnv :: (LogEnv -> Config -> IO env) -> IO env
         mkNaviEnv envFn = envFn logEnv config
     case config ^. #noteSystem of
       DBus -> mkNaviEnv mkDBusEnv >>= runWithEnv
       NotifySend -> mkNaviEnv mkNotifySendEnv >>= runWithEnv
   where
     runWithEnv env = absurd <$> runNaviT runNavi env
-    closeLogging env = do
-      let mFinalizer = env ^? #logFile %? #finalizer
-      fromMaybe (pure ()) mFinalizer
 
 tryParseConfig ::
   ( HasCallStack,
@@ -70,9 +57,8 @@ tryParseConfig =
     . runIdentity
     . view #configFile
 
-mkLogEnv ::
+withLogEnv ::
   ( HasCallStack,
-    MonadFileWriter m,
     MonadHandleWriter m,
     MonadPathReader m,
     MonadPathWriter m,
@@ -81,48 +67,53 @@ mkLogEnv ::
     MonadTime m
   ) =>
   Logging ->
-  m LogEnv
-mkLogEnv logging = do
-  xdgState <- Dir.getXdgState "navi/"
+  (LogEnv -> m a) ->
+  m a
+withLogEnv logging onLogEnv =
+  withLogHandle logging $ \logHandle ->
+    onLogEnv $
+      MkLogEnv
+        { logHandle,
+          logLevel,
+          logNamespace = "main"
+        }
+  where
+    logLevel = fromMaybe LevelError (logging ^. #severity)
 
-  -- handle large log dir
-  handleLogSize xdgState sizeMode
-
-  logFile <- case logLoc' of
+withLogHandle ::
+  ( HasCallStack,
+    MonadHandleWriter m,
+    MonadPathReader m,
+    MonadPathWriter m,
+    MonadTerminal m,
+    MonadThrow m,
+    MonadTime m
+  ) =>
+  Logging ->
+  (Maybe Handle -> m a) ->
+  m a
+withLogHandle logging onMHandle = do
+  case logLoc' of
+    -- Log location defined in config file as stdout.
+    Stdout -> onMHandle Nothing
+    -- Custom log path.
+    File f -> do
+      renameIfExists f
+      withBinaryFile f WriteMode $ \h -> onMHandle (Just h)
     -- Use the default log path: xdgState </> navi/log
     DefPath -> do
+      xdgState <- Dir.getXdgState "navi/"
+
+      -- handle large log dir
+      handleLogSize xdgState sizeMode
+
       currTime <- fmap replaceSpc <$> Time.getSystemTimeString
       let logFile = xdgState </> (currTime <> ".log")
       stateExists <- Dir.doesDirectoryExist xdgState
       unless stateExists (Dir.createDirectoryIfMissing True xdgState)
       renameIfExists logFile
-      h <- openBinaryFile logFile WriteMode
-      pure $
-        Just $
-          MkLogFile
-            { handle = h,
-              finalizer = hFlush h `finally` hClose h
-            }
-    -- Custom log path.
-    File f -> do
-      renameIfExists f
-      h <- openBinaryFile f WriteMode
-      pure $
-        Just $
-          MkLogFile
-            { handle = h,
-              finalizer = hFlush h `finally` hClose h
-            }
-    -- Log location defined in config file as stdout.
-    Stdout -> pure Nothing
-  pure $
-    MkLogEnv
-      { logFile,
-        logLevel,
-        logNamespace = "main"
-      }
+      withBinaryFile logFile WriteMode $ \h -> onMHandle (Just h)
   where
-    logLevel = fromMaybe LevelError (logging ^. #severity)
     logLoc' = fromMaybe DefPath (logging ^. #location)
     sizeMode = fromMaybe defaultSizeMode (logging ^. #sizeMode)
 

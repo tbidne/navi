@@ -256,7 +256,7 @@ getLoggerFn ::
   ) =>
   m (ByteString -> m ())
 getLoggerFn = do
-  mfileHandle <- asks (preview (#logFile % _Just % #handle) . getLogEnv)
+  mfileHandle <- asks (view #logHandle . getLogEnv)
   pure $ maybe putBinary toFile mfileHandle
   where
     toFile h bs = hPut h bs *> hFlush h

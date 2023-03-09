@@ -3,39 +3,21 @@
 
 -- | Provides the types for logging.
 module Navi.Data.NaviLog
-  ( LogFile (..),
-    LogEnv (..),
+  ( LogEnv (..),
   )
 where
 
 import Effects.LoggerNS (Namespace)
 import Navi.Prelude
 
--- | Data for file logging.
---
--- @since 0.1
-data LogFile = MkLogFile
-  { -- | File handle.
-    --
-    -- @since 0.1
-    handle :: !Handle,
-    -- Finalizer to run e.g. flush/close.
-    --
-    -- @since 0.1
-    finalizer :: IO ()
-  }
-
--- | @since 0.1
-makeFieldLabelsNoPrefix ''LogFile
-
 -- | Holds logging env data.
 --
 -- @since 0.1
 data LogEnv = MkLogEnv
-  { -- | Data for file logging.
+  { -- | Handle for file logging.
     --
     -- @since 0.1
-    logFile :: !(Maybe LogFile),
+    logHandle :: !(Maybe Handle),
     -- | Level in which to log.
     --
     -- @since 0.1
