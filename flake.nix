@@ -98,22 +98,14 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       perSystem = { pkgs, ... }:
         let
-          buildTools = c: with c; [
-            cabal-install
+          buildTools = c: [
+            c.cabal-install
             pkgs.gnumake
             pkgs.zlib
           ];
-          devTools = c: with c; [
-            (pkgs.haskell.lib.dontCheck ghcid)
-            (hlib.overrideCabal haskell-language-server (old: {
-              configureFlags = (old.configureFlags or [ ]) ++
-                [
-                  "-f -brittany"
-                  "-f -floskell"
-                  "-f -fourmolu"
-                  "-f -stylishhaskell"
-                ];
-            }))
+          devTools = c: [
+            (hlib.dontCheck c.ghcid)
+            (hlib.dontCheck c.haskell-language-server)
           ];
           ghc-version = "ghc944";
           compiler = pkgs.haskell.packages."${ghc-version}".override {
