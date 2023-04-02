@@ -105,11 +105,16 @@ Navi: A program for monitoring system status via desktop notifications.
 
 Usage: navi [-c|--config-file PATH] [-v|--version]
 
-Navi allows one to easily define custom notification 'services' that hook into a running notification server. For example, one can provide a bash script that, say, queries the connection status of a given network device. Navi will periodically run this query and send a desktop notification if the status has changed. See github.com/tbidne/navi#README for full documentation.
+  Navi allows one to easily define custom notification 'services' that hook into
+  a running notification server. For example, one can provide a bash script
+  that, say, queries the connection status of a given network device. Navi will
+  periodically run this query and send a desktop notification if the status has
+  changed. See github.com/tbidne/navi#README for full documentation.
 
 Available options:
   -c,--config-file PATH    Path to config file. Defaults to
-                           <xdgConfig>/navi/navi-config.toml.
+                           <xdgConfig>/navi/config.toml.
+
   -h,--help                Show this help text
 
 Version: 0.1

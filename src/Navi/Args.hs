@@ -20,6 +20,8 @@ import Navi.Prelude
 import Options.Applicative (Parser, ParserInfo (..))
 import Options.Applicative qualified as OptApp
 import Options.Applicative.Help.Chunk (Chunk (..))
+import Options.Applicative.Help.Chunk qualified as Chunk
+import Options.Applicative.Help.Pretty qualified as Pretty
 import Options.Applicative.Types (ArgPolicy (..))
 
 -- | Represents command-line arguments. We use the \"higher-kinded data\"
@@ -71,7 +73,7 @@ parserInfoArgs =
   ParserInfo
     { infoParser = argsParser,
       infoFullDesc = True,
-      infoProgDesc = Chunk desc,
+      infoProgDesc = desc,
       infoHeader = Chunk header,
       infoFooter = Chunk footer,
       infoFailureCode = 1,
@@ -84,8 +86,8 @@ parserInfoArgs =
           <> "desktop notifications."
     footer = Just $ fromString versNum
     desc =
-      Just $
-        "\nNavi allows one to easily define custom notification 'services'"
+      Chunk.paragraph $
+        "Navi allows one to easily define custom notification 'services'"
           <> " that hook into a running notification server. For example, one"
           <> " can provide a bash script that, say, queries the connection"
           <> " status of a given network device. Navi will periodically run"
@@ -121,10 +123,17 @@ configFileParser =
     ( OptApp.strOption
         ( OptApp.long "config-file"
             <> OptApp.short 'c'
-            <> OptApp.help helpTxt
+            <> mkHelp helpTxt
             <> OptApp.metavar "PATH"
         )
     )
   where
     helpTxt =
       "Path to config file. Defaults to <xdgConfig>/navi/config.toml."
+
+mkHelp :: String -> OptApp.Mod f a
+mkHelp =
+  OptApp.helpDoc
+    . fmap (<> Pretty.hardline)
+    . Chunk.unChunk
+    . Chunk.paragraph
