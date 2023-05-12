@@ -30,5 +30,5 @@ sendNoteQueue ::
   NaviNote ->
   m ()
 sendNoteQueue naviNote =
-  asks getNoteQueue >>= (`writeTBQueueM` naviNote)
+  asks getNoteQueue >>= (`writeTBQueueA` naviNote)
 {-# INLINEABLE sendNoteQueue #-}

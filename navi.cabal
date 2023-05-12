@@ -39,6 +39,8 @@ common common-exts
 
 library
   import:           common-exts
+  other-modules:    Paths_navi
+  autogen-modules:  Paths_navi
   exposed-modules:
     Navi
     Navi.Args
@@ -74,8 +76,7 @@ library
     Navi.Utils
 
   build-depends:
-    , base                  >=4.14.1.0  && <4.18
-    , byte-types            ^>=0.1
+    , base                  >=4.17      && <4.19
     , bytestring            >=0.10.10.0 && <0.12
     , containers            >=0.5.11.0  && <0.7
     , dbus                  ^>=1.2.14
@@ -90,16 +91,15 @@ library
     , effects-thread        ^>=0.1
     , effects-time          ^>=0.1
     , fdo-notify            ^>=0.3.1
-    , gitrev                >=1.2.0     && <1.4
     , monad-logger          ^>=0.3.30
     , mtl                   >=2.2.2     && <2.4
     , optics-core           ^>=0.4
     , optics-th             ^>=0.4
     , optparse-applicative  >=0.16.1.0  && <0.18
-    , package-version       >=0.1.0.0   && <0.4
     , process               ^>=1.6.9.0
     , pythia                ^>=0.1
     , relative-time         ^>=0.1
+    , si-bytes              ^>=0.1
     , smart-math            ^>=0.1
     , text                  >=1.2.3.2   && <2.1
     , toml-reader           >=0.1.0.0   && <0.3
@@ -112,10 +112,10 @@ executable navi
   main-is:          Main.hs
   build-depends:
     , base
-    , byte-types
     , effects-fs
     , effects-time
     , navi
+    , si-bytes
     , text
 
   hs-source-dirs:   app

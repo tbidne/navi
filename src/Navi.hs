@@ -15,7 +15,7 @@ import DBus.Client (ClientError (clientErrorFatal))
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
 import Effects.Concurrent.Async qualified as Async
-import Effects.Concurrent.STM (flushTBQueueM)
+import Effects.Concurrent.STM (flushTBQueueA)
 import Effects.Concurrent.Thread (sleep)
 import Effects.LoggerNS
   ( MonadLoggerNS,
@@ -88,7 +88,7 @@ runNavi = do
             -- handle remaining logs
             queue <- asks getLogQueue
             sendFn <- getLoggerFn
-            flushTBQueueM queue >>= traverse_ (sendFn . logStrToBs)
+            flushTBQueueA queue >>= traverse_ (sendFn . logStrToBs)
             throwM e
     {-# INLINEABLE runAllAsync #-}
 
@@ -215,7 +215,7 @@ pollNoteQueue ::
 pollNoteQueue = addNamespace "note-poller" $ do
   queue <- asks getNoteQueue
   forever $
-    readTBQueueM queue >>= \nn ->
+    readTBQueueA queue >>= \nn ->
       sendNote nn `catchCS` \ce ->
         -- NOTE: Rethrow all exceptions except:
         --
@@ -274,26 +274,26 @@ atomicReadWrite ::
 atomicReadWrite queue logAction =
   -- NOTE: There are several options we could take here:
   --
-  -- 1. uninterruptibleMask_ $ tryReadTBQueueM queue >>= traverse_ logAction
+  -- 1. uninterruptibleMask_ $ tryReadTBQueueA queue >>= traverse_ logAction
   --
   --    This gives us guaranteed atomicity, at the risk of a possible deadlock,
   --    if either the read or logAction blocks indefinitely. IMPORTANT: If we
-  --    go this route, readTBQueueM _must_ be swapped for tryReadTBQueueM, as
+  --    go this route, readTBQueueA _must_ be swapped for tryReadTBQueueA, as
   --    the former relies on cancellation via an async exception i.e.
-  --    uninterruptibleMask_ + readTBQueueM = deadlock.
+  --    uninterruptibleMask_ + readTBQueueA = deadlock.
   --
-  -- 2. mask $ \restore -> restore (readTBQueueM queue) >>= void . logAction
+  -- 2. mask $ \restore -> restore (readTBQueueA queue) >>= void . logAction
   --
   --    This does not give us absolute atomicity, as logAction could be
   --    interrupted if it is actually blocking; but that is probably the right
   --    choice (responsiveness), and we have atomicity as long as logAction
   --    does not block.
   --
-  -- 3. mask_ $ readTBQueueM queue >>= void . logAction
+  -- 3. mask_ $ readTBQueueA queue >>= void . logAction
   --
   --    Slightly simpler than 2, has the same caveat regarding atomicity.
-  --    The difference is that in the latter, readTBQueueM is also masked
+  --    The difference is that in the latter, readTBQueueA is also masked
   --    as long as it is not blocking. There really is no reason for this,
   --    as the invariant we care about is _if_ successful read then
   --    successful handle.
-  mask $ \restore -> restore (readTBQueueM queue) >>= void . logAction
+  mask $ \restore -> restore (readTBQueueA queue) >>= void . logAction

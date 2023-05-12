@@ -13,11 +13,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1676966085,
-        "narHash": "sha256-RSxcMvpjsX+Ed44Qc51zWDINk4hn4e4yQWqTLL8kYXI=",
+        "lastModified": 1683767934,
+        "narHash": "sha256-qy1Kom7zl9D8PDarDoX8i+P1iZdc8FrFHsVWU8xtRX8=",
         "owner": "tbidne",
         "repo": "algebra-simple",
-        "rev": "a2e206727241931cd55f26cd12816bc8a8b5bfcf",
+        "rev": "6d9c1891bc94d46707a1662f6431f5322ac5ed61",
         "type": "github"
       },
       "original": {
@@ -39,48 +39,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1676966300,
-        "narHash": "sha256-BgRsLIhPuC7jTwnHbZ9hK+sMQAtaHxfdmqvLijv1AZc=",
+        "lastModified": 1683779199,
+        "narHash": "sha256-R2tc+U5v4TZEtwP4i5svge4Xwyon0snhJC75hV6mCM8=",
         "owner": "tbidne",
         "repo": "bounds",
-        "rev": "c898e79ff31151e11d69e3fd2ae9c71011e4f558",
+        "rev": "5e547df8cb0d0825bc831123837ca659f4af7219",
         "type": "github"
       },
       "original": {
         "owner": "tbidne",
         "repo": "bounds",
-        "type": "github"
-      }
-    },
-    "byte-types": {
-      "inputs": {
-        "algebra-simple": [
-          "algebra-simple"
-        ],
-        "bounds": [
-          "bounds"
-        ],
-        "flake-compat": [
-          "flake-compat"
-        ],
-        "flake-parts": [
-          "flake-parts"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1676967499,
-        "narHash": "sha256-r0qHTdxr1dvWu1QJHmeS7YTIgd8sQlhJOktpuPkp618=",
-        "owner": "tbidne",
-        "repo": "byte-types",
-        "rev": "d5969e15d9c78e318d73746e41eaf4b2f92b3fa1",
-        "type": "github"
-      },
-      "original": {
-        "owner": "tbidne",
-        "repo": "byte-types",
         "type": "github"
       }
     },
@@ -140,11 +108,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1677376517,
-        "narHash": "sha256-3N/xwbHBalmm2sjkCgWNQLLDXlDtd56kU5HgVVEmuyg=",
+        "lastModified": 1683674334,
+        "narHash": "sha256-v2e0NIGg0FggIfD69YSFCO/xa1kVQZpIzPYasKjNRGo=",
         "owner": "tbidne",
         "repo": "monad-effects",
-        "rev": "fdae8d71d67e490aeeaaf9207ffcad8e3914189d",
+        "rev": "c280062a1e4d3be4e61d856a0d8529d05d198e7c",
         "type": "github"
       },
       "original": {
@@ -195,9 +163,6 @@
         "bounds": [
           "bounds"
         ],
-        "byte-types": [
-          "byte-types"
-        ],
         "flake-compat": [
           "flake-compat"
         ],
@@ -210,6 +175,9 @@
         "nixpkgs": [
           "nixpkgs"
         ],
+        "si-bytes": [
+          "si-bytes"
+        ],
         "smart-math": [
           "smart-math"
         ],
@@ -218,11 +186,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1677530675,
-        "narHash": "sha256-7TIosCxBZ7TCkTz1qLAYmVmcKG9I0IG1Z9zfRcYYBSQ=",
+        "lastModified": 1683866933,
+        "narHash": "sha256-iZxPSNX7/Xo309EEN2Z4BLASSLWb8oJx7di0pmbGkj0=",
         "owner": "tbidne",
         "repo": "pythia",
-        "rev": "5ef4af9637fef47a91fd382ff112ea16a37ac18d",
+        "rev": "d7bebf98cfc1b0aeb11b1fed44e65dec1106997b",
         "type": "github"
       },
       "original": {
@@ -250,11 +218,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1676967247,
-        "narHash": "sha256-OcjpoZK/UWK60W2wSl1jHdtXhOleGPzQAE+BPiXj+Xo=",
+        "lastModified": 1683781270,
+        "narHash": "sha256-BOhyW8SG8pQMJJUPueBNad0UpnEBpmNdt0htyxymLXQ=",
         "owner": "tbidne",
         "repo": "relative-time",
-        "rev": "f470e31f187257c31605a0264d1eca5cbf69a220",
+        "rev": "57b80df91e1f83bbc832c072eeacd6dffcd13987",
         "type": "github"
       },
       "original": {
@@ -267,15 +235,47 @@
       "inputs": {
         "algebra-simple": "algebra-simple",
         "bounds": "bounds",
-        "byte-types": "byte-types",
         "flake-compat": "flake-compat",
         "flake-parts": "flake-parts",
         "monad-effects": "monad-effects",
         "nixpkgs": "nixpkgs",
         "pythia": "pythia",
         "relative-time": "relative-time",
+        "si-bytes": "si-bytes",
         "smart-math": "smart-math",
         "time-conv": "time-conv"
+      }
+    },
+    "si-bytes": {
+      "inputs": {
+        "algebra-simple": [
+          "algebra-simple"
+        ],
+        "bounds": [
+          "bounds"
+        ],
+        "flake-compat": [
+          "flake-compat"
+        ],
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1683779221,
+        "narHash": "sha256-RSvyts2hQqUIQ1x1lXMQ9errGhTUkFv5hywC9wlWaEc=",
+        "owner": "tbidne",
+        "repo": "si-bytes",
+        "rev": "55259ff1cfbbd1c27306014def92cee6d95ae245",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tbidne",
+        "repo": "si-bytes",
+        "type": "github"
       }
     },
     "smart-math": {
@@ -297,11 +297,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1676966773,
-        "narHash": "sha256-1ksAaojP5dnSdPFPnNCgDN7s5AIgql19rNjHJiieV+4=",
+        "lastModified": 1683779313,
+        "narHash": "sha256-E/2ZmCexRHk2956gaikEThkx4IZ6SeT2kPW53oPCaFY=",
         "owner": "tbidne",
         "repo": "smart-math",
-        "rev": "1b84af8a57a27a8919f73d3b5376c26c120410b6",
+        "rev": "2eaa593fe9f7b5a840e87b918a4673faeb230a8d",
         "type": "github"
       },
       "original": {
@@ -312,6 +312,12 @@
     },
     "time-conv": {
       "inputs": {
+        "algebra-simple": [
+          "algebra-simple"
+        ],
+        "bounds": [
+          "bounds"
+        ],
         "flake-compat": [
           "flake-compat"
         ],
@@ -326,11 +332,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1677530408,
-        "narHash": "sha256-WNt78n6TBnSDH1Nf/vTTgyirxB7pF1mDkDGseGdzTJo=",
+        "lastModified": 1683856331,
+        "narHash": "sha256-1Fhn8YcYsvegAFIqlX/DRaZStcmjo2TDCG+FvishABo=",
         "owner": "tbidne",
         "repo": "time-conv",
-        "rev": "0b3aec465a90e15a61fbf54c42220c45f24d5e61",
+        "rev": "3f52018b081d44335c1b6553a65705bc727087cd",
         "type": "github"
       },
       "original": {

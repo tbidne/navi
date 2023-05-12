@@ -13,8 +13,7 @@ import Data.Functor.Classes (Show1 (..))
 import Data.Functor.Classes qualified as Functor
 import Data.Functor.Identity (Identity (..))
 import Data.List qualified as L
-import Data.Version.Package qualified as PV
-import Development.GitRev qualified as GitRev
+import Data.Version (Version (versionBranch))
 import Effects.FileSystem.PathReader qualified as Dir
 import Navi.Prelude
 import Options.Applicative (Parser, ParserInfo (..))
@@ -23,6 +22,7 @@ import Options.Applicative.Help.Chunk (Chunk (..))
 import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Help.Pretty qualified as Pretty
 import Options.Applicative.Types (ArgPolicy (..))
+import Paths_navi qualified as Paths
 
 -- | Represents command-line arguments. We use the \"higher-kinded data\"
 -- approach for:
@@ -103,19 +103,10 @@ argsParser =
     <**> version
 
 version :: Parser (a -> a)
-version = OptApp.infoOption txt (OptApp.long "version" <> OptApp.short 'v')
-  where
-    txt =
-      L.intercalate
-        "\n"
-        [ "Navi",
-          versNum,
-          "Revision: " <> $(GitRev.gitHash),
-          "Date: " <> $(GitRev.gitCommitDate)
-        ]
+version = OptApp.infoOption versNum (OptApp.long "version" <> OptApp.short 'v')
 
 versNum :: [Char]
-versNum = "Version: " <> $$(PV.packageVersionStringTH "navi.cabal")
+versNum = "Version: " <> L.intercalate "." (show <$> versionBranch Paths.version)
 
 configFileParser :: Parser (Maybe String)
 configFileParser =

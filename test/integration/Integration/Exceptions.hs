@@ -115,7 +115,7 @@ instance MonadLogger (NaviT ExceptionEnv ExceptionIO) where
     logLevel <- asks (view #logLevel . getLogEnv)
     when (logLevel <= lvl) $ do
       formatted <- formatLog (defaultLogFormatter loc) lvl msg
-      writeTBQueueM logQueue formatted
+      writeTBQueueA logQueue formatted
 
 instance MonadLoggerNS (NaviT ExceptionEnv ExceptionIO) where
   getNamespace = asks (view #logNamespace . getLogEnv)
@@ -181,8 +181,8 @@ runExceptionApp badThread = do
               raiseAlert = const Nothing
             }
 
-  logQueue <- newTBQueueM 10
-  noteQueue <- newTBQueueM 10
+  logQueue <- newTBQueueA 10
+  noteQueue <- newTBQueueA 10
   logsRef <- newIORef []
 
   let env :: ExceptionEnv

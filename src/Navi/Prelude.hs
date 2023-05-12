@@ -84,10 +84,10 @@ import Effects.Concurrent.Async as X (MonadAsync)
 import Effects.Concurrent.STM as X
   ( MonadSTM,
     TBQueue,
-    newTBQueueM,
-    readTBQueueM,
-    tryReadTBQueueM,
-    writeTBQueueM,
+    newTBQueueA,
+    readTBQueueA,
+    tryReadTBQueueA,
+    writeTBQueueA,
   )
 import Effects.Concurrent.Thread as X (MonadThread)
 import Effects.Exception as X

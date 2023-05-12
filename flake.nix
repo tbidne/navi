@@ -22,15 +22,6 @@
       inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    byte-types = {
-      url = "github:tbidne/byte-types";
-      inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-parts.follows = "flake-parts";
-      inputs.nixpkgs.follows = "nixpkgs";
-
-      inputs.algebra-simple.follows = "algebra-simple";
-      inputs.bounds.follows = "bounds";
-    };
     monad-effects = {
       url = "github:tbidne/monad-effects";
       inputs.flake-compat.follows = "flake-compat";
@@ -49,13 +40,22 @@
 
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
-      inputs.byte-types.follows = "byte-types";
+      inputs.si-bytes.follows = "si-bytes";
       inputs.monad-effects.follows = "monad-effects";
       inputs.smart-math.follows = "smart-math";
       inputs.time-conv.follows = "time-conv";
     };
     relative-time = {
       url = "github:tbidne/relative-time";
+      inputs.flake-compat.follows = "flake-compat";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.nixpkgs.follows = "nixpkgs";
+
+      inputs.algebra-simple.follows = "algebra-simple";
+      inputs.bounds.follows = "bounds";
+    };
+    si-bytes = {
+      url = "github:tbidne/si-bytes";
       inputs.flake-compat.follows = "flake-compat";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -78,41 +78,76 @@
       inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
 
+      inputs.algebra-simple.follows = "algebra-simple";
+      inputs.bounds.follows = "bounds";
       inputs.monad-effects.follows = "monad-effects";
     };
   };
   outputs =
-    inputs@{ algebra-simple
-    , bounds
-    , byte-types
-    , flake-compat
+    inputs@{ flake-compat
     , flake-parts
     , monad-effects
     , nixpkgs
-    , pythia
-    , relative-time
     , self
-    , smart-math
-    , time-conv
+    , ...
     }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       perSystem = { pkgs, ... }:
         let
+          mkLib = p: lib: p.callCabal2nix lib inputs."${lib}" { };
+          mkEffectsLib = p: lib: p.callCabal2nix lib "${monad-effects}/${lib}" { };
+          mkLibs = p: libs:
+            builtins.foldl' (acc: name: acc // { ${name} = mkLib p name; }) { } libs;
+          mkEffectLibs = p: libs:
+            builtins.foldl' (acc: x: acc // { ${x} = mkEffectsLib p x; }) { } libs;
+
           buildTools = c: [
             c.cabal-install
-            pkgs.gnumake
             pkgs.zlib
           ];
           devTools = c: [
-            (hlib.dontCheck c.ghcid)
+            (hlib.dontCheck c.apply-refact)
+            (hlib.dontCheck c.cabal-fmt)
             (hlib.dontCheck c.haskell-language-server)
+            (hlib.dontCheck c.hlint)
+            (hlib.dontCheck c.ormolu)
+            pkgs.nixpkgs-fmt
           ];
           ghc-version = "ghc944";
           compiler = pkgs.haskell.packages."${ghc-version}".override {
             overrides = final: prev: {
+              apply-refact = prev.apply-refact_0_11_0_0;
+              effects-fs = hlib.overrideCabal
+                (mkEffectsLib final "effects-fs")
+                (old: {
+                  configureFlags = (old.configureFlags or [ ]) ++ [ "-f -os_path" ];
+                });
+              hedgehog = prev.hedgehog_1_2;
               # https://github.com/ddssff/listlike/issues/23
               ListLike = hlib.dontCheck prev.ListLike;
-            };
+              ormolu = prev.ormolu_0_5_3_0;
+              tasty-hedgehog = prev.tasty-hedgehog_1_4_0_0;
+            } // mkLibs final [
+              "algebra-simple"
+              "bounds"
+              "pythia"
+              "relative-time"
+              "si-bytes"
+              "smart-math"
+              "time-conv"
+            ] // mkEffectLibs final [
+              "effects-async"
+              "effects-env"
+              "effects-exceptions"
+              "effects-ioref"
+              "effects-logger-ns"
+              "effects-optparse"
+              "effects-stm"
+              "effects-time"
+              "effects-terminal"
+              "effects-thread"
+              "effects-typed-process"
+            ];
           };
           hlib = pkgs.haskell.lib;
           mkPkg = returnShellEnv:
@@ -124,63 +159,43 @@
                 pkgs.haskell.lib.addBuildTools drv
                   (buildTools compiler ++
                     (if returnShellEnv then devTools compiler else [ ]));
-              overrides = final: prev: with compiler; {
-                algebra-simple = final.callCabal2nix "algebra-simple" algebra-simple { };
-                bounds = final.callCabal2nix "bounds" bounds { };
-                byte-types = final.callCabal2nix "byte-types" byte-types { };
-                hedgehog = prev.hedgehog_1_2;
-                effects-async =
-                  final.callCabal2nix "effects-async"
-                    "${monad-effects}/effects-async"
-                    { };
-                effects-exceptions =
-                  final.callCabal2nix "effects-exceptions"
-                    "${monad-effects}/effects-exceptions"
-                    { };
-                effects-fs =
-                  final.callCabal2nix "effects-fs"
-                    "${monad-effects}/effects-fs"
-                    { };
-                effects-ioref =
-                  final.callCabal2nix "effects-ioref"
-                    "${monad-effects}/effects-ioref"
-                    { };
-                effects-logger-ns =
-                  final.callCabal2nix "effects-logger-ns"
-                    "${monad-effects}/effects-logger-ns"
-                    { };
-                effects-stm =
-                  final.callCabal2nix "effects-stm"
-                    "${monad-effects}/effects-stm"
-                    { };
-                effects-time =
-                  final.callCabal2nix "effects-time"
-                    "${monad-effects}/effects-time"
-                    { };
-                effects-terminal =
-                  final.callCabal2nix "effects-terminal"
-                    "${monad-effects}/effects-terminal"
-                    { };
-                effects-thread =
-                  final.callCabal2nix "effects-thread"
-                    "${monad-effects}/effects-thread"
-                    { };
-                effects-typed-process =
-                  final.callCabal2nix "effects-typed-process"
-                    "${monad-effects}/effects-typed-process"
-                    { };
-                package-version = pkgs.haskell.lib.doJailbreak prev.package-version;
-                pythia = final.callCabal2nix "pythia" pythia { };
-                relative-time = final.callCabal2nix "relative-time" relative-time { };
-                smart-math = final.callCabal2nix "smart-math" smart-math { };
-                time-conv = final.callCabal2nix "time-conv" time-conv { };
-                tasty-hedgehog = prev.tasty-hedgehog_1_4_0_0;
-              };
             };
+          mkApp = drv: {
+            type = "app";
+            program = "${drv}/bin/${drv.name}";
+          };
         in
         {
           packages.default = mkPkg false;
           devShells.default = mkPkg true;
+
+          apps = {
+            format = mkApp (
+              pkgs.writeShellApplication {
+                name = "format";
+                text = builtins.readFile ./tools/format.sh;
+                runtimeInputs = [
+                  compiler.cabal-fmt
+                  compiler.ormolu
+                  pkgs.nixpkgs-fmt
+                ];
+              }
+            );
+            lint = mkApp (
+              pkgs.writeShellApplication {
+                name = "lint";
+                text = builtins.readFile ./tools/lint.sh;
+                runtimeInputs = [ compiler.hlint ];
+              }
+            );
+            lint-refactor = mkApp (
+              pkgs.writeShellApplication {
+                name = "lint-refactor";
+                text = builtins.readFile ./tools/lint-refactor.sh;
+                runtimeInputs = [ compiler.apply-refact compiler.hlint ];
+              }
+            );
+          };
         };
       systems = [
         "x86_64-linux"

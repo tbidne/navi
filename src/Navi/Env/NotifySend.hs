@@ -50,8 +50,8 @@ mkNotifySendEnv ::
   Config ->
   m NotifySendEnv
 mkNotifySendEnv logEnv config = do
-  logQueue <- newTBQueueM 1000
-  noteQueue <- newTBQueueM 1000
+  logQueue <- newTBQueueA 1000
+  noteQueue <- newTBQueueA 1000
   pure $
     MkNotifySendEnv
       { coreEnv =

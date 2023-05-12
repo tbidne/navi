@@ -137,8 +137,8 @@ configToMockEnv config = do
   sentNotesRef <- newIORef []
 
   lastPercentageRef <- newIORef $ MkPercentage $ Interval.unsafeLRInterval 6
-  logQueue <- newTBQueueM 1000
-  noteQueue <- newTBQueueM 1000
+  logQueue <- newTBQueueA 1000
+  noteQueue <- newTBQueueA 1000
 
   pure $
     MkMockEnv

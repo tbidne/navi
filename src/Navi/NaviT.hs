@@ -48,7 +48,6 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       MonadThrow
     )
     via (ReaderT e m)
-  deriving (MonadTrans) via (ReaderT e)
 
 -- Manual instances so tests can roll their own
 instance MonadTerminal (NaviT env IO) where
@@ -103,7 +102,7 @@ instance
     logLevel <- asks (view #logLevel . getLogEnv)
     when (logLevel <= lvl) $ do
       formatted <- formatLog (defaultLogFormatter loc) lvl msg
-      writeTBQueueM logQueue formatted
+      writeTBQueueA logQueue formatted
 
 instance
   ( HasLogEnv env,
