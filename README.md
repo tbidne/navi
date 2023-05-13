@@ -27,7 +27,6 @@
       - [Single](#single)
       - [Multiple](#multiple)
 - [Building](#building)
-  - [Prerequisites](#prerequisites)
   - [Cabal](#cabal)
   - [Nix](#nix)
 
@@ -379,63 +378,48 @@ timeout = 10
 
 # Building
 
-## Prerequisites
-
-You will need one of:
-
-* [cabal-install 2.4+](https://www.haskell.org/cabal/download.html) and one of:
-  * [ghc 9.2](https://www.haskell.org/ghcup/)
-  * [ghc 9.4](https://www.haskell.org/ghcup/)
-* [nix](https://nixos.org/download.html)
-
-If you have never built a haskell program before, `cabal` + `ghcup` is probably the best choice.
+If you have never built a haskell program before, [Cabal](#cabal) is probably the best choice.
 
 ## Cabal
 
-You will need `ghc` and `cabal-install`. From there Navi can be built with `cabal build` or installed globally (i.e. `~/.cabal/bin/`) with `cabal install`.
+### Prerequisites
+
+* [`ghcup`](https://www.haskell.org/ghcup/)
+
+Using `ghcup`, install `cabal 2.4+` and ghc `9.4+`.
+
+### Build Navi
+
+Once you have `cabal` and `ghc`, `navi` can be built with `cabal build` or installed globally (i.e. `~/.cabal/bin/`) with `cabal install`.
 
 ## Nix
+
+### Prerequisites
+
+* [nix](https://nixos.org/download.html)
+
+### Manually
+
+Building with `nix` uses [flakes](https://nixos.wiki/wiki/Flakes). `navi` can be built with `nix build`, which will compile and run the tests.
+
+### Nix expression
 
 Because Navi is a flake, it can be built as part of a nix expression. For instance, if you want to add Navi to `NixOS`, your `flake.nix` might look something like:
 
 ```nix
+# flake.nix
 {
-  description = "My flake";
-
-  inputs = {
-    nixpkgs.url = "nixpkgs/nixos-unstable";
-    navi-src.url= "github:tbidne/navi/main";
-  };
-
-  outputs = { self, nixpkgs, navi-src, ... }:
-    let
-      system = "x86_64-linux";
-      pkgs = import nixpkgs {
-        system = system;
-      };
-      navi = navi-src.defaultPackage.${system};
-    in
-    {
-      nixosConfigurations = {
-        nixos = nixpkgs.lib.nixosSystem {
-          system = system;
-          modules = [
-            (import ./configuration.nix { inherit pkgs navi; })
-          ];
-        };
-      };
-    };
+  inputs.navi.url = "github:tbidne/navi/main";
 }
 ```
 
-Then in `configuration.nix` you can simply have:
+Then include this in the `systemPackages`:
 
 ```nix
-{ pkgs, navi, ... }:
-
+# wherever your global packages are defined
 {
   environment.systemPackages = [
-    navi
+    navi.packages."${system}".default
   ];
 }
 ```
