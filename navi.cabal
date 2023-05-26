@@ -95,7 +95,7 @@ library
     , mtl                   >=2.2.2     && <2.4
     , optics-core           ^>=0.4
     , optics-th             ^>=0.4
-    , optparse-applicative  >=0.16.1.0  && <0.18
+    , optparse-applicative  >=0.16.1.0  && <0.19
     , process               ^>=1.6.9.0
     , pythia                ^>=0.1
     , relative-time         ^>=0.1

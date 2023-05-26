@@ -87,6 +87,7 @@ newtype TestEx = MkTestE String
   deriving anyclass (Exception)
 
 instance MonadTerminal (NaviT ExceptionEnv ExceptionIO) where
+  putStr = error "putStr: todo"
   getChar = error "getChar: todo"
   getContents' = error "getContents': todo"
   getLine = error "getLine: todo"

@@ -23,7 +23,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/monad-effects.git
-    tag: c280062a1e4d3be4e61d856a0d8529d05d198e7c
+    tag: 9bc579b32f7f00ab8fd1db6d78a6a646b0c87f84
     subdir:
         effects-env
         effects-exceptions
@@ -43,7 +43,7 @@ constraints: effects-fs -os_path
 source-repository-package
     type: git
     location: https://github.com/tbidne/pythia.git
-    tag: d7bebf98cfc1b0aeb11b1fed44e65dec1106997b
+    tag: 441d0e7ca3bae31ebc4ecf0a0f12bf883ecf4653
 
 source-repository-package
     type: git
@@ -63,7 +63,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/time-conv.git
-    tag: 3f52018b081d44335c1b6553a65705bc727087cd
+    tag: c7994174f1a83b1b9dba621e45c6ee00c65593ff
 
 allow-newer: dbus:template-haskell
 allow-newer: dbus:transformers
