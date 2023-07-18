@@ -38,7 +38,7 @@ There are built-in services for sending specific notifications, along with funct
 
 # Motivation
 
-Navi is useful for when one has a notification server running and wants to define custom notification events. For example, one may want a notification for cpu temperature. One can define a "service" that includes:
+Navi is useful for when we have a running notification server and want to define custom notification events. For example, we may want a notification for cpu temperature. We can define a "service" that includes:
 
 * The command to run.
 * The command output that should trigger a notification.
@@ -73,7 +73,7 @@ urgency = "critical"
 timeout = 10
 ```
 
-This allows one to define arbitrary notification services based on one's system. In other words, as long as you can query for a particular bit of information (e.g. bash code), then navi will take care of the rest: running this query every N seconds, sending notifications, caching previous values to avoid repeats, and error handling.
+This allows us to define arbitrary notification services based on the current system. In other words, as long as we can query for a particular bit of information (e.g. bash code), then navi will take care of the rest: running this query every N seconds, sending notifications, caching previous values to avoid repeats, and error handling.
 
 # Requirements
 
@@ -108,7 +108,7 @@ Usage: navi [-c|--config-file PATH] [-v|--version]
 
 Available options:
   -c,--config-file PATH    Path to config file. Defaults to
-                           <xdgConfig>/navi/config.toml.
+                           <xdg-config>/navi/config.toml.
 
   -h,--help                Show this help text
 
@@ -119,17 +119,17 @@ Version: 0.1
 
 This argument overrides where Navi searches for the configuration file.
 
-The default path to the config file is based on the [XDG config directory](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html). Given `xdgConfig`, by default, Navi will look for `xdgConfig/navi/config.toml` e.g. `~/.config/navi/config.toml`.
+The default path to the config file is based on the [XDG config directory](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html). Given `xdg-config`, by default, Navi will look for `<xdg-config>/navi/config.toml` e.g. `~/.config/navi/config.toml`.
 
 # Configuration
 
-Navi is configured via a toml file, by default located at `xdgBase/navi/config.toml`. Full examples can be found in [examples](./examples).
+Navi is configured via a toml file, by default located at `<xdg-config>/navi/config.toml`. Full examples can be found in [examples](./examples).
 
 ## General Options
 
 * `note-system`: Optional. One of `["dbus"|"notify-send"]`. Defaults to `"dbus"`.
 * `logging.severity`: Optional. One of `["debug"|"info"|"error"]`. Controls the logging level. Defaults to `error`.
-* `logging.location`: Optional. Either `"default"`, `"stdout"` or `"<filename>"`. No option or `default` uses `xdgState/navi/<timestamp>.log` e.g. `~/.local/state/navi/<timestamp>.log`.
+* `logging.location`: Optional. Either `"default"`, `"stdout"` or `"<filename>"`. No option or `default` uses `<xdg-state>/navi/<timestamp>.log` e.g. `~/.local/state/navi/<timestamp>.log`.
 * `logging.size-mode`: Optional. Sets a size threshold for the file log directory, upon which we either print a warning or delete all prior logs, if the threshold is exceeded. The `SIZE` should include the value and units e.g. `warn 10 mb`, `warn 5 gigabytes`, `delete 20.5B`. Defaults to `delete 50 mb`. This only affects the _default_ log path e.g. `~/.local/state/navi`.
 
 ##### Example
@@ -156,9 +156,9 @@ The full list of notification options are:
 
 Individual services have their own options, but there are a few that are common to most.
 
-* `poll-interval`: Optional. One of `[NATURAL | STRING]`. The provided interval be either a raw natural (interpreted as seconds), or a "time string" e.g. 1d2m3h4s, 3h20s. Determines how often a service is polled.
+* `poll-interval`: Optional. One of `[NATURAL | STRING]`. The provided interval be either a raw natural (interpreted as seconds), or a "time string" e.g. `1d2m3h4s`, `3h20s`. Determines how often a service is polled.
 * `repeat-events`: One of `[true|false]`. Determines if we send off the same notification twice in a row. Defaults to `false` (i.e. no repeats) unless stated otherwise.
-* `error-events`: One of `["none"|"repeats"|"no-repeats">`. Determines if we send off notifications for errors, and how we handle repeats. Defaults to `"no-repeats"` unless stated otherwise i.e. we send error notifications but no repeats.
+* `error-events`: One of `["none"|"repeats"|"no-repeats"]`. Determines if we send off notifications for errors, and how we handle repeats. Defaults to `"no-repeats"` unless stated otherwise i.e. we send error notifications but no repeats.
 
 ### Predefined
 
@@ -263,7 +263,7 @@ device = "enp0s31f6"
 
 #### Single
 
-This service allows one to create a single notification based on an arbitrary command.
+This service sends a single notification based on an arbitrary command.
 
 ##### Specific Options
 
@@ -305,7 +305,7 @@ timeout = 10
 
 #### Multiple
 
-This service allows one to create multiple notifications based on an arbitrary command.
+This service sends multiple notifications based on an arbitrary command.
 
 ##### Specific Options
 

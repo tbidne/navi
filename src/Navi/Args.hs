@@ -120,7 +120,7 @@ configFileParser =
     )
   where
     helpTxt =
-      "Path to config file. Defaults to <xdgConfig>/navi/config.toml."
+      "Path to config file. Defaults to <xdg-config>/navi/config.toml."
 
 mkHelp :: String -> OptApp.Mod f a
 mkHelp =
