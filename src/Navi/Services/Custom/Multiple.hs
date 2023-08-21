@@ -27,15 +27,15 @@ toEvent :: (MonadIORef m) => MultipleToml -> m AnyEvent
 toEvent toml = do
   repeatEvent <- EventToml.mRepeatEventTomlToVal (toml ^. #repeatEventCfg)
   errorNote <- EventToml.mErrorNoteTomlToVal (toml ^. #errEventCfg)
-  pure $
-    MkAnyEvent $
-      mkMultipleEvent
-        (toml ^. #name)
-        (toml ^. #command)
-        triggerNotePairs
-        pi
-        repeatEvent
-        errorNote
+  pure
+    $ MkAnyEvent
+    $ mkMultipleEvent
+      (toml ^. #name)
+      (toml ^. #command)
+      triggerNotePairs
+      pi
+      repeatEvent
+      errorNote
   where
     triggerNotePairs = fmap toPair (toml ^. #triggerNotes)
     toPair (MkTriggerNoteToml t n) = (T.strip t, n)

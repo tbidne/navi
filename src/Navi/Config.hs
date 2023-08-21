@@ -41,7 +41,7 @@ readConfig ::
     MonadIORef m,
     MonadThrow m
   ) =>
-  Path ->
+  OsPath ->
   m Config
 readConfig =
   readFileUtf8ThrowM >=> \contents -> do
@@ -78,8 +78,8 @@ tomlToConfig toml = do
   case allEvts of
     [] -> throwCS NoEvents
     (e : es) ->
-      pure $
-        MkConfig
+      pure
+        $ MkConfig
           { events = e :| es,
             logging = logCfg,
             noteSystem = noteSysCfg

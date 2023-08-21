@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -15,6 +16,8 @@ import Data.Functor.Identity (Identity (..))
 import Data.List qualified as L
 import Data.Version (Version (versionBranch))
 import Effects.FileSystem.PathReader qualified as Dir
+import Effects.FileSystem.Utils (osp)
+import Effects.Optparse (osPath)
 import Navi.Prelude
 import Options.Applicative (Parser, ParserInfo (..))
 import Options.Applicative qualified as OptApp
@@ -31,7 +34,7 @@ import Paths_navi qualified as Paths
 -- 2. Filling missing arguments with defaults (@'Args' 'Identity'@).
 newtype Args f = MkArgs
   { -- | Path to the configuration file.
-    configFile :: f Path
+    configFile :: f OsPath
   }
 
 makeFieldLabelsNoPrefix ''Args
@@ -54,18 +57,17 @@ fillMissingDefaults args = do
   configFile' <- case configFile of
     -- No custom paths provided, use default
     Nothing -> do
-      xdgBase <- defaultXdg
+      xdgBase <- Dir.getXdgConfig [osp|navi|]
+      let defConfigName = [osp|config.toml|]
       pure (xdgBase </> defConfigName)
     -- Custom config provided, override
     Just customFile -> pure customFile
-  pure $
-    MkArgs
+  pure
+    $ MkArgs
       { configFile = Identity configFile'
       }
   where
     configFile = args ^. #configFile
-    defaultXdg = Dir.getXdgConfig "navi/"
-    defConfigName = "config.toml"
 
 -- | 'ParserInfo' type for parsing 'Args'.
 parserInfoArgs :: ParserInfo (Args Maybe)
@@ -81,19 +83,19 @@ parserInfoArgs =
     }
   where
     header =
-      Just $
-        "Navi: A program for monitoring system status via "
-          <> "desktop notifications."
+      Just
+        $ "Navi: A program for monitoring system status via "
+        <> "desktop notifications."
     footer = Just $ fromString versNum
     desc =
-      Chunk.paragraph $
-        "Navi allows one to easily define custom notification 'services'"
-          <> " that hook into a running notification server. For example, one"
-          <> " can provide a bash script that, say, queries the connection"
-          <> " status of a given network device. Navi will periodically run"
-          <> " this query and send a desktop notification if the status has"
-          <> " changed. See github.com/tbidne/navi#README for full"
-          <> " documentation."
+      Chunk.paragraph
+        $ "Navi allows one to easily define custom notification 'services'"
+        <> " that hook into a running notification server. For example, one"
+        <> " can provide a bash script that, say, queries the connection"
+        <> " status of a given network device. Navi will periodically run"
+        <> " this query and send a desktop notification if the status has"
+        <> " changed. See github.com/tbidne/navi#README for full"
+        <> " documentation."
 
 argsParser :: Parser (Args Maybe)
 argsParser =
@@ -108,10 +110,11 @@ version = OptApp.infoOption versNum (OptApp.long "version" <> OptApp.short 'v')
 versNum :: [Char]
 versNum = "Version: " <> L.intercalate "." (show <$> versionBranch Paths.version)
 
-configFileParser :: Parser (Maybe String)
+configFileParser :: Parser (Maybe OsPath)
 configFileParser =
   A.optional
-    ( OptApp.strOption
+    ( OptApp.option
+        osPath
         ( OptApp.long "config-file"
             <> OptApp.short 'c'
             <> mkHelp helpTxt

@@ -63,8 +63,8 @@ mkDBusEnv logEnv config = do
   client <- liftIO DBusN.connectSession
   logQueue <- newTBQueueA 1000
   noteQueue <- newTBQueueA 1000
-  pure $
-    MkDBusEnv
+  pure
+    $ MkDBusEnv
       { coreEnv =
           MkEnv
             (config ^. #events)

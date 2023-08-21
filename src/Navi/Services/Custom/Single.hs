@@ -25,15 +25,15 @@ toEvent :: (MonadIORef m) => SingleToml -> m AnyEvent
 toEvent toml = do
   repeatEvent <- EventToml.mRepeatEventTomlToVal (toml ^. #repeatEventCfg)
   errorNote <- EventToml.mErrorNoteTomlToVal (toml ^. #errEventCfg)
-  pure $
-    MkAnyEvent $
-      mkSingleEvent
-        (toml ^. #name)
-        (toml ^. #command)
-        pi
-        (T.strip (toml ^. #triggerVal), toml ^. #note)
-        repeatEvent
-        errorNote
+  pure
+    $ MkAnyEvent
+    $ mkSingleEvent
+      (toml ^. #name)
+      (toml ^. #command)
+      pi
+      (T.strip (toml ^. #triggerVal), toml ^. #note)
+      repeatEvent
+      errorNote
   where
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 {-# INLINEABLE toEvent #-}

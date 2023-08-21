@@ -52,8 +52,8 @@ mkNotifySendEnv ::
 mkNotifySendEnv logEnv config = do
   logQueue <- newTBQueueA 1000
   noteQueue <- newTBQueueA 1000
-  pure $
-    MkNotifySendEnv
+  pure
+    $ MkNotifySendEnv
       { coreEnv =
           MkEnv
             (config ^. #events)
@@ -69,7 +69,8 @@ naviToNotifySend naviNote = txt
   where
     txt =
       "notify-send \""
-        <> naviNote ^. #summary
+        <> naviNote
+        ^. #summary
         <> "\" "
         <> maybe "" (\b -> " \"" <> b <> "\" ") (naviNote ^. #body)
         <> maybe "" ulToNS (naviNote ^. #urgency)
@@ -81,7 +82,7 @@ naviToNotifySend naviNote = txt
 
     timeoutToNS Never = ""
     timeoutToNS (Seconds s) =
-      pack $
-        " --expire-time "
-          <> show (s * 1_000)
-          <> " "
+      pack
+        $ " --expire-time "
+        <> show (s * 1_000)
+        <> " "

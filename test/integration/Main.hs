@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Entrypoint for integration tests. These test the behavior regarding
 -- sending notifications/errors e.g. how notifications are sent depending
 -- on config values (e.g. repeats, send errors).
@@ -16,6 +18,7 @@ import Data.Text qualified as T
 import Effects.Concurrent.Async qualified as Async
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter qualified as Dir
+import Effects.FileSystem.Utils (osp)
 import Integration.Exceptions qualified as Exceptions
 import Integration.MockApp (MockEnv (..), configToMockEnv, runMockApp)
 import Integration.Prelude
@@ -28,8 +31,8 @@ import Test.Tasty qualified as Tasty
 -- | Runs integration tests.
 main :: IO ()
 main = do
-  Tasty.defaultMain $
-    Tasty.testGroup
+  Tasty.defaultMain
+    $ Tasty.testGroup
       "Integration tests"
       [ testMultiNotifs,
         testDuplicates,
@@ -117,7 +120,7 @@ runMock :: Word8 -> Text -> IO MockEnv
 runMock maxSeconds config = do
   -- setup file
   tmp <- Dir.getTemporaryDirectory
-  let configFp = tmp </> "int.toml"
+  let configFp = tmp </> [osp|int.toml|]
   writeFileUtf8 configFp config
   -- file -> config
   cfg <- readConfig configFp

@@ -3,8 +3,10 @@ module Unit.Navi.Config
   )
 where
 
+import Effects.FileSystem.Utils (unsafeEncodeFpToOs)
 import Navi.Config qualified as Config
 import Navi.Config.Types (Config (..), LogLoc (..), NoteSystem (..))
+import System.IO (FilePath)
 import Unit.Prelude
 
 tests :: TestTree
@@ -34,7 +36,10 @@ tests =
       Just DefPath @=? cfg ^. #logging % #location
       1 @=? length (cfg ^. #events)
 
-readsExample :: (Config -> IO ()) -> Path -> TestTree
+readsExample :: (Config -> IO ()) -> FilePath -> TestTree
 readsExample verifyCfg fp =
-  testCase ("Reads " <> fp) $
-    Config.readConfig fp >>= verifyCfg
+  testCase ("Reads " <> fp)
+    $ Config.readConfig p
+    >>= verifyCfg
+  where
+    p = unsafeEncodeFpToOs fp

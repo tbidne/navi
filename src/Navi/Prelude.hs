@@ -19,7 +19,6 @@ module Navi.Prelude
     monoBimap,
 
     -- * 'Text' replacements for 'P.String' functions.
-    error,
     showt,
 
     -- * Base exports
@@ -115,15 +114,15 @@ import Effects.FileSystem.HandleWriter as X
     IOMode (..),
     MonadHandleWriter (hClose, hFlush, hPut, openBinaryFile),
   )
-import Effects.FileSystem.Path as X (Path, (</>))
 import Effects.FileSystem.PathReader as X (MonadPathReader)
+import Effects.FileSystem.Utils as X (OsPath, (</>))
 import Effects.IORef as X
   ( IORef,
     MonadIORef (modifyIORef', newIORef, readIORef, writeIORef),
   )
 import Effects.System.Terminal as X (MonadTerminal, putStrLn, putTextLn)
 import GHC.Enum as X (Bounded (..))
-import GHC.Err as X (undefined)
+import GHC.Err as X (error, undefined)
 import GHC.Float as X (Double)
 import GHC.Generics as X (Generic)
 import GHC.Int as X (Int)
@@ -176,10 +175,6 @@ import Prelude qualified as P
 -- | 'Text' version of 'P.show'.
 showt :: (P.Show a) => a -> Text
 showt = pack . P.show
-
--- | 'Text' version of 'error'.
-error :: Text -> a
-error = P.error . unpack
 
 -- | Safe @head@.
 headMaybe :: [a] -> Maybe a

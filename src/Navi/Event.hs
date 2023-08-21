@@ -48,8 +48,8 @@ runEvent ::
 runEvent event = addNamespace "runEvent" $ do
   result <- query $ event ^. #serviceType
   $(logInfo) ("Shell returned: " <> showt result)
-  pure $
-    MkEventSuccess
+  pure
+    $ MkEventSuccess
       { result,
         repeatEvent = event ^. #repeatEvent,
         raiseAlert = event ^. #raiseAlert

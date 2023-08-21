@@ -3,7 +3,7 @@ name:               navi
 version:            0.1
 license:            MIT
 license-file:       LICENSE
-tested-with:        GHC ==9.4.4
+tested-with:        GHC ==9.4.6 || ==9.6.2
 copyright:          2021-2023 Thomas Bidne
 author:             Thomas Bidne
 maintainer:         tbidne@protonmail.com
@@ -77,15 +77,16 @@ library
 
   build-depends:
     , base                  >=4.17      && <4.19
-    , bytestring            >=0.10.10.0 && <0.12
+    , bytestring            >=0.10.10.0 && <0.13
     , containers            >=0.5.11.0  && <0.7
     , dbus                  ^>=1.2.14
-    , deepseq               ^>=1.4.6.0
+    , deepseq               >=1.4.6.0   && <1.6
     , effects-async         ^>=0.1
     , effects-exceptions    ^>=0.1
     , effects-fs            ^>=0.1
     , effects-ioref         ^>=0.1
     , effects-logger-ns     ^>=0.1
+    , effects-optparse      ^>=0.1
     , effects-stm           ^>=0.1
     , effects-terminal      ^>=0.1
     , effects-thread        ^>=0.1
@@ -138,6 +139,7 @@ test-suite unit
 
   build-depends:
     , base
+    , effects-fs
     , fdo-notify
     , navi
     , pythia

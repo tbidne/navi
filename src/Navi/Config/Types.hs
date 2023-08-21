@@ -31,7 +31,7 @@ import Navi.Prelude
 data LogLoc
   = DefPath
   | Stdout
-  | File !Path
+  | File !OsPath
   deriving stock (Eq, Show)
 
 -- | Determines what to do if the log file surpasses the given size

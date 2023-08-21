@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Unit.Navi.Config.Toml
   ( tests,
   )
@@ -5,6 +7,7 @@ where
 
 import DBus.Notify (UrgencyLevel (..))
 import Data.Text qualified as T
+import Effects.FileSystem.Utils (osp)
 import Navi.Config.Toml (ConfigToml (..))
 import Navi.Config.Types (FilesSizeMode (..), LogLoc (..), Logging (..))
 import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
@@ -44,8 +47,8 @@ logTests =
     expectedDebug =
       MkConfigToml
         { logToml =
-            Just $
-              MkLogging
+            Just
+              $ MkLogging
                 { severity = Just LevelDebug,
                   location = Nothing,
                   sizeMode = Nothing
@@ -71,10 +74,10 @@ expectedFull :: ConfigToml
 expectedFull =
   MkConfigToml
     { logToml =
-        Just $
-          MkLogging
+        Just
+          $ MkLogging
             { severity = Just LevelDebug,
-              location = Just $ File "some-file",
+              location = Just $ File [osp|some-file|],
               sizeMode = Just (FilesSizeModeWarn (MkBytes 50_000_000))
             },
       noteSystemToml = Nothing,
@@ -108,8 +111,8 @@ expectedSingle =
 
 expectedBatteryPercentage :: Maybe BatteryPercentageToml
 expectedBatteryPercentage =
-  Just $
-    MkBatteryPercentageToml
+  Just
+    $ MkBatteryPercentageToml
       { app = BatteryAppUPower,
         pollInterval = Just $ MkPollInterval 15,
         repeatEvent = Nothing,
@@ -132,8 +135,8 @@ expectedBatteryPercentage =
 
 expectedBatteryStatus :: Maybe BatteryStatusToml
 expectedBatteryStatus =
-  Just $
-    MkBatteryStatusToml
+  Just
+    $ MkBatteryStatusToml
       { app = BatteryAppAcpi,
         pollInterval = Nothing,
         repeatEvent = Nothing,

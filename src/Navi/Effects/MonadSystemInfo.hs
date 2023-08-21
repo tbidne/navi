@@ -34,8 +34,8 @@ instance MonadSystemInfo IO where
 rethrowPythia :: Text -> IO a -> IO a
 rethrowPythia n io =
   io `catchAny` \e ->
-    throwM $
-      MkEventError
+    throwM
+      $ MkEventError
         { name = n,
           short = "PythiaException",
           long = pack $ displayException e

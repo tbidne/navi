@@ -66,13 +66,13 @@ instance DecodeTOML ErrorNoteToml where
         "repeats" -> pure ErrNoteAllowRepeatsToml
         "no-repeats" -> pure ErrNoteNoRepeatsToml
         bad ->
-          fail $
-            unpack $
-              concat
-                [ "Unexpected error-events string: ",
-                  bad,
-                  ". Expected one of <none | repeats | no-repeats>."
-                ]
+          fail
+            $ unpack
+            $ concat
+              [ "Unexpected error-events string: ",
+                bad,
+                ". Expected one of <none | repeats | no-repeats>."
+              ]
 
 -- | TOML decoder for optional 'ErrorNoteToml' with field name
 -- "error-events".

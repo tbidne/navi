@@ -214,8 +214,9 @@ pollNoteQueue ::
   m Void
 pollNoteQueue = addNamespace "note-poller" $ do
   queue <- asks getNoteQueue
-  forever $
-    readTBQueueA queue >>= \nn ->
+  forever
+    $ readTBQueueA queue
+    >>= \nn ->
       sendNote nn `catchCS` \ce ->
         -- NOTE: Rethrow all exceptions except:
         --
@@ -223,8 +224,9 @@ pollNoteQueue = addNamespace "note-poller" $ do
         if clientErrorFatal ce
           then throwM ce
           else
-            $(logError) $
-              "Received non-fatal dbus error: " <> T.pack (displayException ce)
+            $(logError)
+              $ "Received non-fatal dbus error: "
+              <> T.pack (displayException ce)
 {-# INLINEABLE pollNoteQueue #-}
 
 pollLogQueue ::
@@ -242,7 +244,8 @@ pollLogQueue ::
 pollLogQueue = addNamespace "logger" $ do
   queue <- asks getLogQueue
   sendFn <- getLoggerFn
-  forever $
+  forever
+    $
     -- NOTE: Rethrow all exceptions
     atomicReadWrite queue (sendFn . logStrToBs)
 {-# INLINEABLE pollLogQueue #-}

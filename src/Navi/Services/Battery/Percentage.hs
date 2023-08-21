@@ -49,9 +49,9 @@ tomlToNote toml =
     percentage = toml ^. #percentage
     summary = "Battery Percentage"
     body =
-      Just $
-        showt (Interval.unLRInterval $ percentage ^. #unPercentage)
-          <> "%"
+      Just
+        $ showt (Interval.unLRInterval $ percentage ^. #unPercentage)
+        <> "%"
 
 mkBatteryEvent ::
   NonEmpty (Percentage, NaviNote) ->

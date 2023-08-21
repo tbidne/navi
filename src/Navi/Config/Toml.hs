@@ -12,6 +12,7 @@ import Data.Bytes (SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Char qualified as Ch
 import Data.Text qualified as T
+import Effects.FileSystem.Utils (encodeFpToOsFail)
 import GHC.Real (truncate)
 import Navi.Config.Types
   ( FilesSizeMode (..),
@@ -82,7 +83,7 @@ locationDecoder =
   tomlDecoder >>= \case
     "default" -> pure DefPath
     "stdout" -> pure Stdout
-    f -> pure $ File $ unpack f
+    f -> File <$> encodeFpToOsFail f
 
 noteSystemDecoder :: Decoder NoteSystem
 noteSystemDecoder =

@@ -57,10 +57,10 @@ decodeNetInterfaceApp =
     "nmcli" -> pure NetInterfaceAppNmCli
     "ip" -> pure NetInterfaceAppIp
     bad ->
-      fail $
-        unpack $
-          concat
-            [ "Unexpected net-interface app: ",
-              bad,
-              ". Expected one of <nmcli | ip>."
-            ]
+      fail
+        $ unpack
+        $ concat
+          [ "Unexpected net-interface app: ",
+            bad,
+            ". Expected one of <nmcli | ip>."
+          ]

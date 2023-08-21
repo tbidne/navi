@@ -172,8 +172,8 @@ runExceptionApp ::
   IO (e, Seq ByteString)
 runExceptionApp badThread = do
   let event =
-        MkAnyEvent $
-          MkEvent
+        MkAnyEvent
+          $ MkEvent
             { name = "exception test",
               serviceType = Single "",
               pollInterval = 1,

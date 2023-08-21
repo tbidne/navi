@@ -53,13 +53,13 @@ percentageDecoder = getFieldWith decoder "percent"
         case mkPercentage x of
           Just n -> pure n
           Nothing ->
-            fail $
-              unpack $
-                concat
-                  [ "Unexpected percent: ",
-                    showt x,
-                    ". Expected integer in [0, 100]."
-                  ]
+            fail
+              $ unpack
+              $ concat
+                [ "Unexpected percent: ",
+                  showt x,
+                  ". Expected integer in [0, 100]."
+                ]
     mkPercentage = fmap MkPercentage . Interval.mkLRInterval
 
 -- | TOML for the battery percentage service.

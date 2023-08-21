@@ -17,10 +17,10 @@ batteryAppDecoder =
     "sysfs" -> pure BatteryAppSysFs
     "upower" -> pure BatteryAppUPower
     bad ->
-      fail $
-        unpack $
-          concat
-            [ "Unexpected battery app: ",
-              bad,
-              ". Expected one of <acpi | sysfs | upower>."
-            ]
+      fail
+        $ unpack
+        $ concat
+          [ "Unexpected battery app: ",
+            bad,
+            ". Expected one of <acpi | sysfs | upower>."
+          ]

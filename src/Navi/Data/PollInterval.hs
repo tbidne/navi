@@ -44,14 +44,14 @@ ltRelTimeBounds :: (MonadFail f) => Natural -> f PollInterval
 ltRelTimeBounds n
   | MkPollInterval n <= maxBound = pure $ MkPollInterval n
   | otherwise =
-      fail $
-        unpack $
-          T.concat
-            [ "Given poll interval of ",
-              showt n,
-              " is too large. Maximum seconds is ",
-              showt @PollInterval maxBound
-            ]
+      fail
+        $ unpack
+        $ T.concat
+          [ "Given poll interval of ",
+            showt n,
+            " is too large. Maximum seconds is ",
+            showt @PollInterval maxBound
+          ]
 
 -- | TOML decoder for optional 'PollInterval' with field name 'poll-interval'.
 --

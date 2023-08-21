@@ -63,8 +63,8 @@ toNote timeout status = toNote' timeout $ fromStatus status
 
 toNote' :: Maybe Timeout -> Text -> Maybe NaviNote
 toNote' timeout msg =
-  Just $
-    NNote.MkNaviNote
+  Just
+    $ NNote.MkNaviNote
       { NNote.summary = "Battery Status",
         NNote.body = Just msg,
         NNote.urgency = Nothing,

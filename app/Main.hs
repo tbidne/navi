@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Main (main) where
 
 import Data.Bytes qualified as Bytes
@@ -8,6 +10,7 @@ import Effects.FileSystem.HandleWriter (MonadHandleWriter (withBinaryFile), die)
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter (MonadPathWriter)
 import Effects.FileSystem.PathWriter qualified as Dir
+import Effects.FileSystem.Utils (encodeFpToOsThrowM, osp, (<</>>!))
 import Effects.Time (MonadTime)
 import Effects.Time qualified as Time
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
@@ -71,8 +74,8 @@ withLogEnv ::
   m a
 withLogEnv logging onLogEnv =
   withLogHandle logging $ \logHandle ->
-    onLogEnv $
-      MkLogEnv
+    onLogEnv
+      $ MkLogEnv
         { logHandle,
           logLevel,
           logNamespace = "main"
@@ -102,13 +105,13 @@ withLogHandle logging onMHandle = do
       withBinaryFile f WriteMode $ \h -> onMHandle (Just h)
     -- Use the default log path: xdgState </> navi/log
     DefPath -> do
-      xdgState <- Dir.getXdgState "navi/"
+      xdgState <- Dir.getXdgState [osp|navi/|]
 
       -- handle large log dir
       handleLogSize xdgState sizeMode
 
       currTime <- fmap replaceSpc <$> Time.getSystemTimeString
-      let logFile = xdgState </> (currTime <> ".log")
+      logFile <- xdgState <</>>! (currTime <> ".log")
       stateExists <- Dir.doesDirectoryExist xdgState
       unless stateExists (Dir.createDirectoryIfMissing True xdgState)
       renameIfExists logFile
@@ -131,8 +134,8 @@ writeConfigErr ::
   SomeException ->
   m void
 writeConfigErr ex = do
-  xdgBase <- Dir.getXdgState "navi/"
-  let logFile = xdgBase </> "config_fatal.log"
+  xdgBase <- Dir.getXdgState [osp|navi|]
+  let logFile = xdgBase </> [osp|config_fatal.log|]
   renameIfExists logFile
   writeFileUtf8 logFile $ "Couldn't read config: " <> pack (displayException ex)
   throwCS ex
@@ -144,7 +147,7 @@ renameIfExists ::
     MonadPathWriter m,
     MonadThrow m
   ) =>
-  Path ->
+  OsPath ->
   m ()
 renameIfExists fp = do
   fileExists <- Dir.doesFileExist fp
@@ -159,15 +162,15 @@ uniqName ::
     MonadPathReader m,
     MonadThrow m
   ) =>
-  Path ->
-  m Path
+  OsPath ->
+  m OsPath
 uniqName fp = go 1
   where
-    go :: Word16 -> m Path
+    go :: Word16 -> m OsPath
     go !counter
-      | counter == maxBound = die $ "Failed renaming file: " <> fp
+      | counter == maxBound = die $ "Failed renaming file: " <> show fp
       | otherwise = do
-          let fp' = fp <> show counter
+          fp' <- (fp <>) <$> encodeFpToOsThrowM (show counter)
           b <- Dir.doesFileExist fp'
           if b
             then go (counter + 1)
@@ -179,7 +182,7 @@ handleLogSize ::
     MonadPathWriter m,
     MonadTerminal m
   ) =>
-  Path ->
+  OsPath ->
   FilesSizeMode ->
   m ()
 handleLogSize naviState sizeMode = do
@@ -194,9 +197,9 @@ handleLogSize naviState sizeMode = do
 
   case sizeMode of
     FilesSizeModeWarn warnSize ->
-      when (totalBytes' > warnSize) $
-        putTextLn $
-          sizeWarning warnSize naviState totalBytes'
+      when (totalBytes' > warnSize)
+        $ putTextLn
+        $ sizeWarning warnSize naviState totalBytes'
     FilesSizeModeDelete delSize ->
       when (totalBytes' > delSize) $ do
         putTextLn $ sizeWarning delSize naviState totalBytes' <> " Deleting logs."
@@ -206,7 +209,7 @@ handleLogSize naviState sizeMode = do
     sizeWarning warnSize fp fileSize =
       mconcat
         [ "Warning: log dir '",
-          T.pack fp,
+          T.pack $ show fp,
           "' has size: ",
           formatBytes fileSize,
           ", but specified threshold is: ",

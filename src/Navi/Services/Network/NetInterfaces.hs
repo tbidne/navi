@@ -25,16 +25,16 @@ toEvent ::
 toEvent toml = do
   repeatEvent <- EventToml.mRepeatEventTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote
-  pure $
-    MkAnyEvent $
-      MkEvent
-        { name = "network-interface",
-          serviceType = cmd,
-          pollInterval = pi,
-          raiseAlert = toNote toml,
-          repeatEvent = repeatEvent,
-          errorNote = errorNote
-        }
+  pure
+    $ MkAnyEvent
+    $ MkEvent
+      { name = "network-interface",
+        serviceType = cmd,
+        pollInterval = pi,
+        raiseAlert = toNote toml,
+        repeatEvent = repeatEvent,
+        errorNote = errorNote
+      }
   where
     device = MkDevice $ toml ^. #deviceName
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
@@ -44,8 +44,8 @@ toEvent toml = do
 
 toNote :: NetInterfacesToml -> NetInterface -> Maybe NaviNote
 toNote noteToml conn =
-  Just $
-    MkNaviNote
+  Just
+    $ MkNaviNote
       { summary = "Network Connectivity",
         body = Just body,
         urgency = Nothing,

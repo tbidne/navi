@@ -140,8 +140,8 @@ configToMockEnv config = do
   logQueue <- newTBQueueA 1000
   noteQueue <- newTBQueueA 1000
 
-  pure $
-    MkMockEnv
+  pure
+    $ MkMockEnv
       { events = config ^. #events,
         sentNotes = sentNotesRef,
         logQueue = logQueue,
