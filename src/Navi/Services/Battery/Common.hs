@@ -5,7 +5,13 @@ module Navi.Services.Battery.Common
 where
 
 import Navi.Prelude
-import Pythia.Services.Battery (BatteryApp (..))
+import Pythia.Services.Battery
+  ( BatteryApp
+      ( BatteryAppAcpi,
+        BatteryAppSysFs,
+        BatteryAppUPower
+      ),
+  )
 
 -- | TOML decoder for 'BatteryApp'.
 --

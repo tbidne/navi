@@ -9,16 +9,15 @@ module Navi.Env.NotifySend
   )
 where
 
-import DBus.Notify (UrgencyLevel (..))
+import DBus.Notify (UrgencyLevel (Critical, Low, Normal))
 import Navi.Config.Types (Config)
 import Navi.Data.NaviLog (LogEnv)
-import Navi.Data.NaviNote (NaviNote, Timeout (..))
+import Navi.Data.NaviNote (NaviNote, Timeout (Never, Seconds))
 import Navi.Env.Core
   ( Env (MkEnv),
-    HasEvents (..),
-    HasLogEnv (..),
-    HasLogQueue (..),
-    HasNoteQueue (..),
+    HasEvents (getEvents),
+    HasLogEnv (getLogEnv, localLogEnv),
+    HasNoteQueue (getNoteQueue),
   )
 import Navi.Prelude
 
@@ -36,21 +35,17 @@ instance HasLogEnv NotifySendEnv where
   getLogEnv = view (#coreEnv % #logEnv)
   localLogEnv = over' (#coreEnv % #logEnv)
 
-instance HasLogQueue NotifySendEnv where
-  getLogQueue = view (#coreEnv % #logQueue)
-
 instance HasNoteQueue NotifySendEnv where
   getNoteQueue = view (#coreEnv % #noteQueue)
 
 -- | Creates a 'NotifySendEnv' from the provided log types and configuration
 -- data.
 mkNotifySendEnv ::
-  (MonadSTM m) =>
+  (Concurrent :> es) =>
   LogEnv ->
   Config ->
-  m NotifySendEnv
+  Eff es NotifySendEnv
 mkNotifySendEnv logEnv config = do
-  logQueue <- newTBQueueA 1000
   noteQueue <- newTBQueueA 1000
   pure
     $ MkNotifySendEnv
@@ -58,7 +53,6 @@ mkNotifySendEnv logEnv config = do
           MkEnv
             (config ^. #events)
             logEnv
-            logQueue
             noteQueue
       }
 {-# INLINEABLE mkNotifySendEnv #-}

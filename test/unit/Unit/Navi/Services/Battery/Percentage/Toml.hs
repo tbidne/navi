@@ -3,16 +3,35 @@ module Unit.Navi.Services.Battery.Percentage.Toml
   )
 where
 
-import DBus.Notify (UrgencyLevel (..))
+import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
-import Navi.Data.NaviNote (Timeout (..))
-import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
+import Navi.Data.NaviNote (Timeout (Seconds))
+import Navi.Event.Toml
+  ( ErrorNoteToml
+      ( ErrNoteAllowRepeatsToml,
+        ErrNoteNoRepeatsToml,
+        NoErrNoteToml
+      ),
+    RepeatEventToml (AllowRepeatsToml, NoRepeatsToml),
+  )
 import Navi.Services.Battery.Percentage.Toml
-  ( BatteryPercentageNoteToml (..),
-    BatteryPercentageToml (..),
+  ( BatteryPercentageNoteToml
+      ( MkBatteryPercentageNoteToml,
+        mTimeout,
+        percentage,
+        urgency
+      ),
+    BatteryPercentageToml,
   )
 import Numeric.Data.Interval qualified as Interval
-import Pythia.Services.Battery (BatteryApp (..), Percentage (..))
+import Pythia.Services.Battery
+  ( BatteryApp
+      ( BatteryAppAcpi,
+        BatteryAppSysFs,
+        BatteryAppUPower
+      ),
+    Percentage (MkPercentage),
+  )
 import Unit.Prelude
 
 tests :: TestTree

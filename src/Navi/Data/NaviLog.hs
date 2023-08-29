@@ -7,7 +7,7 @@ module Navi.Data.NaviLog
   )
 where
 
-import Effects.LoggerNS (Namespace)
+import Effectful.LoggerNS.Dynamic (Namespace)
 import Navi.Prelude
 
 -- | Holds logging env data.
@@ -25,7 +25,9 @@ data LogEnv = MkLogEnv
     -- | The current logging namespace.
     --
     -- @since 0.1
-    logNamespace :: !Namespace
+    logNamespace :: !Namespace,
+    -- | The logging queue.
+    logQueue :: !(TBQueue LogStr)
   }
 
 -- | @since 0.1

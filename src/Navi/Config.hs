@@ -16,13 +16,13 @@ module Navi.Config
 where
 
 import Data.Maybe (catMaybes)
-import Navi.Config.Toml (ConfigToml (..))
+import Navi.Config.Toml (ConfigToml)
 import Navi.Config.Types
-  ( Config (..),
-    ConfigErr (..),
-    LogLoc (..),
-    Logging (..),
-    NoteSystem (..),
+  ( Config (MkConfig, events, logging, noteSystem),
+    ConfigErr (NoEvents, TomlError),
+    LogLoc (DefPath, File, Stdout),
+    Logging (MkLogging, location, severity, sizeMode),
+    NoteSystem (DBus, NotifySend),
     defaultLogging,
     defaultNoteSystem,
   )
@@ -36,28 +36,24 @@ import Navi.Services.Network.NetInterfaces qualified as NetConn
 -- | Parses the provided toml file into a 'Config'. Throws 'ConfigErr' if
 -- anything goes wrong.
 readConfig ::
-  ( HasCallStack,
-    MonadFileReader m,
-    MonadIORef m,
-    MonadThrow m
+  ( FileReaderDynamic :> es,
+    IORefStatic :> es
   ) =>
   OsPath ->
-  m Config
+  Eff es Config
 readConfig =
   readFileUtf8ThrowM >=> \contents -> do
     -- FIXME: Unused keys do not cause errors. This should probably be addressed
     -- upstream. See https://github.com/brandonchinn178/toml-reader/issues/12
     case decode contents of
-      Left tomlErr -> throwCS $ TomlError tomlErr
+      Left tomlErr -> throwM $ TomlError tomlErr
       Right cfg -> tomlToConfig cfg
 
 tomlToConfig ::
-  ( HasCallStack,
-    MonadIORef m,
-    MonadThrow m
+  ( IORefStatic :> es
   ) =>
   ConfigToml ->
-  m Config
+  Eff es Config
 tomlToConfig toml = do
   singleEvents <- traverse Single.toEvent singleToml
   multipleEvents <- traverse Multiple.toEvent multipleToml
@@ -76,7 +72,7 @@ tomlToConfig toml = do
       allEvts = maybeEvts <> multipleEvts
 
   case allEvts of
-    [] -> throwCS NoEvents
+    [] -> throwM NoEvents
     (e : es) ->
       pure
         $ MkConfig

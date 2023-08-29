@@ -3,98 +3,154 @@
 module Main (main) where
 
 import Data.Bytes qualified as Bytes
-import Data.Bytes.Formatting (FloatingFormatter (..))
-import Data.Functor.Identity (Identity (..))
+import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
+import Data.Functor.Identity (Identity (runIdentity))
 import Data.Text qualified as T
-import Effects.FileSystem.HandleWriter (MonadHandleWriter (withBinaryFile), die)
-import Effects.FileSystem.PathReader qualified as Dir
-import Effects.FileSystem.PathWriter (MonadPathWriter)
-import Effects.FileSystem.PathWriter qualified as Dir
-import Effects.FileSystem.Utils (encodeFpToOsThrowM, osp, (<</>>!))
-import Effects.Time (MonadTime)
-import Effects.Time qualified as Time
+import Effectful.Concurrent (runConcurrent)
+import Effectful.FileSystem.FileReader.Dynamic (runFileReaderDynamicIO)
+import Effectful.FileSystem.FileWriter.Dynamic (runFileWriterDynamicIO)
+import Effectful.FileSystem.HandleWriter.Dynamic
+  ( die,
+    runHandleWriterDynamicIO,
+    withBinaryFile,
+  )
+import Effectful.FileSystem.PathReader.Dynamic (runPathReaderDynamicIO)
+import Effectful.FileSystem.PathReader.Dynamic qualified as Dir
+import Effectful.FileSystem.PathWriter.Dynamic (runPathWriterDynamicIO)
+import Effectful.FileSystem.PathWriter.Dynamic qualified as Dir
+import Effectful.FileSystem.Utils (encodeFpToOsThrowM, osp, (<</>>!))
+import Effectful.IORef.Static (runIORefStaticIO)
+import Effectful.Optparse.Static (runOptparseStaticIO)
+import Effectful.Process.Typed (runTypedProcess)
+import Effectful.Reader.Static (runReader)
+import Effectful.Terminal.Dynamic (runTerminalDynamicIO)
+import Effectful.Time.Dynamic (runTimeDynamicIO)
+import Effectful.Time.Dynamic qualified as Time
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
-import Navi (runNavi, runNaviT)
-import Navi.Args (Args (..), getArgs)
+import Navi (runNavi)
+import Navi.Args (Args, getArgs)
 import Navi.Config
-  ( Config (..),
-    LogLoc (..),
-    Logging (..),
-    NoteSystem (..),
+  ( Config,
+    LogLoc (DefPath, File, Stdout),
+    Logging,
+    NoteSystem (DBus, NotifySend),
     readConfig,
   )
-import Navi.Config.Types (FilesSizeMode (..), defaultSizeMode)
-import Navi.Data.NaviLog (LogEnv (..))
-import Navi.Env.DBus (mkDBusEnv)
-import Navi.Env.NotifySend (mkNotifySendEnv)
+import Navi.Config.Types
+  ( FilesSizeMode (FilesSizeModeDelete, FilesSizeModeWarn),
+    defaultSizeMode,
+  )
+import Navi.Data.NaviLog
+  ( LogEnv
+      ( MkLogEnv,
+        logHandle,
+        logLevel,
+        logNamespace,
+        logQueue
+      ),
+  )
+import Navi.Effectful.Logging (runLoggerDynamic, runLoggerDynamicNS)
+import Navi.Effectful.Notify
+  ( runNotifyDynamicDBusIO,
+    runNotifyDynamicNotifySendIO,
+  )
+import Navi.Effectful.Pythia (runPythiaDynamicIO)
+import Navi.Env.DBus (DBusEnv, mkDBusEnv, runMkDbusEnvIO)
+import Navi.Env.NotifySend (NotifySendEnv, mkNotifySendEnv)
 import Navi.Prelude
+import System.IO qualified as IO
 
 main :: IO ()
 main = do
-  setUncaughtExceptionHandler (putStrLn . displayException)
+  setUncaughtExceptionHandler (IO.putStrLn . displayException)
 
-  args <- getArgs
-  config <-
-    tryParseConfig args
-      `catchAny` writeConfigErr
+  runNaviEff $ do
+    args <- getArgs
+    config <-
+      tryParseConfig args
+        `catchAny` writeConfigErr
 
-  withLogEnv (config ^. #logging) $ \logEnv -> do
-    let mkNaviEnv :: (LogEnv -> Config -> IO env) -> IO env
-        mkNaviEnv envFn = envFn logEnv config
-    case config ^. #noteSystem of
-      DBus -> mkNaviEnv mkDBusEnv >>= runWithEnv
-      NotifySend -> mkNaviEnv mkNotifySendEnv >>= runWithEnv
+    withLogEnv (config ^. #logging) $ \logEnv -> do
+      let mkNaviEnv :: (LogEnv -> Config -> Eff es env) -> Eff es env
+          mkNaviEnv envFn = envFn logEnv config
+      case config ^. #noteSystem of
+        DBus -> do
+          env <- runMkDbusEnvIO $ mkNaviEnv mkDBusEnv
+          void
+            <$> runReader env
+            $ runLoggerDynamicNS @DBusEnv
+            $ runLoggerDynamic @DBusEnv
+            $ runPythiaDynamicIO
+            $ runTypedProcess
+            $ runNotifyDynamicDBusIO (runNavi @DBusEnv)
+        NotifySend -> do
+          env <- mkNaviEnv mkNotifySendEnv
+          void
+            <$> runReader env
+            $ runLoggerDynamicNS @NotifySendEnv
+            $ runLoggerDynamic @NotifySendEnv
+            $ runPythiaDynamicIO
+            $ runTypedProcess
+            $ runNotifyDynamicNotifySendIO (runNavi @NotifySendEnv)
   where
-    runWithEnv env = absurd <$> runNaviT runNavi env
+    runNaviEff =
+      runEff
+        . runConcurrent
+        . runFileReaderDynamicIO
+        . runFileWriterDynamicIO
+        . runHandleWriterDynamicIO
+        . runIORefStaticIO
+        . runOptparseStaticIO
+        . runPathReaderDynamicIO
+        . runPathWriterDynamicIO
+        . runTerminalDynamicIO
+        . runTimeDynamicIO
 
 tryParseConfig ::
-  ( HasCallStack,
-    MonadFileReader m,
-    MonadIORef m,
-    MonadThrow m
+  ( FileReaderDynamic :> es,
+    IORefStatic :> es
   ) =>
   Args Identity ->
-  m Config
+  Eff es Config
 tryParseConfig =
   readConfig
     . runIdentity
     . view #configFile
 
 withLogEnv ::
-  ( HasCallStack,
-    MonadHandleWriter m,
-    MonadPathReader m,
-    MonadPathWriter m,
-    MonadTerminal m,
-    MonadThrow m,
-    MonadTime m
+  ( Concurrent :> es,
+    HandleWriterDynamic :> es,
+    PathReaderDynamic :> es,
+    PathWriterDynamic :> es,
+    TerminalDynamic :> es,
+    TimeDynamic :> es
   ) =>
   Logging ->
-  (LogEnv -> m a) ->
-  m a
+  (LogEnv -> Eff es a) ->
+  Eff es a
 withLogEnv logging onLogEnv =
-  withLogHandle logging $ \logHandle ->
+  withLogHandle logging $ \logHandle -> do
+    logQueue <- newTBQueueA 1000
     onLogEnv
       $ MkLogEnv
         { logHandle,
           logLevel,
+          logQueue,
           logNamespace = "main"
         }
   where
     logLevel = fromMaybe LevelError (logging ^. #severity)
 
 withLogHandle ::
-  ( HasCallStack,
-    MonadHandleWriter m,
-    MonadPathReader m,
-    MonadPathWriter m,
-    MonadTerminal m,
-    MonadThrow m,
-    MonadTime m
+  ( HandleWriterDynamic :> es,
+    PathReaderDynamic :> es,
+    PathWriterDynamic :> es,
+    TerminalDynamic :> es,
+    TimeDynamic :> es
   ) =>
   Logging ->
-  (Maybe Handle -> m a) ->
-  m a
+  (Maybe Handle -> Eff es a) ->
+  Eff es a
 withLogHandle logging onMHandle = do
   case logLoc' of
     -- Log location defined in config file as stdout.
@@ -124,31 +180,27 @@ withLogHandle logging onMHandle = do
     replaceSpc x = x
 
 writeConfigErr ::
-  ( HasCallStack,
-    MonadFileWriter m,
-    MonadHandleWriter m,
-    MonadPathReader m,
-    MonadPathWriter m,
-    MonadThrow m
+  ( FileWriterDynamic :> es,
+    HandleWriterDynamic :> es,
+    PathReaderDynamic :> es,
+    PathWriterDynamic :> es
   ) =>
   SomeException ->
-  m void
+  Eff es void
 writeConfigErr ex = do
   xdgBase <- Dir.getXdgState [osp|navi|]
   let logFile = xdgBase </> [osp|config_fatal.log|]
   renameIfExists logFile
   writeFileUtf8 logFile $ "Couldn't read config: " <> pack (displayException ex)
-  throwCS ex
+  throwM ex
 
 renameIfExists ::
-  ( HasCallStack,
-    MonadHandleWriter m,
-    MonadPathReader m,
-    MonadPathWriter m,
-    MonadThrow m
+  ( HandleWriterDynamic :> es,
+    PathReaderDynamic :> es,
+    PathWriterDynamic :> es
   ) =>
   OsPath ->
-  m ()
+  Eff es ()
 renameIfExists fp = do
   fileExists <- Dir.doesFileExist fp
   when fileExists $ do
@@ -156,17 +208,15 @@ renameIfExists fp = do
     Dir.renameFile fp fp'
 
 uniqName ::
-  forall m.
-  ( HasCallStack,
-    MonadHandleWriter m,
-    MonadPathReader m,
-    MonadThrow m
+  forall es.
+  ( HandleWriterDynamic :> es,
+    PathReaderDynamic :> es
   ) =>
   OsPath ->
-  m OsPath
+  Eff es OsPath
 uniqName fp = go 1
   where
-    go :: Word16 -> m OsPath
+    go :: Word16 -> Eff es OsPath
     go !counter
       | counter == maxBound = die $ "Failed renaming file: " <> show fp
       | otherwise = do
@@ -177,14 +227,13 @@ uniqName fp = go 1
             else pure fp'
 
 handleLogSize ::
-  ( HasCallStack,
-    MonadPathReader m,
-    MonadPathWriter m,
-    MonadTerminal m
+  ( PathReaderDynamic :> es,
+    PathWriterDynamic :> es,
+    TerminalDynamic :> es
   ) =>
   OsPath ->
   FilesSizeMode ->
-  m ()
+  Eff es ()
 handleLogSize naviState sizeMode = do
   -- NOTE: Only files should be logs
   logFiles <- Dir.listDirectory naviState

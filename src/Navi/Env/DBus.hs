@@ -1,11 +1,24 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 -- | Provides environment for usage with DBus.
 module Navi.Env.DBus
-  ( HasDBusClient (..),
+  ( -- * Environment
+    HasDBusClient (..),
     DBusEnv (..),
+
+    -- * Creation
+
+    -- ** Effect
+    DBusCreateStatic,
+
+    -- *** Handler
+    runMkDbusEnvIO,
+
+    -- * Functions
     mkDBusEnv,
+    --- * Misc
     naviToDBus,
   )
 where
@@ -13,15 +26,20 @@ where
 import DBus.Client (Client)
 import DBus.Notify (Hint (Urgency), Note)
 import DBus.Notify qualified as DBusN
+import Effectful.Dispatch.Static
+  ( SideEffects (WithSideEffects),
+    StaticRep,
+    evalStaticRep,
+    unsafeEff_,
+  )
 import Navi.Config (Config)
 import Navi.Data.NaviLog (LogEnv)
-import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
+import Navi.Data.NaviNote (NaviNote, Timeout (Never, Seconds))
 import Navi.Env.Core
   ( Env (MkEnv),
-    HasEvents (..),
-    HasLogEnv (..),
-    HasLogQueue (..),
-    HasNoteQueue (..),
+    HasEvents (getEvents),
+    HasLogEnv (getLogEnv, localLogEnv),
+    HasNoteQueue (getNoteQueue),
   )
 import Navi.Prelude
 
@@ -44,24 +62,38 @@ instance HasLogEnv DBusEnv where
   getLogEnv = view (#coreEnv % #logEnv)
   localLogEnv = over' (#coreEnv % #logEnv)
 
-instance HasLogQueue DBusEnv where
-  getLogQueue = view (#coreEnv % #logQueue)
-
 instance HasNoteQueue DBusEnv where
   getNoteQueue = view (#coreEnv % #noteQueue)
 
 instance HasDBusClient DBusEnv where
   getClient = view #dbusClient
 
+-- | Static effect for creating a dbus env.
+--
+-- @since 0.1
+data DBusCreateStatic :: Effect
+
+type instance DispatchOf DBusCreateStatic = Static WithSideEffects
+
+data instance StaticRep DBusCreateStatic = MkDBusCreateStatic
+
+-- | Handler for creating the environment.
+runMkDbusEnvIO ::
+  (IOE :> es) =>
+  Eff (DBusCreateStatic : es) a ->
+  Eff es a
+runMkDbusEnvIO = evalStaticRep MkDBusCreateStatic
+
 -- | Creates a 'DBusEnv' from the provided log types and configuration data.
 mkDBusEnv ::
-  (HasCallStack, MonadIO m, MonadSTM m) =>
+  ( Concurrent :> es,
+    DBusCreateStatic :> es
+  ) =>
   LogEnv ->
   Config ->
-  m DBusEnv
+  Eff es DBusEnv
 mkDBusEnv logEnv config = do
-  client <- liftIO DBusN.connectSession
-  logQueue <- newTBQueueA 1000
+  client <- unsafeEff_ DBusN.connectSession
   noteQueue <- newTBQueueA 1000
   pure
     $ MkDBusEnv
@@ -69,7 +101,6 @@ mkDBusEnv logEnv config = do
           MkEnv
             (config ^. #events)
             logEnv
-            logQueue
             noteQueue,
         dbusClient = client
       }

@@ -20,15 +20,23 @@ module Navi.Event
   )
 where
 
-import Effects.LoggerNS (MonadLoggerNS (..), addNamespace)
-import Navi.Effects (MonadSystemInfo (..))
+import Effectful.LoggerNS.Dynamic (addNamespace)
+import Navi.Effectful.Pythia (PythiaDynamic, query)
 import Navi.Event.Types
-  ( AnyEvent (..),
-    ErrorNote (..),
-    Event (..),
-    EventError (..),
-    EventSuccess (..),
-    RepeatEvent (..),
+  ( AnyEvent (MkAnyEvent),
+    ErrorNote (AllowErrNote, NoErrNote),
+    Event
+      ( MkEvent,
+        errorNote,
+        name,
+        pollInterval,
+        raiseAlert,
+        repeatEvent,
+        serviceType
+      ),
+    EventError (MkEventError, name, short),
+    EventSuccess (MkEventSuccess, raiseAlert, repeatEvent, result),
+    RepeatEvent (AllowRepeats, NoRepeats),
   )
 import Navi.Prelude
 
@@ -37,14 +45,13 @@ import Navi.Prelude
 -- 1. Queries the system via 'MonadSystemInfo'.
 -- 2. Returns the parsed result.
 runEvent ::
-  ( HasCallStack,
-    MonadLoggerNS m,
-    MonadSTM m,
-    MonadSystemInfo m,
+  ( LoggerDynamic :> es,
+    LoggerNSDynamic :> es,
+    PythiaDynamic :> es,
     Show result
   ) =>
   Event result ->
-  m (EventSuccess result)
+  Eff es (EventSuccess result)
 runEvent event = addNamespace "runEvent" $ do
   result <- query $ event ^. #serviceType
   $(logInfo) ("Shell returned: " <> showt result)
@@ -63,13 +70,14 @@ runEvent event = addNamespace "runEvent" $ do
 --    stored in our @ref@.
 blockRepeat ::
   ( Eq a,
-    MonadLoggerNS m,
-    MonadIORef m,
+    LoggerDynamic :> es,
+    LoggerNSDynamic :> es,
+    IORefStatic :> es,
     Show a
   ) =>
   RepeatEvent a ->
   a ->
-  m Bool
+  Eff es Bool
 blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
   case repeatEvent of
     -- Repeat events are allowed, so do not block.
@@ -95,11 +103,12 @@ blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
 -- 3. 'AllowErrNote' 'NoRepeats': block only if we have sent a notifcation
 --    for this error before.
 blockErr ::
-  ( MonadLoggerNS m,
-    MonadIORef m
+  ( LoggerDynamic :> es,
+    LoggerNSDynamic :> es,
+    IORefStatic :> es
   ) =>
   ErrorNote ->
-  m Bool
+  Eff es Bool
 blockErr errorEvent = addNamespace "blockErr" $ do
   case errorEvent of
     -- Error events are off, block.
@@ -127,7 +136,13 @@ blockErr errorEvent = addNamespace "blockErr" $ do
 
 -- | If the reference is 'NoRepeats' then we overwrite the previous reference
 -- with the new parameter. Otherwise we do nothing.
-updatePrevTrigger :: (Eq a, MonadIORef m) => RepeatEvent a -> a -> m ()
+updatePrevTrigger ::
+  ( Eq a,
+    IORefStatic :> es
+  ) =>
+  RepeatEvent a ->
+  a ->
+  Eff es ()
 updatePrevTrigger repeatEvent newVal =
   -- Only overwrite value if it's new
   case repeatEvent of

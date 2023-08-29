@@ -29,6 +29,7 @@ common common-exts
     NoStarIsType
     ApplicativeDo
     DataKinds
+    DeriveAnyClass
     DerivingVia
     DuplicateRecordFields
     FunctionalDependencies
@@ -50,16 +51,15 @@ library
     Navi.Data.NaviLog
     Navi.Data.NaviNote
     Navi.Data.PollInterval
-    Navi.Effects
-    Navi.Effects.MonadNotify
-    Navi.Effects.MonadSystemInfo
+    Navi.Effectful.Logging
+    Navi.Effectful.Notify
+    Navi.Effectful.Pythia
     Navi.Env.Core
     Navi.Env.DBus
     Navi.Env.NotifySend
     Navi.Event
     Navi.Event.Toml
     Navi.Event.Types
-    Navi.NaviT
     Navi.Prelude
     Navi.Services.Battery.Common
     Navi.Services.Battery.Percentage
@@ -76,34 +76,33 @@ library
     Navi.Utils
 
   build-depends:
-    , base                  >=4.17      && <4.19
-    , bytestring            >=0.10.10.0 && <0.13
-    , containers            >=0.5.11.0  && <0.7
-    , dbus                  ^>=1.2.14
-    , deepseq               >=1.4.6.0   && <1.6
-    , effects-async         ^>=0.1
-    , effects-exceptions    ^>=0.1
-    , effects-fs            ^>=0.1
-    , effects-ioref         ^>=0.1
-    , effects-logger-ns     ^>=0.1
-    , effects-optparse      ^>=0.1
-    , effects-stm           ^>=0.1
-    , effects-terminal      ^>=0.1
-    , effects-thread        ^>=0.1
-    , effects-time          ^>=0.1
-    , fdo-notify            ^>=0.3.1
-    , monad-logger          ^>=0.3.30
-    , mtl                   >=2.2.2     && <2.4
-    , optics-core           ^>=0.4
-    , optics-th             ^>=0.4
-    , optparse-applicative  >=0.16.1.0  && <0.19
-    , process               ^>=1.6.9.0
-    , pythia                ^>=0.1
-    , relative-time         ^>=0.1
-    , si-bytes              ^>=0.1
-    , smart-math            ^>=0.1
-    , text                  >=1.2.3.2   && <2.1
-    , toml-reader           >=0.1.0.0   && <0.3
+    , base                     >=4.17      && <4.19
+    , bytestring               >=0.10.10.0 && <0.13
+    , concurrent-effectful     ^>=0.1
+    , containers               >=0.5.11.0  && <0.7
+    , dbus                     >=1.2.14    && <1.4
+    , deepseq                  >=1.4.6.0   && <1.6
+    , effectful                >=2.2.1.0   && <2.4
+    , exceptions-effectful     ^>=0.1
+    , fdo-notify               ^>=0.3.1
+    , fs-effectful             ^>=0.1
+    , ioref-effectful          ^>=0.1
+    , logger-effectful         ^>=0.1
+    , logger-ns-effectful      ^>=0.1
+    , optics-core              ^>=0.4
+    , optics-th                ^>=0.4
+    , optparse-applicative     >=0.16.1.0  && <0.19
+    , optparse-effectful       ^>=0.1
+    , pythia                   ^>=0.1
+    , relative-time            ^>=0.1
+    , si-bytes                 ^>=0.1
+    , smart-math               ^>=0.1
+    , stm-effectful            ^>=0.1
+    , terminal-effectful       ^>=0.1
+    , text                     >=1.2.3.2   && <2.2
+    , time-effectful           ^>=0.1
+    , toml-reader              >=0.1.0.0   && <0.3
+    , typed-process-effectful  ^>=1.0.0.0
 
   hs-source-dirs:   src
   default-language: GHC2021
@@ -113,11 +112,16 @@ executable navi
   main-is:          Main.hs
   build-depends:
     , base
-    , effects-fs
-    , effects-time
+    , effectful
+    , fs-effectful
+    , ioref-effectful
     , navi
+    , optparse-effectful
     , si-bytes
+    , terminal-effectful
     , text
+    , time-effectful
+    , typed-process-effectful
 
   hs-source-dirs:   app
   ghc-options:      -threaded -with-rtsopts=-N
@@ -139,13 +143,14 @@ test-suite unit
 
   build-depends:
     , base
-    , effects-fs
     , fdo-notify
+    , fs-effectful
+    , ioref-effectful
     , navi
     , pythia
     , smart-math
-    , tasty        >=1.1.0.3 && <1.5
-    , tasty-hunit  >=0.9     && <0.11
+    , tasty            >=1.1.0.3 && <1.6
+    , tasty-hunit      >=0.9     && <0.11
     , text
 
   hs-source-dirs:   test/unit
@@ -162,21 +167,22 @@ test-suite integration
 
   build-depends:
     , base
-    , effects-async
-    , effects-exceptions
-    , effects-fs
-    , effects-logger-ns
-    , effects-terminal
-    , effects-thread
-    , effects-time
+    , concurrent-effectful
+    , containers
+    , effectful
     , fdo-notify
+    , fs-effectful
+    , ioref-effectful
+    , logger-ns-effectful
     , navi
     , pythia
     , smart-math
     , tasty
     , tasty-hunit
+    , terminal-effectful
     , text
-    , time                >=1.9.3 && <1.14
+    , time                  >=1.9.3 && <1.14
+    , time-effectful
 
   hs-source-dirs:   test/integration
   default-language: GHC2021

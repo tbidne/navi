@@ -52,6 +52,39 @@
         "type": "github"
       }
     },
+    "effectful-effects": {
+      "inputs": {
+        "algebra-simple": [
+          "algebra-simple"
+        ],
+        "bounds": [
+          "bounds"
+        ],
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nix-hs-utils": [
+          "nix-hs-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1693351207,
+        "narHash": "sha256-M0NRbdMoL13OnlhtnlLsbuZjkKXYe8arqHZnehy/+Bo=",
+        "owner": "tbidne",
+        "repo": "effectful-effects",
+        "rev": "bfdfb6ed351bdb91588878da74c819c0e1423fbf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tbidne",
+        "ref": "logger",
+        "repo": "effectful-effects",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": "nixpkgs-lib"
@@ -70,48 +103,13 @@
         "type": "github"
       }
     },
-    "monad-effects": {
-      "inputs": {
-        "algebra-simple": [
-          "algebra-simple"
-        ],
-        "bounds": [
-          "bounds"
-        ],
-        "flake-parts": [
-          "flake-parts"
-        ],
-        "nix-hs-utils": [
-          "nix-hs-utils"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "smart-math": [
-          "smart-math"
-        ]
-      },
-      "locked": {
-        "lastModified": 1693048711,
-        "narHash": "sha256-zgMO+Jaw6vnYlzESKZx/XBOUQR2jrLqdcs0YpUIWPPk=",
-        "owner": "tbidne",
-        "repo": "monad-effects",
-        "rev": "85a5694c59cc130b185101f98aec1ce4c7e80733",
-        "type": "github"
-      },
-      "original": {
-        "owner": "tbidne",
-        "repo": "monad-effects",
-        "type": "github"
-      }
-    },
     "nix-hs-utils": {
       "locked": {
-        "lastModified": 1692785004,
-        "narHash": "sha256-vIduZ18ljvfh5EhpZIKCMiLBrV3qgShHyESoNLr4tEE=",
+        "lastModified": 1693952689,
+        "narHash": "sha256-kJdLUPMBEv4c0ZaSbL1PmUpId8/TqytWZozkxCRqnj0=",
         "owner": "tbidne",
         "repo": "nix-hs-utils",
-        "rev": "de183f4af585703c7be972fa071a9d0721ec8fae",
+        "rev": "9c301a86474ee5736c9572f5b8ff8dbc273c363c",
         "type": "github"
       },
       "original": {
@@ -162,11 +160,11 @@
         "bounds": [
           "bounds"
         ],
+        "effectful-effects": [
+          "effectful-effects"
+        ],
         "flake-parts": [
           "flake-parts"
-        ],
-        "monad-effects": [
-          "monad-effects"
         ],
         "nix-hs-utils": [
           "nix-hs-utils"
@@ -185,15 +183,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1693053600,
-        "narHash": "sha256-hD04dCKaAmi/6JKFSMl4Xnjb17QKeSdRzBmVppvSOSM=",
+        "lastModified": 1695010801,
+        "narHash": "sha256-zMRvgc+jXi0csIPAI+wLRslEh77YuhSocVJ96MVZWMk=",
         "owner": "tbidne",
         "repo": "pythia",
-        "rev": "2a4de1465c75513617293ca23b3541e4be4b82cb",
+        "rev": "35bce4eba621fec679c16e9d66a7ded3b0804aec",
         "type": "github"
       },
       "original": {
         "owner": "tbidne",
+        "ref": "effectful",
         "repo": "pythia",
         "type": "github"
       }
@@ -234,8 +233,8 @@
       "inputs": {
         "algebra-simple": "algebra-simple",
         "bounds": "bounds",
+        "effectful-effects": "effectful-effects",
         "flake-parts": "flake-parts",
-        "monad-effects": "monad-effects",
         "nix-hs-utils": "nix-hs-utils",
         "nixpkgs": "nixpkgs",
         "pythia": "pythia",
@@ -317,11 +316,11 @@
         "bounds": [
           "bounds"
         ],
+        "effectful-effects": [
+          "effectful-effects"
+        ],
         "flake-parts": [
           "flake-parts"
-        ],
-        "monad-effects": [
-          "monad-effects"
         ],
         "nix-hs-utils": [
           "nix-hs-utils"
@@ -331,15 +330,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1693052363,
-        "narHash": "sha256-SeEA/VdLGpYm35QQtcNs5Dg9ei1/8HbPs4bn+c0i5k8=",
+        "lastModified": 1693395290,
+        "narHash": "sha256-KCSYEGv/WLF5ecgXaX2zfzepsWOqEecv0id/Rlgm14k=",
         "owner": "tbidne",
         "repo": "time-conv",
-        "rev": "19628566adcf9bfd1ed87a407aa0d5798ca94df0",
+        "rev": "21cf514398af4dfa5bb7e1a51796a22c36169f6a",
         "type": "github"
       },
       "original": {
         "owner": "tbidne",
+        "ref": "effectful",
         "repo": "time-conv",
         "type": "github"
       }

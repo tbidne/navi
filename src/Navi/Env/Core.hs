@@ -6,7 +6,6 @@ module Navi.Env.Core
   ( -- * HasX-style Typeclasses
     HasEvents (..),
     HasLogEnv (..),
-    HasLogQueue (..),
     HasNoteQueue (..),
 
     -- * Concrete Env
@@ -28,10 +27,6 @@ class HasLogEnv env where
   getLogEnv :: env -> LogEnv
   localLogEnv :: (LogEnv -> LogEnv) -> env -> env
 
--- | Retrieves the log queue.
-class HasLogQueue env where
-  getLogQueue :: env -> TBQueue LogStr
-
 -- | Retrieves the note queue.
 class HasNoteQueue env where
   getNoteQueue :: env -> TBQueue NaviNote
@@ -40,7 +35,6 @@ class HasNoteQueue env where
 data Env = MkEnv
   { events :: !(NonEmpty AnyEvent),
     logEnv :: !LogEnv,
-    logQueue :: !(TBQueue LogStr),
     noteQueue :: !(TBQueue NaviNote)
   }
 
@@ -52,9 +46,6 @@ instance HasEvents Env where
 instance HasLogEnv Env where
   getLogEnv = view #logEnv
   localLogEnv = over' #logEnv
-
-instance HasLogQueue Env where
-  getLogQueue = view #logQueue
 
 instance HasNoteQueue Env where
   getNoteQueue = view #noteQueue

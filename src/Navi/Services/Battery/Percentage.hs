@@ -8,23 +8,39 @@ where
 import Data.List.NonEmpty qualified as NE
 import Data.Map (Map)
 import Data.Map qualified as Map
-import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Data.PollInterval (PollInterval (..))
+import Navi.Data.NaviNote (NaviNote (MkNaviNote))
+import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
-import Navi.Event.Types (AnyEvent (..), ErrorNote, Event (..), RepeatEvent)
+import Navi.Event.Types
+  ( AnyEvent (MkAnyEvent),
+    ErrorNote,
+    Event
+      ( MkEvent,
+        errorNote,
+        name,
+        pollInterval,
+        raiseAlert,
+        repeatEvent,
+        serviceType
+      ),
+    RepeatEvent,
+  )
 import Navi.Prelude
-import Navi.Services.Battery.Percentage.Toml (BatteryPercentageNoteToml (..), BatteryPercentageToml)
-import Navi.Services.Types (ServiceType (..))
+import Navi.Services.Battery.Percentage.Toml
+  ( BatteryPercentageNoteToml,
+    BatteryPercentageToml,
+  )
+import Navi.Services.Types (ServiceType (BatteryPercentage))
 import Numeric.Data.Interval qualified as Interval
 import Pythia.Services.Battery
-  ( Battery (..),
+  ( Battery,
     BatteryApp,
-    BatteryStatus (..),
-    Percentage (..),
+    BatteryStatus (Discharging),
+    Percentage,
   )
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
-toEvent :: (MonadIORef m) => BatteryPercentageToml -> m AnyEvent
+toEvent :: (IORefStatic :> es) => BatteryPercentageToml -> Eff es AnyEvent
 toEvent toml = do
   repeatEvent <- EventToml.mRepeatEventTomlToVal $ toml ^. #repeatEvent
   errorNote <- EventToml.mErrorNoteTomlToVal $ toml ^. #errorNote

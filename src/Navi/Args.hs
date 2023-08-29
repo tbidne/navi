@@ -10,21 +10,33 @@ module Navi.Args
 where
 
 import Control.Applicative qualified as A
-import Data.Functor.Classes (Show1 (..))
+import Data.Functor.Classes (Show1)
 import Data.Functor.Classes qualified as Functor
-import Data.Functor.Identity (Identity (..))
+import Data.Functor.Identity (Identity (Identity))
 import Data.List qualified as L
 import Data.Version (Version (versionBranch))
-import Effects.FileSystem.PathReader qualified as Dir
-import Effects.FileSystem.Utils (osp)
-import Effects.Optparse (osPath)
+import Effectful.FileSystem.PathReader.Dynamic qualified as Dir
+import Effectful.FileSystem.Utils (osp)
+import Effectful.Optparse.Static (OptparseStatic, execParser, osPath)
 import Navi.Prelude
-import Options.Applicative (Parser, ParserInfo (..))
-import Options.Applicative qualified as OptApp
-import Options.Applicative.Help.Chunk (Chunk (..))
+import Options.Applicative
+  ( Parser,
+    ParserInfo
+      ( ParserInfo,
+        infoFailureCode,
+        infoFooter,
+        infoFullDesc,
+        infoHeader,
+        infoParser,
+        infoPolicy,
+        infoProgDesc
+      ),
+  )
+import Options.Applicative qualified as OA
+import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Help.Pretty qualified as Pretty
-import Options.Applicative.Types (ArgPolicy (..))
+import Options.Applicative.Types (ArgPolicy (Intersperse))
 import Paths_navi qualified as Paths
 
 -- | Represents command-line arguments. We use the \"higher-kinded data\"
@@ -46,13 +58,18 @@ instance (Show1 f) => Show (Args f) where
 
 -- | Parses cli args and fills in defaults. These defaults are based on the
 -- detected XDG Base Directory and default names.
-getArgs :: (MonadIO m) => m (Args Identity)
-getArgs = liftIO $ do
-  args <- OptApp.execParser parserInfoArgs
+getArgs ::
+  (OptparseStatic :> es, PathReaderDynamic :> es) =>
+  Eff es (Args Identity)
+getArgs = do
+  args <- execParser parserInfoArgs
   fillMissingDefaults args
 {-# INLINEABLE getArgs #-}
 
-fillMissingDefaults :: Args Maybe -> IO (Args Identity)
+fillMissingDefaults ::
+  (PathReaderDynamic :> es) =>
+  Args Maybe ->
+  Eff es (Args Identity)
 fillMissingDefaults args = do
   configFile' <- case configFile of
     -- No custom paths provided, use default
@@ -101,11 +118,11 @@ argsParser :: Parser (Args Maybe)
 argsParser =
   MkArgs
     <$> configFileParser
-    <**> OptApp.helper
+    <**> OA.helper
     <**> version
 
 version :: Parser (a -> a)
-version = OptApp.infoOption versNum (OptApp.long "version" <> OptApp.short 'v')
+version = OA.infoOption versNum (OA.long "version" <> OA.short 'v')
 
 versNum :: [Char]
 versNum = "Version: " <> L.intercalate "." (show <$> versionBranch Paths.version)
@@ -113,21 +130,21 @@ versNum = "Version: " <> L.intercalate "." (show <$> versionBranch Paths.version
 configFileParser :: Parser (Maybe OsPath)
 configFileParser =
   A.optional
-    ( OptApp.option
+    ( OA.option
         osPath
-        ( OptApp.long "config-file"
-            <> OptApp.short 'c'
+        ( OA.long "config-file"
+            <> OA.short 'c'
             <> mkHelp helpTxt
-            <> OptApp.metavar "PATH"
+            <> OA.metavar "PATH"
         )
     )
   where
     helpTxt =
       "Path to config file. Defaults to <xdg-config>/navi/config.toml."
 
-mkHelp :: String -> OptApp.Mod f a
+mkHelp :: String -> OA.Mod f a
 mkHelp =
-  OptApp.helpDoc
+  OA.helpDoc
     . fmap (<> Pretty.hardline)
     . Chunk.unChunk
     . Chunk.paragraph

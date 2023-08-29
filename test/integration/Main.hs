@@ -12,19 +12,36 @@
 -- @since 0.1
 module Main (main) where
 
-import Control.Concurrent qualified as CC
-import DBus.Notify (UrgencyLevel (..))
+import DBus.Notify (UrgencyLevel (Critical))
+import Data.IORef qualified as IORef
 import Data.Text qualified as T
-import Effects.Concurrent.Async qualified as Async
-import Effects.FileSystem.PathReader qualified as Dir
-import Effects.FileSystem.PathWriter qualified as Dir
-import Effects.FileSystem.Utils (osp)
+import Effectful.Concurrent (runConcurrent)
+import Effectful.Concurrent.Async qualified as Async
+import Effectful.Concurrent.Static qualified as CC
+import Effectful.FileSystem.FileReader.Dynamic (runFileReaderDynamicIO)
+import Effectful.FileSystem.FileWriter.Dynamic (runFileWriterDynamicIO)
+import Effectful.FileSystem.HandleWriter.Dynamic (runHandleWriterDynamicIO)
+import Effectful.FileSystem.PathReader.Dynamic (runPathReaderDynamicIO)
+import Effectful.FileSystem.PathReader.Dynamic qualified as Dir
+import Effectful.FileSystem.PathWriter.Dynamic (runPathWriterDynamicIO)
+import Effectful.FileSystem.PathWriter.Dynamic qualified as Dir
+import Effectful.FileSystem.Utils (osp)
+import Effectful.IORef.Static (runIORefStaticIO)
+import Effectful.Terminal.Dynamic (runTerminalDynamicIO)
 import Integration.Exceptions qualified as Exceptions
-import Integration.MockApp (MockEnv (..), configToMockEnv, runMockApp)
+import Integration.MockApp (MockEnv, configToMockEnv, runMockApp)
 import Integration.Prelude
 import Navi (runNavi)
 import Navi.Config (readConfig)
-import Navi.Data.NaviNote (NaviNote (..))
+import Navi.Data.NaviNote
+  ( NaviNote
+      ( MkNaviNote,
+        body,
+        summary,
+        timeout,
+        urgency
+      ),
+  )
 import Navi.Event (EventError (MkEventError))
 import Test.Tasty qualified as Tasty
 
@@ -110,14 +127,14 @@ testSendExceptionDies :: TestTree
 testSendExceptionDies = testCase "Exception in send kills program" $ do
   result <-
     (runMock 3 sendExceptionConfig $> Nothing)
-      `catchCS` (pure . Just)
+      `catch` (pure . Just)
 
   expected @=? result
   where
     expected = Just $ MkEventError "SentException" "sending mock exception" ""
 
 runMock :: Word8 -> Text -> IO MockEnv
-runMock maxSeconds config = do
+runMock maxSeconds config = run $ do
   -- setup file
   tmp <- Dir.getTemporaryDirectory
   let configFp = tmp </> [osp|int.toml|]
@@ -127,12 +144,23 @@ runMock maxSeconds config = do
   mockEnv <- configToMockEnv cfg
   -- runNavi runs forever, so we use race_ to kill it once the countdown
   -- runs out.
-  Async.race_ (countdown maxSeconds) (runMockApp runNavi mockEnv)
+  Async.race_ (countdown maxSeconds) (runMockApp (runNavi @MockEnv) mockEnv)
   Dir.removeFile configFp
   pure mockEnv
+  where
+    run =
+      runEff
+        . runConcurrent
+        . runFileReaderDynamicIO
+        . runFileWriterDynamicIO
+        . runHandleWriterDynamicIO
+        . runIORefStaticIO
+        . runPathReaderDynamicIO
+        . runPathWriterDynamicIO
+        . runTerminalDynamicIO
 
-countdown :: Word8 -> IO ()
-countdown = CC.threadDelay . (* 1_000_000) . fromIntegral . (+ 1)
+countdown :: (Concurrent :> es) => Word8 -> Eff es ()
+countdown = CC.sleep . fromIntegral . (+ 1)
 
 batteryPercentageEventConfig :: Text
 batteryPercentageEventConfig =
@@ -196,5 +224,5 @@ sendExceptionConfig =
 
 mockEnvToNotes :: MockEnv -> IO [NaviNote]
 mockEnvToNotes mockEnv = do
-  sentNotes <- readIORef $ mockEnv ^. #sentNotes
+  sentNotes <- IORef.readIORef $ mockEnv ^. #sentNotes
   pure $ filter ((/= "Navi") . view #summary) sentNotes

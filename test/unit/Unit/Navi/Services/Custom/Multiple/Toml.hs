@@ -2,9 +2,19 @@ module Unit.Navi.Services.Custom.Multiple.Toml (tests) where
 
 import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
-import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
-import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
-import Navi.Services.Custom.Multiple.Toml (MultipleToml (..), TriggerNoteToml (..))
+import Navi.Data.NaviNote (NaviNote (MkNaviNote), Timeout (Seconds))
+import Navi.Event.Toml
+  ( ErrorNoteToml
+      ( ErrNoteAllowRepeatsToml,
+        ErrNoteNoRepeatsToml,
+        NoErrNoteToml
+      ),
+    RepeatEventToml (AllowRepeatsToml, NoRepeatsToml),
+  )
+import Navi.Services.Custom.Multiple.Toml
+  ( MultipleToml,
+    TriggerNoteToml (MkTriggerNoteToml, note, trigger),
+  )
 import Unit.Prelude
 
 tests :: TestTree

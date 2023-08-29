@@ -9,7 +9,7 @@ module Navi.Services.Battery.Status.Toml
 where
 
 import Navi.Data.NaviNote (Timeout, timeoutOptDecoder)
-import Navi.Data.PollInterval (PollInterval (..), pollIntervalOptDecoder)
+import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
   ( ErrorNoteToml,
     RepeatEventToml,
@@ -18,7 +18,7 @@ import Navi.Event.Toml
   )
 import Navi.Prelude
 import Navi.Services.Battery.Common (batteryAppDecoder)
-import Pythia.Services.Battery (BatteryApp (..))
+import Pythia.Services.Battery (BatteryApp)
 
 -- | TOML for the battery status service.
 data BatteryStatusToml = MkBatteryStatusToml

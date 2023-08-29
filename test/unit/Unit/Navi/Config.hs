@@ -3,9 +3,15 @@ module Unit.Navi.Config
   )
 where
 
-import Effects.FileSystem.Utils (unsafeEncodeFpToOs)
+import Effectful.FileSystem.FileReader.Dynamic (runFileReaderDynamicIO)
+import Effectful.FileSystem.Utils (unsafeEncodeFpToOs)
+import Effectful.IORef.Static (runIORefStaticIO)
 import Navi.Config qualified as Config
-import Navi.Config.Types (Config (..), LogLoc (..), NoteSystem (..))
+import Navi.Config.Types
+  ( Config,
+    LogLoc (DefPath, Stdout),
+    NoteSystem (DBus, NotifySend),
+  )
 import System.IO (FilePath)
 import Unit.Prelude
 
@@ -39,7 +45,12 @@ tests =
 readsExample :: (Config -> IO ()) -> FilePath -> TestTree
 readsExample verifyCfg fp =
   testCase ("Reads " <> fp)
-    $ Config.readConfig p
+    $ run (Config.readConfig p)
     >>= verifyCfg
   where
     p = unsafeEncodeFpToOs fp
+
+    run =
+      runEff
+        . runFileReaderDynamicIO
+        . runIORefStaticIO

@@ -19,18 +19,17 @@
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    monad-effects = {
-      url = "github:tbidne/monad-effects";
+    effectful-effects = {
+      url = "github:tbidne/effectful-effects/logger";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
 
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
-      inputs.smart-math.follows = "smart-math";
     };
     pythia = {
-      url = "github:tbidne/pythia";
+      url = "github:tbidne/pythia/effectful";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -38,7 +37,7 @@
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
       inputs.si-bytes.follows = "si-bytes";
-      inputs.monad-effects.follows = "monad-effects";
+      inputs.effectful-effects.follows = "effectful-effects";
       inputs.smart-math.follows = "smart-math";
       inputs.time-conv.follows = "time-conv";
     };
@@ -70,19 +69,18 @@
       inputs.bounds.follows = "bounds";
     };
     time-conv = {
-      url = "github:tbidne/time-conv";
+      url = "github:tbidne/time-conv/effectful";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
 
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
-      inputs.monad-effects.follows = "monad-effects";
+      inputs.effectful-effects.follows = "effectful-effects";
     };
   };
   outputs =
     inputs@{ flake-parts
-    , monad-effects
     , nix-hs-utils
     , nixpkgs
     , self
@@ -98,6 +96,15 @@
               hedgehog = prev.hedgehog_1_3;
               hlint = prev.hlint_3_6_1;
               ormolu = prev.ormolu_0_7_1_0;
+              typed-process-effectful =
+                hlib.dontCheck
+                  (final.callHackageDirect
+                    {
+                      pkg = "typed-process-effectful";
+                      ver = "1.0.0.0";
+                      sha256 = "sha256-+AGzviNpE6sIf8j8IQ6qjEjIILe82mItZSEkc/Qc34c=";
+                    }
+                    { });
             } // nix-hs-utils.mkLibs inputs final [
               "algebra-simple"
               "bounds"
@@ -106,19 +113,17 @@
               "si-bytes"
               "smart-math"
               "time-conv"
-            ] // nix-hs-utils.mkRelLibs monad-effects final [
-              "effects-async"
-              "effects-env"
-              "effects-exceptions"
-              "effects-fs"
-              "effects-ioref"
-              "effects-logger-ns"
-              "effects-optparse"
-              "effects-stm"
-              "effects-time"
-              "effects-terminal"
-              "effects-thread"
-              "effects-typed-process"
+            ] // nix-hs-utils.mkRelLibs "${inputs.effectful-effects}/lib" final [
+              "concurrent-effectful"
+              "exceptions-effectful"
+              "fs-effectful"
+              "ioref-effectful"
+              "logger-effectful"
+              "logger-ns-effectful"
+              "optparse-effectful"
+              "stm-effectful"
+              "time-effectful"
+              "terminal-effectful"
             ];
           };
           hlib = pkgs.haskell.lib;
@@ -128,22 +133,16 @@
               name = "navi";
               root = ./.;
             };
-          hsDirs = "app src test";
+          compilerPkgs = { inherit compiler pkgs; };
         in
         {
           packages.default = mkPkg false;
           devShells.default = mkPkg true;
 
           apps = {
-            format = nix-hs-utils.format {
-              inherit compiler hsDirs pkgs;
-            };
-            lint = nix-hs-utils.lint {
-              inherit compiler hsDirs pkgs;
-            };
-            lint-refactor = nix-hs-utils.lint-refactor {
-              inherit compiler hsDirs pkgs;
-            };
+            format = nix-hs-utils.format compilerPkgs;
+            lint = nix-hs-utils.lint compilerPkgs;
+            lintRefactor = nix-hs-utils.lintRefactor compilerPkgs;
           };
         };
       systems = [

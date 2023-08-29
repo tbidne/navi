@@ -26,10 +26,14 @@ module Navi.Prelude
   )
 where
 
-import Control.Applicative as X (Alternative (..), Applicative (..), (<**>))
+import Control.Applicative as X
+  ( Alternative ((<|>)),
+    Applicative (liftA2, pure, (*>), (<*>)),
+    (<**>),
+  )
 import Control.DeepSeq as X (NFData)
 import Control.Monad as X
-  ( Monad (..),
+  ( Monad ((>>=)),
     forever,
     join,
     unless,
@@ -39,97 +43,119 @@ import Control.Monad as X
     (=<<),
     (>=>),
   )
-import Control.Monad.Fail as X (MonadFail (..))
-import Control.Monad.IO.Class as X (MonadIO (..))
-import Control.Monad.Logger as X
+import Control.Monad.Fail as X (MonadFail (fail))
+import Control.Monad.IO.Class as X (MonadIO (liftIO))
+import Data.Bifunctor as X (Bifunctor (bimap, first, second))
+import Data.Bool as X (Bool (False, True), not, otherwise, (&&), (||))
+import Data.ByteString as X (ByteString)
+import Data.Bytes as X (Bytes (MkBytes), Size (B))
+import Data.Char as X (Char)
+import Data.Either as X (Either (Left, Right), either)
+import Data.Eq as X (Eq ((/=), (==)))
+import Data.Foldable as X (Foldable (foldl', foldr), elem, for_, length, traverse_)
+import Data.Function as X (const, flip, id, ($), (.))
+import Data.Functor as X (Functor (fmap), ($>), (<$>), (<&>))
+import Data.Int as X (Int32)
+import Data.Kind as X (Constraint, Type)
+import Data.List as X (all, filter, replicate, zipWith)
+import Data.List.NonEmpty as X (NonEmpty ((:|)))
+import Data.Maybe as X (Maybe (Just, Nothing), fromMaybe, maybe, maybeToList)
+import Data.Monoid as X (Monoid (mempty), mconcat)
+import Data.Ord as X (Ord ((<=), (>)))
+import Data.Proxy as X (Proxy (Proxy))
+import Data.Semigroup as X (Semigroup ((<>)))
+import Data.Sequence as X (Seq ((:<|), (:|>)))
+import Data.String as X (IsString (fromString), String)
+import Data.Text as X (Text, concat, pack, unpack)
+import Data.Traversable as X (Traversable (traverse))
+import Data.Tuple as X (fst, snd, uncurry)
+import Data.Void as X (Void, absurd)
+import Data.Word as X (Word16, Word8)
+import Effectful as X
+  ( Dispatch (Dynamic, Static),
+    DispatchOf,
+    Eff,
+    Effect,
+    IOE,
+    runEff,
+    type (:>),
+  )
+import Effectful.Concurrent as X (Concurrent)
+import Effectful.Concurrent.STM.TBQueue.Static as X
+  ( TBQueue,
+    newTBQueueA,
+    readTBQueueA,
+    tryReadTBQueueA,
+    writeTBQueueA,
+  )
+import Effectful.Dispatch.Dynamic as X (interpret)
+import Effectful.Exception as X
+  ( Exception (displayException),
+    MonadCatch,
+    MonadMask,
+    MonadThrow,
+    SomeException,
+    bracket,
+    catch,
+    catchAny,
+    finally,
+    mask,
+    throwM,
+  )
+import Effectful.FileSystem.FileReader.Dynamic as X
+  ( FileReaderDynamic,
+    readFileUtf8ThrowM,
+  )
+import Effectful.FileSystem.FileWriter.Dynamic as X
+  ( FileWriterDynamic,
+    writeFileUtf8,
+  )
+import Effectful.FileSystem.HandleWriter.Dynamic as X
+  ( Handle,
+    HandleWriterDynamic,
+    IOMode (AppendMode, WriteMode),
+    hClose,
+    hFlush,
+    hPut,
+    openBinaryFile,
+  )
+import Effectful.FileSystem.PathReader.Dynamic as X (PathReaderDynamic)
+import Effectful.FileSystem.PathWriter.Dynamic as X (PathWriterDynamic)
+import Effectful.FileSystem.Utils as X (OsPath, (</>))
+import Effectful.IORef.Static as X
+  ( IORef,
+    IORefStatic,
+    modifyIORef',
+    newIORef,
+    readIORef,
+    writeIORef,
+  )
+import Effectful.Logger.Dynamic as X
   ( LogLevel (LevelDebug, LevelError, LevelInfo, LevelWarn),
     LogStr,
-    MonadLogger (monadLoggerLog),
+    LoggerDynamic (LoggerLog),
     logDebug,
     logError,
     logInfo,
     logOther,
     logWarn,
   )
-import Control.Monad.Reader as X (MonadReader (..), ReaderT (..), asks)
-import Control.Monad.Trans as X (MonadTrans (..))
-import Data.Bifunctor as X (Bifunctor (..))
-import Data.Bool as X (Bool (..), not, otherwise, (&&), (||))
-import Data.ByteString as X (ByteString)
-import Data.Bytes as X (Bytes (MkBytes), Size (B))
-import Data.Char as X (Char)
-import Data.Either as X (Either (..), either)
-import Data.Eq as X (Eq (..))
-import Data.Foldable as X (Foldable (..), for_, length, traverse_)
-import Data.Function as X (const, flip, id, ($), (.))
-import Data.Functor as X (Functor (..), ($>), (<$>), (<&>))
-import Data.Int as X (Int32)
-import Data.Kind as X (Constraint, Type)
-import Data.List as X (all, filter, replicate, zipWith)
-import Data.List.NonEmpty as X (NonEmpty (..))
-import Data.Maybe as X (Maybe (..), fromMaybe, maybe, maybeToList)
-import Data.Monoid as X (Monoid (..))
-import Data.Ord as X (Ord (..))
-import Data.Proxy as X (Proxy (..))
-import Data.Semigroup as X (Semigroup (..))
-import Data.Sequence as X (Seq ((:<|), (:|>)))
-import Data.String as X (IsString (fromString), String)
-import Data.Text as X (Text, concat, pack, unpack)
-import Data.Traversable as X (Traversable (..))
-import Data.Tuple as X (fst, snd, uncurry)
-import Data.Void as X (Void, absurd)
-import Data.Word as X (Word16, Word8)
-import Effects.Concurrent.Async as X (MonadAsync)
-import Effects.Concurrent.STM as X
-  ( MonadSTM,
-    TBQueue,
-    newTBQueueA,
-    readTBQueueA,
-    tryReadTBQueueA,
-    writeTBQueueA,
-  )
-import Effects.Concurrent.Thread as X (MonadThread)
-import Effects.Exception as X
-  ( Exception (..),
-    MonadCatch,
-    MonadMask,
-    MonadThrow,
-    SomeException,
-    addCS,
-    bracket,
-    catchAny,
-    catchCS,
-    finally,
-    mask,
-    throwCS,
-    throwM,
-  )
-import Effects.FileSystem.FileReader as X
-  ( MonadFileReader,
-    readFileUtf8ThrowM,
-  )
-import Effects.FileSystem.FileWriter as X (MonadFileWriter, writeFileUtf8)
-import Effects.FileSystem.HandleWriter as X
-  ( Handle,
-    IOMode (..),
-    MonadHandleWriter (hClose, hFlush, hPut, openBinaryFile),
-  )
-import Effects.FileSystem.PathReader as X (MonadPathReader)
-import Effects.FileSystem.Utils as X (OsPath, (</>))
-import Effects.IORef as X
-  ( IORef,
-    MonadIORef (modifyIORef', newIORef, readIORef, writeIORef),
-  )
-import Effects.System.Terminal as X (MonadTerminal, putStrLn, putTextLn)
-import GHC.Enum as X (Bounded (..))
+import Effectful.LoggerNS.Dynamic as X (LoggerNSDynamic)
+import Effectful.Process.Typed as X (TypedProcess)
+import Effectful.Reader.Static as X (Reader, asks)
+import Effectful.Terminal.Dynamic as X (TerminalDynamic, putStrLn, putTextLn)
+import Effectful.Time.Dynamic as X (TimeDynamic)
+import GHC.Base as X (seq)
+import GHC.Enum as X (Bounded (maxBound, minBound))
 import GHC.Err as X (error, undefined)
 import GHC.Float as X (Double)
 import GHC.Generics as X (Generic)
 import GHC.Int as X (Int)
-import GHC.Natural as X (Natural (..))
-import GHC.Num as X (Num (..))
-import GHC.Real as X (Integral (..), fromIntegral)
-import GHC.Show as X (Show (..))
+import GHC.Integer as X (Integer)
+import GHC.Natural as X (Natural)
+import GHC.Num as X (Num (fromInteger, (*), (+), (-)))
+import GHC.Real as X (Integral (div), fromIntegral)
+import GHC.Show as X (Show (show))
 import GHC.Stack as X (HasCallStack)
 import Optics.Core as X
   ( AffineTraversal',
@@ -154,8 +180,8 @@ import Optics.Core as X
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
 import System.IO as X (IO)
 import TOML as X
-  ( DecodeTOML (..),
-    TOMLError (..),
+  ( DecodeTOML (tomlDecoder),
+    TOMLError,
     Value (Integer, String),
     decode,
     getArrayOf,
@@ -169,12 +195,10 @@ import TOML as X
     typeMismatch,
   )
 import TOML.Decode as X (Decoder)
-import Prelude as X (Integer, seq)
-import Prelude qualified as P
 
 -- | 'Text' version of 'P.show'.
-showt :: (P.Show a) => a -> Text
-showt = pack . P.show
+showt :: (Show a) => a -> Text
+showt = pack . show
 
 -- | Safe @head@.
 headMaybe :: [a] -> Maybe a

@@ -1,11 +1,29 @@
+index-state: 2023-08-29T04:47:22Z
+
 packages: .
+
+-- It would be nice to turn on -Wmissing-import-lists, but we cannot due that
+-- easily with a custom prelude until the following is resolved:
+--
+-- https://gitlab.haskell.org/ghc/ghc/-/issues/14049
 
 package navi
   ghc-options:
-    -Wall -Wcompat -Werror -Widentities -Wunused-binds
-    -Wincomplete-record-updates -Wincomplete-uni-patterns
-    -Wmissing-home-modules -Wmissing-export-lists -Wpartial-fields
-    -Wredundant-constraints -Wunused-packages -Wmissing-deriving-strategies
+    -Wall -Wcompat -Werror
+    -Widentities
+    -Wincomplete-record-updates
+    -Wincomplete-uni-patterns
+    -Wmissing-deriving-strategies
+    -Wmissing-export-lists
+    -Wmissing-exported-signatures
+    -Wmissing-home-modules
+    -Wpartial-fields
+    -Wprepositive-qualified-module
+    -Wredundant-constraints
+    -Wunused-binds
+    -Wunused-packages
+    -Wunused-type-patterns
+    -Wno-unticked-promoted-constructors
 
 optimization: 2
 test-show-details: direct
@@ -22,26 +40,24 @@ source-repository-package
 
 source-repository-package
     type: git
-    location: https://github.com/tbidne/monad-effects.git
-    tag: 85a5694c59cc130b185101f98aec1ce4c7e80733
+    location: https://github.com/tbidne/effectful-effects.git
+    tag: bfdfb6ed351bdb91588878da74c819c0e1423fbf
     subdir:
-        effects-env
-        effects-exceptions
-        effects-async
-        effects-fs
-        effects-ioref
-        effects-logger-ns
-        effects-optparse
-        effects-stm
-        effects-time
-        effects-terminal
-        effects-thread
-        effects-typed-process
+        lib/concurrent-effectful
+        lib/exceptions-effectful
+        lib/fs-effectful
+        lib/ioref-effectful
+        lib/logger-effectful
+        lib/logger-ns-effectful
+        lib/optparse-effectful
+        lib/stm-effectful
+        lib/time-effectful
+        lib/terminal-effectful
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/pythia.git
-    tag: 2a4de1465c75513617293ca23b3541e4be4b82cb
+    tag: 35bce4eba621fec679c16e9d66a7ded3b0804aec
 
 source-repository-package
     type: git
@@ -61,7 +77,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/time-conv.git
-    tag: 19628566adcf9bfd1ed87a407aa0d5798ca94df0
+    tag: 21cf514398af4dfa5bb7e1a51796a22c36169f6a
 
 allow-newer: dbus:template-haskell
 allow-newer: dbus:transformers

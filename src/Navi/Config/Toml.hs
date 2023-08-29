@@ -12,13 +12,13 @@ import Data.Bytes (SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Char qualified as Ch
 import Data.Text qualified as T
-import Effects.FileSystem.Utils (encodeFpToOsFail)
+import Effectful.FileSystem.Utils (encodeFpToOsFail)
 import GHC.Real (truncate)
 import Navi.Config.Types
-  ( FilesSizeMode (..),
-    LogLoc (..),
-    Logging (..),
-    NoteSystem (..),
+  ( FilesSizeMode (FilesSizeModeDelete, FilesSizeModeWarn),
+    LogLoc (DefPath, File, Stdout),
+    Logging (MkLogging),
+    NoteSystem (DBus, NotifySend),
   )
 import Navi.Prelude
 import Navi.Services.Battery.Percentage.Toml (BatteryPercentageToml)

@@ -9,32 +9,56 @@ module Integration.MockApp
   )
 where
 
-import Effects.LoggerNS (MonadLoggerNS (..))
-import Effects.System.Terminal (MonadTerminal (..))
+import Effectful.Dispatch.Dynamic (localSeqUnlift)
+import Effectful.LoggerNS.Dynamic
+  ( LoggerNSDynamic
+      ( GetNamespace,
+        LocalNamespace
+      ),
+  )
+import Effectful.Reader.Static (runReader)
 import Integration.Prelude
 import Navi.Config (Config)
-import Navi.Data.NaviLog (LogEnv (MkLogEnv))
-import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Effects.MonadNotify (MonadNotify (..))
-import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
+import Navi.Data.NaviLog
+  ( LogEnv
+      ( MkLogEnv,
+        logHandle,
+        logLevel,
+        logNamespace,
+        logQueue
+      ),
+  )
+import Navi.Data.NaviNote (NaviNote)
+import Navi.Effectful.Notify (NotifyDynamic (SendNote))
+import Navi.Effectful.Pythia (PythiaDynamic (Query))
 import Navi.Env.Core
-  ( HasEvents (..),
+  ( HasEvents (getEvents),
     HasLogEnv (getLogEnv, localLogEnv),
-    HasLogQueue (..),
-    HasNoteQueue (..),
+    HasNoteQueue (getNoteQueue),
   )
 import Navi.Event.Types (AnyEvent, EventError (MkEventError))
-import Navi.NaviT (NaviT (..), runNaviT)
-import Navi.Services.Types (ServiceType (..))
+import Navi.Services.Types
+  ( ServiceType
+      ( BatteryPercentage,
+        BatteryStatus,
+        Multiple,
+        NetworkInterface,
+        Single
+      ),
+  )
 import Numeric.Data.Interval (_MkLRInterval)
 import Numeric.Data.Interval qualified as Interval
-import Pythia.Control.Exception (CommandException (..))
-import Pythia.Services.Battery (Battery (..), BatteryStatus (..), Percentage (..))
+import Pythia.Control.Exception (CommandException (MkCommandException))
+import Pythia.Services.Battery
+  ( Battery (MkBattery),
+    BatteryStatus (Charging, Discharging),
+    Percentage (MkPercentage),
+  )
 
 -- | Mock configuration.
 data MockEnv = MkMockEnv
   { events :: !(NonEmpty AnyEvent),
-    logQueue :: !(TBQueue LogStr),
+    logEnv :: !LogEnv,
     noteQueue :: !(TBQueue NaviNote),
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
@@ -50,89 +74,89 @@ instance HasEvents MockEnv where
   getEvents = view #events
 
 instance HasLogEnv MockEnv where
-  getLogEnv = pure $ MkLogEnv Nothing LevelInfo ""
+  getLogEnv = view #logEnv
   localLogEnv _ = id
-
-instance HasLogQueue MockEnv where
-  getLogQueue = view #logQueue
 
 instance HasNoteQueue MockEnv where
   getNoteQueue = view #noteQueue
 
-newtype IntTestIO a = MkIntTestIO (IO a)
-  deriving
-    ( Functor,
-      Applicative,
-      Monad,
-      MonadAsync,
-      MonadCatch,
-      MonadFileReader,
-      MonadHandleWriter,
-      MonadIO,
-      MonadIORef,
-      MonadMask,
-      MonadSTM,
-      MonadTerminal,
-      MonadThread,
-      MonadThrow
-    )
-    via IO
+runLoggerMock :: Eff (LoggerDynamic : es) a -> Eff es a
+runLoggerMock = interpret $ \_ -> \case
+  LoggerLog {} -> pure ()
 
-makePrisms ''IntTestIO
+runLoggerNSMock :: Eff (LoggerNSDynamic : es) a -> Eff es a
+runLoggerNSMock = interpret $ \env -> \case
+  GetNamespace -> pure ""
+  LocalNamespace _ m -> localSeqUnlift env $ \runner -> runner m
 
-instance MonadLogger (NaviT MockEnv IntTestIO) where
-  -- if we ever decide to test logs, we can capture them similar to the
-  -- MonadNotify instance.
-  monadLoggerLog _loc _src _lvl _msg = pure ()
-
-instance MonadTerminal (NaviT MockEnv IntTestIO) where
-  getChar = liftIO getChar
-  getLine = liftIO getLine
-  getContents' = liftIO getContents'
-  getTerminalSize = liftIO getTerminalSize
-  putBinary = liftIO . putBinary
-  putStr = liftIO . putStr
-  putStrLn = liftIO . putStrLn
-
-instance MonadLoggerNS (NaviT MockEnv IntTestIO) where
-  getNamespace = pure ""
-  localNamespace _ = id
-
-instance MonadNotify (NaviT MockEnv IntTestIO) where
-  sendNote note =
+runNotifyMock ::
+  ( IORefStatic :> es,
+    Reader MockEnv :> es
+  ) =>
+  Eff (NotifyDynamic : es) a ->
+  Eff es a
+runNotifyMock = interpret $ \_ -> \case
+  SendNote note -> do
     if note ^. #summary == "SentException"
       then throwM $ MkEventError "SentException" "sending mock exception" ""
       else do
-        notes <- asks (view #sentNotes)
-        liftIO $ modifyIORef' notes (note :)
+        notes <- asks @MockEnv (view #sentNotes)
+        modifyIORef' notes (note :)
 
-instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
+runPythiaMock ::
+  (IORefStatic :> es, Reader MockEnv :> es) =>
+  Eff (PythiaDynamic : es) a ->
+  Eff es a
+runPythiaMock = interpret $ \_ -> \case
   -- Service that changes every time: can be used to test multiple
   -- notifications are sent.
-  query (BatteryPercentage _) = do
-    bpRef <- asks (view #lastPercentage)
-    oldVal <- liftIO $ view (#unPercentage % _MkLRInterval) <$> readIORef bpRef
+  Query (BatteryPercentage _) -> do
+    bpRef <- asks @MockEnv (view #lastPercentage)
+    oldVal <- view (#unPercentage % _MkLRInterval) <$> readIORef bpRef
     let !newVal =
           if oldVal == 0
             then 100
             else oldVal - 1
         newBp = MkPercentage $ Interval.unsafeLRInterval newVal
-    liftIO $ writeIORef bpRef newBp
+    writeIORef bpRef newBp
     pure $ MkBattery newBp Discharging
   -- Constant service. Can test duplicate behavior.
-  query (BatteryStatus _) = pure Charging
+  Query (BatteryStatus _) -> pure Charging
   -- Service error. Can test error behavior.
-  query (NetworkInterface _ _) =
+  Query (NetworkInterface _ _) ->
     throwM $ MkCommandException "nmcli" "Nmcli error"
   -- Constant service. Can test duplicate behavior.
-  query (Single _) = pure "single trigger"
+  Query (Single _) -> pure "single trigger"
   -- Constant service. Can test duplicate behavior.
-  query (Multiple _) = pure "multiple result"
+  Query (Multiple _) -> pure "multiple result"
 
-runMockApp :: (NaviT MockEnv IntTestIO) a -> MockEnv -> IO a
-runMockApp nt = view _MkIntTestIO . runNaviT nt
+runMockApp ::
+  (IORefStatic :> es) =>
+  Eff
+    ( PythiaDynamic
+        : NotifyDynamic
+        : LoggerNSDynamic
+        : LoggerDynamic
+        : Reader MockEnv
+        : es
+    )
+    a ->
+  MockEnv ->
+  Eff es a
+runMockApp m env =
+  runReader env
+    . runLoggerMock
+    . runLoggerNSMock
+    . runNotifyMock
+    . runPythiaMock
+    $ m
 
-configToMockEnv :: Config -> IO MockEnv
+configToMockEnv ::
+  ( Concurrent :> es,
+    IORefStatic :> es
+  ) =>
+  Config ->
+  Eff es MockEnv
 configToMockEnv config = do
   sentNotesRef <- newIORef []
 
@@ -144,7 +168,13 @@ configToMockEnv config = do
     $ MkMockEnv
       { events = config ^. #events,
         sentNotes = sentNotesRef,
-        logQueue = logQueue,
-        noteQueue = noteQueue,
+        logEnv =
+          MkLogEnv
+            { logLevel = LevelInfo,
+              logHandle = Nothing,
+              logNamespace = "",
+              logQueue
+            },
+        noteQueue,
         lastPercentage = lastPercentageRef
       }
