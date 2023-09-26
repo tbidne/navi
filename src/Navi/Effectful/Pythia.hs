@@ -14,7 +14,6 @@ where
 import Data.Text qualified as T
 import Effectful.Concurrent (runConcurrent)
 import Effectful.Dispatch.Dynamic (reinterpret, send)
-import Effectful.Dispatch.Static (unsafeEff_)
 import Effectful.FileSystem.FileReader.Dynamic (runFileReaderDynamicIO)
 import Effectful.FileSystem.PathReader.Dynamic (runPathReaderDynamicIO)
 import Effectful.Process.Typed (runTypedProcess)
@@ -51,7 +50,7 @@ runPythiaDynamicIO ::
   (IOE :> es) =>
   Eff (PythiaDynamic : es) a ->
   Eff es a
-runPythiaDynamicIO = reinterpret (unsafeEff_ . runPythiaIO) $ \_ -> \case
+runPythiaDynamicIO = reinterpret runPythiaIO $ \_ -> \case
   Query (BatteryPercentage bp) ->
     rethrowPythia "Battery Percentage" $ Pythia.queryBattery bp
   Query (BatteryStatus bp) ->
@@ -61,9 +60,18 @@ runPythiaDynamicIO = reinterpret (unsafeEff_ . runPythiaIO) $ \_ -> \case
   Query (Single cmd) -> rethrowPythia "Single" $ querySingle cmd
   Query (Multiple cmd) -> rethrowPythia "Multiple" $ queryMultiple cmd
   where
+    -- We previously defined this with runEff ... and then the subsequent
+    -- reinterpret call injected this back into IO with
+    --
+    --     reinterpret (unsafeEff_ . runPythiaIO)
+    --
+    -- This caused a segfault!
+    --
+    -- Clearly this was unnecessary as we want IOE in the signature anyway,
+    -- but the fact that a seg fault was easy probably merits an effectful
+    -- issue.
     runPythiaIO =
-      runEff
-        . runConcurrent
+      runConcurrent
         . runFileReaderDynamicIO
         . runPathReaderDynamicIO
         . runTypedProcess
