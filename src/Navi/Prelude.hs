@@ -81,8 +81,9 @@ import Effectful as X
     type (:>),
   )
 import Effectful.Concurrent as X (Concurrent)
-import Effectful.Concurrent.STM.TBQueue.Static as X
+import Effectful.Concurrent.STM.Static as X
   ( TBQueue,
+    flushTBQueueA,
     newTBQueueA,
     readTBQueueA,
     tryReadTBQueueA,

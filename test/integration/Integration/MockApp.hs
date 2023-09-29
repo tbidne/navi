@@ -9,7 +9,10 @@ module Integration.MockApp
   )
 where
 
+import Effectful.Concurrent.Async (runConcurrent)
 import Effectful.Dispatch.Dynamic (localSeqUnlift)
+import Effectful.FileSystem.HandleWriter.Dynamic (runHandleWriterDynamicIO)
+import Effectful.IORef.Static (runIORefStaticIO)
 import Effectful.LoggerNS.Dynamic
   ( LoggerNSDynamic
       ( GetNamespace,
@@ -17,6 +20,7 @@ import Effectful.LoggerNS.Dynamic
       ),
   )
 import Effectful.Reader.Static (runReader)
+import Effectful.Terminal.Dynamic (runTerminalDynamicIO)
 import Integration.Prelude
 import Navi.Config (Config)
 import Navi.Data.NaviLog
@@ -131,32 +135,35 @@ runPythiaMock = interpret $ \_ -> \case
   Query (Multiple _) -> pure "multiple result"
 
 runMockApp ::
-  (IORefStatic :> es) =>
   Eff
-    ( PythiaDynamic
-        : NotifyDynamic
-        : LoggerNSDynamic
-        : LoggerDynamic
-        : Reader MockEnv
-        : es
-    )
+    [ PythiaDynamic,
+      NotifyDynamic,
+      LoggerNSDynamic,
+      LoggerDynamic,
+      HandleWriterDynamic,
+      TerminalDynamic,
+      IORefStatic,
+      Reader MockEnv,
+      Concurrent,
+      IOE
+    ]
     a ->
   MockEnv ->
-  Eff es a
+  IO a
 runMockApp m env =
-  runReader env
+  runEff
+    . runConcurrent
+    . runReader env
+    . runIORefStaticIO
+    . runTerminalDynamicIO
+    . runHandleWriterDynamicIO
     . runLoggerMock
     . runLoggerNSMock
     . runNotifyMock
     . runPythiaMock
     $ m
 
-configToMockEnv ::
-  ( Concurrent :> es,
-    IORefStatic :> es
-  ) =>
-  Config ->
-  Eff es MockEnv
+configToMockEnv :: Config -> IO MockEnv
 configToMockEnv config = do
   sentNotesRef <- newIORef []
 

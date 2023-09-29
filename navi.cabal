@@ -166,6 +166,7 @@ test-suite integration
     Integration.Prelude
 
   build-depends:
+    , async                 ^>=2.2.2
     , base
     , concurrent-effectful
     , containers
@@ -181,7 +182,7 @@ test-suite integration
     , tasty-hunit
     , terminal-effectful
     , text
-    , time                  >=1.9.3 && <1.14
+    , time                  >=1.9.3  && <1.14
     , time-effectful
 
   hs-source-dirs:   test/integration

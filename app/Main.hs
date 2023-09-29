@@ -58,11 +58,10 @@ import Navi.Effectful.Pythia (runPythiaDynamicIO)
 import Navi.Env.DBus (DBusEnv, mkDBusEnv, runMkDbusEnvIO)
 import Navi.Env.NotifySend (NotifySendEnv, mkNotifySendEnv)
 import Navi.Prelude
-import System.IO qualified as IO
 
 main :: IO ()
 main = do
-  setUncaughtExceptionHandler (IO.putStrLn . displayException)
+  setUncaughtExceptionHandler (putStrLn . displayException)
 
   runNaviEff $ do
     args <- getArgs

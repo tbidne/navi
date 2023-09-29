@@ -12,22 +12,15 @@
 -- @since 0.1
 module Main (main) where
 
+import Control.Concurrent.Async qualified as Async
 import DBus.Notify (UrgencyLevel (Critical))
-import Data.IORef qualified as IORef
 import Data.Text qualified as T
-import Effectful.Concurrent (runConcurrent)
-import Effectful.Concurrent.Async qualified as Async
 import Effectful.Concurrent.Static qualified as CC
 import Effectful.FileSystem.FileReader.Dynamic (runFileReaderDynamicIO)
-import Effectful.FileSystem.FileWriter.Dynamic (runFileWriterDynamicIO)
-import Effectful.FileSystem.HandleWriter.Dynamic (runHandleWriterDynamicIO)
-import Effectful.FileSystem.PathReader.Dynamic (runPathReaderDynamicIO)
-import Effectful.FileSystem.PathReader.Dynamic qualified as Dir
-import Effectful.FileSystem.PathWriter.Dynamic (runPathWriterDynamicIO)
-import Effectful.FileSystem.PathWriter.Dynamic qualified as Dir
+import Effectful.FileSystem.PathReader.Static qualified as Dir
+import Effectful.FileSystem.PathWriter.Static qualified as Dir
 import Effectful.FileSystem.Utils (osp)
 import Effectful.IORef.Static (runIORefStaticIO)
-import Effectful.Terminal.Dynamic (runTerminalDynamicIO)
 import Integration.Exceptions qualified as Exceptions
 import Integration.MockApp (MockEnv, configToMockEnv, runMockApp)
 import Integration.Prelude
@@ -134,13 +127,13 @@ testSendExceptionDies = testCase "Exception in send kills program" $ do
     expected = Just $ MkEventError "SentException" "sending mock exception" ""
 
 runMock :: Word8 -> Text -> IO MockEnv
-runMock maxSeconds config = run $ do
+runMock maxSeconds config = do
   -- setup file
   tmp <- Dir.getTemporaryDirectory
   let configFp = tmp </> [osp|int.toml|]
   writeFileUtf8 configFp config
   -- file -> config
-  cfg <- readConfig configFp
+  cfg <- run $ readConfig configFp
   mockEnv <- configToMockEnv cfg
   -- runNavi runs forever, so we use race_ to kill it once the countdown
   -- runs out.
@@ -150,16 +143,10 @@ runMock maxSeconds config = run $ do
   where
     run =
       runEff
-        . runConcurrent
         . runFileReaderDynamicIO
-        . runFileWriterDynamicIO
-        . runHandleWriterDynamicIO
         . runIORefStaticIO
-        . runPathReaderDynamicIO
-        . runPathWriterDynamicIO
-        . runTerminalDynamicIO
 
-countdown :: (Concurrent :> es) => Word8 -> Eff es ()
+countdown :: Word8 -> IO ()
 countdown = CC.sleep . fromIntegral . (+ 1)
 
 batteryPercentageEventConfig :: Text
@@ -224,5 +211,5 @@ sendExceptionConfig =
 
 mockEnvToNotes :: MockEnv -> IO [NaviNote]
 mockEnvToNotes mockEnv = do
-  sentNotes <- IORef.readIORef $ mockEnv ^. #sentNotes
+  sentNotes <- readIORef $ mockEnv ^. #sentNotes
   pure $ filter ((/= "Navi") . view #summary) sentNotes

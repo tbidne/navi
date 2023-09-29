@@ -6,7 +6,6 @@ module Integration.Exceptions (tests) where
 
 import Control.Exception qualified as UnsafeEx
 import Data.Foldable (toList)
-import Data.IORef qualified as IORef
 import Data.List qualified as L
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
@@ -223,9 +222,9 @@ runExceptionApp badThread = do
               raiseAlert = const Nothing
             }
 
-  logQueue <- runSTM $ newTBQueueA 10
-  noteQueue <- runSTM $ newTBQueueA 10
-  logsRef <- IORef.newIORef Seq.empty
+  logQueue <- newTBQueueA 10
+  noteQueue <- newTBQueueA 10
+  logsRef <- newIORef Seq.empty
 
   let env :: ExceptionEnv
       env =
@@ -266,10 +265,7 @@ runExceptionApp badThread = do
   -- the one from base.
   UnsafeEx.try @e testRun >>= \case
     Left ex -> do
-      logs <- IORef.readIORef logsRef
+      logs <- readIORef logsRef
       pure (ex, logs)
     Right (Left _) -> error "Exception test timed out!"
     Right (Right _) -> error "Navi finished successfully, impossible!"
-
-runSTM :: Eff [Concurrent, IOE] a -> IO a
-runSTM = runEff . runConcurrent

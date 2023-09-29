@@ -41,7 +41,7 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/effectful-effects.git
-    tag: bfdfb6ed351bdb91588878da74c819c0e1423fbf
+    tag: e37deb99934cf1b8800da161cd186a0c32e911bb
     subdir:
         lib/concurrent-effectful
         lib/exceptions-effectful

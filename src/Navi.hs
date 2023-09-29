@@ -12,7 +12,6 @@ import DBus.Client (ClientError (clientErrorFatal))
 import DBus.Notify (UrgencyLevel (Critical, Normal))
 import Data.Text qualified as T
 import Effectful.Concurrent.Async qualified as Async
-import Effectful.Concurrent.STM.TBQueue.Static (flushTBQueueA)
 import Effectful.Concurrent.Static (sleep)
 import Effectful.LoggerNS.Dynamic (addNamespace, logStrToBs)
 import Effectful.Terminal.Dynamic (putBinary)
