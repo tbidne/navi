@@ -16,11 +16,11 @@ import Pythia.Services.NetInterface (Device, NetInterface, NetInterfaceApp)
 -- we can link each service with its result type.
 type ServiceType :: Type -> Type
 data ServiceType result where
-  BatteryPercentage :: !BatteryApp -> ServiceType Battery
-  BatteryStatus :: !BatteryApp -> ServiceType BatteryStatus
-  NetworkInterface :: !Device -> !NetInterfaceApp -> ServiceType NetInterface
-  Single :: !Command -> ServiceType Text
-  Multiple :: !Command -> ServiceType Text
+  BatteryPercentage :: BatteryApp -> ServiceType Battery
+  BatteryStatus :: BatteryApp -> ServiceType BatteryStatus
+  NetworkInterface :: Device -> NetInterfaceApp -> ServiceType NetInterface
+  Single :: Command -> ServiceType Text
+  Multiple :: Command -> ServiceType Text
 
 deriving stock instance Show (ServiceType result)
 

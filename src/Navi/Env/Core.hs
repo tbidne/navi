@@ -38,10 +38,10 @@ class HasNoteQueue env where
 
 -- | 'Env' holds all of our environment data that is used while running navi.
 data Env = MkEnv
-  { events :: !(NonEmpty AnyEvent),
-    logEnv :: !LogEnv,
-    logQueue :: !(TBQueue LogStr),
-    noteQueue :: !(TBQueue NaviNote)
+  { events :: NonEmpty AnyEvent,
+    logEnv :: LogEnv,
+    logQueue :: TBQueue LogStr,
+    noteQueue :: TBQueue NaviNote
   }
 
 makeFieldLabelsNoPrefix ''Env

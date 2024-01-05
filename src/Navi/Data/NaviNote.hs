@@ -19,7 +19,7 @@ import Navi.Utils (urgencyLevelOptDecoder)
 -- @since 0.1
 data Timeout
   = Never
-  | Seconds !Word16
+  | Seconds Word16
   deriving stock (Eq, Show)
 
 -- | @since 0.1
@@ -47,13 +47,13 @@ timeoutOptDecoder = getFieldOptWith tomlDecoder "timeout"
 -- @since 0.1
 data NaviNote = MkNaviNote
   { -- | Text summary.
-    summary :: !Text,
+    summary :: Text,
     -- | Text body.
-    body :: !(Maybe Text),
+    body :: Maybe Text,
     -- | Urgency (e.g. low, critical)
-    urgency :: !(Maybe UrgencyLevel),
+    urgency :: Maybe UrgencyLevel,
     -- | Determines how long the notification stays on-screen.
-    timeout :: !(Maybe Timeout)
+    timeout :: Maybe Timeout
   }
   deriving stock (Eq, Show)
 

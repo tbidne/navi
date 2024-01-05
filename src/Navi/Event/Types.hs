@@ -23,7 +23,7 @@ import Navi.Services.Types (ServiceType)
 -- simultaneously. If we are not, then 'NoRepeats' holds the last trigger
 -- so that we can detect duplicates.
 data RepeatEvent a
-  = NoRepeats !(IORef (Maybe a))
+  = NoRepeats (IORef (Maybe a))
   | AllowRepeats
 
 instance Show (RepeatEvent a) where
@@ -34,17 +34,17 @@ instance Show (RepeatEvent a) where
 -- allow repeats.
 data ErrorNote
   = NoErrNote
-  | AllowErrNote !(RepeatEvent ())
+  | AllowErrNote (RepeatEvent ())
   deriving stock (Show)
 
 -- | Represents an error when querying an 'Event'.
 data EventError = MkEventError
   { -- | The name of the event.
-    name :: !Text,
+    name :: Text,
     -- | Short description of the error.
-    short :: !Text,
+    short :: Text,
     -- | Long description of the error.
-    long :: !Text
+    long :: Text
   }
   deriving stock (Eq, Show)
   deriving anyclass (Exception)
@@ -58,17 +58,17 @@ makeFieldLabelsNoPrefix ''EventError
 -- 3. Raise an alert if the result matches some condition.
 data Event result = MkEvent
   { -- | The name of this event.
-    name :: !Text,
+    name :: Text,
     -- | The service to run.
-    serviceType :: !(ServiceType result),
+    serviceType :: ServiceType result,
     -- | How often to poll for this event, in seconds.
-    pollInterval :: !PollInterval,
+    pollInterval :: PollInterval,
     -- | Conditionally raises an alert based on the result.
     raiseAlert :: result -> Maybe NaviNote,
     -- | Determines how we handle repeat alerts.
-    repeatEvent :: !(RepeatEvent result),
+    repeatEvent :: RepeatEvent result,
     -- | Determines how we handle errors.
-    errorNote :: !ErrorNote
+    errorNote :: ErrorNote
   }
 
 makeFieldLabelsNoPrefix ''Event

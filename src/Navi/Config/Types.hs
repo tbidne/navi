@@ -31,7 +31,7 @@ import Navi.Prelude
 data LogLoc
   = DefPath
   | Stdout
-  | File !OsPath
+  | File OsPath
   deriving stock (Eq, Show)
 
 -- | Determines what to do if the log file surpasses the given size
@@ -46,11 +46,11 @@ data FilesSizeMode
 -- | Logging configuration.
 data Logging = MkLogging
   { -- | Determines the log level.
-    severity :: !(Maybe LogLevel),
+    severity :: Maybe LogLevel,
     -- | Determines the log location (i.e. file or stdout).
-    location :: !(Maybe LogLoc),
+    location :: Maybe LogLoc,
     -- | Determines whether to warn/delete large log files.
-    sizeMode :: !(Maybe FilesSizeMode)
+    sizeMode :: Maybe FilesSizeMode
   }
   deriving stock (Eq, Show)
 
@@ -87,11 +87,11 @@ defaultSizeMode = FilesSizeModeDelete $ Bytes.convert Proxy fiftyMb
 -- (e.g., all user defined Events are parsed).
 data Config = MkConfig
   { -- | The notification events.
-    events :: !(NonEmpty AnyEvent),
+    events :: NonEmpty AnyEvent,
     -- | Logging configuration.
-    logging :: !Logging,
+    logging :: Logging,
     -- | The notification system to use.
-    noteSystem :: !NoteSystem
+    noteSystem :: NoteSystem
   }
   deriving stock (Show)
 
@@ -100,8 +100,8 @@ makeFieldLabelsNoPrefix ''Config
 -- | 'ConfigErr' represents the errors we can encounter when attempting to
 -- parse a config file.
 data ConfigErr
-  = FileErr !SomeException
-  | TomlError !TOMLError
+  = FileErr SomeException
+  | TomlError TOMLError
   | NoEvents
   deriving stock (Show)
 

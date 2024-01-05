@@ -77,12 +77,12 @@ data BadThread
 
 -- | Mock configuration.
 data ExceptionEnv = MkExceptionEnv
-  { badThread :: !BadThread,
-    events :: !(NonEmpty AnyEvent),
-    logEnv :: !LogEnv,
-    logQueue :: !(TBQueue LogStr),
-    logsRef :: !(IORef (Seq ByteString)),
-    noteQueue :: !(TBQueue NaviNote)
+  { badThread :: BadThread,
+    events :: NonEmpty AnyEvent,
+    logEnv :: LogEnv,
+    logQueue :: TBQueue LogStr,
+    logsRef :: IORef (Seq ByteString),
+    noteQueue :: TBQueue NaviNote
   }
 
 makeFieldLabelsNoPrefix ''ExceptionEnv

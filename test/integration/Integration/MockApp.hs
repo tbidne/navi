@@ -54,15 +54,15 @@ import Pythia.Services.Battery
 
 -- | Mock configuration.
 data MockEnv = MkMockEnv
-  { events :: !(NonEmpty AnyEvent),
-    logQueue :: !(TBQueue LogStr),
-    noteQueue :: !(TBQueue NaviNote),
+  { events :: NonEmpty AnyEvent,
+    logQueue :: TBQueue LogStr,
+    noteQueue :: TBQueue NaviNote,
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
-    sentNotes :: !(IORef [NaviNote]),
+    sentNotes :: IORef [NaviNote],
     -- | caches the last battery percentage "reading". This way we can
     -- ensure we have a new percentage every time.
-    lastPercentage :: !(IORef Percentage)
+    lastPercentage :: IORef Percentage
   }
 
 makeFieldLabelsNoPrefix ''MockEnv

@@ -31,8 +31,8 @@ class HasDBusClient env where
 
 -- | Concrete dbus environment. Adds the dbus client.
 data DBusEnv = MkDBusEnv
-  { coreEnv :: !Env,
-    dbusClient :: !Client
+  { coreEnv :: Env,
+    dbusClient :: Client
   }
 
 makeFieldLabelsNoPrefix ''DBusEnv

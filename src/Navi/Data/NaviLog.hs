@@ -17,15 +17,15 @@ data LogEnv = MkLogEnv
   { -- | Handle for file logging.
     --
     -- @since 0.1
-    logHandle :: !(Maybe Handle),
+    logHandle :: Maybe Handle,
     -- | Level in which to log.
     --
     -- @since 0.1
-    logLevel :: !LogLevel,
+    logLevel :: LogLevel,
     -- | The current logging namespace.
     --
     -- @since 0.1
-    logNamespace :: !Namespace
+    logNamespace :: Namespace
   }
 
 -- | @since 0.1

@@ -35,6 +35,7 @@ common common-exts
     NoStarIsType
     OverloadedLabels
     OverloadedStrings
+    StrictData
     TypeFamilies
 
 library
