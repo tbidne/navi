@@ -9,7 +9,7 @@ module Navi.Data.NaviNote
   )
 where
 
-import DBus.Notify (UrgencyLevel (..))
+import DBus.Notify (UrgencyLevel)
 import Data.Bits (toIntegralSized)
 import Navi.Prelude
 import Navi.Utils (urgencyLevelOptDecoder)

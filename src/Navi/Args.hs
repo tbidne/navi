@@ -10,21 +10,21 @@ module Navi.Args
 where
 
 import Control.Applicative qualified as A
-import Data.Functor.Classes (Show1 (..))
+import Data.Functor.Classes (Show1)
 import Data.Functor.Classes qualified as Functor
-import Data.Functor.Identity (Identity (..))
+import Data.Functor.Identity (Identity (Identity))
 import Data.List qualified as L
 import Data.Version (Version (versionBranch))
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.Utils (osp)
 import Effects.Optparse (osPath)
 import Navi.Prelude
-import Options.Applicative (Parser, ParserInfo (..))
+import Options.Applicative (Parser, ParserInfo (ParserInfo))
 import Options.Applicative qualified as OptApp
-import Options.Applicative.Help.Chunk (Chunk (..))
+import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Help.Pretty qualified as Pretty
-import Options.Applicative.Types (ArgPolicy (..))
+import Options.Applicative.Types (ArgPolicy (Intersperse))
 import Paths_navi qualified as Paths
 
 -- | Represents command-line arguments. We use the \"higher-kinded data\"

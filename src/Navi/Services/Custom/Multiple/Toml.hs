@@ -9,7 +9,7 @@ module Navi.Services.Custom.Multiple.Toml
 where
 
 import Navi.Data.NaviNote (NaviNote)
-import Navi.Data.PollInterval (PollInterval (..), pollIntervalOptDecoder)
+import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
   ( ErrorNoteToml,
     RepeatEventToml,
@@ -18,7 +18,7 @@ import Navi.Event.Toml
   )
 import Navi.Prelude
 import Navi.Utils (commandDecoder)
-import Pythia.Data.Command (Command (..))
+import Pythia.Data.Command (Command)
 
 -- | TOML for alerts.
 data TriggerNoteToml = MkTriggerNoteToml

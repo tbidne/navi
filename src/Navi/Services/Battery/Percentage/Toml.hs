@@ -22,7 +22,7 @@ import Navi.Prelude
 import Navi.Services.Battery.Common (batteryAppDecoder)
 import Navi.Utils (urgencyLevelOptDecoder)
 import Pythia.Data.Percentage qualified as Percentage
-import Pythia.Services.Battery (BatteryApp (..), Percentage (..))
+import Pythia.Services.Battery (BatteryApp, Percentage)
 
 -- | TOML for each individual battery percentage.
 data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml

@@ -2,9 +2,16 @@ module Unit.Navi.Services.Custom.Single.Toml (tests) where
 
 import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
-import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
-import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
-import Navi.Services.Custom.Single.Toml (SingleToml (..))
+import Navi.Data.NaviNote (NaviNote (MkNaviNote), Timeout (Seconds))
+import Navi.Event.Toml
+  ( ErrorNoteToml
+      ( ErrNoteAllowRepeatsToml,
+        ErrNoteNoRepeatsToml,
+        NoErrNoteToml
+      ),
+    RepeatEventToml (AllowRepeatsToml, NoRepeatsToml),
+  )
+import Navi.Services.Custom.Single.Toml (SingleToml)
 import Unit.Prelude
 
 tests :: TestTree

@@ -9,10 +9,10 @@ module Navi.Env.NotifySend
   )
 where
 
-import DBus.Notify (UrgencyLevel (..))
+import DBus.Notify (UrgencyLevel (Critical, Low, Normal))
 import Navi.Config.Types (Config)
 import Navi.Data.NaviLog (LogEnv)
-import Navi.Data.NaviNote (NaviNote, Timeout (..))
+import Navi.Data.NaviNote (NaviNote, Timeout (Never, Seconds))
 import Navi.Env.Core
   ( Env (MkEnv),
     HasEvents (..),

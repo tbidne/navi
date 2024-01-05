@@ -9,7 +9,7 @@ module Navi.Services.Network.NetInterfaces.Toml
 where
 
 import Navi.Data.NaviNote (Timeout, timeoutOptDecoder)
-import Navi.Data.PollInterval (PollInterval (..), pollIntervalOptDecoder)
+import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
   ( ErrorNoteToml,
     RepeatEventToml,
@@ -17,7 +17,12 @@ import Navi.Event.Toml
     repeatEventOptDecoder,
   )
 import Navi.Prelude
-import Pythia.Services.NetInterface (NetInterfaceApp (..))
+import Pythia.Services.NetInterface
+  ( NetInterfaceApp
+      ( NetInterfaceAppIp,
+        NetInterfaceAppNmCli
+      ),
+  )
 
 -- | TOML for the network connectivity service.
 data NetInterfacesToml = MkNetInterfacesToml

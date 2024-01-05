@@ -12,7 +12,7 @@ module Navi
 where
 
 import DBus.Client (ClientError (clientErrorFatal))
-import DBus.Notify (UrgencyLevel (..))
+import DBus.Notify (UrgencyLevel (Critical, Normal))
 import Data.Text qualified as T
 import Effects.Concurrent.Async qualified as Async
 import Effects.Concurrent.STM (flushTBQueueA)
@@ -23,17 +23,30 @@ import Effects.LoggerNS
     logStrToBs,
   )
 import Effects.System.Terminal (MonadTerminal (putBinary))
-import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
-import Navi.Effects.MonadNotify (MonadNotify (..), sendNoteQueue)
-import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
+import Navi.Data.NaviNote
+  ( NaviNote
+      ( MkNaviNote,
+        body,
+        summary,
+        timeout,
+        urgency
+      ),
+    Timeout (Seconds),
+  )
+import Navi.Effects.MonadNotify (MonadNotify (sendNote), sendNoteQueue)
+import Navi.Effects.MonadSystemInfo (MonadSystemInfo)
 import Navi.Env.Core
-  ( HasEvents (..),
+  ( HasEvents (getEvents),
     HasLogEnv (getLogEnv),
-    HasLogQueue (..),
-    HasNoteQueue (..),
+    HasLogQueue (getLogQueue),
+    HasNoteQueue (getNoteQueue),
   )
 import Navi.Event qualified as Event
-import Navi.Event.Types (AnyEvent (..), EventError (..), EventSuccess (..))
+import Navi.Event.Types
+  ( AnyEvent (MkAnyEvent),
+    EventError,
+    EventSuccess (MkEventSuccess),
+  )
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Prelude
 

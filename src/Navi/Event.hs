@@ -20,8 +20,8 @@ module Navi.Event
   )
 where
 
-import Effects.LoggerNS (MonadLoggerNS (..), addNamespace)
-import Navi.Effects (MonadSystemInfo (..))
+import Effects.LoggerNS (MonadLoggerNS, addNamespace)
+import Navi.Effects (MonadSystemInfo (query))
 import Navi.Event.Types
   ( AnyEvent (..),
     ErrorNote (..),

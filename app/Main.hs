@@ -3,28 +3,38 @@
 module Main (main) where
 
 import Data.Bytes qualified as Bytes
-import Data.Bytes.Formatting (FloatingFormatter (..))
-import Data.Functor.Identity (Identity (..))
+import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
+import Data.Functor.Identity (Identity (runIdentity))
 import Data.Text qualified as T
 import Effects.FileSystem.HandleWriter (MonadHandleWriter (withBinaryFile), die)
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter (MonadPathWriter)
 import Effects.FileSystem.PathWriter qualified as Dir
-import Effects.FileSystem.Utils (encodeFpToOsThrowM, encodeFpToValidOsThrowM, osp)
+import Effects.FileSystem.Utils
+  ( encodeFpToOsThrowM,
+    encodeFpToValidOsThrowM,
+    osp,
+  )
 import Effects.Time (MonadTime)
 import Effects.Time qualified as Time
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
 import Navi (runNavi, runNaviT)
-import Navi.Args (Args (..), getArgs)
+import Navi.Args (Args, getArgs)
 import Navi.Config
-  ( Config (..),
-    LogLoc (..),
-    Logging (..),
-    NoteSystem (..),
+  ( Config,
+    LogLoc (DefPath, File, Stdout),
+    Logging,
+    NoteSystem (DBus, NotifySend),
     readConfig,
   )
-import Navi.Config.Types (FilesSizeMode (..), defaultSizeMode)
-import Navi.Data.NaviLog (LogEnv (..))
+import Navi.Config.Types
+  ( FilesSizeMode
+      ( FilesSizeModeDelete,
+        FilesSizeModeWarn
+      ),
+    defaultSizeMode,
+  )
+import Navi.Data.NaviLog (LogEnv (MkLogEnv, logHandle, logLevel, logNamespace))
 import Navi.Env.DBus (mkDBusEnv)
 import Navi.Env.NotifySend (mkNotifySendEnv)
 import Navi.Prelude

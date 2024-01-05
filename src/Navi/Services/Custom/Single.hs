@@ -7,12 +7,20 @@ where
 
 import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
-import Navi.Data.PollInterval (PollInterval (..))
+import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
-  ( AnyEvent (..),
-    ErrorNote (..),
-    Event (..),
+  ( AnyEvent (MkAnyEvent),
+    ErrorNote,
+    Event
+      ( MkEvent,
+        errorNote,
+        name,
+        pollInterval,
+        raiseAlert,
+        repeatEvent,
+        serviceType
+      ),
     RepeatEvent (..),
   )
 import Navi.Prelude

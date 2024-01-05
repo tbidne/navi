@@ -24,7 +24,7 @@ where
 import Data.Bytes (Size (M))
 import Data.Bytes qualified as Bytes
 import Data.List.NonEmpty ()
-import Navi.Event (AnyEvent (..))
+import Navi.Event (AnyEvent)
 import Navi.Prelude
 
 -- | Log location configuration.

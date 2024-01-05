@@ -4,13 +4,32 @@ module Navi.Services.Network.NetInterfaces
   )
 where
 
-import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Data.PollInterval (PollInterval (..))
+import Navi.Data.NaviNote
+  ( NaviNote
+      ( MkNaviNote,
+        body,
+        summary,
+        timeout,
+        urgency
+      ),
+  )
+import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
-import Navi.Event.Types (AnyEvent (..), Event (..))
+import Navi.Event.Types
+  ( AnyEvent (MkAnyEvent),
+    Event
+      ( MkEvent,
+        errorNote,
+        name,
+        pollInterval,
+        raiseAlert,
+        repeatEvent,
+        serviceType
+      ),
+  )
 import Navi.Prelude
 import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml)
-import Navi.Services.Types (ServiceType (..))
+import Navi.Services.Types (ServiceType (NetworkInterface))
 import Pythia.Services.NetInterface
   ( Device (..),
     NetInterface (..),

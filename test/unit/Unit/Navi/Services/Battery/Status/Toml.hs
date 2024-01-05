@@ -3,10 +3,23 @@ module Unit.Navi.Services.Battery.Status.Toml
   )
 where
 
-import Navi.Data.NaviNote (Timeout (..))
-import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
-import Navi.Services.Battery.Status.Toml (BatteryStatusToml (..))
-import Pythia.Services.Battery (BatteryApp (..))
+import Navi.Data.NaviNote (Timeout (Seconds))
+import Navi.Event.Toml
+  ( ErrorNoteToml
+      ( ErrNoteAllowRepeatsToml,
+        ErrNoteNoRepeatsToml,
+        NoErrNoteToml
+      ),
+    RepeatEventToml (AllowRepeatsToml, NoRepeatsToml),
+  )
+import Navi.Services.Battery.Status.Toml (BatteryStatusToml)
+import Pythia.Services.Battery
+  ( BatteryApp
+      ( BatteryAppAcpi,
+        BatteryAppSysFs,
+        BatteryAppUPower
+      ),
+  )
 import Unit.Prelude
 
 tests :: TestTree

@@ -8,33 +8,67 @@ module Integration.Exceptions (tests) where
 
 import Control.Exception qualified as UnsafeEx
 import Data.Time.Calendar.OrdinalDate (fromOrdinalDate)
-import Data.Time.LocalTime (LocalTime (..), TimeOfDay (TimeOfDay), utc)
-import Effects.Concurrent.Async (ExceptionInLinkedThread (..))
+import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay), utc)
+import Effects.Concurrent.Async (ExceptionInLinkedThread (ExceptionInLinkedThread))
 import Effects.Concurrent.Async qualified as Async
 import Effects.Concurrent.Thread (sleep)
-import Effects.Exception (ExceptionCS (..))
+import Effects.Exception (ExceptionCS (MkExceptionCS))
 import Effects.LoggerNS
-  ( MonadLoggerNS (..),
+  ( MonadLoggerNS (getNamespace, localNamespace),
     defaultLogFormatter,
     formatLog,
   )
-import Effects.System.Terminal (MonadTerminal (..))
-import Effects.Time (MonadTime (..), ZonedTime (..))
+import Effects.System.Terminal
+  ( MonadTerminal
+      ( getChar,
+        getContents',
+        getLine,
+        getTerminalSize,
+        putBinary,
+        putStr,
+        supportsPretty
+      ),
+  )
+import Effects.Time
+  ( MonadTime (getMonotonicTime, getSystemZonedTime),
+    ZonedTime (ZonedTime),
+  )
 import Integration.Prelude
 import Navi (runNavi)
-import Navi.Data.NaviLog (LogEnv (..))
-import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Effects.MonadNotify (MonadNotify (..))
+import Navi.Data.NaviLog (LogEnv (MkLogEnv, logHandle, logLevel, logNamespace))
+import Navi.Data.NaviNote (NaviNote)
+import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
-import Navi.Env.Core (HasEvents (..), HasLogEnv (..), HasLogQueue (..), HasNoteQueue (..))
+import Navi.Env.Core
+  ( HasEvents (getEvents),
+    HasLogEnv (getLogEnv, localLogEnv),
+    HasLogQueue (getLogQueue),
+    HasNoteQueue (getNoteQueue),
+  )
 import Navi.Event.Types
   ( AnyEvent (MkAnyEvent),
-    ErrorNote (..),
-    Event (..),
-    RepeatEvent (..),
+    ErrorNote (NoErrNote),
+    Event
+      ( MkEvent,
+        errorNote,
+        name,
+        pollInterval,
+        raiseAlert,
+        repeatEvent,
+        serviceType
+      ),
+    RepeatEvent (AllowRepeats),
   )
 import Navi.NaviT (NaviT, runNaviT)
-import Navi.Services.Types (ServiceType (..))
+import Navi.Services.Types
+  ( ServiceType
+      ( BatteryPercentage,
+        BatteryStatus,
+        Multiple,
+        NetworkInterface,
+        Single
+      ),
+  )
 import Test.Tasty qualified as Tasty
 
 data BadThread
@@ -101,6 +135,7 @@ instance MonadTerminal (NaviT ExceptionEnv ExceptionIO) where
         logsRef <- asks (view #logsRef)
         modifyIORef' logsRef (bs :<|)
       LogThread -> sleep 2 *> throwM (MkTestE "logger dying")
+  supportsPretty = error "supportsPretty: todo"
 
 instance MonadSystemInfo (NaviT ExceptionEnv ExceptionIO) where
   query = \case
@@ -163,7 +198,7 @@ badNotifierDies = testCase "Notify exception kills Navi" $ do
   "MkTestE \"notify dying\"" @=? displayException @SomeException ex
   assertBool (show logs) $ errLog `elem` logs
   where
-    errLog = "[2022-02-08 10:20:05][int-ex-test][Error][src/Navi.hs:110:8] Notify: MkTestE \"notify dying\"\n"
+    errLog = "[2022-02-08 10:20:05][int-ex-test][Error][src/Navi.hs:123:8] Notify: MkTestE \"notify dying\"\n"
 
 runExceptionApp ::
   forall e.

@@ -8,7 +8,7 @@ module Navi.Services.Custom.Single.Toml
 where
 
 import Navi.Data.NaviNote (NaviNote)
-import Navi.Data.PollInterval (PollInterval (..), pollIntervalOptDecoder)
+import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
   ( ErrorNoteToml,
     RepeatEventToml,
@@ -17,7 +17,7 @@ import Navi.Event.Toml
   )
 import Navi.Prelude
 import Navi.Utils (commandDecoder)
-import Pythia.Data.Command (Command (..))
+import Pythia.Data.Command (Command)
 
 -- | Codec for 'SingleToml'.
 data SingleToml = MkSingleToml

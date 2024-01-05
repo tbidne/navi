@@ -5,7 +5,11 @@ where
 
 import Effects.FileSystem.Utils (unsafeEncodeFpToOs)
 import Navi.Config qualified as Config
-import Navi.Config.Types (Config (..), LogLoc (..), NoteSystem (..))
+import Navi.Config.Types
+  ( Config,
+    LogLoc (DefPath, Stdout),
+    NoteSystem (DBus, NotifySend),
+  )
 import System.IO (FilePath)
 import Unit.Prelude
 

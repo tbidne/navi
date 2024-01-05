@@ -18,7 +18,7 @@ import Navi.Event.Toml
   )
 import Navi.Prelude
 import Navi.Services.Battery.Common (batteryAppDecoder)
-import Pythia.Services.Battery (BatteryApp (..))
+import Pythia.Services.Battery (BatteryApp)
 
 -- | TOML for the battery status service.
 data BatteryStatusToml = MkBatteryStatusToml

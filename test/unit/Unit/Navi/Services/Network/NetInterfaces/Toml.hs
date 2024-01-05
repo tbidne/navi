@@ -4,10 +4,22 @@ module Unit.Navi.Services.Network.NetInterfaces.Toml
 where
 
 import Data.Text qualified as T
-import Navi.Data.NaviNote (Timeout (..))
-import Navi.Event.Toml (ErrorNoteToml (..), RepeatEventToml (..))
-import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..))
-import Pythia.Services.NetInterface (NetInterfaceApp (..))
+import Navi.Data.NaviNote (Timeout (Seconds))
+import Navi.Event.Toml
+  ( ErrorNoteToml
+      ( ErrNoteAllowRepeatsToml,
+        ErrNoteNoRepeatsToml,
+        NoErrNoteToml
+      ),
+    RepeatEventToml (AllowRepeatsToml, NoRepeatsToml),
+  )
+import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml)
+import Pythia.Services.NetInterface
+  ( NetInterfaceApp
+      ( NetInterfaceAppIp,
+        NetInterfaceAppNmCli
+      ),
+  )
 import Unit.Prelude
 
 tests :: TestTree

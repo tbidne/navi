@@ -10,20 +10,30 @@ where
 
 import DBus.Notify qualified as DBusN
 import Effects.LoggerNS
-  ( MonadLoggerNS (..),
+  ( MonadLoggerNS (getNamespace, localNamespace),
     addNamespace,
     defaultLogFormatter,
     formatLog,
   )
-import Effects.System.Terminal (MonadTerminal (..))
-import Effects.Time (MonadTime (..))
-import Navi.Effects.MonadNotify (MonadNotify (..))
-import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
+import Effects.System.Terminal
+  ( MonadTerminal
+      ( getChar,
+        getContents',
+        getLine,
+        getTerminalSize,
+        putBinary,
+        putStr,
+        supportsPretty
+      ),
+  )
+import Effects.Time (MonadTime (getMonotonicTime, getSystemZonedTime))
+import Navi.Effects.MonadNotify (MonadNotify (sendNote))
+import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
-  ( HasLogEnv (..),
+  ( HasLogEnv (getLogEnv, localLogEnv),
     HasLogQueue (getLogQueue),
   )
-import Navi.Env.DBus (DBusEnv, HasDBusClient (..), naviToDBus)
+import Navi.Env.DBus (DBusEnv, HasDBusClient (getClient), naviToDBus)
 import Navi.Env.NotifySend (NotifySendEnv, naviToNotifySend)
 import Navi.Prelude
 import System.Process qualified as Proc
@@ -58,6 +68,7 @@ instance MonadTerminal (NaviT env IO) where
   putBinary = liftIO . putBinary
   putStr = liftIO . putStr
   putStrLn = liftIO . putStrLn
+  supportsPretty = liftIO supportsPretty
 
 instance MonadTime (NaviT env IO) where
   getSystemZonedTime = liftIO getSystemZonedTime

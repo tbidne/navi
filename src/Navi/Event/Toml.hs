@@ -13,7 +13,10 @@ module Navi.Event.Toml
   )
 where
 
-import Navi.Event.Types (ErrorNote (..), RepeatEvent (..))
+import Navi.Event.Types
+  ( ErrorNote (AllowErrNote, NoErrNote),
+    RepeatEvent (AllowRepeats, NoRepeats),
+  )
 import Navi.Prelude
 
 -- | TOML for 'RepeatEvent'.

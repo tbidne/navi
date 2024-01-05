@@ -5,12 +5,27 @@ module Navi.Effects.MonadSystemInfo
 where
 
 import Data.Text qualified as T
-import Navi.Event.Types (EventError (..))
+import Navi.Event.Types (EventError (MkEventError, long, name, short))
 import Navi.Prelude
-import Navi.Services.Types (ServiceType (..))
+import Navi.Services.Types
+  ( ServiceType
+      ( BatteryPercentage,
+        BatteryStatus,
+        Multiple,
+        NetworkInterface,
+        Single
+      ),
+  )
 import Pythia qualified
-import Pythia.Data.Command (Command (..))
-import Pythia.Internal.ShellApp (SimpleShell (..))
+import Pythia.Data.Command (Command)
+import Pythia.Internal.ShellApp
+  ( SimpleShell
+      ( MkSimpleShell,
+        command,
+        isSupported,
+        parser
+      ),
+  )
 import Pythia.Internal.ShellApp qualified as ShellApp
 
 {- HLINT ignore MonadSystemInfo "Redundant bracket" -}

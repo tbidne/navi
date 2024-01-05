@@ -5,8 +5,8 @@ module Navi.Effects.MonadNotify
   )
 where
 
-import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Env.Core (HasNoteQueue (..))
+import Navi.Data.NaviNote (NaviNote)
+import Navi.Env.Core (HasNoteQueue (getNoteQueue))
 import Navi.Prelude
 
 {- HLINT ignore MonadNotify "Redundant bracket" -}

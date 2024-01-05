@@ -16,9 +16,9 @@ module Navi.Utils
   )
 where
 
-import DBus.Notify (UrgencyLevel (..))
+import DBus.Notify (UrgencyLevel (Critical, Low, Normal))
 import Navi.Prelude
-import Pythia.Data.Command (Command (..))
+import Pythia.Data.Command (Command (MkCommand))
 
 -- | @since 0.1
 whenJust :: (Applicative f) => Maybe a -> (a -> f ()) -> f ()

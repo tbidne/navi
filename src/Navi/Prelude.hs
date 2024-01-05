@@ -26,10 +26,19 @@ module Navi.Prelude
   )
 where
 
-import Control.Applicative as X (Alternative (..), Applicative (..), (<**>))
+import Control.Applicative as X
+  ( Alternative ((<|>)),
+    Applicative
+      ( liftA2,
+        pure,
+        (*>),
+        (<*>)
+      ),
+    (<**>),
+  )
 import Control.DeepSeq as X (NFData)
 import Control.Monad as X
-  ( Monad (..),
+  ( Monad ((>>=)),
     forever,
     join,
     unless,
@@ -39,8 +48,8 @@ import Control.Monad as X
     (=<<),
     (>=>),
   )
-import Control.Monad.Fail as X (MonadFail (..))
-import Control.Monad.IO.Class as X (MonadIO (..))
+import Control.Monad.Fail as X (MonadFail (fail))
+import Control.Monad.IO.Class as X (MonadIO (liftIO))
 import Control.Monad.Logger as X
   ( LogLevel (LevelDebug, LevelError, LevelInfo, LevelWarn),
     LogStr,
@@ -51,31 +60,35 @@ import Control.Monad.Logger as X
     logOther,
     logWarn,
   )
-import Control.Monad.Reader as X (MonadReader (..), ReaderT (..), asks)
-import Control.Monad.Trans as X (MonadTrans (..))
-import Data.Bifunctor as X (Bifunctor (..))
-import Data.Bool as X (Bool (..), not, otherwise, (&&), (||))
+import Control.Monad.Reader as X
+  ( MonadReader (ask, local),
+    ReaderT (runReaderT),
+    asks,
+  )
+import Control.Monad.Trans as X (MonadTrans (lift))
+import Data.Bifunctor as X (Bifunctor (bimap, first, second))
+import Data.Bool as X (Bool (False, True), not, otherwise, (&&), (||))
 import Data.ByteString as X (ByteString)
 import Data.Bytes as X (Bytes (MkBytes), Size (B))
 import Data.Char as X (Char)
-import Data.Either as X (Either (..), either)
-import Data.Eq as X (Eq (..))
-import Data.Foldable as X (Foldable (..), for_, length, traverse_)
+import Data.Either as X (Either (Left, Right), either)
+import Data.Eq as X (Eq ((==)), (/=))
+import Data.Foldable as X (Foldable (elem, foldl'), for_, length, traverse_)
 import Data.Function as X (const, flip, id, ($), (.))
-import Data.Functor as X (Functor (..), ($>), (<$>), (<&>))
+import Data.Functor as X (Functor (fmap), ($>), (<$>), (<&>))
 import Data.Int as X (Int32)
 import Data.Kind as X (Constraint, Type)
 import Data.List as X (all, filter, replicate, zipWith)
-import Data.List.NonEmpty as X (NonEmpty (..))
-import Data.Maybe as X (Maybe (..), fromMaybe, maybe, maybeToList)
-import Data.Monoid as X (Monoid (..))
-import Data.Ord as X (Ord (..))
-import Data.Proxy as X (Proxy (..))
-import Data.Semigroup as X (Semigroup (..))
+import Data.List.NonEmpty as X (NonEmpty ((:|)))
+import Data.Maybe as X (Maybe (Just, Nothing), fromMaybe, maybe, maybeToList)
+import Data.Monoid as X (Monoid (mconcat, mempty))
+import Data.Ord as X (Ord ((<=), (>)))
+import Data.Proxy as X (Proxy (Proxy))
+import Data.Semigroup as X (Semigroup ((<>)))
 import Data.Sequence as X (Seq ((:<|), (:|>)))
 import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text, concat, pack, unpack)
-import Data.Traversable as X (Traversable (..))
+import Data.Traversable as X (Traversable (traverse))
 import Data.Tuple as X (fst, snd, uncurry)
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word16, Word8)
@@ -90,7 +103,7 @@ import Effects.Concurrent.STM as X
   )
 import Effects.Concurrent.Thread as X (MonadThread)
 import Effects.Exception as X
-  ( Exception (..),
+  ( Exception (displayException),
     MonadCatch,
     MonadMask,
     MonadThrow,
@@ -121,15 +134,15 @@ import Effects.IORef as X
     MonadIORef (modifyIORef', newIORef, readIORef, writeIORef),
   )
 import Effects.System.Terminal as X (MonadTerminal, putStrLn, putTextLn)
-import GHC.Enum as X (Bounded (..))
+import GHC.Enum as X (Bounded (maxBound, minBound))
 import GHC.Err as X (error, undefined)
 import GHC.Float as X (Double)
 import GHC.Generics as X (Generic)
 import GHC.Int as X (Int)
-import GHC.Natural as X (Natural (..))
+import GHC.Natural as X (Natural)
 import GHC.Num as X (Num (..))
 import GHC.Real as X (Integral (..), fromIntegral)
-import GHC.Show as X (Show (..))
+import GHC.Show as X (Show (show))
 import GHC.Stack as X (HasCallStack)
 import Optics.Core as X
   ( AffineTraversal',

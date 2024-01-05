@@ -5,23 +5,94 @@ module Unit.Navi.Config.Toml
   )
 where
 
-import DBus.Notify (UrgencyLevel (..))
+import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
 import Effects.FileSystem.Utils (osp)
-import Navi.Config.Toml (ConfigToml (..))
-import Navi.Config.Types (FilesSizeMode (..), LogLoc (..), Logging (..))
-import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
-import Navi.Data.PollInterval (PollInterval (..))
-import Navi.Services.Battery.Percentage.Toml
-  ( BatteryPercentageNoteToml (..),
-    BatteryPercentageToml (..),
+import Navi.Config.Toml
+  ( ConfigToml
+      ( MkConfigToml,
+        batteryPercentageToml,
+        batteryStatusToml,
+        logToml,
+        multipleToml,
+        netInterfacesToml,
+        noteSystemToml,
+        singleToml
+      ),
   )
-import Navi.Services.Battery.Status.Toml (BatteryStatusToml (..))
-import Navi.Services.Custom.Single.Toml (SingleToml (..))
-import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml (..))
+import Navi.Config.Types
+  ( FilesSizeMode (FilesSizeModeWarn),
+    LogLoc (File),
+    Logging
+      ( MkLogging,
+        location,
+        severity,
+        sizeMode
+      ),
+  )
+import Navi.Data.NaviNote
+  ( NaviNote
+      ( MkNaviNote,
+        body,
+        summary,
+        timeout,
+        urgency
+      ),
+    Timeout (Seconds),
+  )
+import Navi.Data.PollInterval (PollInterval (MkPollInterval))
+import Navi.Services.Battery.Percentage.Toml
+  ( BatteryPercentageNoteToml
+      ( MkBatteryPercentageNoteToml,
+        mTimeout,
+        percentage,
+        urgency
+      ),
+    BatteryPercentageToml
+      ( MkBatteryPercentageToml,
+        alerts,
+        app,
+        errorNote,
+        pollInterval,
+        repeatEvent
+      ),
+  )
+import Navi.Services.Battery.Status.Toml
+  ( BatteryStatusToml
+      ( MkBatteryStatusToml,
+        app,
+        errorNote,
+        mTimeout,
+        pollInterval,
+        repeatEvent
+      ),
+  )
+import Navi.Services.Custom.Single.Toml
+  ( SingleToml
+      ( MkSingleToml,
+        command,
+        errEventCfg,
+        name,
+        note,
+        pollInterval,
+        repeatEventCfg,
+        triggerVal
+      ),
+  )
+import Navi.Services.Network.NetInterfaces.Toml
+  ( NetInterfacesToml
+      ( MkNetInterfacesToml,
+        app,
+        deviceName,
+        errorNote,
+        mTimeout,
+        pollInterval,
+        repeatEvent
+      ),
+  )
 import Pythia.Data.Percentage qualified as Percentage
-import Pythia.Services.Battery (BatteryApp (..))
-import Pythia.Services.NetInterface (NetInterfaceApp (..))
+import Pythia.Services.Battery (BatteryApp (BatteryAppAcpi, BatteryAppUPower))
+import Pythia.Services.NetInterface (NetInterfaceApp (NetInterfaceAppNmCli))
 import Unit.Prelude
 
 tests :: TestTree

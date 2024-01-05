@@ -9,26 +9,48 @@ module Integration.MockApp
   )
 where
 
-import Effects.LoggerNS (MonadLoggerNS (..))
-import Effects.System.Terminal (MonadTerminal (..))
+import Effects.LoggerNS (MonadLoggerNS (getNamespace, localNamespace))
+import Effects.System.Terminal
+  ( MonadTerminal
+      ( getChar,
+        getContents',
+        getLine,
+        getTerminalSize,
+        putBinary,
+        putStr,
+        supportsPretty
+      ),
+  )
 import Integration.Prelude
 import Navi.Config (Config)
 import Navi.Data.NaviLog (LogEnv (MkLogEnv))
-import Navi.Data.NaviNote (NaviNote (..))
-import Navi.Effects.MonadNotify (MonadNotify (..))
-import Navi.Effects.MonadSystemInfo (MonadSystemInfo (..))
+import Navi.Data.NaviNote (NaviNote)
+import Navi.Effects.MonadNotify (MonadNotify (sendNote))
+import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
-  ( HasEvents (..),
+  ( HasEvents (getEvents),
     HasLogEnv (getLogEnv, localLogEnv),
-    HasLogQueue (..),
-    HasNoteQueue (..),
+    HasLogQueue (getLogQueue),
+    HasNoteQueue (getNoteQueue),
   )
 import Navi.Event.Types (AnyEvent, EventError (MkEventError))
-import Navi.NaviT (NaviT (..), runNaviT)
-import Navi.Services.Types (ServiceType (..))
-import Pythia.Control.Exception (CommandException (..))
+import Navi.NaviT (NaviT, runNaviT)
+import Navi.Services.Types
+  ( ServiceType
+      ( BatteryPercentage,
+        BatteryStatus,
+        Multiple,
+        NetworkInterface,
+        Single
+      ),
+  )
+import Pythia.Control.Exception (CommandException (MkCommandException))
 import Pythia.Data.Percentage qualified as Percentage
-import Pythia.Services.Battery (Battery (..), BatteryStatus (..), Percentage (..))
+import Pythia.Services.Battery
+  ( Battery (MkBattery),
+    BatteryStatus (Charging, Discharging),
+    Percentage,
+  )
 
 -- | Mock configuration.
 data MockEnv = MkMockEnv

@@ -15,13 +15,13 @@ import DBus.Notify (Hint (Urgency), Note)
 import DBus.Notify qualified as DBusN
 import Navi.Config (Config)
 import Navi.Data.NaviLog (LogEnv)
-import Navi.Data.NaviNote (NaviNote (..), Timeout (..))
+import Navi.Data.NaviNote (NaviNote, Timeout (Never, Seconds))
 import Navi.Env.Core
   ( Env (MkEnv),
-    HasEvents (..),
-    HasLogEnv (..),
-    HasLogQueue (..),
-    HasNoteQueue (..),
+    HasEvents (getEvents),
+    HasLogEnv (getLogEnv, localLogEnv),
+    HasLogQueue (getLogQueue),
+    HasNoteQueue (getNoteQueue),
   )
 import Navi.Prelude
 

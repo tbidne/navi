@@ -13,18 +13,18 @@
 module Main (main) where
 
 import Control.Concurrent qualified as CC
-import DBus.Notify (UrgencyLevel (..))
+import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
 import Effects.Concurrent.Async qualified as Async
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter qualified as Dir
 import Effects.FileSystem.Utils (osp)
 import Integration.Exceptions qualified as Exceptions
-import Integration.MockApp (MockEnv (..), configToMockEnv, runMockApp)
+import Integration.MockApp (MockEnv, configToMockEnv, runMockApp)
 import Integration.Prelude
 import Navi (runNavi)
 import Navi.Config (readConfig)
-import Navi.Data.NaviNote (NaviNote (..))
+import Navi.Data.NaviNote (NaviNote (MkNaviNote, body, summary, timeout, urgency))
 import Navi.Event (EventError (MkEventError))
 import Test.Tasty qualified as Tasty
 
