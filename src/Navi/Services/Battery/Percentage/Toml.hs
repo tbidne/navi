@@ -21,7 +21,7 @@ import Navi.Event.Toml
 import Navi.Prelude
 import Navi.Services.Battery.Common (batteryAppDecoder)
 import Navi.Utils (urgencyLevelOptDecoder)
-import Numeric.Data.Interval qualified as Interval
+import Pythia.Data.Percentage qualified as Percentage
 import Pythia.Services.Battery (BatteryApp (..), Percentage (..))
 
 -- | TOML for each individual battery percentage.
@@ -50,7 +50,7 @@ percentageDecoder = getFieldWith decoder "percent"
   where
     decoder =
       tomlDecoder >>= \x ->
-        case mkPercentage x of
+        case Percentage.mkPercentage x of
           Just n -> pure n
           Nothing ->
             fail
@@ -60,7 +60,6 @@ percentageDecoder = getFieldWith decoder "percent"
                   showt x,
                   ". Expected integer in [0, 100]."
                 ]
-    mkPercentage = fmap MkPercentage . Interval.mkLRInterval
 
 -- | TOML for the battery percentage service.
 data BatteryPercentageToml = MkBatteryPercentageToml

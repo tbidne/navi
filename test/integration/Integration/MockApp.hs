@@ -26,9 +26,8 @@ import Navi.Env.Core
 import Navi.Event.Types (AnyEvent, EventError (MkEventError))
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Services.Types (ServiceType (..))
-import Numeric.Data.Interval (_MkLRInterval)
-import Numeric.Data.Interval qualified as Interval
 import Pythia.Control.Exception (CommandException (..))
+import Pythia.Data.Percentage qualified as Percentage
 import Pythia.Services.Battery (Battery (..), BatteryStatus (..), Percentage (..))
 
 -- | Mock configuration.
@@ -93,6 +92,7 @@ instance MonadTerminal (NaviT MockEnv IntTestIO) where
   putBinary = liftIO . putBinary
   putStr = liftIO . putStr
   putStrLn = liftIO . putStrLn
+  supportsPretty = liftIO supportsPretty
 
 instance MonadLoggerNS (NaviT MockEnv IntTestIO) where
   getNamespace = pure ""
@@ -111,12 +111,12 @@ instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
   -- notifications are sent.
   query (BatteryPercentage _) = do
     bpRef <- asks (view #lastPercentage)
-    oldVal <- liftIO $ view (#unPercentage % _MkLRInterval) <$> readIORef bpRef
+    oldVal <- liftIO $ Percentage.unPercentage <$> readIORef bpRef
     let !newVal =
           if oldVal == 0
             then 100
             else oldVal - 1
-        newBp = MkPercentage $ Interval.unsafeLRInterval newVal
+        newBp = Percentage.unsafePercentage newVal
     liftIO $ writeIORef bpRef newBp
     pure $ MkBattery newBp Discharging
   -- Constant service. Can test duplicate behavior.
@@ -136,7 +136,7 @@ configToMockEnv :: Config -> IO MockEnv
 configToMockEnv config = do
   sentNotesRef <- newIORef []
 
-  lastPercentageRef <- newIORef $ MkPercentage $ Interval.unsafeLRInterval 6
+  lastPercentageRef <- newIORef $ Percentage.unsafePercentage 6
   logQueue <- newTBQueueA 1000
   noteQueue <- newTBQueueA 1000
 

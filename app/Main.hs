@@ -10,7 +10,7 @@ import Effects.FileSystem.HandleWriter (MonadHandleWriter (withBinaryFile), die)
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter (MonadPathWriter)
 import Effects.FileSystem.PathWriter qualified as Dir
-import Effects.FileSystem.Utils (encodeFpToOsThrowM, osp, (<</>>!))
+import Effects.FileSystem.Utils (encodeFpToOsThrowM, encodeFpToValidOsThrowM, osp)
 import Effects.Time (MonadTime)
 import Effects.Time qualified as Time
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
@@ -110,8 +110,11 @@ withLogHandle logging onMHandle = do
       -- handle large log dir
       handleLogSize xdgState sizeMode
 
-      currTime <- fmap replaceSpc <$> Time.getSystemTimeString
-      logFile <- xdgState <</>>! (currTime <> ".log")
+      currTimeOs <-
+        encodeFpToValidOsThrowM
+          . fmap replaceSpc
+          =<< Time.getSystemTimeString
+      let logFile = currTimeOs <> [osp|.log|]
       stateExists <- Dir.doesDirectoryExist xdgState
       unless stateExists (Dir.createDirectoryIfMissing True xdgState)
       renameIfExists logFile

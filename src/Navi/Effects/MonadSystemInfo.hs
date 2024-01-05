@@ -50,7 +50,7 @@ queryMultiple cmd =
   let shellApp = multipleShellApp cmd
    in T.strip <$> ShellApp.runSimple shellApp
 
-multipleShellApp :: Command -> SimpleShell EventError Text
+multipleShellApp :: (Applicative f) => Command -> SimpleShell f EventError Text
 multipleShellApp cmd =
   MkSimpleShell
     { command = cmd,
@@ -66,7 +66,7 @@ querySingle cmd = do
   let shellApp = singleShellApp cmd
    in T.strip <$> ShellApp.runSimple shellApp
 
-singleShellApp :: Command -> SimpleShell EventError Text
+singleShellApp :: (Applicative f) => Command -> SimpleShell f EventError Text
 singleShellApp cmd =
   MkSimpleShell
     { command = cmd,

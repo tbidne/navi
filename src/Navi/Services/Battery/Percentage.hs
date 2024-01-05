@@ -13,9 +13,12 @@ import Navi.Data.PollInterval (PollInterval (..))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types (AnyEvent (..), ErrorNote, Event (..), RepeatEvent)
 import Navi.Prelude
-import Navi.Services.Battery.Percentage.Toml (BatteryPercentageNoteToml (..), BatteryPercentageToml)
+import Navi.Services.Battery.Percentage.Toml
+  ( BatteryPercentageNoteToml (..),
+    BatteryPercentageToml,
+  )
 import Navi.Services.Types (ServiceType (..))
-import Numeric.Data.Interval qualified as Interval
+import Pythia.Data.Percentage qualified as Percentage
 import Pythia.Services.Battery
   ( Battery (..),
     BatteryApp,
@@ -50,7 +53,7 @@ tomlToNote toml =
     summary = "Battery Percentage"
     body =
       Just
-        $ showt (Interval.unLRInterval $ percentage ^. #unPercentage)
+        $ showt (Percentage.unPercentage percentage)
         <> "%"
 
 mkBatteryEvent ::
