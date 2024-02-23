@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - ghc981
 
   pull_request:
     branches:
@@ -19,6 +20,7 @@ jobs:
         ghc:
           - "9.4.7"
           - "9.6.3"
+          - "9.8.1"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
