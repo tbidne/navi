@@ -115,7 +115,7 @@ withLogHandle logging onMHandle = do
       withBinaryFile f WriteMode $ \h -> onMHandle (Just h)
     -- Use the default log path: xdgState </> navi/log
     DefPath -> do
-      xdgState <- Dir.getXdgState [osp|navi/|]
+      xdgState <- Dir.getXdgState [osp|navi|]
 
       -- handle large log dir
       handleLogSize xdgState sizeMode
@@ -124,9 +124,10 @@ withLogHandle logging onMHandle = do
         encodeFpToValidOsThrowM
           . fmap replaceSpc
           =<< Time.getSystemTimeString
-      let logFile = currTimeOs <> [osp|.log|]
+      let logFile = xdgState </> currTimeOs <> [osp|.log|]
       stateExists <- Dir.doesDirectoryExist xdgState
       unless stateExists (Dir.createDirectoryIfMissing True xdgState)
+
       renameIfExists logFile
       withBinaryFile logFile WriteMode $ \h -> onMHandle (Just h)
   where
