@@ -112,8 +112,10 @@ instance
     logQueue <- asks getLogQueue
     logLevel <- asks (view #logLevel . getLogEnv)
     when (logLevel <= lvl) $ do
-      formatted <- formatLog (defaultLogFormatter loc) lvl msg
+      formatted <- formatLog formatter lvl msg
       writeTBQueueA logQueue formatted
+    where
+      formatter = set' #threadLabel True (defaultLogFormatter loc)
 
 instance
   ( HasLogEnv env,

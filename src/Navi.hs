@@ -16,7 +16,7 @@ import DBus.Notify (UrgencyLevel (Critical, Normal))
 import Data.Text qualified as T
 import Effects.Concurrent.Async qualified as Async
 import Effects.Concurrent.STM (flushTBQueueA)
-import Effects.Concurrent.Thread (sleep)
+import Effects.Concurrent.Thread (MonadThread (labelThread, myThreadId), sleep)
 import Effects.LoggerNS
   ( MonadLoggerNS,
     addNamespace,
@@ -142,6 +142,8 @@ processEvent ::
   AnyEvent ->
   m Void
 processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
+  tid <- myThreadId
+  labelThread tid (fromString $ unpack name)
   let pi = event ^. (#pollInterval % #unPollInterval)
   forever $ do
     $(logInfo) ("Checking " <> name)
