@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -12,7 +13,7 @@ import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay), utc)
 import Effects.Concurrent.Async (ExceptionInLinkedThread (ExceptionInLinkedThread))
 import Effects.Concurrent.Async qualified as Async
 import Effects.Concurrent.Thread (sleep)
-import Effects.Exception (ExceptionCS (MkExceptionCS))
+import Effects.Exception qualified as Ex
 import Effects.LoggerNS
   ( MonadLoggerNS (getNamespace, localNamespace),
     defaultLogFormatter,
@@ -192,13 +193,22 @@ badLoggerDies = testCase "Logger exception kills Navi" $ do
   (ExceptionInLinkedThread _ ex, _) <- runExceptionApp LogThread
   "MkTestE \"logger dying\"" @=? displayException ex
 
+{- ORMOLU_DISABLE -}
+
 badNotifierDies :: TestTree
 badNotifierDies = testCase "Notify exception kills Navi" $ do
-  (MkExceptionCS ex _, logs) <- runExceptionApp NotifyThread
+#if MIN_VERSION_base(4, 20, 0)
+  (ex, logs) <- runExceptionApp NotifyThread
+  "MkTestE \"notify dying\"" @=? Ex.displayInner @TestEx ex
+#else
+  (Ex.MkExceptionCS ex _, logs) <- runExceptionApp NotifyThread
   "MkTestE \"notify dying\"" @=? displayException @SomeException ex
+#endif
   assertBool (show logs) $ errLog `elem` logs
   where
     errLog = "[2022-02-08 10:20:05][int-ex-test][Error][src/Navi.hs:123:8] Notify: MkTestE \"notify dying\"\n"
+
+{- ORMOLU_ENABLE -}
 
 runExceptionApp ::
   forall e.

@@ -81,55 +81,59 @@
     };
   };
   outputs =
-    inputs@{ flake-parts
-    , monad-effects
-    , nix-hs-utils
-    , nixpkgs
-    , self
-    , ...
+    inputs@{
+      flake-parts,
+      monad-effects,
+      nix-hs-utils,
+      nixpkgs,
+      self,
+      ...
     }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      perSystem = { pkgs, ... }:
+      perSystem =
+        { pkgs, ... }:
         let
           ghc-version = "ghc963";
           compiler = pkgs.haskell.packages."${ghc-version}".override {
-            overrides = final: prev: {
-              hedgehog = prev.hedgehog_1_4;
-              hlint = prev.hlint_3_6_1;
-              ormolu = prev.ormolu_0_7_2_0;
-              tasty-hedgehog = prev.tasty-hedgehog_1_4_0_2;
-            } // nix-hs-utils.mkLibs inputs final [
-              "algebra-simple"
-              "bounds"
-              "pythia"
-              "relative-time"
-              "si-bytes"
-              "smart-math"
-              "time-conv"
-            ] // nix-hs-utils.mkRelLibs "${monad-effects}/lib" final [
-              "effects-async"
-              "effects-env"
-              "effects-exceptions"
-              "effects-fs"
-              "effects-ioref"
-              "effects-logger-ns"
-              "effects-optparse"
-              "effects-stm"
-              "effects-time"
-              "effects-terminal"
-              "effects-thread"
-              "effects-typed-process"
-              "effects-unix-compat"
-            ];
+            overrides =
+              final: prev:
+              { }
+              // nix-hs-utils.mkLibs inputs final [
+                "algebra-simple"
+                "bounds"
+                "pythia"
+                "relative-time"
+                "si-bytes"
+                "smart-math"
+                "time-conv"
+              ]
+              // nix-hs-utils.mkRelLibs "${monad-effects}/lib" final [
+                "effects-async"
+                "effects-env"
+                "effects-exceptions"
+                "effects-fs"
+                "effects-ioref"
+                "effects-logger-ns"
+                "effects-optparse"
+                "effects-stm"
+                "effects-time"
+                "effects-terminal"
+                "effects-thread"
+                "effects-typed-process"
+                "effects-unix-compat"
+              ];
           };
           hlib = pkgs.haskell.lib;
-          mkPkg = returnShellEnv:
+          mkPkg =
+            returnShellEnv:
             nix-hs-utils.mkHaskellPkg {
               inherit compiler pkgs returnShellEnv;
               name = "navi";
               root = ./.;
             };
-          compilerPkgs = { inherit compiler pkgs; };
+          compilerPkgs = {
+            inherit compiler pkgs;
+          };
         in
         {
           packages.default = mkPkg false;

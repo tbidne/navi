@@ -388,9 +388,9 @@ If you have never built a haskell program before, [Cabal](#cabal) is probably th
 
 Using `ghcup`, install `cabal 2.4+` and one of:
 
-- `ghc 9.4`
 - `ghc 9.6`
 - `ghc 9.8`
+- `ghc 9.10`
 
 ### Build Navi
 
