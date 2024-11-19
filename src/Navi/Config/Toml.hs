@@ -12,7 +12,7 @@ import Data.Bytes (SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Char qualified as Ch
 import Data.Text qualified as T
-import Effects.FileSystem.Utils (encodeFpToOsFail)
+import FileSystem.OsPath (encodeFail)
 import GHC.Real (truncate)
 import Navi.Config.Types
   ( FilesSizeMode (FilesSizeModeDelete, FilesSizeModeWarn),
@@ -83,7 +83,7 @@ locationDecoder =
   tomlDecoder >>= \case
     "default" -> pure DefPath
     "stdout" -> pure Stdout
-    f -> File <$> encodeFpToOsFail f
+    f -> File <$> encodeFail f
 
 noteSystemDecoder :: Decoder NoteSystem
 noteSystemDecoder =
@@ -112,7 +112,7 @@ sizeModeDecoder = do
       -- NOTE: Try conversion to natural first for more precision. Fall back
       -- to double if that fails.
       case Bytes.parse @(SomeSize Natural) txt of
-        Right b -> Right $ Bytes.convert (Proxy @B) b
+        Right b -> Right $ Bytes.convert_ @_ @B b
         Left _ -> case Bytes.parse @(SomeSize Double) txt of
-          Right b -> Right (truncate <$> Bytes.convert (Proxy @B) b)
+          Right b -> Right (truncate <$> Bytes.convert_ @_ @B b)
           Left err -> Left err

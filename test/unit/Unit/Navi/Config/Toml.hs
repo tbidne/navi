@@ -7,7 +7,6 @@ where
 
 import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
-import Effects.FileSystem.Utils (osp)
 import Navi.Config.Toml
   ( ConfigToml
       ( MkConfigToml,

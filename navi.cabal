@@ -26,6 +26,7 @@ common common-exts
   default-extensions:
     ApplicativeDo
     DataKinds
+    DeriveAnyClass
     DerivingVia
     DuplicateRecordFields
     FunctionalDependencies
@@ -85,7 +86,6 @@ library
     , dbus                  >=1.2.14    && <1.4
     , deepseq               >=1.4.6.0   && <1.6
     , effects-async         ^>=0.1
-    , effects-exceptions    ^>=0.1
     , effects-fs            ^>=0.1
     , effects-ioref         ^>=0.1
     , effects-logger-ns     ^>=0.1
@@ -94,6 +94,8 @@ library
     , effects-terminal      ^>=0.1
     , effects-thread        ^>=0.1
     , effects-time          ^>=0.1
+    , exception-utils       ^>=0.1
+    , exceptions            ^>=0.10.4
     , fdo-notify            ^>=0.3.1
     , monad-logger          ^>=0.3.30
     , mtl                   >=2.2.2     && <2.4
@@ -161,18 +163,18 @@ test-suite integration
   build-depends:
     , base
     , effects-async
-    , effects-exceptions
     , effects-fs
     , effects-logger-ns
     , effects-terminal
     , effects-thread
     , effects-time
+    , exception-utils
     , fdo-notify
     , navi
     , pythia
     , tasty
     , tasty-hunit
     , text
-    , time                >=1.9.3 && <1.15
+    , time               >=1.9.3 && <1.15
 
   hs-source-dirs: test/integration

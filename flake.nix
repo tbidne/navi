@@ -6,7 +6,7 @@
     nix-hs-utils.url = "github:tbidne/nix-hs-utils";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    #haskell
+    # haskell
     algebra-simple = {
       url = "github:tbidne/algebra-simple";
       inputs.flake-parts.follows = "flake-parts";
@@ -19,6 +19,18 @@
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    exception-utils = {
+      url = "github:tbidne/exception-utils";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.nix-hs-utils.follows = "nix-hs-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    fs-utils = {
+      url = "github:tbidne/fs-utils";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.nix-hs-utils.follows = "nix-hs-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     monad-effects = {
       url = "github:tbidne/monad-effects";
       inputs.flake-parts.follows = "flake-parts";
@@ -27,6 +39,8 @@
 
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
+      inputs.exception-utils.follows = "exception-utils";
+      inputs.fs-utils.follows = "fs-utils";
       inputs.smart-math.follows = "smart-math";
     };
     pythia = {
@@ -37,8 +51,10 @@
 
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
-      inputs.si-bytes.follows = "si-bytes";
+      inputs.exception-utils.follows = "exception-utils";
+      inputs.fs-utils.follows = "fs-utils";
       inputs.monad-effects.follows = "monad-effects";
+      inputs.si-bytes.follows = "si-bytes";
       inputs.smart-math.follows = "smart-math";
       inputs.time-conv.follows = "time-conv";
     };
@@ -77,6 +93,8 @@
 
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
+      inputs.exception-utils.follows = "exception-utils";
+      inputs.fs-utils.follows = "fs-utils";
       inputs.monad-effects.follows = "monad-effects";
     };
   };
@@ -93,7 +111,7 @@
       perSystem =
         { pkgs, ... }:
         let
-          ghc-version = "ghc963";
+          ghc-version = "ghc982";
           compiler = pkgs.haskell.packages."${ghc-version}".override {
             overrides =
               final: prev:
@@ -101,6 +119,8 @@
               // nix-hs-utils.mkLibs inputs final [
                 "algebra-simple"
                 "bounds"
+                "exception-utils"
+                "fs-utils"
                 "pythia"
                 "relative-time"
                 "si-bytes"
@@ -110,7 +130,6 @@
               // nix-hs-utils.mkRelLibs "${monad-effects}/lib" final [
                 "effects-async"
                 "effects-env"
-                "effects-exceptions"
                 "effects-fs"
                 "effects-ioref"
                 "effects-logger-ns"
@@ -142,7 +161,7 @@
           apps = {
             format = nix-hs-utils.format compilerPkgs;
             lint = nix-hs-utils.lint compilerPkgs;
-            lintRefactor = nix-hs-utils.lintRefactor compilerPkgs;
+            lint-refactor = nix-hs-utils.lint-refactor compilerPkgs;
           };
         };
       systems = [

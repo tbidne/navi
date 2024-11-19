@@ -11,6 +11,7 @@ module Navi
   )
 where
 
+import Control.Exception.Annotation.Utils (displayInner)
 import DBus.Client (ClientError (clientErrorFatal))
 import DBus.Notify (UrgencyLevel (Critical, Normal))
 import Data.Text qualified as T
@@ -96,7 +97,7 @@ runNavi = do
         -- app.
         Async.link logThread
         runEvents evts
-          `catchAny` \e -> do
+          `catchSync` \e -> do
             Async.cancel logThread
             -- handle remaining logs
             queue <- asks getLogQueue
@@ -119,7 +120,7 @@ runNavi = do
     {-# INLINEABLE runEvents #-}
 
     logExAndRethrow :: Text -> m a -> m a
-    logExAndRethrow prefix io = catchAny io $ \ex -> do
+    logExAndRethrow prefix io = catchSync io $ \ex -> do
       $(logError) (prefix <> pack (displayException ex))
       throwM ex
     {-# INLINEABLE logExAndRethrow #-}
@@ -148,8 +149,8 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
   forever $ do
     $(logInfo) ("Checking " <> name)
     (Event.runEvent event >>= handleSuccess)
-      `catchCS` handleEventError
-      `catchAny` handleSomeException
+      `catch` handleEventError
+      `catchSync` handleSomeException
     sleep pi
   where
     name = event ^. #name
@@ -211,7 +212,7 @@ exToNote :: SomeException -> NaviNote
 exToNote ex =
   MkNaviNote
     { summary = "Exception",
-      body = Just $ pack (displayException ex),
+      body = Just $ pack (displayInner ex),
       urgency = Just Critical,
       timeout = Nothing
     }
@@ -232,7 +233,7 @@ pollNoteQueue = addNamespace "note-poller" $ do
   forever
     $ readTBQueueA queue
     >>= \nn ->
-      sendNote nn `catchCS` \ce ->
+      sendNote nn `catch` \ce ->
         -- NOTE: Rethrow all exceptions except:
         --
         -- 1. Non-fatal dbus errors e.g. quickly sending the same notif twice.

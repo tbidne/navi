@@ -16,7 +16,6 @@ import Data.Functor.Identity (Identity (Identity))
 import Data.List qualified as L
 import Data.Version (Version (versionBranch))
 import Effects.FileSystem.PathReader qualified as Dir
-import Effects.FileSystem.Utils (osp)
 import Effects.Optparse (osPath)
 import Navi.Prelude
 import Options.Applicative (Parser, ParserInfo (ParserInfo))

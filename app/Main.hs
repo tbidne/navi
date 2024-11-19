@@ -10,13 +10,9 @@ import Effects.FileSystem.HandleWriter (MonadHandleWriter (withBinaryFile), die)
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter (MonadPathWriter)
 import Effects.FileSystem.PathWriter qualified as Dir
-import Effects.FileSystem.Utils
-  ( encodeFpToOsThrowM,
-    encodeFpToValidOsThrowM,
-    osp,
-  )
 import Effects.Time (MonadTime)
 import Effects.Time qualified as Time
+import FileSystem.OsPath (encodeThrowM, encodeValidThrowM)
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
 import Navi (runNavi, runNaviT)
 import Navi.Args (Args, getArgs)
@@ -46,7 +42,7 @@ main = do
   args <- getArgs
   config <-
     tryParseConfig args
-      `catchAny` writeConfigErr
+      `catchSync` writeConfigErr
 
   withLogEnv (config ^. #logging) $ \logEnv -> do
     let mkNaviEnv :: (LogEnv -> Config -> IO env) -> IO env
@@ -121,7 +117,7 @@ withLogHandle logging onMHandle = do
       handleLogSize xdgState sizeMode
 
       currTimeOs <-
-        encodeFpToValidOsThrowM
+        encodeValidThrowM
           . fmap replaceSpc
           =<< Time.getSystemTimeString
       let logFile = xdgState </> currTimeOs <> [osp|.log|]
@@ -152,7 +148,7 @@ writeConfigErr ex = do
   let logFile = xdgBase </> [osp|config_fatal.log|]
   renameIfExists logFile
   writeFileUtf8 logFile $ "Couldn't read config: " <> pack (displayException ex)
-  throwCS ex
+  throwM ex
 
 renameIfExists ::
   ( HasCallStack,
@@ -184,7 +180,7 @@ uniqName fp = go 1
     go !counter
       | counter == maxBound = die $ "Failed renaming file: " <> show fp
       | otherwise = do
-          fp' <- (fp <>) <$> encodeFpToOsThrowM (show counter)
+          fp' <- (fp <>) <$> encodeThrowM (show counter)
           b <- Dir.doesFileExist fp'
           if b
             then go (counter + 1)

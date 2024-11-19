@@ -83,9 +83,9 @@ blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
         then -- Already sent this alert, block.
           pure True
         else -- New alert, do not block.
-        do
-          writeIORef prevRef $ Just newVal
-          pure False
+          do
+            writeIORef prevRef $ Just newVal
+            pure False
 {-# INLINEABLE blockRepeat #-}
 
 -- | Determines if we should block the error event. The semantics are:

@@ -85,7 +85,7 @@ instance MonadNotify (NaviT DBusEnv IO) where
   sendNote naviNote = addNamespace "dbus" $ do
     $(logDebug) (showt note)
     client <- asks getClient
-    liftIO $ addCS $ sendDbus client note
+    liftIO $ sendDbus client note
     where
       note = naviToDBus naviNote
       sendDbus c = void . DBusN.notify c
@@ -95,7 +95,7 @@ instance MonadNotify (NaviT DBusEnv IO) where
 instance MonadNotify (NaviT NotifySendEnv IO) where
   sendNote naviNote = addNamespace "notify-send" $ do
     $(logDebug) noteTxt
-    liftIO $ addCS $ void $ Proc.readCreateProcess cp "notify-send"
+    liftIO $ void $ Proc.readCreateProcess cp "notify-send"
     where
       noteTxt = naviToNotifySend naviNote
       cp = Proc.shell $ unpack noteTxt

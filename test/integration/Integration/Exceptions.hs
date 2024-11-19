@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -7,13 +6,14 @@
 -- | Tests fatal exceptions.
 module Integration.Exceptions (tests) where
 
-import Control.Exception qualified as UnsafeEx
+import Control.Exception.Annotation.Utils qualified as Ex
+import Data.Text qualified as T
 import Data.Time.Calendar.OrdinalDate (fromOrdinalDate)
 import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay), utc)
 import Effects.Concurrent.Async (ExceptionInLinkedThread (ExceptionInLinkedThread))
 import Effects.Concurrent.Async qualified as Async
 import Effects.Concurrent.Thread (sleep)
-import Effects.Exception qualified as Ex
+import Effects.FileSystem.FileReader (decodeUtf8Lenient)
 import Effects.LoggerNS
   ( MonadLoggerNS (getNamespace, localNamespace),
     defaultLogFormatter,
@@ -191,24 +191,23 @@ tests =
 badLoggerDies :: TestTree
 badLoggerDies = testCase "Logger exception kills Navi" $ do
   (ExceptionInLinkedThread _ ex, _) <- runExceptionApp LogThread
-  "MkTestE \"logger dying\"" @=? displayException ex
-
-{- ORMOLU_DISABLE -}
+  "MkTestE \"logger dying\"" @=? Ex.displayInner ex
 
 badNotifierDies :: TestTree
 badNotifierDies = testCase "Notify exception kills Navi" $ do
-#if MIN_VERSION_base(4, 20, 0)
-  (ex, logs) <- runExceptionApp NotifyThread
-  "MkTestE \"notify dying\"" @=? Ex.displayInner @TestEx ex
-#else
-  (Ex.MkExceptionCS ex _, logs) <- runExceptionApp NotifyThread
-  "MkTestE \"notify dying\"" @=? displayException @SomeException ex
-#endif
-  assertBool (show logs) $ errLog `elem` logs
-  where
-    errLog = "[2022-02-08 10:20:05][int-ex-test][Error][src/Navi.hs:123:8] Notify: MkTestE \"notify dying\"\n"
+  (ex, logs) <- runExceptionApp @SomeException NotifyThread
+  "MkTestE \"notify dying\"" @=? Ex.displayInner ex
 
-{- ORMOLU_ENABLE -}
+  -- search for log
+  foundLogRef <- newIORef False
+  for_ logs $ \l -> do
+    let t = decodeUtf8Lenient l
+    when (errLog `T.isPrefixOf` t) $ writeIORef foundLogRef True
+
+  foundLog <- readIORef foundLogRef
+  unless foundLog (assertFailure $ "Did not find expectedLog: " <> show logs)
+  where
+    errLog = "[2022-02-08 10:20:05][int-ex-test][Error][src/Navi.hs:124:8] Notify: MkTestE \"notify dying\""
 
 runExceptionApp ::
   forall e.
@@ -250,9 +249,7 @@ runExceptionApp badThread = do
       -- NOTE: timeout after 10 seconds
       MkExceptionIO testRun = Async.race (sleep 10_000_000) (runNaviT runNavi env)
 
-  -- NOTE: The try that is in scope only works on sync exceptions, so we use
-  -- the one from base.
-  UnsafeEx.try @e testRun >>= \case
+  try @_ @e testRun >>= \case
     Left ex -> do
       logs <- readIORef logsRef
       pure (ex, logs)

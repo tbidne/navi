@@ -18,7 +18,6 @@ import Data.Text qualified as T
 import Effects.Concurrent.Async qualified as Async
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter qualified as Dir
-import Effects.FileSystem.Utils (osp)
 import Integration.Exceptions qualified as Exceptions
 import Integration.MockApp (MockEnv, configToMockEnv, runMockApp)
 import Integration.Prelude
@@ -110,7 +109,7 @@ testSendExceptionDies :: TestTree
 testSendExceptionDies = testCase "Exception in send kills program" $ do
   result <-
     (runMock 3 sendExceptionConfig $> Nothing)
-      `catchCS` (pure . Just)
+      `catch` (pure . Just)
 
   expected @=? result
   where

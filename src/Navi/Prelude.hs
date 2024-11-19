@@ -37,6 +37,7 @@ import Control.Applicative as X
     (<**>),
   )
 import Control.DeepSeq as X (NFData)
+import Control.Exception.Utils as X (catchSync)
 import Control.Monad as X
   ( Monad ((>>=)),
     forever,
@@ -47,6 +48,19 @@ import Control.Monad as X
     (<=<),
     (=<<),
     (>=>),
+  )
+import Control.Monad.Catch as X
+  ( Exception (displayException),
+    MonadCatch,
+    MonadMask,
+    MonadThrow,
+    SomeException,
+    bracket,
+    catch,
+    finally,
+    mask,
+    throwM,
+    try,
   )
 import Control.Monad.Fail as X (MonadFail (fail))
 import Control.Monad.IO.Class as X (MonadIO (liftIO))
@@ -102,21 +116,6 @@ import Effects.Concurrent.STM as X
     writeTBQueueA,
   )
 import Effects.Concurrent.Thread as X (MonadThread)
-import Effects.Exception as X
-  ( Exception (displayException),
-    MonadCatch,
-    MonadMask,
-    MonadThrow,
-    SomeException,
-    addCS,
-    bracket,
-    catchAny,
-    catchCS,
-    finally,
-    mask,
-    throwCS,
-    throwM,
-  )
 import Effects.FileSystem.FileReader as X
   ( MonadFileReader,
     readFileUtf8ThrowM,
@@ -128,12 +127,12 @@ import Effects.FileSystem.HandleWriter as X
     MonadHandleWriter (hClose, hFlush, hPut, openBinaryFile),
   )
 import Effects.FileSystem.PathReader as X (MonadPathReader)
-import Effects.FileSystem.Utils as X (OsPath, (</>))
 import Effects.IORef as X
   ( IORef,
     MonadIORef (modifyIORef', newIORef, readIORef, writeIORef),
   )
 import Effects.System.Terminal as X (MonadTerminal, putStrLn, putTextLn)
+import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
 import GHC.Enum as X (Bounded (maxBound, minBound))
 import GHC.Err as X (error, undefined)
 import GHC.Float as X (Double)

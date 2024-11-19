@@ -79,7 +79,7 @@ defaultLogging =
 
 -- | @since 0.1
 defaultSizeMode :: FilesSizeMode
-defaultSizeMode = FilesSizeModeDelete $ Bytes.convert Proxy fiftyMb
+defaultSizeMode = FilesSizeModeDelete $ Bytes.convert_ fiftyMb
   where
     fiftyMb = MkBytes @M 50
 

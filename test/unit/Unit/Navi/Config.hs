@@ -1,25 +1,26 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Unit.Navi.Config
   ( tests,
   )
 where
 
-import Effects.FileSystem.Utils (unsafeEncodeFpToOs)
+import FileSystem.OsPath (unsafeDecode)
 import Navi.Config qualified as Config
 import Navi.Config.Types
   ( Config,
     LogLoc (DefPath, Stdout),
     NoteSystem (DBus, NotifySend),
   )
-import System.IO (FilePath)
 import Unit.Prelude
 
 tests :: TestTree
 tests =
   testGroup
     "Navi.Config"
-    [ readsExample verifyConfig "examples/config.toml",
-      readsExample verifySimple "examples/simple.toml",
-      readsExample verifyMultiple "examples/multiple.toml"
+    [ readsExample verifyConfig [osp|examples/config.toml|],
+      readsExample verifySimple [osp|examples/simple.toml|],
+      readsExample verifyMultiple [osp|examples/multiple.toml|]
     ]
   where
     verifyConfig cfg = do
@@ -40,10 +41,8 @@ tests =
       Just DefPath @=? cfg ^. #logging % #location
       1 @=? length (cfg ^. #events)
 
-readsExample :: (Config -> IO ()) -> FilePath -> TestTree
-readsExample verifyCfg fp =
-  testCase ("Reads " <> fp)
+readsExample :: (Config -> IO ()) -> OsPath -> TestTree
+readsExample verifyCfg p =
+  testCase ("Reads " <> unsafeDecode p)
     $ Config.readConfig p
     >>= verifyCfg
-  where
-    p = unsafeEncodeFpToOs fp

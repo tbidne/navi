@@ -48,7 +48,7 @@ readConfig =
     -- FIXME: Unused keys do not cause errors. This should probably be addressed
     -- upstream. See https://github.com/brandonchinn178/toml-reader/issues/12
     case decode contents of
-      Left tomlErr -> throwCS $ TomlError tomlErr
+      Left tomlErr -> throwM $ TomlError tomlErr
       Right cfg -> tomlToConfig cfg
 
 tomlToConfig ::
@@ -76,7 +76,7 @@ tomlToConfig toml = do
       allEvts = maybeEvts <> multipleEvts
 
   case allEvts of
-    [] -> throwCS NoEvents
+    [] -> throwM NoEvents
     (e : es) ->
       pure
         $ MkConfig

@@ -4,6 +4,7 @@ module Navi.Effects.MonadSystemInfo
   )
 where
 
+import Control.Exception.Annotation.Utils (displayInner)
 import Data.Text qualified as T
 import Navi.Event.Types (EventError (MkEventError, long, name, short))
 import Navi.Prelude
@@ -48,12 +49,12 @@ instance MonadSystemInfo IO where
 
 rethrowPythia :: Text -> IO a -> IO a
 rethrowPythia n io =
-  io `catchAny` \e ->
+  io `catchSync` \e ->
     throwM
       $ MkEventError
         { name = n,
           short = "PythiaException",
-          long = pack $ displayException e
+          long = pack $ displayInner e
         }
 
 instance (MonadSystemInfo m) => MonadSystemInfo (ReaderT e m) where
