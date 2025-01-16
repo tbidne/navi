@@ -391,6 +391,7 @@ Using `ghcup`, install `cabal 2.4+` and one of:
 - `ghc 9.6`
 - `ghc 9.8`
 - `ghc 9.10`
+- `ghc 9.12`
 
 ### Build Navi
 

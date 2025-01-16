@@ -11,7 +11,6 @@ module Navi
   )
 where
 
-import Control.Exception.Annotation.Utils (displayInner)
 import DBus.Client (ClientError (clientErrorFatal))
 import DBus.Notify (UrgencyLevel (Critical, Normal))
 import Data.Text qualified as T
@@ -50,6 +49,7 @@ import Navi.Event.Types
   )
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Prelude
+import Navi.Utils qualified as U
 
 -- | Entry point for the application.
 runNavi ::
@@ -113,8 +113,7 @@ runNavi = do
         Async.withAsync
           ( logExAndRethrow
               "Event processing: "
-              ( Async.mapConcurrently processEvent evts
-              )
+              (Async.mapConcurrently processEvent evts)
           )
           (fmap fst . Async.waitBoth noteThread)
     {-# INLINEABLE runEvents #-}
@@ -212,7 +211,7 @@ exToNote :: SomeException -> NaviNote
 exToNote ex =
   MkNaviNote
     { summary = "Exception",
-      body = Just $ pack (displayInner ex),
+      body = Just $ pack (U.displayInner ex),
       urgency = Just Critical,
       timeout = Nothing
     }

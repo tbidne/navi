@@ -86,7 +86,7 @@ testNoDuplicateErrs = testCase "Does not send duplicate errors" $ do
   expected @=? sentNotes
   where
     expected = [MkNaviNote "Exception" (Just body) (Just Critical) Nothing]
-    body = "Command exception. Command: <nmcli>. Error: <Nmcli error>"
+    body = "Pythia exception: Command exception. Command: <nmcli>. Error: <Nmcli error>"
 
 testSwallowErrs :: TestTree
 testSwallowErrs = testCase "Does not send any errors" $ do
@@ -103,7 +103,7 @@ testSendsMultipleErrs = testCase "Sends multiple errors" $ do
   expected @=? sentNotes
   where
     expected = replicate 4 $ MkNaviNote "Exception" (Just body) (Just Critical) Nothing
-    body = "Command exception. Command: <nmcli>. Error: <Nmcli error>"
+    body = "Pythia exception: Command exception. Command: <nmcli>. Error: <Nmcli error>"
 
 testSendExceptionDies :: TestTree
 testSendExceptionDies = testCase "Exception in send kills program" $ do

@@ -96,6 +96,7 @@
       inputs.exception-utils.follows = "exception-utils";
       inputs.fs-utils.follows = "fs-utils";
       inputs.monad-effects.follows = "monad-effects";
+      inputs.smart-math.follows = "smart-math";
     };
   };
   outputs =
@@ -111,11 +112,26 @@
       perSystem =
         { pkgs, ... }:
         let
-          ghc-version = "ghc982";
+          ghc-version = "ghc9101";
           compiler = pkgs.haskell.packages."${ghc-version}".override {
             overrides =
               final: prev:
-              { }
+              {
+                # The latest dbus in nixpkgs, dbus_1_3_8, has compilation
+                # problems with doJailbreak, which we need for filepath.
+                # Hence the direct call here.
+                dbus = (
+                  final.callHackageDirect {
+                    pkg = "dbus";
+                    ver = "1.3.10";
+                    sha256 = "sha256-Of2aSeCzi5+LHyR+6aPxlCW/Oa8QfjwKrIieqs2h6YE=";
+                  } { }
+                );
+
+                network = prev.network_3_2_4_0;
+
+                path = hlib.dontCheck prev.path_0_9_6;
+              }
               // nix-hs-utils.mkLibs inputs final [
                 "algebra-simple"
                 "bounds"
@@ -149,6 +165,14 @@
               inherit compiler pkgs returnShellEnv;
               name = "navi";
               root = ./.;
+
+              # TODO: Once hlint is back to working with our GHC we can
+              # use nix-hs-utils.mkDevTools ++ otherDeps.
+              devTools = [
+                (hlib.dontCheck compiler.cabal-fmt)
+                (hlib.dontCheck compiler.haskell-language-server)
+                pkgs.nixfmt-rfc-style
+              ];
             };
           compilerPkgs = {
             inherit compiler pkgs;
@@ -160,8 +184,8 @@
 
           apps = {
             format = nix-hs-utils.format compilerPkgs;
-            lint = nix-hs-utils.lint compilerPkgs;
-            lint-refactor = nix-hs-utils.lint-refactor compilerPkgs;
+            #lint = nix-hs-utils.lint compilerPkgs;
+            #lint-refactor = nix-hs-utils.lint-refactor compilerPkgs;
           };
         };
       systems = [

@@ -1,10 +1,11 @@
+{-# LANGUAGE CPP #-}
+
 -- | Provides an effect for querying system information.
 module Navi.Effects.MonadSystemInfo
   ( MonadSystemInfo (..),
   )
 where
 
-import Control.Exception.Annotation.Utils (displayInner)
 import Data.Text qualified as T
 import Navi.Event.Types (EventError (MkEventError, long, name, short))
 import Navi.Prelude
@@ -17,6 +18,7 @@ import Navi.Services.Types
         Single
       ),
   )
+import Navi.Utils qualified as U
 import Pythia qualified
 import Pythia.Data.Command (Command)
 import Pythia.Internal.ShellApp
@@ -54,7 +56,7 @@ rethrowPythia n io =
       $ MkEventError
         { name = n,
           short = "PythiaException",
-          long = pack $ displayInner e
+          long = pack $ U.displayInner e
         }
 
 instance (MonadSystemInfo m) => MonadSystemInfo (ReaderT e m) where

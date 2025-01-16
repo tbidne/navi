@@ -6,7 +6,6 @@
 -- | Tests fatal exceptions.
 module Integration.Exceptions (tests) where
 
-import Control.Exception.Annotation.Utils qualified as Ex
 import Data.Text qualified as T
 import Data.Time.Calendar.OrdinalDate (fromOrdinalDate)
 import Data.Time.LocalTime (LocalTime (LocalTime), TimeOfDay (TimeOfDay), utc)
@@ -70,6 +69,7 @@ import Navi.Services.Types
         Single
       ),
   )
+import Navi.Utils qualified as U
 import Test.Tasty qualified as Tasty
 
 data BadThread
@@ -191,12 +191,12 @@ tests =
 badLoggerDies :: TestTree
 badLoggerDies = testCase "Logger exception kills Navi" $ do
   (ExceptionInLinkedThread _ ex, _) <- runExceptionApp LogThread
-  "MkTestE \"logger dying\"" @=? Ex.displayInner ex
+  "MkTestE \"logger dying\"" @=? U.displayInner ex
 
 badNotifierDies :: TestTree
 badNotifierDies = testCase "Notify exception kills Navi" $ do
   (ex, logs) <- runExceptionApp @SomeException NotifyThread
-  "MkTestE \"notify dying\"" @=? Ex.displayInner ex
+  "MkTestE \"notify dying\"" @=? U.displayInner ex
 
   -- search for log
   foundLogRef <- newIORef False
@@ -207,7 +207,7 @@ badNotifierDies = testCase "Notify exception kills Navi" $ do
   foundLog <- readIORef foundLogRef
   unless foundLog (assertFailure $ "Did not find expectedLog: " <> show logs)
   where
-    errLog = "[2022-02-08 10:20:05][int-ex-test][Error][src/Navi.hs:124:8] Notify: MkTestE \"notify dying\""
+    errLog = "[2022-02-08 10:20:05][int-ex-test][src/Navi.hs:123:8][Error] Notify: MkTestE \"notify dying\""
 
 runExceptionApp ::
   forall e.

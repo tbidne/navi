@@ -18,14 +18,15 @@ jobs:
       fail-fast: false
       matrix:
         ghc:
-          - "9.6.5"
+          - "9.6.6"
           - "9.8.2"
           - "9.10.1"
+          - "9.12.1"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: haskell/actions/setup@v2
+      - uses: haskell-actions/setup@v2
         with:
           ghc-version: ${{ matrix.ghc }}
 
@@ -68,6 +69,3 @@ jobs:
         run: |
           nix run .#format
           git diff --exit-code --color=always
-
-      - name: HLint
-        run: nix run .#lint

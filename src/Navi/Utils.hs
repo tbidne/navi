@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 -- | Provides utilities.
 --
 -- @since 0.1
@@ -12,10 +14,14 @@ module Navi.Utils
     urgencyLevelOptDecoder,
 
     -- * Misc
+    displayInner,
     whenJust,
   )
 where
 
+#if MIN_VERSION_base(4, 20, 0) && !MIN_VERSION_base(4, 21, 0)
+import Control.Exception qualified as E
+#endif
 import DBus.Notify (UrgencyLevel (Critical, Low, Normal))
 import Navi.Prelude
 import Pythia.Data.Command (Command (MkCommand))
@@ -60,3 +66,17 @@ urgencyLevelDecoder = do
 -- @since 0.1
 commandDecoder :: Decoder Command
 commandDecoder = MkCommand <$> getField "command"
+
+-- NOTE: For base 4.20 (GHC 9.10), there is a callstack on the SomeException
+-- itself. We don't really want this as it clutters the output (and fails
+-- a functional test). So in this case we walk the SomeException to avoid
+-- the callstack.
+--
+-- In later base versions, the callstack is separate, so we have no problems.
+displayInner :: (Exception e) => e -> String
+#if MIN_VERSION_base(4, 20, 0) && !MIN_VERSION_base(4, 21, 0)
+displayInner ex = case E.toException ex of
+  E.SomeException e -> displayException $ e
+#else
+displayInner = displayException
+#endif

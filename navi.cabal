@@ -3,7 +3,7 @@ name:               navi
 version:            0.1
 license:            MIT
 license-file:       LICENSE
-tested-with:        GHC ==9.6.5 || ==9.8.2 || ==9.10.1
+tested-with:        GHC ==9.6.6 || ==9.8.2 || ==9.10.1 || ==9.12.1
 copyright:          2021-2025 Thomas Bidne
 author:             Thomas Bidne
 maintainer:         tbidne@protonmail.com
@@ -79,7 +79,7 @@ library
     Navi.Utils
 
   build-depends:
-    , base                  >=4.17      && <4.21
+    , base                  >=4.17      && <4.22
     , bytestring            >=0.10.10.0 && <0.13
     , containers            >=0.5.11.0  && <0.8
     , dbus                  >=1.2.14    && <1.4
@@ -167,7 +167,6 @@ test-suite integration
     , effects-terminal
     , effects-thread
     , effects-time
-    , exception-utils
     , fdo-notify
     , navi
     , pythia
