@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - release
+      - osx
 
   pull_request:
     branches:
@@ -29,11 +30,14 @@ jobs:
             proj_file: ""
           - vers: "9.8.4"
             proj_file: ""
-          - vers: "9.10.1"
+          - vers: "9.10.2"
             proj_file: "--project-file cabal.ghc9102.project"
           - vers: "9.12.2"
             proj_file: ""
-    runs-on: ubuntu-latest
+        os:
+          - "macos-latest"
+          - "ubuntu-latest"
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -88,6 +92,21 @@ jobs:
       fail-fast: false
       matrix:
         platform:
+          - name: "macos-13"
+            os: "macos-13"
+            script: ".github/scripts/release_osx.sh"
+            script_args: ""
+
+          - name: "macos-14"
+            os: "macos-14"
+            script: ".github/scripts/release_osx.sh"
+            script_args: ""
+
+          - name: "macos-15"
+            os: "macos-15"
+            script: ".github/scripts/release_osx.sh"
+            script_args: ""
+
           - name: "alpine_amd64"
             os: "ubuntu-24.04"
             script: ".github/scripts/release_linux.sh"

@@ -14,6 +14,7 @@ module Navi.Utils
     urgencyLevelOptDecoder,
 
     -- * Misc
+    escapeDoubleQuotes,
     displayInner,
     whenJust,
   )
@@ -23,6 +24,10 @@ where
 import Control.Exception qualified as E
 #endif
 import DBus.Notify (UrgencyLevel (Critical, Low, Normal))
+import Data.Text qualified as T
+import Data.Text.Lazy qualified as TL
+import Data.Text.Lazy.Builder (Builder)
+import Data.Text.Lazy.Builder qualified as TLB
 import Navi.Prelude
 import Pythia.Data.Command (Command (MkCommand))
 
@@ -65,6 +70,14 @@ urgencyLevelDecoder = do
 -- @since 0.1
 commandDecoder :: Decoder Command
 commandDecoder = MkCommand <$> getField "command"
+
+-- | Escape double quotes in strings.
+escapeDoubleQuotes :: Text -> Text
+escapeDoubleQuotes = TL.toStrict . TLB.toLazyText . T.foldl' go ""
+  where
+    go :: Builder -> Char -> Builder
+    go acc '"' = acc <> "\\\""
+    go acc c = acc <> TLB.singleton c
 
 -- NOTE: For base 4.20 (GHC 9.10), there is a callstack on the SomeException
 -- itself. We don't really want this as it clutters the output (and fails

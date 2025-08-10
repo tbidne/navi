@@ -18,7 +18,7 @@ import Navi.Config.Types
   ( FilesSizeMode (FilesSizeModeDelete, FilesSizeModeWarn),
     LogLoc (DefPath, File, Stdout),
     Logging (MkLogging),
-    NoteSystem (DBus, NotifySend),
+    NoteSystem (AppleScript, DBus, NotifySend),
   )
 import Navi.Prelude
 import Navi.Services.Battery.Percentage.Toml (BatteryPercentageToml)
@@ -88,6 +88,7 @@ locationDecoder =
 noteSystemDecoder :: Decoder NoteSystem
 noteSystemDecoder =
   tomlDecoder >>= \case
+    "apple-script" -> pure AppleScript
     "dbus" -> pure DBus
     "notify-send" -> pure NotifySend
     bad -> fail $ unpack $ "Unsupported NoteSystem: " <> bad

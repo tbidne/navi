@@ -21,8 +21,9 @@ import Navi.Env.Core
     HasNoteQueue (..),
   )
 import Navi.Prelude
+import Navi.Utils qualified as Utils
 
--- | Concrete notify-send environment. Adds the dbus client.
+-- | Concrete notify-send environment.
 newtype NotifySendEnv = MkNotifySendEnv
   { coreEnv :: Env
   }
@@ -82,13 +83,20 @@ naviToNotifySend :: NaviNote -> Text
 naviToNotifySend naviNote = txt
   where
     txt =
-      "notify-send \""
-        <> naviNote
-        ^. #summary
-        <> "\" "
-        <> maybe "" (\b -> " \"" <> b <> "\" ") (naviNote ^. #body)
-        <> maybe "" ulToNS (naviNote ^. #urgency)
-        <> maybe "" timeoutToNS (naviNote ^. #timeout)
+      mconcat
+        [ "notify-send \"",
+          summary,
+          "\" ",
+          body,
+          maybe "" ulToNS (naviNote ^. #urgency),
+          maybe "" timeoutToNS (naviNote ^. #timeout)
+        ]
+
+    summary = Utils.escapeDoubleQuotes $ naviNote ^. #summary
+    body =
+      maybe "" ((\b -> " \"" <> b <> "\" ") . Utils.escapeDoubleQuotes)
+        $ naviNote
+        ^. #body
 
     ulToNS Low = " --urgency low "
     ulToNS Normal = " --urgency normal "

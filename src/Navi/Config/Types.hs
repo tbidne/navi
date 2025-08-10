@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -58,16 +59,22 @@ makeFieldLabelsNoPrefix ''Logging
 
 -- | Configuration for notification systems.
 data NoteSystem
-  = -- | For use with a running notification server that receives messages
+  = -- | For use with osx.
+    AppleScript
+  | -- | For use with a running notification server that receives messages
     -- via DBus.
     DBus
   | -- | For use with the notify-send tool.
     NotifySend
   deriving stock (Eq, Show)
 
--- | Default notification system i.e. DBus.
+-- | Default notification system i.e. DBus for linux, AppleScript for osx.
 defaultNoteSystem :: NoteSystem
+#if OSX
+defaultNoteSystem = AppleScript
+#else
 defaultNoteSystem = DBus
+#endif
 
 -- | Default logging i.e. log errors and use the default path.
 defaultLogging :: Logging

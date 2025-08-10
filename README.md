@@ -6,6 +6,9 @@
 [![ci](http://img.shields.io/github/actions/workflow/status/tbidne/navi/ci.yaml?branch=main)](https://github.com/tbidne/navi/actions/workflows/ci.yaml)
 [![MIT](https://img.shields.io/github/license/tbidne/navi?color=blue)](https://opensource.org/licenses/MIT)
 
+![linux](https://img.shields.io/static/v1?label=&message=linux&logo=linux&logoColor=white&labelColor=2f353e&color=blue)
+![apple](https://img.shields.io/static/v1?label=&message=osx&logo=apple&labelColor=2f353e&color=blue)
+
 </div>
 
 ### Table of Contents

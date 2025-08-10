@@ -37,7 +37,7 @@ import Control.Applicative as X
     (<**>),
   )
 import Control.DeepSeq as X (NFData)
-import Control.Exception.Utils as X (catchSync)
+import Control.Exception.Utils as X (catchSync, throwText)
 import Control.Monad as X
   ( Monad ((>>=)),
     forever,

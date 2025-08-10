@@ -38,6 +38,9 @@ common common-exts
     StrictData
     TypeFamilies
 
+  if os(osx)
+    cpp-options: -DOSX
+
   default-language:   GHC2021
 
 library
@@ -57,6 +60,7 @@ library
     Navi.Effects
     Navi.Effects.MonadNotify
     Navi.Effects.MonadSystemInfo
+    Navi.Env.AppleScript
     Navi.Env.Core
     Navi.Env.DBus
     Navi.Env.NotifySend

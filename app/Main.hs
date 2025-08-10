@@ -1,4 +1,6 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module Main (main) where
 
@@ -20,7 +22,7 @@ import Navi.Config
   ( Config,
     LogLoc (DefPath, File, Stdout),
     Logging,
-    NoteSystem (DBus, NotifySend),
+    NoteSystem (AppleScript, DBus, NotifySend),
     readConfig,
   )
 import Navi.Config.Types
@@ -31,9 +33,12 @@ import Navi.Config.Types
     defaultSizeMode,
   )
 import Navi.Data.NaviLog (LogEnv (MkLogEnv, logHandle, logLevel, logNamespace))
+import Navi.Env.AppleScript (mkAppleScriptEnv)
 import Navi.Env.DBus (mkDBusEnv)
 import Navi.Env.NotifySend (mkNotifySendEnv)
 import Navi.Prelude
+
+{- ORMOLU_DISABLE -}
 
 main :: IO ()
 main = do
@@ -48,10 +53,19 @@ main = do
     let mkNaviEnv :: (LogEnv -> Config -> IO env) -> IO env
         mkNaviEnv envFn = envFn logEnv config
     case config ^. #noteSystem of
+#if OSX
+      AppleScript -> mkNaviEnv mkAppleScriptEnv >>= runWithEnv
+      DBus -> throwText "Detected osx, but DBus is only available on linux!"
+      NotifySend -> throwText "Detected osx, but NotifySend is only available on linux!"
+#else
+      AppleScript -> throwText "Detected linux, but AppleScript is only available on osx!"
       DBus -> mkNaviEnv mkDBusEnv >>= runWithEnv
       NotifySend -> mkNaviEnv mkNotifySendEnv >>= runWithEnv
+#endif
   where
     runWithEnv env = absurd <$> runNaviT runNavi env
+
+{- ORMOLU_ENABLE -}
 
 tryParseConfig ::
   ( HasCallStack,
