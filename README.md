@@ -23,6 +23,7 @@
     - [Custom](#custom)
       - [Single](#single)
       - [Multiple](#multiple)
+- [Installation](#installation)
 - [Building](#building)
   - [Cabal](#cabal)
   - [Nix](#nix)
@@ -342,6 +343,10 @@ body = "< 40"
 urgency = "critical"
 timeout = 10
 ```
+
+# Installation
+
+The [releases](https://github.com/tbidne/navi/releases) page has binaries built for several platforms. If there are no binaries for your platform, it is possible to [build navi](#building) yourself.
 
 # Building
 

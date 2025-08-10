@@ -4,13 +4,20 @@ on:
   push:
     branches:
       - main
-      - updates
+      - release
 
   pull_request:
     branches:
       - main
+      - release
 
   workflow_dispatch:
+
+env:
+  CABAL_VERS: "3.12"
+  GHC_VERS: "9.10.2"
+  CABAL_PROJ: "cabal.ghc9102.project"
+  NAVI_VERS: "0.1"
 
 jobs:
   cabal:
@@ -73,3 +80,65 @@ jobs:
         run: |
           nix run .#format
           git diff --exit-code --color=always
+
+  release:
+    needs: [cabal, nix, lint]
+    if: github.ref == 'refs/heads/release'
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - name: "alpine_amd64"
+            os: "ubuntu-24.04"
+            script: ".github/scripts/release_linux.sh"
+            script_args: "alpine_amd64"
+
+          - name: "alpine_arm64v8"
+            os: "ubuntu-24.04-arm"
+            script: ".github/scripts/release_linux.sh"
+            script_args: "alpine_arm64v8"
+
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify env vars
+        run: .github/scripts/verify_env.sh
+
+      - uses: docker/setup-docker-action@v4
+        if: ${{ matrix.platform.name == 'alpine_amd64' || matrix.platform.name == 'alpine_arm64v8' }}
+
+      # So we have sha256sum
+      - name: Install coreutils
+        if: ${{ matrix.platform.os == 'macos-13' || matrix.platform.os == 'macos-14' }}
+        run: brew install coreutils
+
+      - uses: haskell-actions/setup@v2
+        if: ${{ matrix.platform.name != 'alpine_amd64' && matrix.platform.name != 'alpine_arm64v8' }}
+        with:
+          ghc-version: ${{ env.GHC_VERS }}
+          cabal-version: ${{ env.CABAL_VERS }}
+
+      - name: Install binary
+        shell: bash
+        run: |
+          ${{ matrix.platform.script }} ${{ matrix.platform.script_args }}
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ matrix.platform.name }}
+          path: navi*.zip
+          retention-days: 1
+
+  merge-releases:
+    runs-on: "ubuntu-latest"
+    needs: release
+    steps:
+      - name: Merge Release Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: release-artifacts
+          pattern: release-artifacts-*
+          delete-merged: true
+          retention-days: 1
