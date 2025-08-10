@@ -14,9 +14,12 @@ import Data.Functor.Classes (Show1)
 import Data.Functor.Classes qualified as Functor
 import Data.Functor.Identity (Identity (Identity))
 import Data.List qualified as L
-import Data.Version (Version (versionBranch))
+import Data.Version (showVersion)
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.Optparse (osPath)
+import FileSystem.OsString (OsString)
+import FileSystem.OsString qualified as OsString
+import Navi.Args.TH qualified as TH
 import Navi.Prelude
 import Options.Applicative (Parser, ParserInfo (ParserInfo))
 import Options.Applicative qualified as OptApp
@@ -25,6 +28,16 @@ import Options.Applicative.Help.Chunk qualified as Chunk
 import Options.Applicative.Help.Pretty qualified as Pretty
 import Options.Applicative.Types (ArgPolicy (Intersperse))
 import Paths_navi qualified as Paths
+import System.Info qualified as Info
+
+data VersionInfo = MkVersionInfo
+  { gitCommitDate :: OsString,
+    ghc :: String,
+    gitHash :: OsString,
+    gitShortHash :: OsString
+  }
+
+makeFieldLabelsNoPrefix ''VersionInfo
 
 -- | Represents command-line arguments. We use the \"higher-kinded data\"
 -- approach for:
@@ -85,7 +98,7 @@ parserInfoArgs =
       Just
         $ "Navi: A program for monitoring system status via "
         <> "desktop notifications."
-    footer = Just $ fromString versNum
+    footer = Just $ fromString versShort
     desc =
       Chunk.paragraph
         $ "Navi allows one to easily define custom notification 'services'"
@@ -104,10 +117,38 @@ argsParser =
     <**> version
 
 version :: Parser (a -> a)
-version = OptApp.infoOption versNum (OptApp.long "version" <> OptApp.short 'v')
+version = OptApp.infoOption versLong (OptApp.long "version" <> OptApp.short 'v')
 
-versNum :: [Char]
-versNum = "Version: " <> L.intercalate "." (show <$> versionBranch Paths.version)
+versShort :: String
+versShort =
+  mconcat
+    [ "Version: ",
+      showVersion Paths.version,
+      " (",
+      OsString.decodeLenient $ versionInfo ^. #gitShortHash,
+      ")"
+    ]
+
+versLong :: String
+versLong =
+  L.intercalate
+    "\n"
+    [ "Navi: " <> showVersion Paths.version,
+      " - Git revision: " <> OsString.decodeLenient (versionInfo ^. #gitHash),
+      " - Commit date:  " <> OsString.decodeLenient (versionInfo ^. #gitCommitDate),
+      " - GHC version:  " <> versionInfo ^. #ghc
+    ]
+
+versionInfo :: VersionInfo
+versionInfo =
+  MkVersionInfo
+    { gitCommitDate = d,
+      ghc = showVersion Info.compilerVersion,
+      gitHash = h,
+      gitShortHash = sh
+    }
+  where
+    (d, h, sh) = $$TH.gitData
 
 configFileParser :: Parser (Maybe OsPath)
 configFileParser =
