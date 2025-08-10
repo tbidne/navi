@@ -87,7 +87,4 @@ source-repository-package
     location: https://github.com/tbidne/smart-math.git
     tag: fe5befb66274752b4ce7f6cdde2c947cc9eabffc
 
-allow-newer: dbus:filepath
 allow-newer: dbus:template-haskell
-allow-newer: optics-th:template-haskell
-allow-newer: path:hashable
