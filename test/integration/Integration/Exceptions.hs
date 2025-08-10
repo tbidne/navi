@@ -100,7 +100,7 @@ instance
       fmap
         (\b -> MkExceptionEnv a1 a2 (set' #logNamespace b a3) a4 a5 a6)
         (f (a3 ^. #logNamespace))
-  {-# INLINEABLE labelOptic #-}
+  {-# INLINE labelOptic #-}
 
 instance HasEvents ExceptionEnv where
   getEvents = view #events

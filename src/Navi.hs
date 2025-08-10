@@ -99,7 +99,6 @@ runNavi = do
             sendFn <- getLoggerFn
             flushTBQueueA queue >>= traverse_ (sendFn . logStrToBs)
             throwM e
-    {-# INLINEABLE runAllAsync #-}
 
     -- run events and notify threads
     runEvents :: (HasCallStack, Traversable t) => t AnyEvent -> m Void
@@ -111,13 +110,11 @@ runNavi = do
               (Async.mapConcurrently processEvent evts)
           )
           (fmap fst . Async.waitBoth noteThread)
-    {-# INLINEABLE runEvents #-}
 
     logExAndRethrow :: Text -> m a -> m a
     logExAndRethrow prefix io = catchSync io $ \ex -> do
       $(logError) (prefix <> pack (displayException ex))
       throwM ex
-    {-# INLINEABLE logExAndRethrow #-}
 {-# INLINEABLE runNavi #-}
 
 {- HLINT ignore module "Redundant bracket" -}
@@ -168,13 +165,10 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
                 Event.updatePrevTrigger repeatEvent result
                 sendNoteQueue note
 
-    {-# INLINEABLE handleSuccess #-}
-
     handleEventError :: (HasCallStack) => EventError -> m ()
     handleEventError =
       addNamespace "handleEventError"
         . handleErr eventErrToNote
-    {-# INLINEABLE handleEventError #-}
 
     handleSomeException :: (HasCallStack) => SomeException -> m ()
     handleSomeException =
@@ -188,7 +182,6 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
       if blockErrEvent
         then $(logDebug) "Error note blocked"
         else sendNoteQueue (toNote e)
-    {-# INLINEABLE handleErr #-}
 {-# INLINEABLE processEvent #-}
 
 eventErrToNote :: EventError -> NaviNote
@@ -199,7 +192,6 @@ eventErrToNote ex =
       urgency = Just Critical,
       timeout = Nothing
     }
-{-# INLINEABLE eventErrToNote #-}
 
 exToNote :: SomeException -> NaviNote
 exToNote ex =
@@ -209,7 +201,6 @@ exToNote ex =
       urgency = Just Critical,
       timeout = Nothing
     }
-{-# INLINEABLE exToNote #-}
 
 pollNoteQueue ::
   ( HasCallStack,
@@ -270,6 +261,7 @@ getLoggerFn = do
   pure $ maybe putBinary toFile mfileHandle
   where
     toFile h bs = hPut h bs *> hFlush h
+{-# INLINEABLE getLoggerFn #-}
 
 atomicReadWrite ::
   ( HasCallStack,
@@ -307,3 +299,4 @@ atomicReadWrite queue logAction =
   --    as the invariant we care about is _if_ successful read then
   --    successful handle.
   mask $ \restore -> restore (readTBQueueA queue) >>= void . logAction
+{-# INLINEABLE atomicReadWrite #-}

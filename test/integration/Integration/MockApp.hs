@@ -78,7 +78,7 @@ instance
       fmap
         (\_ -> env)
         (f "")
-  {-# INLINEABLE labelOptic #-}
+  {-# INLINE labelOptic #-}
 
 instance HasEvents MockEnv where
   getEvents = view #events

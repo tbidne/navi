@@ -71,4 +71,4 @@ instance
       fmap
         (\b -> MkEnv a1 (set' #logNamespace b a2) a3 a4)
         (f (a2 ^. #logNamespace))
-  {-# INLINEABLE labelOptic #-}
+  {-# INLINE labelOptic #-}

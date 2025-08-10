@@ -65,7 +65,7 @@ instance
       fmap
         (\b -> MkDBusEnv (set' #namespace b a1) a2)
         (f (a1 ^. #namespace))
-  {-# INLINEABLE labelOptic #-}
+  {-# INLINE labelOptic #-}
 
 -- | Creates a 'DBusEnv' from the provided log types and configuration data.
 mkDBusEnv ::

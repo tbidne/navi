@@ -54,7 +54,7 @@ instance
       fmap
         (\b -> MkNotifySendEnv (set' #namespace b a1))
         (f (a1 ^. #namespace))
-  {-# INLINEABLE labelOptic #-}
+  {-# INLINE labelOptic #-}
 
 -- | Creates a 'NotifySendEnv' from the provided log types and configuration
 -- data.
