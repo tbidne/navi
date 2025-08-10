@@ -18,29 +18,33 @@ jobs:
       fail-fast: false
       matrix:
         ghc:
-          - "9.6.6"
-          - "9.8.2"
-          - "9.10.1"
-          - "9.12.1"
+          - vers: "9.6.6"
+            proj_file: ""
+          - vers: "9.8.4"
+            proj_file: ""
+          - vers: "9.10.1"
+            proj_file: "--project-file cabal.ghc9102.project"
+          - vers: "9.12.2"
+            proj_file: ""
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: haskell-actions/setup@v2
         with:
-          ghc-version: ${{ matrix.ghc }}
+          ghc-version: ${{ matrix.ghc.vers }}
 
       - name: Configure
-        run: cabal configure --enable-tests --ghc-options -Werror
+        run: cabal configure ${{ matrix.ghc.proj_file }} --enable-tests --ghc-options -Werror
 
       - name: Compile
-        run: cabal build
+        run: cabal build ${{ matrix.ghc.proj_file }}
 
       - name: Unit Tests
-        run: cabal test unit
+        run: cabal test ${{ matrix.ghc.proj_file }} unit
 
       - name: Integration Tests
-        run: cabal test integration
+        run: cabal test ${{ matrix.ghc.proj_file }} integration
   nix:
     runs-on: "ubuntu-latest"
     steps:

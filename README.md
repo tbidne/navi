@@ -12,9 +12,6 @@
 - [Introduction](#introduction)
 - [Motivation](#motivation)
 - [Requirements](#requirements)
-- [Command-Line Args](#command-line-args)
-  - [Config File](#config-file)
-  - [Config Directory](#config-directory)
 - [Configuration](#configuration)
   - [General Options](#general-options)
   - [Notification Options](#notification-options)
@@ -90,36 +87,6 @@ Navi currently supports:
 * Libnotify
 
   Navi can also use the `notify-send` tool directly. This is largely redundant since `notify-send` itself requires a running DBus notification server, but this option is provided as an alternative.
-
-# Command-Line Args
-
-Navi has the following usage:
-
-```
-Navi: A program for monitoring system status via desktop notifications.
-
-Usage: navi [-c|--config-file PATH] [-v|--version]
-
-  Navi allows one to easily define custom notification 'services' that hook into
-  a running notification server. For example, one can provide a bash script
-  that, say, queries the connection status of a given network device. Navi will
-  periodically run this query and send a desktop notification if the status has
-  changed. See github.com/tbidne/navi#README for full documentation.
-
-Available options:
-  -c,--config-file PATH    Path to config file. Defaults to
-                           <xdg-config>/navi/config.toml.
-
-  -h,--help                Show this help text
-
-Version: 0.1
-```
-
-## Config File
-
-This argument overrides where Navi searches for the configuration file.
-
-The default path to the config file is based on the [XDG config directory](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html). Given `xdg-config`, by default, Navi will look for `<xdg-config>/navi/config.toml` e.g. `~/.config/navi/config.toml`.
 
 # Configuration
 
@@ -384,18 +351,32 @@ If you have never built a haskell program before, [Cabal](#cabal) is probably th
 
 ### Prerequisites
 
-* [`ghcup`](https://www.haskell.org/ghcup/)
+* [`cabal 3.8+`](https://www.haskell.org/cabal/download.html)
+* [`ghc 9.6 - 9.12`](https://gitlab.haskell.org/ghc/ghc/-/wikis/GHC%20Status)
 
-Using `ghcup`, install `cabal 2.4+` and one of:
+The easiest way to install these is generally [`ghcup`](https://www.haskell.org/ghcup/).
 
-- `ghc 9.6`
-- `ghc 9.8`
-- `ghc 9.10`
-- `ghc 9.12`
+The current "blessed" version is `ghc-9.10.2`.
 
 ### Build Navi
 
-Once you have `cabal` and `ghc`, `navi` can be built with `cabal build` or installed globally (i.e. `~/.cabal/bin/`) with `cabal install`.
+Once you have `cabal` and `ghc`, `navi` can be built locally with `cabal build` or installed globally (e.g. `~/.local/bin/navi`) with `cabal install`.
+
+> [!IMPORTANT]
+>
+> Navi requires git information to be available at build time, for the purposes of including some data in the binary (e.g. commit hash). Cabal's vanilla install method interfers with this, though we have a workaround that relies on passing the current directory as an environment variable:
+>
+> ```sh
+> $ export NAVI_HOME=$(pwd); cabal install exe:navi
+> ```
+>
+> Nix does not require such a workaround.
+
+For further reproducibility, an optional freeze files can be used for the "blessed" compiler.
+
+```sh
+cabal build --project-file cabal.ghc<XYZ>.project
+```
 
 ## Nix
 

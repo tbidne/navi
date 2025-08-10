@@ -42,6 +42,20 @@ instance HasLogQueue NotifySendEnv where
 instance HasNoteQueue NotifySendEnv where
   getNoteQueue = view (#coreEnv % #noteQueue)
 
+instance
+  ( k ~ A_Lens,
+    x ~ Namespace,
+    y ~ Namespace
+  ) =>
+  LabelOptic "namespace" k NotifySendEnv NotifySendEnv x y
+  where
+  labelOptic =
+    lensVL $ \f (MkNotifySendEnv a1) ->
+      fmap
+        (\b -> MkNotifySendEnv (set' #namespace b a1))
+        (f (a1 ^. #namespace))
+  {-# INLINEABLE labelOptic #-}
+
 -- | Creates a 'NotifySendEnv' from the provided log types and configuration
 -- data.
 mkNotifySendEnv ::

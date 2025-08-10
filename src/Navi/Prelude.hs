@@ -64,16 +64,6 @@ import Control.Monad.Catch as X
   )
 import Control.Monad.Fail as X (MonadFail (fail))
 import Control.Monad.IO.Class as X (MonadIO (liftIO))
-import Control.Monad.Logger as X
-  ( LogLevel (LevelDebug, LevelError, LevelInfo, LevelWarn),
-    LogStr,
-    MonadLogger (monadLoggerLog),
-    logDebug,
-    logError,
-    logInfo,
-    logOther,
-    logWarn,
-  )
 import Control.Monad.Reader as X
   ( MonadReader (ask, local),
     ReaderT (runReaderT),
@@ -92,7 +82,7 @@ import Data.Function as X (const, flip, id, ($), (.))
 import Data.Functor as X (Functor (fmap), ($>), (<$>), (<&>))
 import Data.Int as X (Int32)
 import Data.Kind as X (Constraint, Type)
-import Data.List as X (all, filter, replicate, zipWith)
+import Data.List as X (all, filter, replicate, zipWith, (++))
 import Data.List.NonEmpty as X (NonEmpty ((:|)))
 import Data.Maybe as X (Maybe (Just, Nothing), fromMaybe, maybe, maybeToList)
 import Data.Monoid as X (Monoid (mconcat, mempty))
@@ -104,6 +94,7 @@ import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text, concat, pack, unpack)
 import Data.Traversable as X (Traversable (traverse))
 import Data.Tuple as X (fst, snd, uncurry)
+import Data.Type.Equality as X (type (~))
 import Data.Void as X (Void, absurd)
 import Data.Word as X (Word16, Word8)
 import Effects.Concurrent.Async as X (MonadAsync)
@@ -131,6 +122,17 @@ import Effects.IORef as X
   ( IORef,
     MonadIORef (modifyIORef', newIORef, readIORef, writeIORef),
   )
+import Effects.Logger as X
+  ( LogLevel (LevelDebug, LevelError, LevelInfo, LevelWarn),
+    LogStr,
+    MonadLogger (monadLoggerLog),
+    logDebug,
+    logError,
+    logInfo,
+    logOther,
+    logWarn,
+  )
+import Effects.Logger.Namespace as X (MonadLoggerNS, Namespace, addNamespace)
 import Effects.System.Terminal as X (MonadTerminal, putStrLn, putTextLn)
 import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
 import GHC.Enum as X (Bounded (maxBound, minBound))
@@ -144,11 +146,13 @@ import GHC.Real as X (Integral (..), fromIntegral)
 import GHC.Show as X (Show (show))
 import GHC.Stack as X (HasCallStack)
 import Optics.Core as X
-  ( AffineTraversal',
+  ( A_Lens,
+    AffineTraversal',
     Iso',
     Lens',
     Traversal',
     lens,
+    lensVL,
     over',
     preview,
     review,
@@ -163,6 +167,7 @@ import Optics.Core as X
     _2,
     _Just,
   )
+import Optics.Label as X (LabelOptic (labelOptic))
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
 import System.IO as X (IO)
 import TOML as X

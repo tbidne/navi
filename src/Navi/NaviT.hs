@@ -9,9 +9,8 @@ module Navi.NaviT
 where
 
 import DBus.Notify qualified as DBusN
-import Effects.LoggerNS
-  ( MonadLoggerNS (getNamespace, localNamespace),
-    addNamespace,
+import Effects.Logger.Namespace
+  ( HasNamespace,
     defaultLogFormatter,
     formatLog,
   )
@@ -26,11 +25,19 @@ import Effects.System.Terminal
         supportsPretty
       ),
   )
-import Effects.Time (MonadTime (getMonotonicTime, getSystemZonedTime))
+import Effects.Time
+  ( MonadTime
+      ( getMonotonicTime,
+        getSystemZonedTime,
+        getTimeZone,
+        loadLocalTZ,
+        utcToLocalZonedTime
+      ),
+  )
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
-  ( HasLogEnv (getLogEnv, localLogEnv),
+  ( HasLogEnv (getLogEnv),
     HasLogQueue (getLogQueue),
   )
 import Navi.Env.DBus (DBusEnv, HasDBusClient (getClient), naviToDBus)
@@ -72,7 +79,10 @@ instance MonadTerminal (NaviT env IO) where
 
 instance MonadTime (NaviT env IO) where
   getSystemZonedTime = liftIO getSystemZonedTime
+  getTimeZone = liftIO . getTimeZone
   getMonotonicTime = liftIO getMonotonicTime
+  utcToLocalZonedTime = liftIO . utcToLocalZonedTime
+  loadLocalTZ = liftIO loadLocalTZ
 
 -- Concrete IO rather than MonadIO so that we can write instances over
 -- other MonadIOs (i.e. in tests)
@@ -104,7 +114,8 @@ instance MonadNotify (NaviT NotifySendEnv IO) where
 -- other MonadIOs (i.e. in tests)
 instance
   ( HasLogEnv env,
-    HasLogQueue env
+    HasLogQueue env,
+    HasNamespace (NaviT env IO) env k
   ) =>
   MonadLogger (NaviT env IO)
   where
@@ -116,15 +127,6 @@ instance
       writeTBQueueA logQueue formatted
     where
       formatter = set' #threadLabel True (defaultLogFormatter loc)
-
-instance
-  ( HasLogEnv env,
-    HasLogQueue env
-  ) =>
-  MonadLoggerNS (NaviT env IO)
-  where
-  getNamespace = asks (view #logNamespace . getLogEnv)
-  localNamespace f = local (localLogEnv (over' #logNamespace f))
 
 -- | Runs 'NaviT'.
 runNaviT :: NaviT env m a -> env -> m a

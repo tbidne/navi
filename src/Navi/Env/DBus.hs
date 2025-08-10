@@ -53,6 +53,20 @@ instance HasNoteQueue DBusEnv where
 instance HasDBusClient DBusEnv where
   getClient = view #dbusClient
 
+instance
+  ( k ~ A_Lens,
+    x ~ Namespace,
+    y ~ Namespace
+  ) =>
+  LabelOptic "namespace" k DBusEnv DBusEnv x y
+  where
+  labelOptic =
+    lensVL $ \f (MkDBusEnv a1 a2) ->
+      fmap
+        (\b -> MkDBusEnv (set' #namespace b a1) a2)
+        (f (a1 ^. #namespace))
+  {-# INLINEABLE labelOptic #-}
+
 -- | Creates a 'DBusEnv' from the provided log types and configuration data.
 mkDBusEnv ::
   (HasCallStack, MonadIO m, MonadSTM m) =>

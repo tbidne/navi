@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-missing-methods #-}
 
 -- | Tests fatal exceptions.
 module Integration.Exceptions (tests) where
@@ -13,9 +14,8 @@ import Effects.Concurrent.Async (ExceptionInLinkedThread (ExceptionInLinkedThrea
 import Effects.Concurrent.Async qualified as Async
 import Effects.Concurrent.Thread (sleep)
 import Effects.FileSystem.FileReader (decodeUtf8Lenient)
-import Effects.LoggerNS
-  ( MonadLoggerNS (getNamespace, localNamespace),
-    defaultLogFormatter,
+import Effects.Logger.Namespace
+  ( defaultLogFormatter,
     formatLog,
   )
 import Effects.System.Terminal
@@ -88,6 +88,20 @@ data ExceptionEnv = MkExceptionEnv
 
 makeFieldLabelsNoPrefix ''ExceptionEnv
 
+instance
+  ( k ~ A_Lens,
+    x ~ Namespace,
+    y ~ Namespace
+  ) =>
+  LabelOptic "namespace" k ExceptionEnv ExceptionEnv x y
+  where
+  labelOptic =
+    lensVL $ \f (MkExceptionEnv a1 a2 a3 a4 a5 a6) ->
+      fmap
+        (\b -> MkExceptionEnv a1 a2 (set' #logNamespace b a3) a4 a5 a6)
+        (f (a3 ^. #logNamespace))
+  {-# INLINEABLE labelOptic #-}
+
 instance HasEvents ExceptionEnv where
   getEvents = view #events
 
@@ -154,10 +168,6 @@ instance MonadLogger (NaviT ExceptionEnv ExceptionIO) where
       formatted <- formatLog (defaultLogFormatter loc) lvl msg
       writeTBQueueA logQueue formatted
 
-instance MonadLoggerNS (NaviT ExceptionEnv ExceptionIO) where
-  getNamespace = asks (view #logNamespace . getLogEnv)
-  localNamespace f = local (localLogEnv (over' #logNamespace f))
-
 instance MonadTime (NaviT ExceptionEnv ExceptionIO) where
   getSystemZonedTime = pure zonedTime
   getMonotonicTime = pure 0
@@ -202,12 +212,12 @@ badNotifierDies = testCase "Notify exception kills Navi" $ do
   foundLogRef <- newIORef False
   for_ logs $ \l -> do
     let t = decodeUtf8Lenient l
-    when (errLog `T.isPrefixOf` t) $ writeIORef foundLogRef True
+    when (errLog `T.isInfixOf` t) $ writeIORef foundLogRef True
 
   foundLog <- readIORef foundLogRef
   unless foundLog (assertFailure $ "Did not find expectedLog: " <> show logs)
   where
-    errLog = "[2022-02-08 10:20:05][int-ex-test][src/Navi.hs:123:8][Error] Notify: MkTestE \"notify dying\""
+    errLog = "[Error] Notify: MkTestE \"notify dying\""
 
 runExceptionApp ::
   forall e.

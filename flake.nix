@@ -31,6 +31,20 @@
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    kairos = {
+      url = "github:tbidne/kairos";
+
+      inputs.nix-hs-utils.follows = "nix-hs-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+
+      inputs.algebra-simple.follows = "algebra-simple";
+      inputs.bounds.follows = "bounds";
+      inputs.smart-math.follows = "smart-math";
+      inputs.exception-utils.follows = "exception-utils";
+      inputs.fs-utils.follows = "fs-utils";
+      inputs.monad-effects.follows = "monad-effects";
+    };
     monad-effects = {
       url = "github:tbidne/monad-effects";
       inputs.flake-parts.follows = "flake-parts";
@@ -53,10 +67,10 @@
       inputs.bounds.follows = "bounds";
       inputs.exception-utils.follows = "exception-utils";
       inputs.fs-utils.follows = "fs-utils";
+      inputs.kairos.follows = "kairos";
       inputs.monad-effects.follows = "monad-effects";
       inputs.si-bytes.follows = "si-bytes";
       inputs.smart-math.follows = "smart-math";
-      inputs.time-conv.follows = "time-conv";
     };
     relative-time = {
       url = "github:tbidne/relative-time";
@@ -85,19 +99,6 @@
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
     };
-    time-conv = {
-      url = "github:tbidne/time-conv";
-      inputs.flake-parts.follows = "flake-parts";
-      inputs.nix-hs-utils.follows = "nix-hs-utils";
-      inputs.nixpkgs.follows = "nixpkgs";
-
-      inputs.algebra-simple.follows = "algebra-simple";
-      inputs.bounds.follows = "bounds";
-      inputs.exception-utils.follows = "exception-utils";
-      inputs.fs-utils.follows = "fs-utils";
-      inputs.monad-effects.follows = "monad-effects";
-      inputs.smart-math.follows = "smart-math";
-    };
   };
   outputs =
     inputs@{
@@ -112,23 +113,20 @@
       perSystem =
         { pkgs, ... }:
         let
-          ghc-version = "ghc9101";
+          ghc-version = "ghc9102";
           compiler = pkgs.haskell.packages."${ghc-version}".override {
             overrides =
               final: prev:
               {
-                # The latest dbus in nixpkgs, dbus_1_3_8, has compilation
-                # problems with doJailbreak, which we need for filepath.
-                # Hence the direct call here.
-                dbus = (
+                gitrev-typed = (
                   final.callHackageDirect {
-                    pkg = "dbus";
-                    ver = "1.3.10";
-                    sha256 = "sha256-Of2aSeCzi5+LHyR+6aPxlCW/Oa8QfjwKrIieqs2h6YE=";
+                    pkg = "gitrev-typed";
+                    ver = "0.1";
+                    sha256 = "sha256-s7LEekR7NLe3CNhD/8uChnh50eGfaArrrtc5hoCtJ1A=";
                   } { }
                 );
 
-                network = prev.network_3_2_4_0;
+                kairos-core = nix-hs-utils.mkRelLib inputs.kairos final "lib/core";
 
                 path = hlib.dontCheck prev.path_0_9_6;
               }
@@ -141,14 +139,13 @@
                 "relative-time"
                 "si-bytes"
                 "smart-math"
-                "time-conv"
               ]
               // nix-hs-utils.mkRelLibs "${monad-effects}/lib" final [
                 "effects-async"
                 "effects-env"
                 "effects-fs"
                 "effects-ioref"
-                "effects-logger-ns"
+                "effects-logger"
                 "effects-optparse"
                 "effects-stm"
                 "effects-time"
@@ -173,6 +170,14 @@
                 (hlib.dontCheck compiler.haskell-language-server)
                 pkgs.nixfmt-rfc-style
               ];
+
+              modifier =
+                drv:
+                drv.overrideAttrs (oldAttrs: {
+                  NAVI_HASH = "${self.rev or self.dirtyRev}";
+                  NAVI_MODIFIED = "${builtins.toString self.lastModified}";
+                  NAVI_SHORT_HASH = "${self.shortRev or self.dirtyShortRev}";
+                });
             };
           compilerPkgs = {
             inherit compiler pkgs;

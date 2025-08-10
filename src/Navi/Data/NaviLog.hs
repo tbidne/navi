@@ -7,7 +7,6 @@ module Navi.Data.NaviLog
   )
 where
 
-import Effects.LoggerNS (Namespace)
 import Navi.Prelude
 
 -- | Holds logging env data.

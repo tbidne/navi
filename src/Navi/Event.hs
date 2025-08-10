@@ -20,7 +20,6 @@ module Navi.Event
   )
 where
 
-import Effects.LoggerNS (MonadLoggerNS, addNamespace)
 import Navi.Effects (MonadSystemInfo (query))
 import Navi.Event.Types
   ( AnyEvent (..),
@@ -38,8 +37,7 @@ import Navi.Prelude
 -- 2. Returns the parsed result.
 runEvent ::
   ( HasCallStack,
-    MonadLoggerNS m,
-    MonadSTM m,
+    MonadLoggerNS m env k,
     MonadSystemInfo m,
     Show result
   ) =>
@@ -63,7 +61,7 @@ runEvent event = addNamespace "runEvent" $ do
 --    stored in our @ref@.
 blockRepeat ::
   ( Eq a,
-    MonadLoggerNS m,
+    MonadLoggerNS m env k,
     MonadIORef m,
     Show a
   ) =>
@@ -95,7 +93,7 @@ blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
 -- 3. 'AllowErrNote' 'NoRepeats': block only if we have sent a notifcation
 --    for this error before.
 blockErr ::
-  ( MonadLoggerNS m,
+  ( MonadLoggerNS m env k,
     MonadIORef m
   ) =>
   ErrorNote ->

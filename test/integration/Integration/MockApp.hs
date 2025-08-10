@@ -9,7 +9,6 @@ module Integration.MockApp
   )
 where
 
-import Effects.LoggerNS (MonadLoggerNS (getNamespace, localNamespace))
 import Effects.System.Terminal
   ( MonadTerminal
       ( getChar,
@@ -67,6 +66,20 @@ data MockEnv = MkMockEnv
 
 makeFieldLabelsNoPrefix ''MockEnv
 
+instance
+  ( k ~ A_Lens,
+    x ~ Namespace,
+    y ~ Namespace
+  ) =>
+  LabelOptic "namespace" k MockEnv MockEnv x y
+  where
+  labelOptic =
+    lensVL $ \f env ->
+      fmap
+        (\_ -> env)
+        (f "")
+  {-# INLINEABLE labelOptic #-}
+
 instance HasEvents MockEnv where
   getEvents = view #events
 
@@ -115,10 +128,6 @@ instance MonadTerminal (NaviT MockEnv IntTestIO) where
   putStr = liftIO . putStr
   putStrLn = liftIO . putStrLn
   supportsPretty = liftIO supportsPretty
-
-instance MonadLoggerNS (NaviT MockEnv IntTestIO) where
-  getNamespace = pure ""
-  localNamespace _ = id
 
 instance MonadNotify (NaviT MockEnv IntTestIO) where
   sendNote note =

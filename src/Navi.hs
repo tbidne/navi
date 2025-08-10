@@ -17,11 +17,7 @@ import Data.Text qualified as T
 import Effects.Concurrent.Async qualified as Async
 import Effects.Concurrent.STM (flushTBQueueA)
 import Effects.Concurrent.Thread (MonadThread (labelThread, myThreadId), sleep)
-import Effects.LoggerNS
-  ( MonadLoggerNS,
-    addNamespace,
-    logStrToBs,
-  )
+import Effects.Logger.Namespace (logStrToBs)
 import Effects.System.Terminal (MonadTerminal (putBinary))
 import Navi.Data.NaviNote
   ( NaviNote
@@ -53,7 +49,7 @@ import Navi.Utils qualified as U
 
 -- | Entry point for the application.
 runNavi ::
-  forall env m.
+  forall env m k.
   ( HasCallStack,
     HasEvents env,
     HasLogEnv env,
@@ -62,14 +58,13 @@ runNavi ::
     MonadAsync m,
     MonadHandleWriter m,
     MonadIORef m,
-    MonadLoggerNS m,
+    MonadLoggerNS m env k,
     MonadMask m,
     MonadNotify m,
     MonadSTM m,
     MonadSystemInfo m,
     MonadTerminal m,
-    MonadThread m,
-    MonadReader env m
+    MonadThread m
   ) =>
   m Void
 runNavi = do
@@ -128,13 +123,12 @@ runNavi = do
 {- HLINT ignore module "Redundant bracket" -}
 
 processEvent ::
-  forall m env.
+  forall m env k.
   ( HasCallStack,
     HasNoteQueue env,
     MonadCatch m,
     MonadIORef m,
-    MonadLoggerNS m,
-    MonadReader env m,
+    MonadLoggerNS m env k,
     MonadSTM m,
     MonadSystemInfo m,
     MonadThread m
@@ -221,9 +215,8 @@ pollNoteQueue ::
   ( HasCallStack,
     HasNoteQueue env,
     MonadCatch m,
-    MonadLoggerNS m,
+    MonadLoggerNS m env k,
     MonadNotify m,
-    MonadReader env m,
     MonadSTM m
   ) =>
   m Void
@@ -248,10 +241,9 @@ pollLogQueue ::
   ( HasCallStack,
     HasLogQueue env,
     HasLogEnv env,
-    MonadLoggerNS m,
+    MonadLoggerNS m env k,
     MonadHandleWriter m,
     MonadMask m,
-    MonadReader env m,
     MonadSTM m,
     MonadTerminal m
   ) =>

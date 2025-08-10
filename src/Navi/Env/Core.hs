@@ -58,3 +58,17 @@ instance HasLogQueue Env where
 
 instance HasNoteQueue Env where
   getNoteQueue = view #noteQueue
+
+instance
+  ( k ~ A_Lens,
+    x ~ Namespace,
+    y ~ Namespace
+  ) =>
+  LabelOptic "namespace" k Env Env x y
+  where
+  labelOptic =
+    lensVL $ \f (MkEnv a1 a2 a3 a4) ->
+      fmap
+        (\b -> MkEnv a1 (set' #logNamespace b a2) a3 a4)
+        (f (a2 ^. #logNamespace))
+  {-# INLINEABLE labelOptic #-}
