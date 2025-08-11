@@ -52,6 +52,7 @@ import Navi.Services.Types
   )
 import Navi.Utils qualified as U
 import System.Environment qualified as SysEnv
+import System.IO (FilePath)
 import Test.Tasty qualified as Tasty
 
 data BadThread
@@ -225,10 +226,25 @@ runExceptionApp badThread = do
     Right (Left _) -> error "Exception test timed out!"
     Right (Right _) -> error "Navi finished successfully, impossible!"
   where
-    args = ["-c", path]
+    args = ["-c", configPath]
 
-    path =
-      decodeLenient
-        $ [osp|test|]
-        </> [osp|integration|]
-        </> [osp|exceptions.toml|]
+configPath :: FilePath
+configPath =
+  decodeLenient
+    $ [osp|test|]
+    </> [osp|integration|]
+    </> [osp|exceptions|]
+    <> suffix
+    <> [osp|.toml|]
+
+{- ORMOLU_DISABLE -}
+
+suffix :: OsPath
+suffix =
+#if OSX
+  [osp|_osx|]
+#else
+  [osp|_linux|]
+#endif
+
+{- ORMOLU_ENABLE -}

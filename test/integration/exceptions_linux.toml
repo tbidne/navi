@@ -1,3 +1,5 @@
+note-system = "notify-send"
+
 [logging]
 severity = "debug"
 location = "stdout"

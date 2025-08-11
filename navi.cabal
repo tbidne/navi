@@ -14,7 +14,11 @@ description:
   Please see the README at https://github.com/tbidne/navi/#readme
 
 category:           System, Notifications
-extra-source-files: README.md
+extra-source-files:
+  README.md
+  test/integration/exceptions_linux.toml
+  test/integration/exceptions_osx.toml
+
 extra-doc-files:    CHANGELOG.md
 
 source-repository head

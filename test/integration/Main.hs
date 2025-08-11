@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Entrypoint for integration tests. These test the behavior regarding
@@ -123,8 +124,7 @@ runMock maxSeconds config = do
   where
     config' =
       T.unlines
-        [ "[logging]",
-          "location = \"stdout\"",
+        [ headerConfig,
           config
         ]
 
@@ -202,3 +202,31 @@ assertNoteRange l r expected actual = do
   for_ actual $ \a -> expected @=? a
   where
     numActual = length actual
+
+headerConfig :: Text
+headerConfig =
+  T.unlines
+    [ notifyConfig,
+      "[logging]",
+      "location = \"stdout\""
+    ]
+
+notifyConfig :: Text
+notifyConfig =
+  mconcat
+    [ "note-system = \"",
+      notifySystem,
+      "\""
+    ]
+
+{- ORMOLU_DISABLE -}
+
+notifySystem :: Text
+notifySystem =
+#if OSX
+  "apple-script"
+#else
+  "notify-send"
+#endif
+
+{- ORMOLU_ENABLE -}

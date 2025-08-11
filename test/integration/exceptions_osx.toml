@@ -1,0 +1,18 @@
+note-system = "apple-script"
+
+[logging]
+severity = "debug"
+location = "stdout"
+
+[[single]]
+name = "exception test"
+poll-interval = 1
+repeat-events = true
+command = ""
+trigger = ""
+
+[single.note]
+summary = ""
+body = ""
+timeout = 2
+
