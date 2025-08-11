@@ -33,7 +33,8 @@ import Navi.Services.Types
         BatteryStatus,
         Multiple,
         NetworkInterface,
-        Single
+        Single,
+        Switch
       ),
   )
 import Pythia.Control.Exception (CommandException (MkCommandException))
@@ -142,6 +143,7 @@ instance MonadSystemInfo MockAppT where
     throwM $ MkCommandException "nmcli" "Nmcli error"
   -- Constant service. Can test duplicate behavior.
   query (Single _) = pure "single trigger"
+  query (Switch _) = pure "switch trigger"
   -- Constant service. Can test duplicate behavior.
   query (Multiple _) = pure "multiple result"
 

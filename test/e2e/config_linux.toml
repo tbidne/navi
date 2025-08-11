@@ -5,7 +5,7 @@ severity = "error"
 location = "stdout"
 
 [[single]]
-name = "even-seconds"
+name = "even-single"
 poll-interval = 3
 repeat-events = true
 command = """
@@ -19,6 +19,25 @@ command = """
 trigger = "true"
 
 [single.note]
-summary = "Even"
+summary = "Even Single"
 body = "Seconds are even!"
+timeout = 2
+
+[[switch]]
+name = "even-switch"
+poll-interval = 3
+repeat-events = true
+command = """
+  sec=`date +%S`;
+  if [[ \"$sec % 2\" -eq 0 ]]; then
+    echo -n "true"
+  else
+    echo -n "false"
+  fi
+"""
+trigger = "true"
+
+[switch.note]
+summary = "Even Switch"
+body = "Seconds are even"
 timeout = 2

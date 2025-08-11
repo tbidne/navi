@@ -1,9 +1,23 @@
+# Sets the notification system. Options are:
+#
+# Linux: "dbus" (default), "notify-send".
+# Macos: "apple-script" (default).
 note-system = "dbus"
 
+# Some logging options.
 [logging]
+# Log level: Options are "debug", "info", "error".
 severity = "debug"
+# How to handle the log file. E.g. "warn 10gb" will print a
+# warning when the log file reaches 10gb. "delete 20 mb" will instead
+# delete the file. Note that this only applies to startup i.e. the log
+# file can grow arbitrarily large while navi is running.
 size-mode = "delete 100.5 mb"
+# Log location. Can be a file or "stdout". Defaults to the XDG state
+# directory i.e. ~/.local/state/navi/<timestamp>.log
+#location = "stdout"
 
+# Built in battery percentage alerts.
 [battery-percentage]
 repeat-events = false
 error-events = "no-repeats"
@@ -29,8 +43,12 @@ urgency = "critical"
 percent = 5
 urgency = "critical"
 
-# Send alert when the current minute is even
-[[single]]
+# Custom "switch" event i.e. sends an update every time the status changes.
+# This is based on if the output equals the trigger ("true", in this case)
+# or not. That is, all other non-error outputs are considered 'false'.
+#
+# Send alert when the current minute changes its even/odd parity.
+[[switch]]
 poll-interval = 10
 command = """
   min=`date +%M`;
@@ -42,11 +60,16 @@ command = """
 """
 trigger = "true"
 
-[single.note]
+[switch.note]
 summary = "Even/Odd"
-body = "We're even, yay!"
+# Optional body, rendered as "Minute is even: true/false". Otherwise
+# defaults to "Status: true/false".
+body = "Minute is even"
 timeout = 10
 
+# Custom "single" event. Similar to "switch", though notifications are only
+# sent for "true" i.e. when the trigger is activated.
+#
 # requires lm-sensors
 [[single]]
 command = """
@@ -74,6 +97,7 @@ body = "We're hot!"
 urgency = "critical"
 timeout = 10
 
+# Built-in network notifications, based on when the connection state changes.
 [[net-interface]]
 app = "nmcli"
 poll-interval = 30

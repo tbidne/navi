@@ -20,6 +20,7 @@ data ServiceType result where
   BatteryStatus :: BatteryApp -> ServiceType BatteryStatus
   NetworkInterface :: Device -> NetInterfaceApp -> ServiceType NetInterface
   Single :: Command -> ServiceType Text
+  Switch :: Command -> ServiceType Text
   Multiple :: Command -> ServiceType Text
 
 deriving stock instance Show (ServiceType result)

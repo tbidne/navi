@@ -4,6 +4,7 @@
 -- | Provides the 'NaviNote' type, representing notifications.
 module Navi.Data.NaviNote
   ( NaviNote (..),
+    urgencyLevelOptDecoder,
     Timeout (..),
     timeoutOptDecoder,
   )

@@ -25,6 +25,7 @@
       - [Network Interface](#network-interface)
     - [Custom](#custom)
       - [Single](#single)
+      - [Switch](#switch)
       - [Multiple](#multiple)
 - [Installation](#installation)
 - [Building](#building)
@@ -255,6 +256,56 @@ This service sends a single notification based on an arbitrary command.
 ##### Example
 
 ```toml
+[[single]]
+command = """
+  temp_res=$(sensors | head -n 3 | tail -n 1)
+  regex="temp1:\\s*\\+([0-9]+)\\.[0-9]{0,2}°[C|F]"
+
+  if [[ $temp_res =~ $regex ]]; then
+    temp="${BASH_REMATCH[1]}"
+    # not actually that hot...
+    if [[ $temp -gt 20 ]]; then
+      echo "true"
+    else
+      echo "false"
+    fi
+  else
+    echo "couldn't parse: ${temp_res}"
+    exit 1
+  fi
+"""
+trigger = "true"
+
+[single.note]
+summary = "Temperature"
+body = "We're hot!"
+urgency = "critical"
+timeout = 10
+```
+
+#### Switch
+
+This service sends a single notification based on an arbitrary command. Like [single](#single), except it considers triggers to be both _positive_ and _negative_ i.e. will send notifactions whenever the status changes.
+
+##### Specific Options
+
+* `switch.command`: Command literal or path to a script.
+* `switch.name`: Optional name to be used in logging.
+* `switch.trigger`: Result that triggers the notification.
+
+##### General Options
+
+* `switch.poll-interval`: Defaults to 30 seconds.
+* `switch.repeat-events`
+* `switch.error-events`
+* `switch.note.summary`
+* `switch.note.body`
+* `switch.note.urgency`
+* `switch.note.timeout`
+
+##### Example
+
+```toml
 # Send alert when the current minute is even
 [[single]]
 poll-interval = 10
@@ -270,7 +321,7 @@ trigger = "true"
 
 [single.note]
 summary = "Even/Odd"
-body = "We're even, yay!"
+body = "Minute is even"
 timeout = 10
 ```
 

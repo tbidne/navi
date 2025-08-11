@@ -15,7 +15,8 @@ import Navi.Services.Types
         BatteryStatus,
         Multiple,
         NetworkInterface,
-        Single
+        Single,
+        Switch
       ),
   )
 import Navi.Utils qualified as U
@@ -46,8 +47,9 @@ instance MonadSystemInfo IO where
       rethrowPythia "Battery Status" $ view #status <$> Pythia.queryBattery bp
     NetworkInterface device cp ->
       rethrowPythia "NetInterface" $ Pythia.queryNetInterface device cp
-    Single cmd -> rethrowPythia "Single" $ querySingle cmd
-    Multiple cmd -> rethrowPythia "Multiple" $ queryMultiple cmd
+    Single cmd -> rethrowPythia "Single" $ querySimple cmd
+    Switch cmd -> rethrowPythia "Switch" $ querySimple cmd
+    Multiple cmd -> rethrowPythia "Multiple" $ querySimple cmd
 
 rethrowPythia :: Text -> IO a -> IO a
 rethrowPythia n io =
@@ -63,34 +65,15 @@ instance (MonadSystemInfo m) => MonadSystemInfo (ReaderT e m) where
   query = lift . query
   {-# INLINEABLE query #-}
 
-queryMultiple :: Command -> IO Text
-queryMultiple cmd =
-  let shellApp = multipleShellApp cmd
+querySimple :: Command -> IO Text
+querySimple cmd = do
+  let shellApp = mkApp cmd
    in T.strip <$> ShellApp.runSimple shellApp
 
-multipleShellApp :: (Applicative f) => Command -> SimpleShell f EventError Text
-multipleShellApp cmd =
+mkApp :: (Applicative f) => Command -> SimpleShell f EventError Text
+mkApp cmd =
   MkSimpleShell
     { command = cmd,
       isSupported = pure True,
-      parser = parseMultiple
+      parser = Right
     }
-
-parseMultiple :: Text -> Either EventError Text
-parseMultiple = Right
-
-querySingle :: Command -> IO Text
-querySingle cmd = do
-  let shellApp = singleShellApp cmd
-   in T.strip <$> ShellApp.runSimple shellApp
-
-singleShellApp :: (Applicative f) => Command -> SimpleShell f EventError Text
-singleShellApp cmd =
-  MkSimpleShell
-    { command = cmd,
-      isSupported = pure True,
-      parser = parseSingle
-    }
-
-parseSingle :: Text -> Either EventError Text
-parseSingle = Right
