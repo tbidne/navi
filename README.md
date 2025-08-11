@@ -104,7 +104,7 @@ Navi is configured via a toml file, by default located at `<xdg-config>/navi/con
 
 ## General Options
 
-* `note-system`: Optional. One of `["dbus"|"notify-send"]`. Defaults to `"dbus"`.
+* `note-system`: Optional. One of `["apple-script"|"dbus"|"notify-send"]`. Defaults to `"apple-script"` on macos, `"dbus"` on linux.
 * `logging.severity`: Optional. One of `["debug"|"info"|"error"]`. Controls the logging level. Defaults to `error`.
 * `logging.location`: Optional. Either `"default"`, `"stdout"` or `"<filename>"`. No option or `default` uses `<xdg-state>/navi/<timestamp>.log` e.g. `~/.local/state/navi/<timestamp>.log`.
 * `logging.size-mode`: Optional. Sets a size threshold for the file log directory, upon which we either print a warning or delete all prior logs, if the threshold is exceeded. The `SIZE` should include the value and units e.g. `warn 10 mb`, `warn 5 gigabytes`, `delete 20.5B`. Defaults to `delete 50 mb`. This only affects the _default_ log path e.g. `~/.local/state/navi`.
@@ -133,7 +133,7 @@ The full list of notification options are:
 
 Individual services have their own options, but there are a few that are common to most.
 
-* `poll-interval`: Optional. One of `[NATURAL | STRING]`. The provided interval be either a raw natural (interpreted as seconds), or a "time string" e.g. `1d2m3h4s`, `3h20s`. Determines how often a service is polled.
+* `poll-interval`: Optional. One of `[NATURAL | STRING]`. The provided interval must be either a raw natural (interpreted as seconds), or a "time string" e.g. `1d2m3h4s`, `3h20s`. Determines how often a service is polled.
 * `repeat-events`: One of `[true|false]`. Determines if we send off the same notification twice in a row. Defaults to `false` (i.e. no repeats) unless stated otherwise.
 * `error-events`: One of `["none"|"repeats"|"no-repeats"]`. Determines if we send off notifications for errors, and how we handle repeats. Defaults to `"no-repeats"` unless stated otherwise i.e. we send error notifications but no repeats.
 
@@ -312,7 +312,7 @@ This service sends a single notification based on an arbitrary command. Like [si
 
 ```toml
 # Send alert when the current minute is even
-[[single]]
+[[switch]]
 poll-interval = 10
 command = """
   min=`date +%M`;
@@ -324,7 +324,7 @@ command = """
 """
 trigger = "true"
 
-[single.note]
+[switch.note]
 summary = "Even/Odd"
 body = "Minute is even"
 timeout = 10
