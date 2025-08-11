@@ -59,8 +59,7 @@ gitDataFromGitQ = do
       [[osstr|log|], [osstr|HEAD|], [osstr|-1|], [osstr|--format=%cs|]]
       IdxNotUsed
   h <- GRT.gitHashQ
-  sh <- GRT.gitShortHashQ
-  pure $ liftA3 (,,) d h sh
+  liftA3 (,,) d h <$> GRT.gitShortHashQ
 
 -- | Backup for when we cannot use git e.g. nix. We instead get the data
 -- from environment variables:

@@ -30,7 +30,7 @@ import System.IO (FilePath)
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit (testCase)
 
-data TestEnv = MkTestEnv
+newtype TestEnv = MkTestEnv
   { coreEnv :: Env
   }
 
@@ -86,7 +86,6 @@ instance MonadLogger TestIO where
 
 instance MonadNotify TestIO where
   sendNote = hoistNaviT . sendNote
-    where
 
 hoistNaviT :: NaviT Env IO a -> TestIO a
 hoistNaviT (MkNaviT r) = MkTestIO $ ReaderT $ \env -> runReaderT r (env ^. #coreEnv)
@@ -101,7 +100,7 @@ instance
   labelOptic =
     lensVL $ \f env ->
       fmap
-        (\_ -> env)
+        (const env)
         (f "")
   {-# INLINE labelOptic #-}
 

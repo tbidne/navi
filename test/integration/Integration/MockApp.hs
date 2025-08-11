@@ -69,7 +69,7 @@ instance
   labelOptic =
     lensVL $ \f env ->
       fmap
-        (\_ -> env)
+        (const env)
         (f "")
   {-# INLINE labelOptic #-}
 
