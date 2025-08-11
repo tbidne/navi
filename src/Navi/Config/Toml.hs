@@ -14,7 +14,7 @@ import Data.Char qualified as Ch
 import Data.Text qualified as T
 import FileSystem.OsPath (encodeFail)
 import GHC.Real (truncate)
-import Navi.Config.Phase (ConfigPhase (ConfigPhaseConfig))
+import Navi.Config.Phase (ConfigPhase (ConfigPhaseToml))
 import Navi.Config.Types
   ( FilesSizeMode (FilesSizeModeDelete, FilesSizeModeWarn),
     LogLoc (DefPath, File, Stdout),
@@ -33,7 +33,7 @@ import Navi.Utils (getFieldOptArrayOf)
 -- | 'ConfigToml' holds the data that is defined in the configuration file.
 data ConfigToml = MkConfigToml
   { logToml :: Maybe Logging,
-    noteSystemToml :: Maybe (NoteSystem ConfigPhaseConfig),
+    noteSystemToml :: Maybe (NoteSystem ConfigPhaseToml),
     singleToml :: [SingleToml],
     switchToml :: [SwitchToml],
     multipleToml :: [MultipleToml],
@@ -89,7 +89,7 @@ locationDecoder =
     "stdout" -> pure Stdout
     f -> File <$> encodeFail f
 
-noteSystemDecoder :: Decoder (NoteSystem ConfigPhaseConfig)
+noteSystemDecoder :: Decoder (NoteSystem ConfigPhaseToml)
 noteSystemDecoder =
   tomlDecoder >>= \case
     "apple-script" -> pure AppleScript

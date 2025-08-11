@@ -3,6 +3,9 @@ module Navi.Config.Phase
   )
 where
 
+-- | Phase index for config data.
 data ConfigPhase
-  = ConfigPhaseConfig
+  = -- | Toml phase.
+    ConfigPhaseToml
+    -- | Env phase.
   | ConfigPhaseEnv

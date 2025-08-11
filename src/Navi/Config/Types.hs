@@ -26,7 +26,7 @@ import DBus.Client qualified as DBus
 import Data.Bytes (Size (M))
 import Data.Bytes qualified as Bytes
 import Data.List.NonEmpty ()
-import Navi.Config.Phase (ConfigPhase (ConfigPhaseConfig, ConfigPhaseEnv))
+import Navi.Config.Phase (ConfigPhase (ConfigPhaseToml, ConfigPhaseEnv))
 import Navi.Event (AnyEvent)
 import Navi.Prelude
 
@@ -61,7 +61,7 @@ makeFieldLabelsNoPrefix ''Logging
 
 type DBusF :: ConfigPhase -> Type
 type family DBusF p where
-  DBusF ConfigPhaseConfig = ()
+  DBusF ConfigPhaseToml = ()
   DBusF ConfigPhaseEnv = DBus.Client
 
 -- | Configuration for notification systems.
@@ -75,12 +75,12 @@ data NoteSystem p
   | -- | For use with the notify-send tool.
     NotifySend
 
-deriving stock instance Eq (NoteSystem ConfigPhaseConfig)
+deriving stock instance Eq (NoteSystem ConfigPhaseToml)
 
-deriving stock instance Show (NoteSystem ConfigPhaseConfig)
+deriving stock instance Show (NoteSystem ConfigPhaseToml)
 
 -- | Default notification system i.e. DBus for linux, AppleScript for osx.
-defaultNoteSystem :: NoteSystem ConfigPhaseConfig
+defaultNoteSystem :: NoteSystem ConfigPhaseToml
 #if OSX
 defaultNoteSystem = AppleScript
 #else
@@ -109,7 +109,7 @@ data Config = MkConfig
     -- | Logging configuration.
     logging :: Logging,
     -- | The notification system to use.
-    noteSystem :: NoteSystem ConfigPhaseConfig
+    noteSystem :: NoteSystem ConfigPhaseToml
   }
   deriving stock (Show)
 
