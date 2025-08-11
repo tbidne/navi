@@ -60,9 +60,9 @@ testDuplicates = testCase "Send duplicate notifications" $ do
   mockEnv <- runMock 3 (singleEventConfig "repeat-events = true")
 
   sentNotes <- mockEnvToNotes mockEnv
-  expected @=? sentNotes
+  assertNoteRange 3 5 expected sentNotes
   where
-    expected = replicate 4 $ MkNaviNote "Single" (Just "body") Nothing Nothing
+    expected = MkNaviNote "Single" (Just "body") Nothing Nothing
 
 testNoDuplicates :: TestTree
 testNoDuplicates = testCase "Does not send duplicate notifications" $ do
@@ -96,9 +96,9 @@ testSendsMultipleErrs = testCase "Sends multiple errors" $ do
   mockEnv <- runMock 3 (netInterfaceEventConfig "error-events = \"repeats\"")
 
   sentNotes <- mockEnvToNotes mockEnv
-  expected @=? sentNotes
+  assertNoteRange 3 5 expected sentNotes
   where
-    expected = replicate 4 $ MkNaviNote "Exception" (Just body) (Just Critical) Nothing
+    expected = MkNaviNote "Exception" (Just body) (Just Critical) Nothing
     body = "Pythia exception: Command exception. Command: <nmcli>. Error: <Nmcli error>"
 
 testSendExceptionDies :: TestTree
@@ -192,3 +192,13 @@ mockEnvToNotes :: MockEnv -> IO [NaviNote]
 mockEnvToNotes mockEnv = do
   sentNotes <- readIORef $ mockEnv ^. #sentNotes
   pure $ filter ((/= "Navi") . view #summary) sentNotes
+
+-- For when the number of received notest is non-deterministic
+-- (i.e. based on timing).
+assertNoteRange :: Int -> Int -> NaviNote -> [NaviNote] -> IO ()
+assertNoteRange l r expected actual = do
+  assertBool (show l ++ " <= " ++ show numActual) (l <= numActual)
+  assertBool (show numActual ++ " <= " ++ show r) (numActual <= r)
+  for_ actual $ \a -> expected @=? a
+  where
+    numActual = length actual

@@ -11,3 +11,6 @@ cradle:
 
     - path: "./test/integration"
       component: "navi:test:integration"
+
+    - path: "./test/e2e"
+      component: "navi:test:e2e"

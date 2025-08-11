@@ -1,0 +1,24 @@
+note-system = "apple-script"
+
+[logging]
+severity = "error"
+location = "stdout"
+
+[[single]]
+name = "even-seconds"
+poll-interval = 3
+repeat-events = true
+command = """
+  sec=`date +%S`;
+  if [[ \"$sec % 2\" -eq 0 ]]; then
+    echo -n "true"
+  else
+    echo -n "false"
+  fi
+"""
+trigger = "true"
+
+[single.note]
+summary = "Even"
+body = "Seconds are even!"
+timeout = 2

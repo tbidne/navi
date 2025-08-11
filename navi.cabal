@@ -182,3 +182,19 @@ test-suite integration
     , time              >=1.9.3 && <1.15
 
   hs-source-dirs: test/integration
+
+test-suite e2e
+  import:         common-exts
+  type:           exitcode-stdio-1.0
+  main-is:        Main.hs
+  build-depends:
+    , base
+    , effects-async
+    , effects-fs
+    , env-guard      ^>=0.2
+    , mtl
+    , navi
+    , tasty
+    , tasty-hunit
+
+  hs-source-dirs: test/e2e
