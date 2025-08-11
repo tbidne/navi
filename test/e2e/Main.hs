@@ -11,15 +11,14 @@ import Control.Monad.Reader (ReaderT (ReaderT))
 import Effects.Concurrent.Async qualified as Async
 import FileSystem.OsPath (decodeLenient)
 import Navi qualified
-import Navi.Data.NaviLog (LogEnv (MkLogEnv))
 import Navi.Effects (MonadNotify, MonadSystemInfo)
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Env.Core
-  ( Env,
-    HasEvents (getEvents),
-    HasLogEnv (getLogEnv, localLogEnv),
-    HasLogQueue (getLogQueue),
-    HasNoteQueue (getNoteQueue),
+  ( CoreEnvField (MkCoreEnvField),
+    Env,
+    HasEvents,
+    HasLogEnv,
+    HasNoteQueue,
   )
 import Navi.NaviT (NaviT (MkNaviT))
 import Navi.Prelude
@@ -35,6 +34,12 @@ newtype TestEnv = MkTestEnv
   }
 
 makeFieldLabelsNoPrefix ''TestEnv
+
+deriving via (CoreEnvField TestEnv) instance HasEvents TestEnv
+
+deriving via (CoreEnvField TestEnv) instance HasLogEnv TestEnv
+
+deriving via (CoreEnvField TestEnv) instance HasNoteQueue TestEnv
 
 main :: IO ()
 main = guardOrElse' "RUN_E2E" ExpectEnvSet runTests dontRun
@@ -103,19 +108,6 @@ instance
         (const env)
         (f "")
   {-# INLINE labelOptic #-}
-
-instance HasEvents TestEnv where
-  getEvents = getEvents . view #coreEnv
-
-instance HasLogEnv TestEnv where
-  getLogEnv = pure $ MkLogEnv Nothing LevelInfo ""
-  localLogEnv _ = id
-
-instance HasLogQueue TestEnv where
-  getLogQueue = getLogQueue . view #coreEnv
-
-instance HasNoteQueue TestEnv where
-  getNoteQueue = getNoteQueue . view #coreEnv
 
 runTestIO :: TestIO a -> TestEnv -> IO a
 runTestIO (MkTestIO rdr) = runReaderT rdr

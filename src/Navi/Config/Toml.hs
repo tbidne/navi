@@ -69,14 +69,30 @@ logDecoder =
     <*> sizeModeDecoderOpt
 
 severityDecoderOpt :: Decoder (Maybe LogLevel)
-severityDecoderOpt = getFieldOptWith severityDecoder "severity"
+severityDecoderOpt = setDef <$> getFieldOptWith severityDecoder "severity"
+  where
+    -- NOTE: We want the following semantics:
+    --
+    -- 1. User sets a log-level, use it.
+    -- 2. User can disable logging w/ 'none'.
+    -- 3. If no option is given, default to LevelError.
+    --
+    -- Hence 'getFieldOptWith severityDecoder' returns Maybe (Maybe LogLevel),
+    -- where the outer maybe refers to the field existence, and the inner
+    -- maybe handle 'none'.
+    --
+    -- Here we join the levels, so that Nothing means 'none', o/w logging is
+    -- on.
+    setDef Nothing = Just LevelError
+    setDef (Just l) = l
 
-severityDecoder :: Decoder LogLevel
+severityDecoder :: Decoder (Maybe LogLevel)
 severityDecoder =
   tomlDecoder >>= \case
-    "debug" -> pure LevelDebug
-    "info" -> pure LevelInfo
-    "error" -> pure LevelError
+    "debug" -> pure $ Just LevelDebug
+    "info" -> pure $ Just LevelInfo
+    "error" -> pure $ Just LevelError
+    "none" -> pure Nothing
     bad -> fail $ unpack $ "Unsupported severity: " <> bad
 
 locationDecoderOpt :: Decoder (Maybe LogLoc)

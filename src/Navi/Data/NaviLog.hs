@@ -24,7 +24,11 @@ data LogEnv = MkLogEnv
     -- | The current logging namespace.
     --
     -- @since 0.1
-    logNamespace :: Namespace
+    logNamespace :: Namespace,
+    -- | Log queue.
+    --
+    -- @since 0.1
+    logQueue :: TBQueue LogStr
   }
 
 -- | @since 0.1

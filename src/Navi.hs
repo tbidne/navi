@@ -19,6 +19,7 @@ import Effects.Concurrent.STM (flushTBQueueA)
 import Effects.Concurrent.Thread (MonadThread (labelThread, myThreadId), sleep)
 import Effects.Logger.Namespace (logStrToBs)
 import Effects.System.Terminal (MonadTerminal (putBinary))
+import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote
   ( NaviNote
       ( MkNaviNote,
@@ -34,7 +35,6 @@ import Navi.Effects.MonadSystemInfo (MonadSystemInfo)
 import Navi.Env.Core
   ( HasEvents (getEvents),
     HasLogEnv (getLogEnv),
-    HasLogQueue (getLogQueue),
     HasNoteQueue (getNoteQueue),
     sendNoteQueue,
   )
@@ -54,7 +54,6 @@ runNavi ::
   ( HasCallStack,
     HasEvents env,
     HasLogEnv env,
-    HasLogQueue env,
     HasNoteQueue env,
     MonadAsync m,
     MonadHandleWriter m,
@@ -86,20 +85,26 @@ runNavi = do
       ) =>
       t AnyEvent ->
       m Void
-    runAllAsync evts =
-      Async.withAsync pollLogQueue $ \logThread -> do
-        -- NOTE: Need the link here _before_ we run the other two threads.
-        -- This ensures that a logger exception successfully kills the entire
-        -- app.
-        Async.link logThread
-        runEvents evts
-          `catchSync` \e -> do
-            Async.cancel logThread
-            -- handle remaining logs
-            queue <- asks getLogQueue
-            sendFn <- getLoggerFn
-            flushTBQueueA queue >>= traverse_ (sendFn . logStrToBs)
-            throwM e
+    runAllAsync evts = do
+      mLogEnv <- asks getLogEnv
+      case mLogEnv of
+        -- 1. No logging: just run the events.
+        Nothing -> runEvents evts
+        -- 2. Logging: Run the events and the logger.
+        Just logEnv -> do
+          Async.withAsync (pollLogQueue logEnv) $ \logThread -> do
+            -- NOTE: Need the link here _before_ we run the other two threads.
+            -- This ensures that a logger exception successfully kills the entire
+            -- app.
+            Async.link logThread
+            runEvents evts
+              `catchSync` \e -> do
+                Async.cancel logThread
+                -- handle remaining logs
+                let queue = logEnv ^. #logQueue
+                    sendFn = getLoggerFn logEnv
+                flushTBQueueA queue >>= traverse_ (sendFn . logStrToBs)
+                throwM e
 
     -- run events and notify threads
     runEvents :: (HasCallStack, Traversable t) => t AnyEvent -> m Void
@@ -231,36 +236,34 @@ pollNoteQueue = addNamespace "note-poller" $ do
 
 pollLogQueue ::
   ( HasCallStack,
-    HasLogQueue env,
-    HasLogEnv env,
     MonadLoggerNS m env k,
     MonadHandleWriter m,
     MonadMask m,
     MonadSTM m,
     MonadTerminal m
   ) =>
+  LogEnv ->
   m Void
-pollLogQueue = addNamespace "logger" $ do
-  queue <- asks getLogQueue
-  sendFn <- getLoggerFn
+pollLogQueue logEnv = addNamespace "logger" $ do
   forever
     $
     -- NOTE: Rethrow all exceptions
     atomicReadWrite queue (sendFn . logStrToBs)
+  where
+    queue = logEnv ^. #logQueue
+    sendFn = getLoggerFn logEnv
 {-# INLINEABLE pollLogQueue #-}
 
 getLoggerFn ::
   ( HasCallStack,
-    HasLogEnv env,
     MonadHandleWriter m,
-    MonadReader env m,
     MonadTerminal m
   ) =>
-  m (ByteString -> m ())
-getLoggerFn = do
-  mfileHandle <- asks (view #logHandle . getLogEnv)
-  pure $ maybe putBinary toFile mfileHandle
+  LogEnv ->
+  (ByteString -> m ())
+getLoggerFn logEnv = maybe putBinary toFile mfileHandle
   where
+    mfileHandle = logEnv ^. #logHandle
     toFile h bs = hPut h bs *> hFlush h
 {-# INLINEABLE getLoggerFn #-}
 

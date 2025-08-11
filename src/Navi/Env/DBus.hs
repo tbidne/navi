@@ -1,11 +1,8 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Provides environment for usage with DBus.
 module Navi.Env.DBus
-  ( HasDBusClient (..),
-    DBusEnv (..),
-    MonadDBus (..),
+  ( MonadDBus (..),
     mkDBusEnv,
     naviToDBus,
   )
@@ -19,56 +16,8 @@ import Navi.Config (Config)
 import Navi.Config.Types (NoteSystem (DBus))
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote, Timeout (Never, Seconds))
-import Navi.Env.Core
-  ( Env (MkEnv),
-    HasEvents (getEvents),
-    HasLogEnv (getLogEnv, localLogEnv),
-    HasLogQueue (getLogQueue),
-    HasNoteQueue (getNoteQueue),
-  )
+import Navi.Env.Core (Env (MkEnv, events, logEnv, noteQueue, notifySystem))
 import Navi.Prelude
-
--- | Retrieves the notification client.
-class HasDBusClient env where
-  getClient :: env -> Client
-
--- | Concrete dbus environment. Adds the dbus client.
-data DBusEnv = MkDBusEnv
-  { coreEnv :: Env,
-    dbusClient :: Client
-  }
-
-makeFieldLabelsNoPrefix ''DBusEnv
-
-instance HasEvents DBusEnv where
-  getEvents = view (#coreEnv % #events)
-
-instance HasLogEnv DBusEnv where
-  getLogEnv = view (#coreEnv % #logEnv)
-  localLogEnv = over' (#coreEnv % #logEnv)
-
-instance HasLogQueue DBusEnv where
-  getLogQueue = view (#coreEnv % #logQueue)
-
-instance HasNoteQueue DBusEnv where
-  getNoteQueue = view (#coreEnv % #noteQueue)
-
-instance HasDBusClient DBusEnv where
-  getClient = view #dbusClient
-
-instance
-  ( k ~ A_Lens,
-    x ~ Namespace,
-    y ~ Namespace
-  ) =>
-  LabelOptic "namespace" k DBusEnv DBusEnv x y
-  where
-  labelOptic =
-    lensVL $ \f (MkDBusEnv a1 a2) ->
-      fmap
-        (\b -> MkDBusEnv (set' #namespace b a1) a2)
-        (f (a1 ^. #namespace))
-  {-# INLINE labelOptic #-}
 
 class (Monad m) => MonadDBus m where
   -- | Connects to DBus.
@@ -90,20 +39,19 @@ instance (MonadDBus m) => MonadDBus (ReaderT env m) where
 -- | Creates a 'DBusEnv' from the provided log types and configuration data.
 mkDBusEnv ::
   (HasCallStack, MonadDBus m, MonadSTM m) =>
-  LogEnv ->
+  Maybe LogEnv ->
   Config ->
   m Env
 mkDBusEnv logEnv config = do
   client <- connectSession
-  logQueue <- newTBQueueA 1000
   noteQueue <- newTBQueueA 1000
   pure
     $ MkEnv
-      (config ^. #events)
-      logEnv
-      logQueue
-      noteQueue
-      (DBus client)
+      { events = config ^. #events,
+        logEnv,
+        noteQueue,
+        notifySystem = DBus client
+      }
 {-# INLINEABLE mkDBusEnv #-}
 
 -- | Turns a 'NaviNote' into a DBus 'Note'.

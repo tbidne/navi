@@ -208,7 +208,7 @@ headerConfig =
   T.unlines
     [ notifyConfig,
       "[logging]",
-      "location = \"stdout\""
+      "severity = \"none\""
     ]
 
 notifyConfig :: Text

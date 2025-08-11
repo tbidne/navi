@@ -26,7 +26,7 @@ import DBus.Client qualified as DBus
 import Data.Bytes (Size (M))
 import Data.Bytes qualified as Bytes
 import Data.List.NonEmpty ()
-import Navi.Config.Phase (ConfigPhase (ConfigPhaseToml, ConfigPhaseEnv))
+import Navi.Config.Phase (ConfigPhase (ConfigPhaseEnv, ConfigPhaseToml))
 import Navi.Event (AnyEvent)
 import Navi.Prelude
 

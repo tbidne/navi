@@ -6,9 +6,12 @@ module Navi.Env.Core
   ( -- * HasX-style Typeclasses
     HasEvents (..),
     HasLogEnv (..),
-    HasLogQueue (..),
     HasNoteQueue (..),
     sendNoteQueue,
+
+    -- ** Deriving
+    TopField (..),
+    CoreEnvField (..),
 
     -- * Concrete Env
     Env (..),
@@ -22,48 +25,82 @@ import Navi.Data.NaviNote (NaviNote)
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
 
--- | Retrieves the events.
-class HasEvents env where
-  getEvents :: env -> NonEmpty AnyEvent
-
--- | Retrieves the log environment.
-class HasLogEnv env where
-  getLogEnv :: env -> LogEnv
-
-  -- TODO: Is this needed?
-  localLogEnv :: (LogEnv -> LogEnv) -> env -> env
-
--- | Retrieves the log queue.
-class HasLogQueue env where
-  getLogQueue :: env -> TBQueue LogStr
-
--- | Retrieves the note queue.
-class HasNoteQueue env where
-  getNoteQueue :: env -> TBQueue NaviNote
-
 -- | 'Env' holds all of our environment data that is used while running navi.
 data Env = MkEnv
   { events :: NonEmpty AnyEvent,
-    logEnv :: LogEnv,
-    logQueue :: TBQueue LogStr,
+    logEnv :: Maybe LogEnv,
     noteQueue :: TBQueue NaviNote,
     notifySystem :: NoteSystem ConfigPhaseEnv
   }
 
 makeFieldLabelsNoPrefix ''Env
 
-instance HasEvents Env where
-  getEvents = view #events
+deriving via (TopField Env) instance HasEvents Env
 
-instance HasLogEnv Env where
-  getLogEnv = view #logEnv
-  localLogEnv = over' #logEnv
+deriving via (TopField Env) instance HasLogEnv Env
 
-instance HasLogQueue Env where
-  getLogQueue = view #logQueue
+deriving via (TopField Env) instance HasNoteQueue Env
 
-instance HasNoteQueue Env where
-  getNoteQueue = view #noteQueue
+-- | Used for deriving instances from the top level field name e.g.
+-- 'events :: NonEmpty AnyEvent'.
+type TopField :: Type -> Type
+newtype TopField a = MkTopField a
+
+-- | Used for deriving instances for types with a field 'coreEnv :: Env'.
+type CoreEnvField :: Type -> Type
+newtype CoreEnvField a = MkCoreEnvField a
+
+-- | Retrieves the events.
+class HasEvents env where
+  getEvents :: env -> NonEmpty AnyEvent
+
+-- | Retrieves the log environment.
+class HasLogEnv env where
+  getLogEnv :: env -> Maybe LogEnv
+
+-- | Retrieves the note queue.
+class HasNoteQueue env where
+  getNoteQueue :: env -> TBQueue NaviNote
+
+-- NOTE: For some reason, we cannot really compose these optics together
+-- e.g. view (#coreEnv % #events) fails to typecheck. Probably there's a
+-- way to do this with castOptic, but reusing the instance itself is easy.
+
+instance
+  (Is k A_Getter, LabelOptic' "events" k a (NonEmpty AnyEvent)) =>
+  HasEvents (TopField a)
+  where
+  getEvents (MkTopField x) = view #events x
+
+instance
+  (Is k A_Getter, LabelOptic' "coreEnv" k a Env) =>
+  HasEvents (CoreEnvField a)
+  where
+  getEvents (MkCoreEnvField x) = getEvents $ view #coreEnv x
+
+instance
+  (Is k A_Getter, LabelOptic' "logEnv" k a (Maybe LogEnv)) =>
+  HasLogEnv (TopField a)
+  where
+  getLogEnv (MkTopField x) = view #logEnv x
+
+instance
+  (Is k A_Getter, LabelOptic' "coreEnv" k a Env) =>
+  HasLogEnv (CoreEnvField a)
+  where
+  getLogEnv (MkCoreEnvField x) = getLogEnv $ view #coreEnv x
+
+instance
+  (Is k A_Getter, LabelOptic' "noteQueue" k a (TBQueue NaviNote)) =>
+  HasNoteQueue (TopField a)
+  where
+  getNoteQueue (MkTopField x) = view #noteQueue x
+
+instance
+  (Is k A_Getter, LabelOptic' "coreEnv" k a Env) =>
+  HasNoteQueue (CoreEnvField a)
+  where
+  getNoteQueue (MkCoreEnvField x) = getNoteQueue $ view #coreEnv x
 
 instance
   ( k ~ A_Lens,
@@ -73,10 +110,10 @@ instance
   LabelOptic "namespace" k Env Env x y
   where
   labelOptic =
-    lensVL $ \f (MkEnv a1 a2 a3 a4 a5) ->
+    lensVL $ \f (MkEnv a1 a2 a3 a4) ->
       fmap
-        (\b -> MkEnv a1 (set' #logNamespace b a2) a3 a4 a5)
-        (f (a2 ^. #logNamespace))
+        (\b -> MkEnv a1 (set' (_Just % #logNamespace) b a2) a3 a4)
+        (f $ fromMaybe "" (a2 ^? _Just % #logNamespace))
   {-# INLINE labelOptic #-}
 
 -- | Convenience function for retrieving a 'TBQueue'

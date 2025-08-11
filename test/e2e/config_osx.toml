@@ -1,8 +1,7 @@
 note-system = "apple-script"
 
 [logging]
-severity = "error"
-location = "stdout"
+severity = "none"
 
 [[single]]
 name = "even-single"

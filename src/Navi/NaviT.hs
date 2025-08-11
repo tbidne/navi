@@ -21,7 +21,6 @@ import Navi.Env.AppleScript (naviToAppleScript)
 import Navi.Env.Core
   ( Env,
     HasLogEnv (getLogEnv),
-    HasLogQueue (getLogQueue),
   )
 import Navi.Env.DBus (MonadDBus)
 import Navi.Env.DBus qualified as DBus
@@ -87,11 +86,15 @@ instance
   MonadLogger (NaviT Env m)
   where
   monadLoggerLog loc _src lvl msg = do
-    logQueue <- asks getLogQueue
-    logLevel <- asks (view #logLevel . getLogEnv)
-    when (logLevel <= lvl) $ do
-      formatted <- formatLog formatter lvl msg
-      writeTBQueueA logQueue formatted
+    mLogEnv <- asks getLogEnv
+    case mLogEnv of
+      Just logEnv -> do
+        let logQueue = logEnv ^. #logQueue
+            logLevel = logEnv ^. #logLevel
+        when (logLevel <= lvl) $ do
+          formatted <- formatLog formatter lvl msg
+          writeTBQueueA logQueue formatted
+      Nothing -> pure ()
     where
       formatter = set' #threadLabel True (defaultLogFormatter loc)
 

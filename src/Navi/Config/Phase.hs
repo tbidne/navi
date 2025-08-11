@@ -7,5 +7,5 @@ where
 data ConfigPhase
   = -- | Toml phase.
     ConfigPhaseToml
-    -- | Env phase.
-  | ConfigPhaseEnv
+  | -- | Env phase.
+    ConfigPhaseEnv

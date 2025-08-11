@@ -6,7 +6,7 @@ note-system = "dbus"
 
 # Some logging options.
 [logging]
-# Log level: Options are "debug", "info", "error".
+# Log level: Options are "debug", "info", "error", or "none" for no logging.
 severity = "debug"
 # How to handle the log file. E.g. "warn 10gb" will print a
 # warning when the log file reaches 10gb. "delete 20 mb" will instead

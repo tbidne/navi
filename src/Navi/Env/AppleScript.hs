@@ -10,26 +10,25 @@ where
 import Navi.Config.Types (Config, NoteSystem (AppleScript))
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote)
-import Navi.Env.Core (Env (MkEnv))
+import Navi.Env.Core (Env (MkEnv, events, logEnv, noteQueue, notifySystem))
 import Navi.Prelude
 
 -- | Creates a 'AppleScriptEnv' from the provided log types and configuration
 -- data.
 mkAppleScriptEnv ::
   (MonadSTM m) =>
-  LogEnv ->
+  Maybe LogEnv ->
   Config ->
   m Env
 mkAppleScriptEnv logEnv config = do
-  logQueue <- newTBQueueA 1000
   noteQueue <- newTBQueueA 1000
   pure
     $ MkEnv
-      (config ^. #events)
-      logEnv
-      logQueue
-      noteQueue
-      AppleScript
+      { events = config ^. #events,
+        logEnv,
+        noteQueue,
+        notifySystem = AppleScript
+      }
 {-# INLINEABLE mkAppleScriptEnv #-}
 
 -- | Turns a 'NaviNote' into a string to be sent with the notify-send tool.

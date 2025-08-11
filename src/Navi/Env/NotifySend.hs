@@ -11,7 +11,7 @@ import DBus.Notify (UrgencyLevel (Critical, Low, Normal))
 import Navi.Config.Types (Config, NoteSystem (NotifySend))
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote, Timeout (Never, Seconds))
-import Navi.Env.Core (Env (MkEnv))
+import Navi.Env.Core (Env (MkEnv, events, logEnv, noteQueue, notifySystem))
 import Navi.Prelude
 import Navi.Utils qualified as Utils
 
@@ -19,19 +19,18 @@ import Navi.Utils qualified as Utils
 -- data.
 mkNotifySendEnv ::
   (MonadSTM m) =>
-  LogEnv ->
+  Maybe LogEnv ->
   Config ->
   m Env
 mkNotifySendEnv logEnv config = do
-  logQueue <- newTBQueueA 1000
   noteQueue <- newTBQueueA 1000
   pure
     $ MkEnv
-      (config ^. #events)
-      logEnv
-      logQueue
-      noteQueue
-      NotifySend
+      { events = config ^. #events,
+        logEnv,
+        noteQueue,
+        notifySystem = NotifySend
+      }
 {-# INLINEABLE mkNotifySendEnv #-}
 
 -- | Turns a 'NaviNote' into a string to be sent with the notify-send tool.

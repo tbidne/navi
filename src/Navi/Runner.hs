@@ -37,12 +37,20 @@ import Navi.Config.Types
       ),
     defaultSizeMode,
   )
-import Navi.Data.NaviLog (LogEnv (MkLogEnv, logHandle, logLevel, logNamespace))
+import Navi.Data.NaviLog
+  ( LogEnv
+      ( MkLogEnv,
+        logHandle,
+        logLevel,
+        logNamespace,
+        logQueue
+      ),
+  )
 import Navi.Effects (MonadSystemInfo)
 import Navi.Effects.MonadNotify (MonadNotify)
 import Navi.Env.AppleScript (mkAppleScriptEnv)
 import Navi.Env.Core (Env)
-import Navi.Env.DBus (DBusEnv, MonadDBus, mkDBusEnv)
+import Navi.Env.DBus (MonadDBus, mkDBusEnv)
 import Navi.Env.NotifySend (mkNotifySendEnv)
 import Navi.Prelude
 
@@ -99,7 +107,7 @@ withEnv onEnv = do
       `catchSync` writeConfigErr
 
   withLogEnv (config ^. #logging) $ \logEnv -> do
-    let mkNaviEnv :: (LogEnv -> Config -> m env) -> m env
+    let mkNaviEnv :: (Maybe LogEnv -> Config -> m env) -> m env
         mkNaviEnv envFn = envFn logEnv config
     case config ^. #noteSystem of
 #if OSX
@@ -134,23 +142,28 @@ withLogEnv ::
     MonadHandleWriter m,
     MonadPathReader m,
     MonadPathWriter m,
+    MonadSTM m,
     MonadTerminal m,
     MonadThrow m,
     MonadTime m
   ) =>
   Logging ->
-  (LogEnv -> m a) ->
+  (Maybe LogEnv -> m a) ->
   m a
-withLogEnv logging onLogEnv =
-  withLogHandle logging $ \logHandle ->
-    onLogEnv
-      $ MkLogEnv
-        { logHandle,
-          logLevel,
-          logNamespace = "main"
-        }
-  where
-    logLevel = fromMaybe LevelError (logging ^. #severity)
+withLogEnv logging onLogEnv = do
+  case logging ^. #severity of
+    Nothing -> onLogEnv Nothing
+    Just logLevel -> do
+      logQueue <- newTBQueueA 1000
+      withLogHandle logging $ \logHandle ->
+        onLogEnv
+          $ Just
+          $ MkLogEnv
+            { logHandle,
+              logLevel,
+              logNamespace = "main",
+              logQueue
+            }
 
 withLogHandle ::
   ( HasCallStack,

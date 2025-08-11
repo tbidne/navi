@@ -34,11 +34,11 @@ import Navi (runNavi)
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
-  ( Env,
-    HasEvents (getEvents),
-    HasLogEnv (getLogEnv, localLogEnv),
-    HasLogQueue (getLogQueue),
-    HasNoteQueue (getNoteQueue),
+  ( CoreEnvField (MkCoreEnvField),
+    Env,
+    HasEvents,
+    HasLogEnv (getLogEnv),
+    HasNoteQueue,
   )
 import Navi.Runner qualified as Runner
 import Navi.Services.Types
@@ -83,18 +83,11 @@ instance
         (f (a2 ^. #namespace))
   {-# INLINE labelOptic #-}
 
-instance HasEvents ExceptionEnv where
-  getEvents = getEvents . view #coreEnv
+deriving via (CoreEnvField ExceptionEnv) instance HasEvents ExceptionEnv
 
-instance HasLogEnv ExceptionEnv where
-  getLogEnv = getLogEnv . view #coreEnv
-  localLogEnv = over' (#coreEnv % #logEnv)
+deriving via (CoreEnvField ExceptionEnv) instance HasLogEnv ExceptionEnv
 
-instance HasLogQueue ExceptionEnv where
-  getLogQueue = getLogQueue . view #coreEnv
-
-instance HasNoteQueue ExceptionEnv where
-  getNoteQueue = getNoteQueue . view #coreEnv
+deriving via (CoreEnvField ExceptionEnv) instance HasNoteQueue ExceptionEnv
 
 newtype TestEx = MkTestE String
   deriving stock (Show)
@@ -144,11 +137,15 @@ instance MonadSystemInfo ExceptionsT where
 
 instance MonadLogger ExceptionsT where
   monadLoggerLog loc _src lvl msg = do
-    logQueue <- asks getLogQueue
-    logLevel <- asks (view #logLevel . getLogEnv)
-    when (logLevel <= lvl) $ do
-      formatted <- formatLog (defaultLogFormatter loc) lvl msg
-      writeTBQueueA logQueue formatted
+    mLogEnv <- asks getLogEnv
+    case mLogEnv of
+      Just logEnv -> do
+        let logQueue = logEnv ^. #logQueue
+            logLevel = logEnv ^. #logLevel
+        when (logLevel <= lvl) $ do
+          formatted <- formatLog (defaultLogFormatter loc) lvl msg
+          writeTBQueueA logQueue formatted
+      Nothing -> pure ()
 
 instance MonadTime ExceptionsT where
   getSystemZonedTime = pure zonedTime

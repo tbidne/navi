@@ -14,16 +14,15 @@ import Effects.Concurrent.Async qualified as Async
 import FileSystem.OsPath (decodeLenient)
 import Integration.Prelude
 import Navi (runNavi)
-import Navi.Data.NaviLog (LogEnv (MkLogEnv))
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
-  ( Env,
-    HasEvents (getEvents),
-    HasLogEnv (getLogEnv, localLogEnv),
-    HasLogQueue (getLogQueue),
-    HasNoteQueue (getNoteQueue),
+  ( CoreEnvField (MkCoreEnvField),
+    Env,
+    HasEvents,
+    HasLogEnv,
+    HasNoteQueue,
   )
 import Navi.Event.Types (EventError (MkEventError))
 import Navi.Runner qualified as Runner
@@ -73,18 +72,11 @@ instance
         (f "")
   {-# INLINE labelOptic #-}
 
-instance HasEvents MockEnv where
-  getEvents = getEvents . view #coreEnv
+deriving via (CoreEnvField MockEnv) instance HasEvents MockEnv
 
-instance HasLogEnv MockEnv where
-  getLogEnv = pure $ MkLogEnv Nothing LevelInfo ""
-  localLogEnv _ = id
+deriving via (CoreEnvField MockEnv) instance HasLogEnv MockEnv
 
-instance HasLogQueue MockEnv where
-  getLogQueue = getLogQueue . view #coreEnv
-
-instance HasNoteQueue MockEnv where
-  getNoteQueue = getNoteQueue . view #coreEnv
+deriving via (CoreEnvField MockEnv) instance HasNoteQueue MockEnv
 
 newtype MockAppT a = MkMockAppT (ReaderT MockEnv IO a)
   deriving
