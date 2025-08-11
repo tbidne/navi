@@ -87,11 +87,16 @@ Navi currently supports:
 
     * [deadd-notification-center](https://github.com/phuhl/linux_notification_center)
     * [dunst](https://dunst-project.org/)
+    * [GNOME](https://www.gnome.org/)
     * [KDE Plasma](https://kde.org/plasma-desktop/)
 
 * Libnotify
 
   Navi can also use the `notify-send` tool directly. This is largely redundant since `notify-send` itself requires a running DBus notification server, but this option is provided as an alternative.
+
+* AppleScript
+
+  MacOS can use AppleScript.
 
 # Configuration
 
