@@ -61,6 +61,12 @@ jobs:
         shell: bash
         run: |
           RUN_E2E=1 cabal test ${{ matrix.ghc.proj_file }} e2e
+
+      - name: Cabal check
+        run: cabal check
+
+      - name: Outdated
+        run: cabal outdated
   nix:
     strategy:
       fail-fast: false

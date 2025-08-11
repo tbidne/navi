@@ -88,8 +88,8 @@ library
   build-depends:
     , base                   >=4.17      && <4.22
     , bytestring             >=0.10.10.0 && <0.13
-    , containers             >=0.5.11.0  && <0.8
-    , dbus                   >=1.2.14    && <1.4
+    , containers             >=0.5.11.0  && <0.9
+    , dbus                   >=1.2.14    && <1.5
     , deepseq                >=1.4.6.0   && <1.6
     , effects-async          ^>=0.1
     , effects-fs             ^>=0.1
@@ -108,15 +108,15 @@ library
     , mtl                    >=2.2.2     && <2.4
     , optics-core            ^>=0.4
     , optics-th              ^>=0.4
-    , optparse-applicative   >=0.16.1.0  && <0.19
+    , optparse-applicative   >=0.16.1.0  && <0.20
     , os-string              ^>=2.0.1
     , pythia                 ^>=0.1
     , relative-time          ^>=0.1
     , si-bytes               ^>=0.1
     , template-haskell       >=2.17.0.0  && <2.24
     , text                   >=1.2.3.2   && <2.2
-    , time                   >=1.9.3     && <1.15
-    , toml-reader            >=0.1.0.0   && <0.3
+    , time                   >=1.9.3     && <1.16
+    , toml-reader            >=0.1.0.0   && <0.4
 
   hs-source-dirs:  src
 
@@ -179,7 +179,7 @@ test-suite integration
     , tasty
     , tasty-hunit
     , text
-    , time              >=1.9.3 && <1.15
+    , time
 
   hs-source-dirs: test/integration
 
