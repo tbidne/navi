@@ -8,43 +8,25 @@ module Navi.NaviT
   )
 where
 
-import DBus.Notify qualified as DBusN
 import Effects.Logger.Namespace
-  ( HasNamespace,
-    defaultLogFormatter,
+  ( defaultLogFormatter,
     formatLog,
   )
-import Effects.System.Terminal
-  ( MonadTerminal
-      ( getChar,
-        getContents',
-        getLine,
-        getTerminalSize,
-        putBinary,
-        putStr,
-        supportsPretty
-      ),
-  )
-import Effects.Time
-  ( MonadTime
-      ( getMonotonicTime,
-        getSystemZonedTime,
-        getTimeZone,
-        loadLocalTZ,
-        utcToLocalZonedTime
-      ),
-  )
+import Effects.Process.Typed qualified as TP
+import Effects.Time (MonadTime)
+import Navi.Config.Types (NoteSystem (AppleScript, DBus, NotifySend))
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
-import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
-import Navi.Env.AppleScript (AppleScriptEnv, naviToAppleScript)
+import Navi.Effects.MonadSystemInfo (MonadSystemInfo)
+import Navi.Env.AppleScript (naviToAppleScript)
 import Navi.Env.Core
-  ( HasLogEnv (getLogEnv),
+  ( Env,
+    HasLogEnv (getLogEnv),
     HasLogQueue (getLogQueue),
   )
-import Navi.Env.DBus (DBusEnv, HasDBusClient (getClient), naviToDBus)
-import Navi.Env.NotifySend (NotifySendEnv, naviToNotifySend)
+import Navi.Env.DBus (MonadDBus)
+import Navi.Env.DBus qualified as DBus
+import Navi.Env.NotifySend (naviToNotifySend)
 import Navi.Prelude
-import System.Process qualified as Proc
 
 -- | NaviT is the core type used to run the application.
 type NaviT :: Type -> (Type -> Type) -> Type -> Type
@@ -55,6 +37,7 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       Monad,
       MonadAsync,
       MonadCatch,
+      MonadDBus,
       MonadFileReader,
       MonadHandleWriter,
       MonadIO,
@@ -62,71 +45,46 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       MonadMask,
       MonadReader e,
       MonadSTM,
+      MonadSystemInfo,
+      MonadTerminal,
+      MonadTime,
       MonadThread,
-      MonadThrow
+      MonadThrow,
+      MonadTypedProcess
     )
     via (ReaderT e m)
 
--- Manual instances so tests can roll their own
-instance MonadTerminal (NaviT env IO) where
-  getChar = liftIO getChar
-  getLine = liftIO getLine
-  getContents' = liftIO getContents'
-  getTerminalSize = liftIO getTerminalSize
-  putBinary = liftIO . putBinary
-  putStr = liftIO . putStr
-  putStrLn = liftIO . putStrLn
-  supportsPretty = liftIO supportsPretty
-
-instance MonadTime (NaviT env IO) where
-  getSystemZonedTime = liftIO getSystemZonedTime
-  getTimeZone = liftIO . getTimeZone
-  getMonotonicTime = liftIO getMonotonicTime
-  utcToLocalZonedTime = liftIO . utcToLocalZonedTime
-  loadLocalTZ = liftIO loadLocalTZ
-
--- Concrete IO rather than MonadIO so that we can write instances over
--- other MonadIOs (i.e. in tests)
-instance MonadSystemInfo (NaviT env IO) where
-  query = liftIO . query
-
-instance MonadNotify (NaviT AppleScriptEnv IO) where
-  sendNote naviNote = addNamespace "apple-script" $ do
-    $(logDebug) noteTxt
-    liftIO $ void $ Proc.readCreateProcess cp "apple-script"
-    where
-      noteTxt = naviToAppleScript naviNote
-      cp = Proc.shell $ unpack noteTxt
-
--- Concrete IO rather than MonadIO so that we can write instances over
--- other MonadIOs (i.e. in tests)
-instance MonadNotify (NaviT DBusEnv IO) where
-  sendNote naviNote = addNamespace "dbus" $ do
-    $(logDebug) (showt note)
-    client <- asks getClient
-    liftIO $ sendDbus client note
-    where
-      note = naviToDBus naviNote
-      sendDbus c = void . DBusN.notify c
-
--- Concrete IO rather than MonadIO so that we can write instances over
--- other MonadIOs (i.e. in tests)
-instance MonadNotify (NaviT NotifySendEnv IO) where
-  sendNote naviNote = addNamespace "notify-send" $ do
-    $(logDebug) noteTxt
-    liftIO $ void $ Proc.readCreateProcess cp "notify-send"
-    where
-      noteTxt = naviToNotifySend naviNote
-      cp = Proc.shell $ unpack noteTxt
-
--- Concrete IO rather than MonadIO so that we can write instances over
--- other MonadIOs (i.e. in tests)
 instance
-  ( HasLogEnv env,
-    HasLogQueue env,
-    HasNamespace (NaviT env IO) env k
+  ( MonadDBus m,
+    MonadSTM m,
+    MonadTime m,
+    MonadThread m,
+    MonadTypedProcess m
   ) =>
-  MonadLogger (NaviT env IO)
+  MonadNotify (NaviT Env m)
+  where
+  sendNote naviNote =
+    asks (view #notifySystem) >>= \case
+      AppleScript -> addNamespace "apple-script" $ do
+        let noteTxt = naviToAppleScript naviNote
+        $(logDebug) noteTxt
+        void $ TP.readProcess (mkProc noteTxt)
+      DBus client -> addNamespace "dbus" $ do
+        $(logDebug) (showt naviNote)
+        void $ DBus.notify client naviNote
+      NotifySend -> addNamespace "notify-send" $ do
+        let noteTxt = naviToNotifySend naviNote
+        $(logDebug) noteTxt
+        void $ TP.readProcess (mkProc noteTxt)
+    where
+      mkProc = TP.shell . unpack
+
+instance
+  ( MonadSTM m,
+    MonadTime m,
+    MonadThread m
+  ) =>
+  MonadLogger (NaviT Env m)
   where
   monadLoggerLog loc _src lvl msg = do
     logQueue <- asks getLogQueue

@@ -14,6 +14,7 @@ import Data.Char qualified as Ch
 import Data.Text qualified as T
 import FileSystem.OsPath (encodeFail)
 import GHC.Real (truncate)
+import Navi.Config.Phase (ConfigPhase (ConfigPhaseConfig))
 import Navi.Config.Types
   ( FilesSizeMode (FilesSizeModeDelete, FilesSizeModeWarn),
     LogLoc (DefPath, File, Stdout),
@@ -31,7 +32,7 @@ import Navi.Utils (getFieldOptArrayOf)
 -- | 'ConfigToml' holds the data that is defined in the configuration file.
 data ConfigToml = MkConfigToml
   { logToml :: Maybe Logging,
-    noteSystemToml :: Maybe NoteSystem,
+    noteSystemToml :: Maybe (NoteSystem ConfigPhaseConfig),
     singleToml :: [SingleToml],
     multipleToml :: [MultipleToml],
     batteryPercentageToml :: Maybe BatteryPercentageToml,
@@ -85,11 +86,11 @@ locationDecoder =
     "stdout" -> pure Stdout
     f -> File <$> encodeFail f
 
-noteSystemDecoder :: Decoder NoteSystem
+noteSystemDecoder :: Decoder (NoteSystem ConfigPhaseConfig)
 noteSystemDecoder =
   tomlDecoder >>= \case
     "apple-script" -> pure AppleScript
-    "dbus" -> pure DBus
+    "dbus" -> pure $ DBus ()
     "notify-send" -> pure NotifySend
     bad -> fail $ unpack $ "Unsupported NoteSystem: " <> bad
 

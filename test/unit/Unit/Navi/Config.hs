@@ -24,7 +24,7 @@ tests =
     ]
   where
     verifyConfig cfg = do
-      DBus @=? cfg ^. #noteSystem
+      DBus () @=? cfg ^. #noteSystem
       Just LevelDebug @=? cfg ^. #logging % #severity
       Nothing @=? cfg ^. #logging % #location
       5 @=? length (cfg ^. #events)
@@ -36,7 +36,7 @@ tests =
       1 @=? length (cfg ^. #events)
 
     verifyMultiple cfg = do
-      DBus @=? cfg ^. #noteSystem
+      DBus () @=? cfg ^. #noteSystem
       Just LevelError @=? cfg ^. #logging % #severity
       Just DefPath @=? cfg ^. #logging % #location
       1 @=? length (cfg ^. #events)

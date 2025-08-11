@@ -29,13 +29,14 @@ import Navi.Data.NaviNote
       ),
     Timeout (Seconds),
   )
-import Navi.Effects.MonadNotify (MonadNotify (sendNote), sendNoteQueue)
+import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo)
 import Navi.Env.Core
   ( HasEvents (getEvents),
     HasLogEnv (getLogEnv),
     HasLogQueue (getLogQueue),
     HasNoteQueue (getNoteQueue),
+    sendNoteQueue,
   )
 import Navi.Event qualified as Event
 import Navi.Event.Types

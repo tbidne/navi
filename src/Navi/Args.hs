@@ -16,7 +16,7 @@ import Data.Functor.Identity (Identity (Identity))
 import Data.List qualified as L
 import Data.Version (showVersion)
 import Effects.FileSystem.PathReader qualified as Dir
-import Effects.Optparse (osPath)
+import Effects.Optparse (execParser, osPath)
 import FileSystem.OsString (OsString)
 import FileSystem.OsString qualified as OsString
 import Navi.Args.TH qualified as TH
@@ -58,13 +58,22 @@ instance (Show1 f) => Show (Args f) where
 
 -- | Parses cli args and fills in defaults. These defaults are based on the
 -- detected XDG Base Directory and default names.
-getArgs :: (MonadIO m) => m (Args Identity)
-getArgs = liftIO $ do
-  args <- OptApp.execParser parserInfoArgs
+getArgs ::
+  ( HasCallStack,
+    MonadOptparse m,
+    MonadPathReader m
+  ) =>
+  m (Args Identity)
+getArgs = do
+  args <- execParser parserInfoArgs
   fillMissingDefaults args
 {-# INLINEABLE getArgs #-}
 
-fillMissingDefaults :: Args Maybe -> IO (Args Identity)
+fillMissingDefaults ::
+  ( HasCallStack,
+    MonadPathReader m
+  ) =>
+  Args Maybe -> m (Args Identity)
 fillMissingDefaults args = do
   configFile' <- case configFile of
     -- No custom paths provided, use default

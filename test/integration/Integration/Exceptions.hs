@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-missing-methods #-}
@@ -20,46 +21,26 @@ import Effects.Logger.Namespace
   )
 import Effects.System.Terminal
   ( MonadTerminal
-      ( getChar,
-        getContents',
-        getLine,
-        getTerminalSize,
-        putBinary,
-        putStr,
-        supportsPretty
+      ( putBinary
       ),
   )
 import Effects.Time
   ( MonadTime (getMonotonicTime, getSystemZonedTime),
     ZonedTime (ZonedTime),
   )
+import FileSystem.OsPath (decodeLenient)
 import Integration.Prelude
 import Navi (runNavi)
-import Navi.Data.NaviLog (LogEnv (MkLogEnv, logHandle, logLevel, logNamespace))
-import Navi.Data.NaviNote (NaviNote)
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
-  ( HasEvents (getEvents),
+  ( Env,
+    HasEvents (getEvents),
     HasLogEnv (getLogEnv, localLogEnv),
     HasLogQueue (getLogQueue),
     HasNoteQueue (getNoteQueue),
   )
-import Navi.Event.Types
-  ( AnyEvent (MkAnyEvent),
-    ErrorNote (NoErrNote),
-    Event
-      ( MkEvent,
-        errorNote,
-        name,
-        pollInterval,
-        raiseAlert,
-        repeatEvent,
-        serviceType
-      ),
-    RepeatEvent (AllowRepeats),
-  )
-import Navi.NaviT (NaviT, runNaviT)
+import Navi.Runner qualified as Runner
 import Navi.Services.Types
   ( ServiceType
       ( BatteryPercentage,
@@ -70,6 +51,7 @@ import Navi.Services.Types
       ),
   )
 import Navi.Utils qualified as U
+import System.Environment qualified as SysEnv
 import Test.Tasty qualified as Tasty
 
 data BadThread
@@ -79,11 +61,8 @@ data BadThread
 -- | Mock configuration.
 data ExceptionEnv = MkExceptionEnv
   { badThread :: BadThread,
-    events :: NonEmpty AnyEvent,
-    logEnv :: LogEnv,
-    logQueue :: TBQueue LogStr,
-    logsRef :: IORef (Seq ByteString),
-    noteQueue :: TBQueue NaviNote
+    coreEnv :: Env,
+    logsRef :: IORef (Seq ByteString)
   }
 
 makeFieldLabelsNoPrefix ''ExceptionEnv
@@ -96,52 +75,53 @@ instance
   LabelOptic "namespace" k ExceptionEnv ExceptionEnv x y
   where
   labelOptic =
-    lensVL $ \f (MkExceptionEnv a1 a2 a3 a4 a5 a6) ->
+    lensVL $ \f (MkExceptionEnv a1 a2 a3) ->
       fmap
-        (\b -> MkExceptionEnv a1 a2 (set' #logNamespace b a3) a4 a5 a6)
-        (f (a3 ^. #logNamespace))
+        (\b -> MkExceptionEnv a1 (set' #namespace b a2) a3)
+        (f (a2 ^. #namespace))
   {-# INLINE labelOptic #-}
 
 instance HasEvents ExceptionEnv where
-  getEvents = view #events
+  getEvents = getEvents . view #coreEnv
 
 instance HasLogEnv ExceptionEnv where
-  getLogEnv = view #logEnv
-  localLogEnv = over' #logEnv
+  getLogEnv = getLogEnv . view #coreEnv
+  localLogEnv = over' (#coreEnv % #logEnv)
 
 instance HasLogQueue ExceptionEnv where
-  getLogQueue = view #logQueue
+  getLogQueue = getLogQueue . view #coreEnv
 
 instance HasNoteQueue ExceptionEnv where
-  getNoteQueue = view #noteQueue
+  getNoteQueue = getNoteQueue . view #coreEnv
 
-newtype ExceptionIO a = MkExceptionIO (IO a)
+newtype TestEx = MkTestE String
+  deriving stock (Show)
+  deriving anyclass (Exception)
+
+newtype ExceptionsT a = MkExceptionsT (ReaderT ExceptionEnv IO a)
   deriving
     ( Functor,
       Applicative,
       Monad,
       MonadAsync,
       MonadCatch,
+      MonadFileReader,
       MonadHandleWriter,
+      MonadIO,
       MonadIORef,
       MonadMask,
+      MonadReader ExceptionEnv,
       MonadSTM,
       MonadThread,
-      MonadThrow
+      MonadThrow,
+      MonadTypedProcess
     )
-    via IO
+    via (ReaderT ExceptionEnv IO)
 
-newtype TestEx = MkTestE String
-  deriving stock (Show)
-  deriving anyclass (Exception)
+runExceptionsT :: ExceptionsT a -> ExceptionEnv -> IO a
+runExceptionsT (MkExceptionsT rdr) = runReaderT rdr
 
-instance MonadTerminal (NaviT ExceptionEnv ExceptionIO) where
-  putStr = error "putStr: todo"
-  getChar = error "getChar: todo"
-  getContents' = error "getContents': todo"
-  getLine = error "getLine: todo"
-  getTerminalSize = error "getTerminalSize: todo"
-
+instance MonadTerminal ExceptionsT where
   -- NOTE: putBinary is used to fatally kill the logger thread, if we are
   -- testing it (badThread == LogThread)
   putBinary bs = do
@@ -150,9 +130,8 @@ instance MonadTerminal (NaviT ExceptionEnv ExceptionIO) where
         logsRef <- asks (view #logsRef)
         modifyIORef' logsRef (bs :<|)
       LogThread -> sleep 2 *> throwM (MkTestE "logger dying")
-  supportsPretty = error "supportsPretty: todo"
 
-instance MonadSystemInfo (NaviT ExceptionEnv ExceptionIO) where
+instance MonadSystemInfo ExceptionsT where
   query = \case
     BatteryPercentage _ -> error "battery percentage unimplemented"
     BatteryStatus _ -> error "battery status unimplemented"
@@ -160,7 +139,7 @@ instance MonadSystemInfo (NaviT ExceptionEnv ExceptionIO) where
     Single _ -> pure "single"
     Multiple _ -> pure "multiple"
 
-instance MonadLogger (NaviT ExceptionEnv ExceptionIO) where
+instance MonadLogger ExceptionsT where
   monadLoggerLog loc _src lvl msg = do
     logQueue <- asks getLogQueue
     logLevel <- asks (view #logLevel . getLogEnv)
@@ -168,7 +147,7 @@ instance MonadLogger (NaviT ExceptionEnv ExceptionIO) where
       formatted <- formatLog (defaultLogFormatter loc) lvl msg
       writeTBQueueA logQueue formatted
 
-instance MonadTime (NaviT ExceptionEnv ExceptionIO) where
+instance MonadTime ExceptionsT where
   getSystemZonedTime = pure zonedTime
   getMonotonicTime = pure 0
 
@@ -181,7 +160,7 @@ localTime = LocalTime day tod
 zonedTime :: ZonedTime
 zonedTime = ZonedTime localTime utc
 
-instance MonadNotify (NaviT ExceptionEnv ExceptionIO) where
+instance MonadNotify ExceptionsT where
   -- NOTE: sendNote is used to fatally kill the notify thread, if we are
   -- testing it (badThread == NotifyThread)
   sendNote _ = do
@@ -225,43 +204,31 @@ runExceptionApp ::
   BadThread ->
   IO (e, Seq ByteString)
 runExceptionApp badThread = do
-  let event =
-        MkAnyEvent
-          $ MkEvent
-            { name = "exception test",
-              serviceType = Single "",
-              pollInterval = 1,
-              repeatEvent = AllowRepeats,
-              errorNote = NoErrNote,
-              raiseAlert = const Nothing
-            }
-
-  logQueue <- newTBQueueA 10
-  noteQueue <- newTBQueueA 10
   logsRef <- newIORef []
 
-  let env :: ExceptionEnv
-      env =
-        MkExceptionEnv
-          { badThread,
-            events = [event],
-            logEnv =
-              MkLogEnv
-                { logHandle = Nothing,
-                  logLevel = LevelDebug,
-                  logNamespace = "int-ex-test"
-                },
-            logQueue,
-            logsRef,
-            noteQueue
-          }
+  let action = SysEnv.withArgs args $ Runner.withEnv $ \coreEnv -> do
+        let env =
+              MkExceptionEnv
+                { badThread,
+                  coreEnv,
+                  logsRef
+                }
+        Async.race
+          (sleep 10)
+          (runExceptionsT runNavi env)
 
-      -- NOTE: timeout after 10 seconds
-      MkExceptionIO testRun = Async.race (sleep 10_000_000) (runNaviT runNavi env)
-
-  try @_ @e testRun >>= \case
+  eResult <- try @_ @e action
+  case eResult of
     Left ex -> do
       logs <- readIORef logsRef
       pure (ex, logs)
     Right (Left _) -> error "Exception test timed out!"
     Right (Right _) -> error "Navi finished successfully, impossible!"
+  where
+    args = ["-c", path]
+
+    path =
+      decodeLenient
+        $ [osp|test|]
+        </> [osp|integration|]
+        </> [osp|exceptions.toml|]

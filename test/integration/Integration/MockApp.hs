@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -5,35 +6,27 @@
 module Integration.MockApp
   ( MockEnv (..),
     runMockApp,
-    configToMockEnv,
   )
 where
 
-import Effects.System.Terminal
-  ( MonadTerminal
-      ( getChar,
-        getContents',
-        getLine,
-        getTerminalSize,
-        putBinary,
-        putStr,
-        supportsPretty
-      ),
-  )
+import Control.Concurrent qualified as CC
+import Effects.Concurrent.Async qualified as Async
+import FileSystem.OsPath (decodeLenient)
 import Integration.Prelude
-import Navi.Config (Config)
+import Navi (runNavi)
 import Navi.Data.NaviLog (LogEnv (MkLogEnv))
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
-  ( HasEvents (getEvents),
+  ( Env,
+    HasEvents (getEvents),
     HasLogEnv (getLogEnv, localLogEnv),
     HasLogQueue (getLogQueue),
     HasNoteQueue (getNoteQueue),
   )
-import Navi.Event.Types (AnyEvent, EventError (MkEventError))
-import Navi.NaviT (NaviT, runNaviT)
+import Navi.Event.Types (EventError (MkEventError))
+import Navi.Runner qualified as Runner
 import Navi.Services.Types
   ( ServiceType
       ( BatteryPercentage,
@@ -50,12 +43,11 @@ import Pythia.Services.Battery
     BatteryStatus (Charging, Discharging),
     Percentage,
   )
+import System.Environment qualified as SysEnv
 
 -- | Mock configuration.
 data MockEnv = MkMockEnv
-  { events :: NonEmpty AnyEvent,
-    logQueue :: TBQueue LogStr,
-    noteQueue :: TBQueue NaviNote,
+  { coreEnv :: Env,
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
     sentNotes :: IORef [NaviNote],
@@ -81,19 +73,19 @@ instance
   {-# INLINE labelOptic #-}
 
 instance HasEvents MockEnv where
-  getEvents = view #events
+  getEvents = getEvents . view #coreEnv
 
 instance HasLogEnv MockEnv where
   getLogEnv = pure $ MkLogEnv Nothing LevelInfo ""
   localLogEnv _ = id
 
 instance HasLogQueue MockEnv where
-  getLogQueue = view #logQueue
+  getLogQueue = getLogQueue . view #coreEnv
 
 instance HasNoteQueue MockEnv where
-  getNoteQueue = view #noteQueue
+  getNoteQueue = getNoteQueue . view #coreEnv
 
-newtype IntTestIO a = MkIntTestIO (IO a)
+newtype MockAppT a = MkMockAppT (ReaderT MockEnv IO a)
   deriving
     ( Functor,
       Applicative,
@@ -105,31 +97,24 @@ newtype IntTestIO a = MkIntTestIO (IO a)
       MonadIO,
       MonadIORef,
       MonadMask,
+      MonadReader MockEnv,
       MonadSTM,
       MonadTerminal,
       MonadThread,
-      MonadThrow
+      MonadThrow,
+      MonadTypedProcess
     )
-    via IO
+    via (ReaderT MockEnv IO)
 
-makePrisms ''IntTestIO
+runMockAppT :: MockAppT a -> MockEnv -> IO a
+runMockAppT (MkMockAppT rdr) = runReaderT rdr
 
-instance MonadLogger (NaviT MockEnv IntTestIO) where
+instance MonadLogger MockAppT where
   -- if we ever decide to test logs, we can capture them similar to the
   -- MonadNotify instance.
   monadLoggerLog _loc _src _lvl _msg = pure ()
 
-instance MonadTerminal (NaviT MockEnv IntTestIO) where
-  getChar = liftIO getChar
-  getLine = liftIO getLine
-  getContents' = liftIO getContents'
-  getTerminalSize = liftIO getTerminalSize
-  putBinary = liftIO . putBinary
-  putStr = liftIO . putStr
-  putStrLn = liftIO . putStrLn
-  supportsPretty = liftIO supportsPretty
-
-instance MonadNotify (NaviT MockEnv IntTestIO) where
+instance MonadNotify MockAppT where
   sendNote note =
     if note ^. #summary == "SentException"
       then throwM $ MkEventError "SentException" "sending mock exception" ""
@@ -137,7 +122,7 @@ instance MonadNotify (NaviT MockEnv IntTestIO) where
         notes <- asks (view #sentNotes)
         liftIO $ modifyIORef' notes (note :)
 
-instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
+instance MonadSystemInfo MockAppT where
   -- Service that changes every time: can be used to test multiple
   -- notifications are sent.
   query (BatteryPercentage _) = do
@@ -160,22 +145,30 @@ instance MonadSystemInfo (NaviT MockEnv IntTestIO) where
   -- Constant service. Can test duplicate behavior.
   query (Multiple _) = pure "multiple result"
 
-runMockApp :: (NaviT MockEnv IntTestIO) a -> MockEnv -> IO a
-runMockApp nt = view _MkIntTestIO . runNaviT nt
+runMockApp :: Word8 -> OsPath -> IO MockEnv
+runMockApp maxSeconds configPath = do
+  lastPercentage <- newIORef $ Percentage.unsafePercentage 6
+  sentNotes <- newIORef []
 
-configToMockEnv :: Config -> IO MockEnv
-configToMockEnv config = do
-  sentNotesRef <- newIORef []
+  let action = SysEnv.withArgs args $ Runner.withEnv $ \coreEnv -> do
+        let env =
+              MkMockEnv
+                { coreEnv,
+                  lastPercentage,
+                  sentNotes
+                }
+        Async.race
+          (countdown maxSeconds $> env)
+          (runMockAppT (absurd <$> runNavi) env)
 
-  lastPercentageRef <- newIORef $ Percentage.unsafePercentage 6
-  logQueue <- newTBQueueA 1000
-  noteQueue <- newTBQueueA 1000
+  result <- action
+  case result of
+    Left env -> pure env
+    Right env -> pure env
+  where
+    args = ["-c", path]
 
-  pure
-    $ MkMockEnv
-      { events = config ^. #events,
-        sentNotes = sentNotesRef,
-        logQueue = logQueue,
-        noteQueue = noteQueue,
-        lastPercentage = lastPercentageRef
-      }
+    path = decodeLenient configPath
+
+countdown :: Word8 -> IO ()
+countdown = CC.threadDelay . (* 1_000_000) . fromIntegral . (+ 1)

@@ -3,59 +3,18 @@
 
 -- | Provides environment for usage with NotifySend.
 module Navi.Env.NotifySend
-  ( NotifySendEnv (..),
-    mkNotifySendEnv,
+  ( mkNotifySendEnv,
     naviToNotifySend,
   )
 where
 
 import DBus.Notify (UrgencyLevel (Critical, Low, Normal))
-import Navi.Config.Types (Config)
+import Navi.Config.Types (Config, NoteSystem (NotifySend))
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote, Timeout (Never, Seconds))
-import Navi.Env.Core
-  ( Env (MkEnv),
-    HasEvents (..),
-    HasLogEnv (..),
-    HasLogQueue (..),
-    HasNoteQueue (..),
-  )
+import Navi.Env.Core (Env (MkEnv))
 import Navi.Prelude
 import Navi.Utils qualified as Utils
-
--- | Concrete notify-send environment.
-newtype NotifySendEnv = MkNotifySendEnv
-  { coreEnv :: Env
-  }
-
-makeFieldLabelsNoPrefix ''NotifySendEnv
-
-instance HasEvents NotifySendEnv where
-  getEvents = view (#coreEnv % #events)
-
-instance HasLogEnv NotifySendEnv where
-  getLogEnv = view (#coreEnv % #logEnv)
-  localLogEnv = over' (#coreEnv % #logEnv)
-
-instance HasLogQueue NotifySendEnv where
-  getLogQueue = view (#coreEnv % #logQueue)
-
-instance HasNoteQueue NotifySendEnv where
-  getNoteQueue = view (#coreEnv % #noteQueue)
-
-instance
-  ( k ~ A_Lens,
-    x ~ Namespace,
-    y ~ Namespace
-  ) =>
-  LabelOptic "namespace" k NotifySendEnv NotifySendEnv x y
-  where
-  labelOptic =
-    lensVL $ \f (MkNotifySendEnv a1) ->
-      fmap
-        (\b -> MkNotifySendEnv (set' #namespace b a1))
-        (f (a1 ^. #namespace))
-  {-# INLINE labelOptic #-}
 
 -- | Creates a 'NotifySendEnv' from the provided log types and configuration
 -- data.
@@ -63,19 +22,17 @@ mkNotifySendEnv ::
   (MonadSTM m) =>
   LogEnv ->
   Config ->
-  m NotifySendEnv
+  m Env
 mkNotifySendEnv logEnv config = do
   logQueue <- newTBQueueA 1000
   noteQueue <- newTBQueueA 1000
   pure
-    $ MkNotifySendEnv
-      { coreEnv =
-          MkEnv
-            (config ^. #events)
-            logEnv
-            logQueue
-            noteQueue
-      }
+    $ MkEnv
+      (config ^. #events)
+      logEnv
+      logQueue
+      noteQueue
+      NotifySend
 {-# INLINEABLE mkNotifySendEnv #-}
 
 -- | Turns a 'NaviNote' into a string to be sent with the notify-send tool.

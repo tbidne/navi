@@ -52,6 +52,7 @@ library
     Navi.Args
     Navi.Args.TH
     Navi.Config
+    Navi.Config.Phase
     Navi.Config.Toml
     Navi.Config.Types
     Navi.Data.NaviLog
@@ -69,6 +70,7 @@ library
     Navi.Event.Types
     Navi.NaviT
     Navi.Prelude
+    Navi.Runner
     Navi.Services.Battery.Common
     Navi.Services.Battery.Percentage
     Navi.Services.Battery.Percentage.Toml
@@ -84,37 +86,37 @@ library
     Navi.Utils
 
   build-depends:
-    , base                  >=4.17      && <4.22
-    , bytestring            >=0.10.10.0 && <0.13
-    , containers            >=0.5.11.0  && <0.8
-    , dbus                  >=1.2.14    && <1.4
-    , deepseq               >=1.4.6.0   && <1.6
-    , effects-async         ^>=0.1
-    , effects-fs            ^>=0.1
-    , effects-ioref         ^>=0.1
-    , effects-logger        ^>=0.1
-    , effects-optparse      ^>=0.1
-    , effects-stm           ^>=0.1
-    , effects-terminal      ^>=0.1
-    , effects-thread        ^>=0.1
-    , effects-time          ^>=0.1
-    , exception-utils       ^>=0.1
-    , exceptions            ^>=0.10.4
-    , fdo-notify            ^>=0.3.1
-    , gitrev-typed          ^>=0.1
-    , mtl                   >=2.2.2     && <2.4
-    , optics-core           ^>=0.4
-    , optics-th             ^>=0.4
-    , optparse-applicative  >=0.16.1.0  && <0.19
-    , os-string             ^>=2.0.1
-    , process               ^>=1.6.9.0
-    , pythia                ^>=0.1
-    , relative-time         ^>=0.1
-    , si-bytes              ^>=0.1
-    , template-haskell      >=2.17.0.0  && <2.24
-    , text                  >=1.2.3.2   && <2.2
-    , time                  >=1.9.3     && <1.15
-    , toml-reader           >=0.1.0.0   && <0.3
+    , base                   >=4.17      && <4.22
+    , bytestring             >=0.10.10.0 && <0.13
+    , containers             >=0.5.11.0  && <0.8
+    , dbus                   >=1.2.14    && <1.4
+    , deepseq                >=1.4.6.0   && <1.6
+    , effects-async          ^>=0.1
+    , effects-fs             ^>=0.1
+    , effects-ioref          ^>=0.1
+    , effects-logger         ^>=0.1
+    , effects-optparse       ^>=0.1
+    , effects-stm            ^>=0.1
+    , effects-terminal       ^>=0.1
+    , effects-thread         ^>=0.1
+    , effects-time           ^>=0.1
+    , effects-typed-process  ^>=0.1
+    , exception-utils        ^>=0.1
+    , exceptions             ^>=0.10.4
+    , fdo-notify             ^>=0.3.1
+    , gitrev-typed           ^>=0.1
+    , mtl                    >=2.2.2     && <2.4
+    , optics-core            ^>=0.4
+    , optics-th              ^>=0.4
+    , optparse-applicative   >=0.16.1.0  && <0.19
+    , os-string              ^>=2.0.1
+    , pythia                 ^>=0.1
+    , relative-time          ^>=0.1
+    , si-bytes               ^>=0.1
+    , template-haskell       >=2.17.0.0  && <2.24
+    , text                   >=1.2.3.2   && <2.2
+    , time                   >=1.9.3     && <1.15
+    , toml-reader            >=0.1.0.0   && <0.3
 
   hs-source-dirs:  src
 
@@ -123,11 +125,7 @@ executable navi
   main-is:        Main.hs
   build-depends:
     , base
-    , effects-fs
-    , effects-time
     , navi
-    , si-bytes
-    , text
 
   hs-source-dirs: app
   ghc-options:    -threaded -with-rtsopts=-N

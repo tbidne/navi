@@ -12,17 +12,13 @@
 -- @since 0.1
 module Main (main) where
 
-import Control.Concurrent qualified as CC
 import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
-import Effects.Concurrent.Async qualified as Async
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter qualified as Dir
 import Integration.Exceptions qualified as Exceptions
-import Integration.MockApp (MockEnv, configToMockEnv, runMockApp)
+import Integration.MockApp (MockEnv, runMockApp)
 import Integration.Prelude
-import Navi (runNavi)
-import Navi.Config (readConfig)
 import Navi.Data.NaviNote (NaviNote (MkNaviNote, body, summary, timeout, urgency))
 import Navi.Event (EventError (MkEventError))
 import Test.Tasty qualified as Tasty
@@ -120,18 +116,17 @@ runMock maxSeconds config = do
   -- setup file
   tmp <- Dir.getTemporaryDirectory
   let configFp = tmp </> [osp|int.toml|]
-  writeFileUtf8 configFp config
-  -- file -> config
-  cfg <- readConfig configFp
-  mockEnv <- configToMockEnv cfg
-  -- runNavi runs forever, so we use race_ to kill it once the countdown
-  -- runs out.
-  Async.race_ (countdown maxSeconds) (runMockApp runNavi mockEnv)
+  writeFileUtf8 configFp config'
+  mockEnv <- runMockApp maxSeconds configFp
   Dir.removeFile configFp
   pure mockEnv
-
-countdown :: Word8 -> IO ()
-countdown = CC.threadDelay . (* 1_000_000) . fromIntegral . (+ 1)
+  where
+    config' =
+      T.unlines
+        [ "[logging]",
+          "location = \"stdout\"",
+          config
+        ]
 
 batteryPercentageEventConfig :: Text
 batteryPercentageEventConfig =

@@ -5,15 +5,18 @@
 module Navi.Env.DBus
   ( HasDBusClient (..),
     DBusEnv (..),
+    MonadDBus (..),
     mkDBusEnv,
     naviToDBus,
   )
 where
 
 import DBus.Client (Client)
+import DBus.Client qualified as DBus
 import DBus.Notify (Hint (Urgency), Note)
 import DBus.Notify qualified as DBusN
 import Navi.Config (Config)
+import Navi.Config.Types (NoteSystem (DBus))
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote, Timeout (Never, Seconds))
 import Navi.Env.Core
@@ -67,26 +70,40 @@ instance
         (f (a1 ^. #namespace))
   {-# INLINE labelOptic #-}
 
+class (Monad m) => MonadDBus m where
+  -- | Connects to DBus.
+  connectSession :: (HasCallStack) => m Client
+
+  -- | Sends a notification to DBus.
+  notify :: (HasCallStack) => Client -> NaviNote -> m ()
+
+instance MonadDBus IO where
+  connectSession = DBus.connectSession
+
+  notify client = void . DBusN.notify client . naviToDBus
+
+instance (MonadDBus m) => MonadDBus (ReaderT env m) where
+  connectSession = lift connectSession
+
+  notify c = lift . notify c
+
 -- | Creates a 'DBusEnv' from the provided log types and configuration data.
 mkDBusEnv ::
-  (HasCallStack, MonadIO m, MonadSTM m) =>
+  (HasCallStack, MonadDBus m, MonadSTM m) =>
   LogEnv ->
   Config ->
-  m DBusEnv
+  m Env
 mkDBusEnv logEnv config = do
-  client <- liftIO DBusN.connectSession
+  client <- connectSession
   logQueue <- newTBQueueA 1000
   noteQueue <- newTBQueueA 1000
   pure
-    $ MkDBusEnv
-      { coreEnv =
-          MkEnv
-            (config ^. #events)
-            logEnv
-            logQueue
-            noteQueue,
-        dbusClient = client
-      }
+    $ MkEnv
+      (config ^. #events)
+      logEnv
+      logQueue
+      noteQueue
+      (DBus client)
 {-# INLINEABLE mkDBusEnv #-}
 
 -- | Turns a 'NaviNote' into a DBus 'Note'.

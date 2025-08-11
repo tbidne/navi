@@ -133,6 +133,8 @@ import Effects.Logger as X
     logWarn,
   )
 import Effects.Logger.Namespace as X (MonadLoggerNS, Namespace, addNamespace)
+import Effects.Optparse as X (MonadOptparse)
+import Effects.Process.Typed as X (MonadTypedProcess, Process)
 import Effects.System.Terminal as X (MonadTerminal, putStrLn, putTextLn)
 import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
 import GHC.Enum as X (Bounded (maxBound, minBound))
@@ -146,9 +148,13 @@ import GHC.Real as X (Integral (..), fromIntegral)
 import GHC.Show as X (Show (show))
 import GHC.Stack as X (HasCallStack)
 import Optics.Core as X
-  ( A_Lens,
+  ( A_Getter,
+    A_Lens,
+    A_Setter,
     AffineTraversal',
+    Is,
     Iso',
+    LabelOptic',
     Lens',
     Traversal',
     lens,

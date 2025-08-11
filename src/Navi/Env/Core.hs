@@ -8,12 +8,15 @@ module Navi.Env.Core
     HasLogEnv (..),
     HasLogQueue (..),
     HasNoteQueue (..),
+    sendNoteQueue,
 
     -- * Concrete Env
     Env (..),
   )
 where
 
+import Navi.Config.Phase (ConfigPhase (ConfigPhaseEnv))
+import Navi.Config.Types (NoteSystem)
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Event.Types (AnyEvent)
@@ -26,6 +29,8 @@ class HasEvents env where
 -- | Retrieves the log environment.
 class HasLogEnv env where
   getLogEnv :: env -> LogEnv
+
+  -- TODO: Is this needed?
   localLogEnv :: (LogEnv -> LogEnv) -> env -> env
 
 -- | Retrieves the log queue.
@@ -41,7 +46,8 @@ data Env = MkEnv
   { events :: NonEmpty AnyEvent,
     logEnv :: LogEnv,
     logQueue :: TBQueue LogStr,
-    noteQueue :: TBQueue NaviNote
+    noteQueue :: TBQueue NaviNote,
+    notifySystem :: NoteSystem ConfigPhaseEnv
   }
 
 makeFieldLabelsNoPrefix ''Env
@@ -67,8 +73,22 @@ instance
   LabelOptic "namespace" k Env Env x y
   where
   labelOptic =
-    lensVL $ \f (MkEnv a1 a2 a3 a4) ->
+    lensVL $ \f (MkEnv a1 a2 a3 a4 a5) ->
       fmap
-        (\b -> MkEnv a1 (set' #logNamespace b a2) a3 a4)
+        (\b -> MkEnv a1 (set' #logNamespace b a2) a3 a4 a5)
         (f (a2 ^. #logNamespace))
   {-# INLINE labelOptic #-}
+
+-- | Convenience function for retrieving a 'TBQueue'
+-- 'NaviNote' from the @env@ and sending the note.
+sendNoteQueue ::
+  ( HasCallStack,
+    HasNoteQueue env,
+    MonadReader env m,
+    MonadSTM m
+  ) =>
+  NaviNote ->
+  m ()
+sendNoteQueue naviNote =
+  asks getNoteQueue >>= (`writeTBQueueA` naviNote)
+{-# INLINEABLE sendNoteQueue #-}
