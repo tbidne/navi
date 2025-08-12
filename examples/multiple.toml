@@ -26,24 +26,18 @@ command = """
 
 [[multiple.trigger-note]]
 trigger = "100"
-
-[multiple.trigger-note.note]
 summary = "Battery Percentage"
 body = "Full"
 timeout = 10
 
 [[multiple.trigger-note]]
 trigger = "80"
-
-[multiple.trigger-note.note]
 summary = "Battery Percentage"
 body = "< 80"
 timeout = 10
 
 [[multiple.trigger-note]]
 trigger = "40"
-
-[multiple.trigger-note.note]
 summary = "Battery Percentage"
 body = "< 40"
 urgency = "critical"

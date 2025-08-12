@@ -1,3 +1,6 @@
+{-# LANGUAGE ImplicitParams #-}
+{-# LANGUAGE MagicHash #-}
+
 -- | Custom prelude. The idea is to:
 --
 -- * Re-export useful prelude functions/types
@@ -17,6 +20,7 @@ module Navi.Prelude
     (<<$>>),
     maybeToEither,
     monoBimap,
+    todo,
 
     -- * 'Text' replacements for 'P.String' functions.
     showt,
@@ -139,6 +143,8 @@ import Effects.System.Terminal as X (MonadTerminal, putStrLn, putTextLn)
 import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
 import GHC.Enum as X (Bounded (maxBound, minBound))
 import GHC.Err as X (error, undefined)
+import GHC.Exception (errorCallWithCallStackException)
+import GHC.Exts (RuntimeRep, TYPE, raise#)
 import GHC.Float as X (Double)
 import GHC.Generics as X (Generic)
 import GHC.Int as X (Int)
@@ -224,3 +230,7 @@ infixr 8 >.>
 (<<$>>) = fmap . fmap
 
 infixl 4 <<$>>
+
+todo :: forall {r :: RuntimeRep} (a :: TYPE r). (HasCallStack) => a
+todo = raise# (errorCallWithCallStackException "Prelude.todo: not yet implemented" ?callStack)
+{-# WARNING todo "todo remains in code" #-}

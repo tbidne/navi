@@ -166,15 +166,11 @@ testReplaceText = testCase "Replaces trigger text" $ do
           "",
           "[[multiple.trigger-note]]",
           "trigger = \"t1\"",
-          "",
-          "[multiple.trigger-note.note]",
           "summary = \"Multiple\"",
           "body = \"Result is $trigger\"",
           "",
           "[[multiple.trigger-note]]",
           "trigger = \"t2\"",
-          "",
-          "[multiple.trigger-note.note]",
           "summary = \"Multiple\"",
           "body = \"Result is $trigger\""
         ]

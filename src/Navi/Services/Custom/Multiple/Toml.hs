@@ -36,7 +36,7 @@ instance DecodeTOML TriggerNoteToml where
   tomlDecoder =
     MkTriggerNoteToml
       <$> getField "trigger"
-      <*> getField "note"
+      <*> tomlDecoder
 
 -- | TOML for the custom multiple service.
 data MultipleToml = MkMultipleToml

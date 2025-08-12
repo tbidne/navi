@@ -47,7 +47,6 @@ parsesCmd =
           "\"\"\"",
           "[[trigger-note]]",
           "trigger = \"value\"",
-          "[trigger-note.note]",
           "summary = \"a summary\""
         ]
 
@@ -64,14 +63,12 @@ parsesNotes =
         [ "command = \"cmd\"",
           "[[trigger-note]]",
           "trigger = \"first val\"",
-          "[trigger-note.note]",
           "summary = \"first summary\"",
           "body = \"first body\"",
           "urgency = \"critical\"",
           "timeout = 5",
           "[[trigger-note]]",
           "trigger = \"second val\"",
-          "[trigger-note.note]",
           "summary = \"second summary\""
         ]
     firstNote =
@@ -99,7 +96,6 @@ repeatEventTests =
         [ "command = \"cmd\"",
           "[[trigger-note]]",
           "trigger = \"value\"",
-          "[trigger-note.note]",
           "summary = \"a summary\""
         ]
 
@@ -117,7 +113,6 @@ parsesRepeatEvent desc flag ret =
           "repeat-events = " <> flag,
           "[[trigger-note]]",
           "trigger = \"value\"",
-          "[trigger-note.note]",
           "summary = \"a summary\""
         ]
 
@@ -136,7 +131,6 @@ errorNoteTests =
         [ "command = \"cmd\"",
           "[[trigger-note]]",
           "trigger = \"value\"",
-          "[trigger-note.note]",
           "summary = \"a summary\""
         ]
 
@@ -154,7 +148,6 @@ parsesErrorEvent desc flag ret =
           "error-events = \"" <> flag <> "\"",
           "[[trigger-note]]",
           "trigger = \"value\"",
-          "[trigger-note.note]",
           "summary = \"a summary\""
         ]
 
