@@ -255,7 +255,6 @@ defaultConfigTxt =
       "#    echo -n \"false\"",
       "#  fi",
       "#\"\"\"",
-      "#trigger = \"true\"",
       "#",
       "#[[multiple.trigger-note]]",
       "#trigger = \"true\"",

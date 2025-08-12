@@ -6,6 +6,7 @@
 module Integration.MockApp
   ( MockEnv (..),
     runMockApp,
+    runMockAppEnv,
   )
 where
 
@@ -52,7 +53,9 @@ data MockEnv = MkMockEnv
     sentNotes :: IORef [NaviNote],
     -- | caches the last battery percentage "reading". This way we can
     -- ensure we have a new percentage every time.
-    lastPercentage :: IORef Percentage
+    lastPercentage :: IORef Percentage,
+    multipleResponses :: IORef [Text],
+    singleResponses :: IORef [Text]
   }
 
 makeFieldLabelsNoPrefix ''MockEnv
@@ -119,7 +122,7 @@ instance MonadSystemInfo MockAppT where
   -- notifications are sent.
   query (BatteryPercentage _) = do
     bpRef <- asks (view #lastPercentage)
-    oldVal <- liftIO $ Percentage.unPercentage <$> readIORef bpRef
+    oldVal <- Percentage.unPercentage <$> readIORef bpRef
     let !newVal =
           if oldVal == 0
             then 100
@@ -132,14 +135,30 @@ instance MonadSystemInfo MockAppT where
   -- Service error. Can test error behavior.
   query (NetworkInterface _ _) =
     throwM $ MkCommandException "nmcli" "Nmcli error"
-  -- Constant service. Can test duplicate behavior.
-  query (Single _) = pure "single trigger"
-  -- Constant service. Can test duplicate behavior.
-  query (Multiple _) = pure "multiple result"
+  query (Single _) = getResponseOrDefault #singleResponses "single trigger"
+  query (Multiple _) = getResponseOrDefault #multipleResponses "multiple result"
+
+getResponseOrDefault ::
+  Lens' MockEnv (IORef [Text]) ->
+  Text ->
+  MockAppT Text
+getResponseOrDefault l def = do
+  ref <- asks (view l)
+  singleResponses <- readIORef ref
+  case singleResponses of
+    [] -> pure def
+    r : rs -> do
+      writeIORef ref rs
+      pure r
 
 runMockApp :: Word8 -> OsPath -> IO MockEnv
-runMockApp maxSeconds configPath = do
+runMockApp = runMockAppEnv pure
+
+runMockAppEnv :: (MockEnv -> IO MockEnv) -> Word8 -> OsPath -> IO MockEnv
+runMockAppEnv modEnv maxSeconds configPath = do
   lastPercentage <- newIORef $ Percentage.unsafePercentage 6
+  multipleResponses <- newIORef []
+  singleResponses <- newIORef []
   sentNotes <- newIORef []
 
   let action = SysEnv.withArgs args $ Runner.withEnv $ \coreEnv -> do
@@ -147,11 +166,14 @@ runMockApp maxSeconds configPath = do
               MkMockEnv
                 { coreEnv,
                   lastPercentage,
-                  sentNotes
+                  sentNotes,
+                  multipleResponses,
+                  singleResponses
                 }
+        env' <- modEnv env
         Async.race
-          (countdown maxSeconds $> env)
-          (runMockAppT (absurd <$> runNavi) env)
+          (countdown maxSeconds $> env')
+          (runMockAppT (absurd <$> runNavi) env')
 
   result <- action
   case result of

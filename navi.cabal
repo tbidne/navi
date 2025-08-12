@@ -171,6 +171,7 @@ test-suite integration
 
   build-depends:
     , base
+    , containers
     , effects-async
     , effects-fs
     , effects-logger

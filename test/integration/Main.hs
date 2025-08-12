@@ -14,11 +14,13 @@
 module Main (main) where
 
 import DBus.Notify (UrgencyLevel (Critical))
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Text qualified as T
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter qualified as Dir
 import Integration.Exceptions qualified as Exceptions
-import Integration.MockApp (MockEnv, runMockApp)
+import Integration.MockApp (MockEnv, runMockAppEnv)
 import Integration.Prelude
 import Navi.Data.NaviNote (NaviNote (MkNaviNote, body, summary, timeout, urgency))
 import Navi.Event (EventError (MkEventError))
@@ -37,6 +39,7 @@ main = do
         testSwallowErrs,
         testSendsMultipleErrs,
         testSendExceptionDies,
+        testReplaceText,
         Exceptions.tests
       ]
 
@@ -112,13 +115,80 @@ testSendExceptionDies = testCase "Exception in send kills program" $ do
   where
     expected = Just $ MkEventError "SentException" "sending mock exception" ""
 
+testReplaceText :: TestTree
+testReplaceText = testCase "Replaces trigger text" $ do
+  mockEnv <- runMockEnv modEnv 3 cfg
+
+  sentNotes <- mockEnvToNotes mockEnv
+  assertNotes expected sentNotes
+  where
+    expected =
+      Set.fromList
+        [ MkNaviNote
+            { summary = "Multiple",
+              body = Just "Result is t2",
+              urgency = Nothing,
+              timeout = Nothing
+            },
+          MkNaviNote
+            { summary = "Multiple",
+              body = Just "Result is t1",
+              urgency = Nothing,
+              timeout = Nothing
+            },
+          MkNaviNote
+            { summary = "Single",
+              body = Just "result is: single trigger",
+              urgency = Nothing,
+              timeout = Nothing
+            }
+        ]
+
+    modEnv :: MockEnv -> IO MockEnv
+    modEnv env = do
+      writeIORef (env ^. #multipleResponses) ["t1", "t2"]
+      pure env
+
+    cfg =
+      T.unlines
+        [ "[[single]]",
+          "poll-interval = 1",
+          "command = \"cmd\"",
+          "trigger = \"single trigger\"",
+          "",
+          "[single.note]",
+          "summary = \"Single\"",
+          "body = \"result is: $trigger\"",
+          "",
+          "[[multiple]]",
+          "poll-interval = 1",
+          "command = \"cmd\"",
+          "",
+          "[[multiple.trigger-note]]",
+          "trigger = \"t1\"",
+          "",
+          "[multiple.trigger-note.note]",
+          "summary = \"Multiple\"",
+          "body = \"Result is $trigger\"",
+          "",
+          "[[multiple.trigger-note]]",
+          "trigger = \"t2\"",
+          "",
+          "[multiple.trigger-note.note]",
+          "summary = \"Multiple\"",
+          "body = \"Result is $trigger\""
+        ]
+
 runMock :: Word8 -> Text -> IO MockEnv
-runMock maxSeconds config = do
+runMock = runMockEnv pure
+
+runMockEnv :: (MockEnv -> IO MockEnv) -> Word8 -> Text -> IO MockEnv
+runMockEnv modEnv maxSeconds config = do
   -- setup file
   tmp <- Dir.getTemporaryDirectory
   let configFp = tmp </> [osp|int.toml|]
   writeFileUtf8 configFp config'
-  mockEnv <- runMockApp maxSeconds configFp
+  mockEnv <- runMockAppEnv modEnv maxSeconds configFp
   Dir.removeFile configFp
   pure mockEnv
   where
@@ -202,6 +272,11 @@ assertNoteRange l r expected actual = do
   for_ actual $ \a -> expected @=? a
   where
     numActual = length actual
+
+assertNotes :: Set NaviNote -> [NaviNote] -> IO ()
+assertNotes expected actual = do
+  length expected @=? length actual
+  for_ actual $ \a -> assertBool (show a) (Set.member a expected)
 
 headerConfig :: Text
 headerConfig =

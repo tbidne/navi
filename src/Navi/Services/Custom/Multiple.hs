@@ -8,7 +8,7 @@ where
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict qualified as Map
 import Data.Text qualified as T
-import Navi.Data.NaviNote (NaviNote)
+import Navi.Data.NaviNote (NaviNote, replaceTrigger)
 import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -66,7 +66,7 @@ mkMultipleEvent mname cmd noteList pi re en =
     { name = name',
       serviceType = Multiple cmd,
       pollInterval = pi,
-      raiseAlert = flip Map.lookup noteMap,
+      raiseAlert = \b -> replaceTrigger b <$> Map.lookup b noteMap,
       repeatEvent = re,
       errorNote = en
     }

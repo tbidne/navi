@@ -7,11 +7,13 @@ module Navi.Data.NaviNote
     urgencyLevelOptDecoder,
     Timeout (..),
     timeoutOptDecoder,
+    replaceTrigger,
   )
 where
 
 import DBus.Notify (UrgencyLevel)
 import Data.Bits (toIntegralSized)
+import Data.Text qualified as T
 import Navi.Prelude
 import Navi.Utils (urgencyLevelOptDecoder)
 
@@ -21,7 +23,7 @@ import Navi.Utils (urgencyLevelOptDecoder)
 data Timeout
   = Never
   | Seconds Word16
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Ord, Show)
 
 -- | @since 0.1
 instance DecodeTOML Timeout where
@@ -56,7 +58,7 @@ data NaviNote = MkNaviNote
     -- | Determines how long the notification stays on-screen.
     timeout :: Maybe Timeout
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Ord, Show)
 
 makeFieldLabelsNoPrefix ''NaviNote
 
@@ -68,3 +70,7 @@ instance DecodeTOML NaviNote where
       <*> getFieldOpt "body"
       <*> urgencyLevelOptDecoder
       <*> timeoutOptDecoder
+
+replaceTrigger :: Text -> NaviNote -> NaviNote
+replaceTrigger triggerVal =
+  over' (#body % _Just) (T.replace "$trigger" triggerVal)
