@@ -22,13 +22,11 @@ summary = "Even Single"
 body = "Seconds are even!"
 timeout = 2
 
-[[switch]]
-name = "even-switch"
+[[multiple]]
 poll-interval = 3
-repeat-events = true
 command = """
-  sec=`date +%S`;
-  if [[ \"$sec % 2\" -eq 0 ]]; then
+  min=`date +%M`;
+  if [[ \"$min % 2\" -eq 0 ]]; then
     echo -n "true"
   else
     echo -n "false"
@@ -36,7 +34,18 @@ command = """
 """
 trigger = "true"
 
-[switch.note]
-summary = "Even Switch"
-body = "Seconds are even"
+[[multiple.trigger-note]]
+trigger = "true"
+
+[multiple.trigger-note.note]
+summary = "Even/Odd"
+body = "Minute is even"
+timeout = 2
+
+[[multiple.trigger-note]]
+trigger = "false"
+
+[multiple.trigger-note.note]
+summary = "Even/Odd"
+body = "Minute is odd"
 timeout = 2

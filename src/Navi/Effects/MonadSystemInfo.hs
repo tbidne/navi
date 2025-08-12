@@ -15,8 +15,7 @@ import Navi.Services.Types
         BatteryStatus,
         Multiple,
         NetworkInterface,
-        Single,
-        Switch
+        Single
       ),
   )
 import Navi.Utils qualified as U
@@ -48,7 +47,6 @@ instance MonadSystemInfo IO where
     NetworkInterface device cp ->
       rethrowPythia "NetInterface" $ Pythia.queryNetInterface device cp
     Single cmd -> rethrowPythia "Single" $ querySimple cmd
-    Switch cmd -> rethrowPythia "Switch" $ querySimple cmd
     Multiple cmd -> rethrowPythia "Multiple" $ querySimple cmd
 
 rethrowPythia :: Text -> IO a -> IO a

@@ -26,7 +26,6 @@ import Navi.Services.Battery.Percentage.Toml (BatteryPercentageToml)
 import Navi.Services.Battery.Status.Toml (BatteryStatusToml)
 import Navi.Services.Custom.Multiple.Toml (MultipleToml)
 import Navi.Services.Custom.Single.Toml (SingleToml)
-import Navi.Services.Custom.Switch.Toml (SwitchToml)
 import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml)
 import Navi.Utils (getFieldOptArrayOf)
 
@@ -35,7 +34,6 @@ data ConfigToml = MkConfigToml
   { logToml :: Maybe Logging,
     noteSystemToml :: Maybe (NoteSystem ConfigPhaseToml),
     singleToml :: [SingleToml],
-    switchToml :: [SwitchToml],
     multipleToml :: [MultipleToml],
     batteryPercentageToml :: Maybe BatteryPercentageToml,
     batteryStatusToml :: Maybe BatteryStatusToml,
@@ -52,7 +50,6 @@ instance DecodeTOML ConfigToml where
       <$> logDecoderOpt
       <*> getFieldOptWith noteSystemDecoder "note-system"
       <*> getFieldOptArrayOf "single"
-      <*> getFieldOptArrayOf "switch"
       <*> getFieldOptArrayOf "multiple"
       <*> getFieldOptWith tomlDecoder "battery-percentage"
       <*> getFieldOptWith tomlDecoder "battery-status"

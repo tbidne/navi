@@ -84,8 +84,6 @@ library
     Navi.Services.Custom.Multiple.Toml
     Navi.Services.Custom.Single
     Navi.Services.Custom.Single.Toml
-    Navi.Services.Custom.Switch
-    Navi.Services.Custom.Switch.Toml
     Navi.Services.Network.NetInterfaces
     Navi.Services.Network.NetInterfaces.Toml
     Navi.Services.Types

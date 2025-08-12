@@ -43,30 +43,6 @@ urgency = "critical"
 percent = 5
 urgency = "critical"
 
-# Custom "switch" event i.e. sends an update every time the status changes.
-# This is based on if the output equals the trigger ("true", in this case)
-# or not. That is, all other non-error outputs are considered 'false'.
-#
-# Send alert when the current minute changes its even/odd parity.
-[[switch]]
-poll-interval = 10
-command = """
-  min=`date +%M`;
-  if [[ \"$min % 2\" -eq 0 ]]; then
-    echo -n "true"
-  else
-    echo -n "false"
-  fi
-"""
-trigger = "true"
-
-[switch.note]
-summary = "Even/Odd"
-# Optional body, rendered as "Minute is even: true/false". Otherwise
-# defaults to "Status: true/false".
-body = "Minute is even"
-timeout = 10
-
 # Custom "single" event. Similar to "switch", though notifications are only
 # sent for "true" i.e. when the trigger is activated.
 #
@@ -95,6 +71,35 @@ trigger = "true"
 summary = "Temperature"
 body = "We're hot!"
 urgency = "critical"
+timeout = 10
+
+# Send alert when the current minute changes its even/odd parity.
+[[multiple]]
+poll-interval = 10
+command = """
+  min=`date +%M`;
+  if [[ \"$min % 2\" -eq 0 ]]; then
+    echo -n "true"
+  else
+    echo -n "false"
+  fi
+"""
+trigger = "true"
+
+[[multiple.trigger-note]]
+trigger = "true"
+
+[multiple.trigger-note.note]
+summary = "Even/Odd"
+body = "Minute is even"
+timeout = 10
+
+[[multiple.trigger-note]]
+trigger = "false"
+
+[multiple.trigger-note.note]
+summary = "Even/Odd"
+body = "Minute is odd"
 timeout = 10
 
 # Built-in network notifications, based on when the connection state changes.

@@ -16,8 +16,7 @@ import Navi.Config.Toml
         multipleToml,
         netInterfacesToml,
         noteSystemToml,
-        singleToml,
-        switchToml
+        singleToml
       ),
   )
 import Navi.Config.Types
@@ -126,7 +125,6 @@ logTests =
                 },
           noteSystemToml = Nothing,
           singleToml = [],
-          switchToml = [],
           multipleToml = [],
           batteryPercentageToml = Nothing,
           batteryStatusToml = expectedBatteryStatus,
@@ -154,7 +152,6 @@ expectedFull =
             },
       noteSystemToml = Nothing,
       singleToml = expectedSingle,
-      switchToml = [],
       multipleToml = [],
       batteryPercentageToml = expectedBatteryPercentage,
       batteryStatusToml = expectedBatteryStatus,

@@ -25,7 +25,6 @@
       - [Network Interface](#network-interface)
     - [Custom](#custom)
       - [Single](#single)
-      - [Switch](#switch)
       - [Multiple](#multiple)
 - [Installation](#installation)
 - [Building](#building)
@@ -285,48 +284,6 @@ trigger = "true"
 summary = "Temperature"
 body = "We're hot!"
 urgency = "critical"
-timeout = 10
-```
-
-#### Switch
-
-This service sends a single notification based on an arbitrary command. Like [single](#single), except it considers triggers to be both _positive_ and _negative_ i.e. will send notifactions whenever the status changes.
-
-##### Specific Options
-
-* `switch.command`: Command literal or path to a script.
-* `switch.name`: Optional name to be used in logging.
-* `switch.trigger`: Result that triggers the notification.
-
-##### General Options
-
-* `switch.poll-interval`: Defaults to 30 seconds.
-* `switch.repeat-events`
-* `switch.error-events`
-* `switch.note.summary`
-* `switch.note.body`
-* `switch.note.urgency`
-* `switch.note.timeout`
-
-##### Example
-
-```toml
-# Send alert when the current minute is even
-[[switch]]
-poll-interval = 10
-command = """
-  min=`date +%M`;
-  if [[ \"$min % 2\" -eq 0 ]]; then
-    echo -n "true"
-  else
-    echo -n "false"
-  fi
-"""
-trigger = "true"
-
-[switch.note]
-summary = "Even/Odd"
-body = "Minute is even"
 timeout = 10
 ```
 
