@@ -49,7 +49,7 @@ data MultipleToml = MkMultipleToml
     -- | The poll interval.
     pollInterval :: Maybe PollInterval,
     -- | Determines how we treat repeat alerts.
-    repeatEventCfg :: Maybe MultiRepeatEventToml,
+    repeatEventCfg :: Maybe (MultiRepeatEventToml Text),
     -- | Determines how we handle errors.
     errEventCfg :: Maybe ErrorNoteToml
   }
@@ -65,5 +65,8 @@ instance DecodeTOML MultipleToml where
       <*> getFieldOpt "name"
       <*> getFieldWith tomlDecoder "trigger-note"
       <*> pollIntervalOptDecoder
-      <*> multiRepeatEventOptDecoder
+      <*> multiRepeatEventOptDecoder decodeStr
       <*> errorNoteOptDecoder
+    where
+      decodeStr (String s) = pure s
+      decodeStr other = typeMismatch other

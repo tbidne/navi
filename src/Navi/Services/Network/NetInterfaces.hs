@@ -61,15 +61,17 @@ toEvent toml = do
       NetworkInterface device (toml ^. #app)
 {-# INLINEABLE toEvent #-}
 
-toNote :: NetInterfacesToml -> NetInterface -> Maybe NaviNote
+toNote :: NetInterfacesToml -> NetInterface -> Maybe (NetInterface, NaviNote)
 toNote noteToml conn =
   Just
-    $ MkNaviNote
-      { summary = "Network Connectivity",
-        body = Just body,
-        urgency = Nothing,
-        timeout = noteToml ^. #mTimeout
-      }
+    ( conn,
+      MkNaviNote
+        { summary = "Network Connectivity",
+          body = Just body,
+          urgency = Nothing,
+          timeout = noteToml ^. #mTimeout
+        }
+    )
   where
     deviceTxt = conn ^. (#device % #unDevice)
     nameTxt = fromMaybe "Unknown" $ conn ^. #name

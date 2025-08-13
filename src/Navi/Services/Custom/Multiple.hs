@@ -40,7 +40,7 @@ import Pythia.Data.Command (Command)
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent :: (MonadIORef m) => MultipleToml -> m AnyEvent
 toEvent toml = do
-  repeatEvent <- EventToml.mMultiRepeatEventTomlToVal (toml ^. #repeatEventCfg)
+  repeatEvent <- EventToml.mMultiRepeatEventTomlToVal CustomText (toml ^. #repeatEventCfg)
   errorNote <- EventToml.mErrorNoteTomlToVal (toml ^. #errEventCfg)
   pure
     $ MkAnyEvent
@@ -64,15 +64,15 @@ mkMultipleEvent ::
   PollInterval ->
   RepeatEvent CustomResult ->
   ErrorNote ->
-  Event CustomResult
+  Event CustomResult CustomResult
 mkMultipleEvent mname cmd noteList pollInterval repeatEvent errorNote =
   MkEvent
     { name,
       serviceType = Multiple cmd,
       pollInterval,
       raiseAlert = \case
-        CustomText result -> Map.lookup result noteMap
-        CustomOut (result, out) -> replaceOut out <$> Map.lookup result noteMap,
+        r@(CustomText result) -> (r,) <$> Map.lookup result noteMap
+        r@(CustomOut (result, out)) -> (r,) . replaceOut out <$> Map.lookup result noteMap,
       repeatEvent,
       errorNote
     }

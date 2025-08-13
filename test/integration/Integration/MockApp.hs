@@ -55,6 +55,7 @@ data MockEnv = MkMockEnv
     -- ensure we have a new percentage every time.
     lastPercentage :: IORef Percentage,
     multipleResponses :: IORef [Text],
+    percentageResponses :: IORef [Percentage],
     singleResponses :: IORef [Text]
   }
 
@@ -121,14 +122,22 @@ instance MonadSystemInfo MockAppT where
   -- Service that changes every time: can be used to test multiple
   -- notifications are sent.
   query (BatteryPercentage _) = do
-    bpRef <- asks (view #lastPercentage)
-    oldVal <- Percentage.unPercentage <$> readIORef bpRef
-    let !newVal =
-          if oldVal == 0
-            then 100
-            else oldVal - 1
-        newBp = Percentage.unsafePercentage newVal
-    liftIO $ writeIORef bpRef newBp
+    responsesRef <- asks (view #percentageResponses)
+    responses <- readIORef responsesRef
+    newBp <- case responses of
+      (r : rs) -> do
+        writeIORef responsesRef rs
+        pure r
+      [] -> do
+        bpRef <- asks (view #lastPercentage)
+        oldVal <- Percentage.unPercentage <$> readIORef bpRef
+        let !newVal =
+              if oldVal == 0
+                then 100
+                else oldVal - 1
+            newBp = Percentage.unsafePercentage newVal
+        liftIO $ writeIORef bpRef newBp
+        pure newBp
     pure $ MkBattery newBp Discharging
   -- Constant service. Can test duplicate behavior.
   query (BatteryStatus _) = pure Charging
@@ -159,6 +168,7 @@ runMockAppEnv :: (MockEnv -> IO MockEnv) -> Word8 -> OsPath -> IO MockEnv
 runMockAppEnv modEnv maxSeconds configPath = do
   lastPercentage <- newIORef $ Percentage.unsafePercentage 6
   multipleResponses <- newIORef []
+  percentageResponses <- newIORef []
   singleResponses <- newIORef []
   sentNotes <- newIORef []
 
@@ -169,6 +179,7 @@ runMockAppEnv modEnv maxSeconds configPath = do
                   lastPercentage,
                   sentNotes,
                   multipleResponses,
+                  percentageResponses,
                   singleResponses
                 }
         env' <- modEnv env

@@ -13,7 +13,7 @@
 -- @since 0.1
 module Main (main) where
 
-import DBus.Notify (UrgencyLevel (Critical))
+import DBus.Notify (UrgencyLevel (Critical, Low))
 import Data.List qualified as L
 import Data.List.NonEmpty qualified as NE
 import Data.Set (Set)
@@ -26,6 +26,7 @@ import Integration.MockApp (MockEnv, runMockAppEnv)
 import Integration.Prelude
 import Navi.Data.NaviNote (NaviNote (MkNaviNote, body, summary, timeout, urgency), Timeout (Seconds))
 import Navi.Event (AnyEvent (MkAnyEvent), EventError (MkEventError))
+import Pythia.Data.Percentage (unsafePercentage)
 import Test.Tasty qualified as Tasty
 
 -- | Runs integration tests.
@@ -44,6 +45,7 @@ main = do
         testReplaceText,
         testMultipleRepeats,
         testMultipleCustomText,
+        testBatteryPercentage,
         Exceptions.tests
       ]
 
@@ -315,6 +317,55 @@ testMultipleCustomText = testCase "Tests multiple dynamic example" $ do
             $ env
             ^. (#coreEnv % #events)
 
+testBatteryPercentage :: TestTree
+testBatteryPercentage = testCase "Tests battery percentage example" $ do
+  -- Tests complex config example that involves dynamic output and
+  -- some repeat events.
+
+  cfg <- modNoteSys <$> readFileUtf8ThrowM [ospPathSep|examples/config.toml|]
+
+  mockEnv <- runMockNoConfigEnv modEnv 5 cfg
+
+  sentNotes <- mockEnvToNotes mockEnv
+
+  -- The total length of sentNotes is non-deterministic (can result in extra
+  -- "2" messages), so we stop after verifying it has everything we want.
+  assertNotesOrder expected sentNotes
+  where
+    expected =
+      set' #urgency (Just Low) (mkNote "50%")
+        : (mkNote <$> ["10%", "8%", "2%"])
+
+    mkNote i =
+      MkNaviNote
+        { summary = "Battery Percentage",
+          body = Just i,
+          urgency = Just Critical,
+          timeout = Nothing
+        }
+
+    modEnv :: MockEnv -> IO MockEnv
+    modEnv env = do
+      let ps = [50, 45, 15, 11, 10, 8] ++ L.repeat 2
+      writeIORef (env ^. #percentageResponses) (unsafePercentage <$> ps)
+
+      let evts = case modEvts of
+            [] -> error "empty list: "
+            [e] -> NE.singleton e
+            es@(_ : _ : _) -> error $ "Filter failed:" ++ show es
+
+      pure
+        . set' (#coreEnv % #events) evts
+        $ env
+      where
+        takeExact (MkAnyEvent evt) = evt ^. #name == "battery-percentage"
+
+        modEvts =
+          fmap (\(MkAnyEvent e) -> MkAnyEvent (set' #pollInterval 1 e))
+            . NE.filter takeExact
+            $ env
+            ^. (#coreEnv % #events)
+
 -- Hacky, but we need to make some changes to examples/config.toml before
 -- it is parsed into the Env.
 modNoteSys :: Text -> Text
@@ -430,6 +481,10 @@ assertNoteRange l r expected actual = do
   for_ actual $ \a -> expected @=? a
   where
     numActual = length actual
+
+assertNotesOrder :: [NaviNote] -> [NaviNote] -> IO ()
+assertNotesOrder expected actual =
+  for_ (L.zip expected actual) $ uncurry (@=?)
 
 assertNotes :: Set NaviNote -> [NaviNote] -> IO ()
 assertNotes expected actual = do

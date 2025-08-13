@@ -55,6 +55,7 @@ import Navi.Services.Battery.Percentage.Toml
         pollInterval,
         repeatEvent
       ),
+    PercentageData (PercentageExact),
   )
 import Navi.Services.Battery.Status.Toml
   ( BatteryStatusToml
@@ -192,13 +193,13 @@ expectedBatteryPercentage =
   where
     alert1 =
       MkBatteryPercentageNoteToml
-        { percentage = Percentage.unsafePercentage 50,
+        { percentage = PercentageExact $ Percentage.unsafePercentage 50,
           urgency = Nothing,
           mTimeout = Nothing
         }
     alert2 =
       MkBatteryPercentageNoteToml
-        { percentage = Percentage.unsafePercentage 20,
+        { percentage = PercentageExact $ Percentage.unsafePercentage 20,
           urgency = Just Critical,
           mTimeout = Nothing
         }

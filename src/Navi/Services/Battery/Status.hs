@@ -58,7 +58,7 @@ mkStatusEvent ::
   PollInterval ->
   RepeatEvent BatteryStatus ->
   ErrorNote ->
-  Event BatteryStatus
+  Event BatteryStatus BatteryStatus
 mkStatusEvent to cfg pi repeatEvent errorNote =
   MkEvent
     { name = "battery-status",
@@ -69,8 +69,8 @@ mkStatusEvent to cfg pi repeatEvent errorNote =
       errorNote = errorNote
     }
 
-toNote :: Maybe Timeout -> BatteryStatus -> Maybe NaviNote
-toNote timeout status = toNote' timeout $ fromStatus status
+toNote :: Maybe Timeout -> BatteryStatus -> Maybe (BatteryStatus, NaviNote)
+toNote timeout status = (status,) <$> toNote' timeout (fromStatus status)
   where
     fromStatus Charging = "Battery charging"
     fromStatus Discharging = "Battery discharging"

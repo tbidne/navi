@@ -99,7 +99,7 @@ repeatEventTests =
           "summary = \"a summary\""
         ]
 
-parsesRepeatEvent :: String -> Text -> MultiRepeatEventToml -> TestTree
+parsesRepeatEvent :: String -> Text -> MultiRepeatEventToml Text -> TestTree
 parsesRepeatEvent desc flag ret =
   parsesExpected
     desc

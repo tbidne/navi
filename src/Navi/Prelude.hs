@@ -22,8 +22,10 @@ module Navi.Prelude
     monoBimap,
     todo,
 
-    -- * 'Text' replacements for 'P.String' functions.
+    -- * 'Text' utils.
     showt,
+    packText,
+    unpackText,
 
     -- * Base exports
     module X,
@@ -90,12 +92,14 @@ import Data.List as X (all, filter, replicate, zipWith, (++))
 import Data.List.NonEmpty as X (NonEmpty ((:|)))
 import Data.Maybe as X (Maybe (Just, Nothing), fromMaybe, maybe, maybeToList)
 import Data.Monoid as X (Monoid (mconcat, mempty))
-import Data.Ord as X (Ord ((<=), (>), (>=)))
+import Data.Ord as X (Ord ((<), (<=), (>), (>=)))
 import Data.Proxy as X (Proxy (Proxy))
 import Data.Semigroup as X (Semigroup ((<>)))
 import Data.Sequence as X (Seq ((:<|), (:|>)))
 import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text, concat, pack, unpack)
+import Data.Text qualified as T
+import Data.Text.Display as X (display)
 import Data.Traversable as X (Traversable (traverse))
 import Data.Tuple as X (fst, snd, uncurry)
 import Data.Type.Equality as X (type (~))
@@ -204,6 +208,12 @@ import Prelude qualified as P
 -- | 'Text' version of 'P.show'.
 showt :: (P.Show a) => a -> Text
 showt = pack . P.show
+
+unpackText :: Text -> String
+unpackText = T.unpack
+
+packText :: String -> Text
+packText = T.pack
 
 -- | Safe @head@.
 headMaybe :: [a] -> Maybe a

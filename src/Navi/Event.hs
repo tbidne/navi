@@ -42,8 +42,8 @@ runEvent ::
     MonadSystemInfo m,
     Show result
   ) =>
-  Event result ->
-  m (EventSuccess result)
+  Event result trigger ->
+  m (EventSuccess result trigger)
 runEvent event = addNamespace "runEvent" $ do
   result <- query $ event ^. #serviceType
   $(logInfo) ("Shell returned: " <> showt result)

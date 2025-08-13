@@ -4,6 +4,7 @@ module Unit.Navi.Services.Battery.Percentage.Toml
 where
 
 import DBus.Notify (UrgencyLevel (Critical))
+import Data.Set qualified as Set
 import Data.Text qualified as T
 import Navi.Data.NaviNote (Timeout (Seconds))
 import Navi.Event.Toml
@@ -12,7 +13,7 @@ import Navi.Event.Toml
         ErrNoteNoRepeatsToml,
         NoErrNoteToml
       ),
-    RepeatEventToml (AllowRepeatsToml, NoRepeatsToml),
+    MultiRepeatEventToml (MultiAllowRepeatsToml, MultiNoRepeatsToml, MultiSomeRepeatsToml),
   )
 import Navi.Services.Battery.Percentage.Toml
   ( BatteryPercentageNoteToml
@@ -22,7 +23,9 @@ import Navi.Services.Battery.Percentage.Toml
         urgency
       ),
     BatteryPercentageToml,
+    PercentageData (PercentageExact, PercentageRange),
   )
+import Pythia.Data.Percentage (Percentage)
 import Pythia.Data.Percentage qualified as Percentage
 import Pythia.Services.Battery
   ( BatteryApp
@@ -60,25 +63,26 @@ parsesAlerts =
           "percent = 20",
           "urgency = \"critical\"",
           "[[alert]]",
-          "percent = 10",
+          "lower = 0",
+          "upper = 10",
           "urgency = \"critical\"",
           "timeout = 15"
         ]
     alert1 =
       MkBatteryPercentageNoteToml
-        { percentage = Percentage.unsafePercentage 50,
+        { percentage = PercentageExact $ Percentage.unsafePercentage 50,
           urgency = Nothing,
           mTimeout = Nothing
         }
     alert2 =
       MkBatteryPercentageNoteToml
-        { percentage = Percentage.unsafePercentage 20,
+        { percentage = PercentageExact $ Percentage.unsafePercentage 20,
           urgency = Just Critical,
           mTimeout = Nothing
         }
     alert3 =
       MkBatteryPercentageNoteToml
-        { percentage = Percentage.unsafePercentage 10,
+        { percentage = PercentageRange (Percentage.unsafePercentage 0) (Percentage.unsafePercentage 10),
           urgency = Just Critical,
           mTimeout = Just (Seconds 15)
         }
@@ -111,16 +115,22 @@ repeatEventTests :: TestTree
 repeatEventTests =
   testGroup
     "Parses repeat event"
-    [ parsesRepeatEvent "off" "false" NoRepeatsToml,
-      parsesRepeatEvent "on" "true" AllowRepeatsToml,
-      parsesExpected
-        "<none>"
-        "app=\"upower\"\n[[alert]]\npercent=50"
-        Nothing
-        (view #repeatEvent)
+    [ parsesRepeatEvent "off" "false" MultiNoRepeatsToml,
+      parsesRepeatEvent "on" "true" MultiAllowRepeatsToml,
+      parsesExpected "<none>" txt Nothing (view #repeatEvent),
+      parsesRepeatEvent "<some>" "[0, 20]" (MultiSomeRepeatsToml expectedSome)
     ]
+  where
+    txt =
+      T.unlines
+        [ "app = \"upower\"",
+          "[[alert]]",
+          "percent = 50"
+        ]
 
-parsesRepeatEvent :: String -> Text -> RepeatEventToml -> TestTree
+    expectedSome = Set.fromList [Percentage.unsafePercentage 0, Percentage.unsafePercentage 20]
+
+parsesRepeatEvent :: String -> Text -> MultiRepeatEventToml Percentage -> TestTree
 parsesRepeatEvent desc flag ret =
   parsesExpected
     desc
@@ -133,7 +143,16 @@ parsesRepeatEvent desc flag ret =
         [ "app = \"upower\"",
           "repeat-events = " <> flag,
           "[[alert]]",
-          "percent = 50"
+          "percent = 50",
+          "[[alert]]",
+          "lower = 20",
+          "upper = 30",
+          "[[alert]]",
+          "lower = 10",
+          "upper = 20",
+          "[[alert]]",
+          "lower = 0",
+          "upper = 10"
         ]
 
 errorNoteTests :: TestTree

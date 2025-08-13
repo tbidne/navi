@@ -153,8 +153,8 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
     errorNote = event ^. #errorNote
 
     handleSuccess ::
-      (HasCallStack, Ord result, Show result) =>
-      EventSuccess result ->
+      (HasCallStack, Ord trigger, Show result, Show trigger) =>
+      EventSuccess result trigger ->
       m ()
     handleSuccess (MkEventSuccess result repeatEvent raiseAlert) =
       addNamespace "handleSuccess" $ do
@@ -162,13 +162,13 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
           Nothing -> do
             $(logDebug) ("No alert to raise " <> showt result)
             Event.updatePrevTrigger repeatEvent Nothing
-          Just note -> do
-            blocked <- Event.blockRepeat repeatEvent result
+          Just (trigger, note) -> do
+            blocked <- Event.blockRepeat repeatEvent trigger
             if blocked
               then $(logDebug) ("Alert blocked " <> showt result)
               else do
                 $(logInfo) ("Sending note " <> showt note)
-                Event.updatePrevTrigger repeatEvent (Just result)
+                Event.updatePrevTrigger repeatEvent (Just trigger)
                 sendNoteQueue note
 
     handleEventError :: (HasCallStack) => EventError -> m ()

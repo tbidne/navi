@@ -69,24 +69,33 @@ makeFieldLabelsNoPrefix ''EventError
 -- 1. Query for information (i.e. run a shell command).
 -- 2. Parse the result.
 -- 3. Raise an alert if the result matches some condition.
-data Event result = MkEvent
+--
+-- For most services, result and trigger will be identical. For example,
+-- custom single/multiple services are both 'Text', and NetInterfaces is
+-- NetInterface. In these cases, there is an exact correspondonce between
+-- the service query result and the trigger.
+--
+-- But for e.g. battery percentage, the result is Battery (percentage and status)
+-- whereas trigger is PercentageData.
+data Event result trigger = MkEvent
   { -- | Determines how we handle errors.
     errorNote :: ErrorNote,
     -- | The name of this event.
     name :: Text,
     -- | How often to poll for this event, in seconds.
     pollInterval :: PollInterval,
-    -- | Conditionally raises an alert based on the result.
-    raiseAlert :: result -> Maybe NaviNote,
+    -- | Conditionally raises an alert based on the (result -> trigger)
+    -- mapping.
+    raiseAlert :: result -> Maybe (trigger, NaviNote),
     -- | Determines how we handle repeat alerts.
-    repeatEvent :: RepeatEvent result,
+    repeatEvent :: RepeatEvent trigger,
     -- | The service to run.
     serviceType :: ServiceType result
   }
 
 makeFieldLabelsNoPrefix ''Event
 
-instance (Show result) => Show (Event result) where
+instance (Show trigger) => Show (Event result trigger) where
   showsPrec i event =
     showParen
       (i >= 11)
@@ -107,17 +116,17 @@ instance (Show result) => Show (Event result) where
 -- store different events in the same list.
 type AnyEvent :: Type
 data AnyEvent where
-  MkAnyEvent :: (Ord result, Show result) => Event result -> AnyEvent
+  MkAnyEvent :: (Ord trigger, Show result, Show trigger) => Event result trigger -> AnyEvent
 
 deriving stock instance Show AnyEvent
 
 -- | Holds the 'Event' data used after an event is successfully run.
 --
 -- @since 0.1
-data EventSuccess result = MkEventSuccess
+data EventSuccess result trigger = MkEventSuccess
   { result :: result,
-    repeatEvent :: RepeatEvent result,
-    raiseAlert :: result -> Maybe NaviNote
+    repeatEvent :: RepeatEvent trigger,
+    raiseAlert :: result -> Maybe (trigger, NaviNote)
   }
 
 makeFieldLabelsNoPrefix ''EventSuccess

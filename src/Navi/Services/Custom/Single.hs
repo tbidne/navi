@@ -57,20 +57,20 @@ mkSingleEvent ::
   (Text, NaviNote) ->
   RepeatEvent CustomResult ->
   ErrorNote ->
-  Event CustomResult
+  Event CustomResult CustomResult
 mkSingleEvent mname cmd pollInterval (triggerVal, note) repeatEvent errorNote =
   MkEvent
     { name,
       pollInterval,
       serviceType = Single cmd,
       raiseAlert = \case
-        CustomText result ->
+        r@(CustomText result) ->
           if result == triggerVal
-            then Just note
+            then Just (r, note)
             else Nothing
-        CustomOut (result, out) ->
+        r@(CustomOut (result, out)) ->
           if result == triggerVal
-            then Just $ replaceOut out note
+            then Just (r, replaceOut out note)
             else Nothing,
       repeatEvent,
       errorNote
