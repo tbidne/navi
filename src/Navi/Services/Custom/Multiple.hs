@@ -61,15 +61,15 @@ mkMultipleEvent ::
   RepeatEvent Text ->
   ErrorNote ->
   Event Text
-mkMultipleEvent mname cmd noteList pi re en =
+mkMultipleEvent mname cmd noteList pollInterval repeatEvent errorNote =
   MkEvent
-    { name = name',
+    { name,
       serviceType = Multiple cmd,
-      pollInterval = pi,
+      pollInterval,
       raiseAlert = \b -> replaceTrigger b <$> Map.lookup b noteMap,
-      repeatEvent = re,
-      errorNote = en
+      repeatEvent,
+      errorNote
     }
   where
     noteMap = Map.fromList $ NE.toList noteList
-    name' = fromMaybe "multiple" mname
+    name = fromMaybe "multiple" mname
