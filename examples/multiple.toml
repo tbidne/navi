@@ -23,22 +23,24 @@ command = """
       echo "Error reading battery: $power"
   fi
 """
+# Repeat '5' events only.
+repeat-events = ["5"]
 
 [[multiple.trigger-note]]
 trigger = "100"
 summary = "Battery Percentage"
-body = "Full"
-timeout = 10
-
-[[multiple.trigger-note]]
-trigger = "80"
-summary = "Battery Percentage"
-body = "< 80"
+body = "battery is full"
 timeout = 10
 
 [[multiple.trigger-note]]
 trigger = "40"
 summary = "Battery Percentage"
-body = "< 40"
+body = "battery < $trigger"
+timeout = 10
+
+[[multiple.trigger-note]]
+trigger = "5"
+summary = "Battery Percentage"
+body = "battery < $trigger"
 urgency = "critical"
-timeout = "never"
+timeout = 10

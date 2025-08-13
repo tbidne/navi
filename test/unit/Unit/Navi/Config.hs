@@ -24,10 +24,10 @@ tests =
     ]
   where
     verifyConfig cfg = do
-      DBus () @=? cfg ^. #noteSystem
+      NotifySend @=? cfg ^. #noteSystem
       Just LevelDebug @=? cfg ^. #logging % #severity
       Nothing @=? cfg ^. #logging % #location
-      5 @=? length (cfg ^. #events)
+      6 @=? length (cfg ^. #events)
 
     verifySimple cfg = do
       NotifySend @=? cfg ^. #noteSystem

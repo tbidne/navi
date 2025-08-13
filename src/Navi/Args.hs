@@ -14,7 +14,6 @@ import Data.Functor.Classes (Show1)
 import Data.Functor.Classes qualified as Functor
 import Data.Functor.Identity (Identity (Identity))
 import Data.List qualified as L
-import Data.Text qualified as T
 import Data.Version (showVersion)
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.Optparse (execParser, osPath)
@@ -130,7 +129,7 @@ argsParser =
 defaultConfig :: Parser (a -> a)
 defaultConfig =
   OptApp.infoOption
-    (unpack defaultConfigTxt)
+    (unpack $$TH.defaultToml)
     (OptApp.long "default-config" <> mkHelp help)
   where
     help = "Writes a default config.toml file to stdout."
@@ -190,81 +189,3 @@ mkHelp =
     . fmap (<> Pretty.hardline)
     . Chunk.unChunk
     . Chunk.paragraph
-
-defaultConfigTxt :: Text
-defaultConfigTxt =
-  T.unlines
-    [ "# Sets the notification system. Options are:",
-      "#",
-      "# Linux: \"dbus\" (default), \"notify-send\".",
-      "# Macos: \"apple-script\" (default).",
-      "#note-system = \"dbus\"",
-      "",
-      "# Some logging options.",
-      "#[logging]",
-      "# Log level: Options are \"debug\", \"info\", \"error\", or \"none\" for no logging.",
-      "# Defaults to \"error\"",
-      "#severity = \"error\"",
-      "# How to handle the log file. E.g. \"warn 10gb\" will print a",
-      "# warning when the log file reaches 10gb. \"delete 20 mb\" will instead",
-      "# delete the file. Note that this only applies to startup i.e. the log",
-      "# file can grow arbitrarily large while navi is running.",
-      "#size-mode = \"delete 100.5 mb\"",
-      "# Log location. Can be a file or \"stdout\". Defaults to the XDG state",
-      "# directory i.e. ~/.local/state/navi/<timestamp>.log",
-      "#location = \"stdout\"",
-      "",
-      "# EXAMPLES",
-      "",
-      "# Sends a notifcation when the temperature reaches our threshold.",
-      "# Requires lm-sensors.",
-      "#[[single]]",
-      "#command = \"\"\"",
-      "#  temp_res=$(sensors | grep \"Core 0\")",
-      "#  regex=\"Core 0:\\\\s*\\\\+([0-9]+)\\\\.[0-9]{0,2}°[C|F].*\"",
-      "#",
-      "#  if [[ $temp_res =~ $regex ]]; then",
-      "#    temp=\"${BASH_REMATCH[1]}\"",
-      "#    # not actually that hot...",
-      "#    if [[ $temp -gt 20 ]]; then",
-      "#      echo \"true\"",
-      "#    else",
-      "#      echo \"false\"",
-      "#    fi",
-      "#  else",
-      "#    echo \"couldn't parse: ${temp_res}\"",
-      "#    exit 1",
-      "#  fi",
-      "#\"\"\"",
-      "#trigger = \"true\"",
-      "#",
-      "#[single.note]",
-      "#summary = \"Temperature\"",
-      "#body = \"We're hot!\"",
-      "#urgency = \"critical\"",
-      "#timeout = 10",
-      "",
-      "# Send alert when the current minute changes its even/odd parity.",
-      "#[[multiple]]",
-      "#poll-interval = 10",
-      "#command = \"\"\"",
-      "#  min=`date +%M`;",
-      "#  if [[ \\\"$min % 2\\\" -eq 0 ]]; then",
-      "#    echo -n \"true\"",
-      "#  else",
-      "#    echo -n \"false\"",
-      "#  fi",
-      "#\"\"\"",
-      "#",
-      "#[[multiple.trigger-note]]",
-      "#trigger = \"true\"",
-      "#summary = \"Even/Odd\"",
-      "#body = \"Minute is even\"",
-      "#timeout = 10",
-      "#",
-      "#[[multiple.trigger-note]]",
-      "#trigger = \"false\"",
-      "#summary = \"Even/Odd\"",
-      "#body = \"Minute is odd\"",
-      "#timeout = 10"
-    ]

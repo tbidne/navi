@@ -2,7 +2,8 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Navi.Args.TH
-  ( gitData,
+  ( defaultToml,
+    gitData,
   )
 where
 
@@ -21,6 +22,8 @@ import Development.GitRev.Typed.OsString qualified as GRT
 import FileSystem.OsString (OsString, osstr)
 import FileSystem.OsString qualified as FS.OsString
 import Language.Haskell.TH (Code, Q)
+import Language.Haskell.TH qualified as TH
+import Language.Haskell.TH.Syntax (Lift (liftTyped))
 import Navi.Prelude
 import System.OsString qualified as OsString
 import Text.Read qualified as TR
@@ -144,3 +147,14 @@ displayUnixTime var unixTimeOsStr = do
           value = Just unixTimeOsStr,
           reason = FS.OsString.encodeLenient str
         }
+
+defaultToml :: Code Q Text
+defaultToml = liftIOToTH $ readFileUtf8ThrowM [ospPathSep|examples/default.toml|]
+
+-- | Binds an IO action to TH.
+bindIOToTH :: (HasCallStack, Lift b) => ((HasCallStack) => a -> IO b) -> a -> Code Q b
+bindIOToTH f x = TH.bindCode (TH.runIO (f x)) liftTyped
+
+-- | Lifts an IO action to TH.
+liftIOToTH :: (HasCallStack, Lift a) => IO a -> Code Q a
+liftIOToTH m = bindIOToTH (const m) ()

@@ -15,9 +15,9 @@ description:
 
 category:           System, Notifications
 extra-source-files:
+  examples/*.toml
   README.md
-  test/integration/exceptions_linux.toml
-  test/integration/exceptions_osx.toml
+  test/integration/*.toml
 
 extra-doc-files:    CHANGELOG.md
 

@@ -1,0 +1,211 @@
+# # --------------------------------------------------------------------------- #
+# #                                General Config                               #
+# # --------------------------------------------------------------------------- #
+
+# # Sets the notification system. Options are:
+# #
+# # - Linux: "dbus" (default), "notify-send".
+# # - Macos: "apple-script" (default).
+# note-system = "notify-send"
+
+# # Some logging options.
+# [logging]
+# # Log level: Options are "debug", "info", "error", or "none" for no logging.
+# severity = "error"
+# # How to handle the log file. E.g. "warn 10gb" will print a
+# # warning when the log file reaches 10gb. "delete 20 mb" will instead
+# # delete the file. Note that this only applies to startup i.e. the log
+# # file can grow arbitrarily large while navi is running.
+# size-mode = "delete 100.5 mb"
+# # Log location. Can be a file or "stdout". Defaults to the XDG state
+# # directory i.e. ~/.local/state/navi/<timestamp>.log
+# location = "stdout"
+
+# # --------------------------------------------------------------------------- #
+# #                                   Services                                  #
+# # --------------------------------------------------------------------------- #
+
+# # There are 5 service types:
+# #
+# #   - battery-status: Monitors battery status.
+# #
+# #   - battery-percentage: Monitors battery percentage.
+# #
+# #   - net-interface: Monitors a network interface.
+# #
+# #   - single: Custom service for sending a single event.
+# #
+# #   - multiple: Custom service for sending multiple events.
+
+# # Common service options. All are optional:
+# #
+# #   - poll-interval: Optional. One of `[NATURAL | STRING]`. The provided
+# #     interval must be either a raw natural (interpreted as seconds), or a
+# #     "time string" e.g. `1d2m3h4s`, `3h20s`. Determines how often a service
+# #     is polled.
+# #
+# #   - repeat-events: One of `[true|false]`. Determines if we send off the same
+# #     notification twice in a row. Defaults to `false` (i.e. no repeats) unless
+# #     stated otherwise.
+# #
+# #   - error-events: One of `["none"|"repeats"|"no-repeats"]`. Determines if we
+# #     send off notifications for errors, and how we handle repeats. Defaults
+# #     to `"no-repeats"` unless stated otherwise i.e. we send error
+# #     notifications but no repeats.
+
+# # Notification options. All are optional.
+# #
+# #   - summary: Notification header.
+# #
+# #   - body: Notification body.
+# #
+# #   - urgency: One of `["low"|"normal"|"critical"]`.
+# #
+# #   - timeout: One of `["never"|<seconds>]`. Determines how long
+# #     notifications persist. Defaults to 10 seconds. Note that we are at the
+# #     mercy of the underlying notification system e.g. some systems will never
+# #     timeout critical notifications (KDE), whereas others do not reliably
+# #     timeout at all (GNOME)
+# #
+# # Summary and body are only available options on custom services i.e.
+# # 'single' and 'multiple'. Built-ins have their own.
+
+# # --------------------------------------------------------------------------- #
+# #                                Battery Status                               #
+# # --------------------------------------------------------------------------- #
+
+# [battery-status]
+# # App to use: Options:
+# #
+# #   - acpi
+# #   - sysfs
+# #   - upower
+# app = "sysfs"
+# repeat-events = false
+# error-events = "repeats"
+
+# # --------------------------------------------------------------------------- #
+# #                              Battery Percentage                             #
+# # --------------------------------------------------------------------------- #
+
+# # Built in battery percentage alerts.
+# [battery-percentage]
+# repeat-events = false
+# error-events = "no-repeats"
+# # Same apps as battery-status
+# app = "sysfs"
+
+# [[battery-percentage.alert]]
+# percent = 50
+# urgency = "low"
+
+# [[battery-percentage.alert]]
+# percent = 30
+# urgency = "normal"
+
+# [[battery-percentage.alert]]
+# percent = 20
+# urgency = "critical"
+
+# [[battery-percentage.alert]]
+# percent = 10
+# urgency = "critical"
+
+# [[battery-percentage.alert]]
+# percent = 5
+# urgency = "critical"
+
+# # --------------------------------------------------------------------------- #
+# #                                    Single                                   #
+# # --------------------------------------------------------------------------- #
+
+# # Custom "single" event. Sends notification for a single text trigger. A
+# # single config can define multiple "single" services, hence this is a toml
+# # list.
+# #
+# # This example requires lm-sensors
+# [[single]]
+# command = """
+#   temp_res=$(sensors | grep "Core 0")
+#   regex="Core 0:\\s*\\+([0-9]+)\\.[0-9]{0,2}°[C|F].*"
+
+#   if [[ $temp_res =~ $regex ]]; then
+#     temp="${BASH_REMATCH[1]}"
+#     # not actually that hot...
+#     if [[ $temp -gt 20 ]]; then
+#       echo "true"
+#     else
+#       echo "false"
+#     fi
+#   else
+#     echo "couldn't parse: ${temp_res}"
+#     exit 1
+#   fi
+# """
+# trigger = "true"
+
+# [single.note]
+# summary = "Temperature"
+# body = "We're hot!"
+# urgency = "critical"
+# timeout = 10
+
+# # --------------------------------------------------------------------------- #
+# #                                   Multiple                                  #
+# # --------------------------------------------------------------------------- #
+
+# # Custom "multiple" event. Sends notifications for multiple triggers. A
+# # single config can define multiple "multiple" services, hence this is a toml
+# # list.
+# [[multiple]]
+# poll-interval = 10
+# command = """
+#   min=`date +%M`;
+#   if [[ \"$min % 2\" -eq 0 ]]; then
+#     echo -n "true"
+#   else
+#     echo -n "false"
+#   fi
+# """
+# # Multiple allow for more granularity with repeat events. Options are:
+# #
+# #   - false: No repeat events.
+# #   - true: Repeat all events.
+# #   - ["t1", "t2", ...]: Allow repeats for each trigger (string) in the list.
+# #     Notice the empty list is equivalent to false.
+# repeat-events = ["true"]
+
+# # Send a notif for trigger "true"
+# [[multiple.trigger-note]]
+# trigger = "true"
+# summary = "Even/Odd"
+# # The special syntax '$trigger' will be replaced by the trigger value
+# # (in this case "true").
+# body = "Minute is even: $trigger"
+# timeout = 10
+
+# # Send a notif for trigger "false"
+# [[multiple.trigger-note]]
+# trigger = "false"
+# summary = "Even/Odd"
+# body = "Minute is even: $trigger"
+# timeout = 10
+
+# # --------------------------------------------------------------------------- #
+# #                                Net Interface                                #
+# # --------------------------------------------------------------------------- #
+
+# # Built-in network notifications, based on when the connection state changes.
+# [[net-interface]]
+# # App to use: Options:
+# #
+# #   - nmcli
+# #   - ip
+# app = "nmcli"
+# poll-interval = 30
+# device = "wifi-device"
+
+# [[net-interface]]
+# app = "nmcli"
+# poll-interval = 60
+# device = "eth-device"
