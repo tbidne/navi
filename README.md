@@ -39,8 +39,8 @@ Navi is useful for when we have a running notification server and want to define
 # requires lm-sensors
 [[single]]
 command = """
-  temp_res=$(sensors | head -n 3 | tail -n 1)
-  regex="temp1:\\s*\\+([0-9]+)\\.[0-9]{0,2}°[C|F]"
+  temp_res=$(sensors | grep "Core 0")
+  regex="Core 0:\\s*\\+([0-9]+)\\.[0-9]{0,2}°[C|F].*"
 
   if [[ $temp_res =~ $regex ]]; then
     temp="${BASH_REMATCH[1]}"
