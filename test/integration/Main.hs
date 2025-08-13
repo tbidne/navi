@@ -183,19 +183,21 @@ testReplaceText = testCase "Replaces output text" $ do
 
 testMultipleRepeats :: TestTree
 testMultipleRepeats = testCase "Uses multiple repeats" $ do
-  mockEnv <- runMockEnv modEnv 4 cfg
+  mockEnv <- runMockEnv modEnv 6 cfg
 
   sentNotes <- mockEnvToNotes mockEnv
   expected @=? sentNotes
   where
-    expected =
-      MkNaviNote
-        { summary = "Multiple",
-          body = Just "Result is o1",
-          urgency = Nothing,
-          timeout = Nothing
-        }
-        : t2s
+    expected = t1s <> t2s
+
+    t1s =
+      replicate 2
+        $ MkNaviNote
+          { summary = "Multiple",
+            body = Just "Result is o1",
+            urgency = Nothing,
+            timeout = Nothing
+          }
 
     t2s =
       replicate 3
@@ -210,7 +212,20 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
     modEnv env = do
       let t1 = "(t1, o1)"
           t2 = "(t2, o2)"
-      writeIORef (env ^. #multipleResponses) [t1, t1, t2, t2, t2]
+          t3 = "(t3, o3)"
+
+      -- Behavior should be:
+      --
+      -- t1 (sent)
+      -- t1 (blocked)
+      -- t3 (not raised)
+      -- t1 (sent)
+      -- t2 (sent)
+      -- t2 (sent)
+      -- t2 (sent)
+      writeIORef
+        (env ^. #multipleResponses)
+        [t1, t1, t3, t1, t2, t2, t2]
       pure env
 
     cfg =
