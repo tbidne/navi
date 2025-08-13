@@ -139,12 +139,12 @@ blockErr errorEvent = addNamespace "blockErr" $ do
 
 -- | If the reference is 'NoRepeats' then we overwrite the previous reference
 -- with the new parameter. Otherwise we do nothing.
-updatePrevTrigger :: (Eq a, MonadIORef m) => RepeatEvent a -> a -> m ()
+updatePrevTrigger :: (Eq a, MonadIORef m) => RepeatEvent a -> Maybe a -> m ()
 updatePrevTrigger repeatEvent newVal =
   -- Only overwrite value if it's new
   case repeatEvent of
     NoRepeats ref -> do
       val <- readIORef ref
-      when (val /= Just newVal) $ writeIORef ref $ Just newVal
+      when (val /= newVal) $ writeIORef ref newVal
     _ -> pure ()
 {-# INLINEABLE updatePrevTrigger #-}

@@ -161,14 +161,14 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
         case raiseAlert result of
           Nothing -> do
             $(logDebug) ("No alert to raise " <> showt result)
-            Event.updatePrevTrigger repeatEvent result
+            Event.updatePrevTrigger repeatEvent Nothing
           Just note -> do
             blocked <- Event.blockRepeat repeatEvent result
             if blocked
               then $(logDebug) ("Alert blocked " <> showt result)
               else do
                 $(logInfo) ("Sending note " <> showt note)
-                Event.updatePrevTrigger repeatEvent result
+                Event.updatePrevTrigger repeatEvent (Just result)
                 sendNoteQueue note
 
     handleEventError :: (HasCallStack) => EventError -> m ()
