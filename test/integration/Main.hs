@@ -14,6 +14,7 @@
 module Main (main) where
 
 import DBus.Notify (UrgencyLevel (Critical))
+import Data.List qualified as L
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as T
@@ -40,6 +41,7 @@ main = do
         testSendsMultipleErrs,
         testSendExceptionDies,
         testReplaceText,
+        testMultipleRepeats,
         Exceptions.tests
       ]
 
@@ -50,7 +52,8 @@ testMultiNotifs = testCase "Sends multiple new notifications" $ do
   sentNotes <- mockEnvToNotes mockEnv
   expected @=? sentNotes
   where
-    expected = fmap toNote [1 .. 5 :: Int]
+    -- Percentage is counting down, hence we receive them in order 5 .. 1.
+    expected = L.reverse $ fmap toNote [1 .. 5 :: Int]
     toNote i =
       MkNaviNote
         { summary = "Battery Percentage",
@@ -175,6 +178,54 @@ testReplaceText = testCase "Replaces trigger text" $ do
           "body = \"Result is $trigger\""
         ]
 
+testMultipleRepeats :: TestTree
+testMultipleRepeats = testCase "Uses multiple repeats" $ do
+  mockEnv <- runMockEnv modEnv 4 cfg
+
+  sentNotes <- mockEnvToNotes mockEnv
+  expected @=? sentNotes
+  where
+    expected =
+      MkNaviNote
+        { summary = "Multiple",
+          body = Just "Result is t1",
+          urgency = Nothing,
+          timeout = Nothing
+        }
+        : t2s
+
+    t2s =
+      replicate 3
+        $ MkNaviNote
+          { summary = "Multiple",
+            body = Just "Result is t2",
+            urgency = Nothing,
+            timeout = Nothing
+          }
+
+    modEnv :: MockEnv -> IO MockEnv
+    modEnv env = do
+      writeIORef (env ^. #multipleResponses) ["t1", "t1", "t2", "t2", "t2"]
+      pure env
+
+    cfg =
+      T.unlines
+        [ "[[multiple]]",
+          "poll-interval = 1",
+          "command = \"cmd\"",
+          "repeat-events = [\"t2\"]",
+          "",
+          "[[multiple.trigger-note]]",
+          "trigger = \"t1\"",
+          "summary = \"Multiple\"",
+          "body = \"Result is $trigger\"",
+          "",
+          "[[multiple.trigger-note]]",
+          "trigger = \"t2\"",
+          "summary = \"Multiple\"",
+          "body = \"Result is $trigger\""
+        ]
+
 runMock :: Word8 -> Text -> IO MockEnv
 runMock = runMockEnv pure
 
@@ -257,7 +308,10 @@ sendExceptionConfig =
 mockEnvToNotes :: MockEnv -> IO [NaviNote]
 mockEnvToNotes mockEnv = do
   sentNotes <- readIORef $ mockEnv ^. #sentNotes
-  pure $ filter ((/= "Navi") . view #summary) sentNotes
+  pure
+    . L.reverse
+    . filter ((/= "Navi") . view #summary)
+    $ sentNotes
 
 -- For when the number of received notest is non-deterministic
 -- (i.e. based on timing).

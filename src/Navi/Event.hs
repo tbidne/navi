@@ -20,6 +20,7 @@ module Navi.Event
   )
 where
 
+import Data.Set qualified as Set
 import Navi.Effects (MonadSystemInfo (query))
 import Navi.Event.Types
   ( AnyEvent (..),
@@ -60,7 +61,7 @@ runEvent event = addNamespace "runEvent" $ do
 -- 2. 'NoRepeats': block only if the parameter @a@ equals the previous @a@
 --    stored in our @ref@.
 blockRepeat ::
-  ( Eq a,
+  ( Ord a,
     MonadLoggerNS m env k,
     MonadIORef m,
     Show a
@@ -73,13 +74,23 @@ blockRepeat repeatEvent newVal = addNamespace "blockRepeat" $ do
     -- Repeat events are allowed, so do not block.
     AllowRepeats -> pure False
     -- Repeat events are not allowed, must check.
-    NoRepeats prevRef -> do
+    SomeRepeats allowed prevRef -> checkRepeat allowed prevRef
+    NoRepeats prevRef -> checkRepeat Set.empty prevRef
+  where
+    checkRepeat allowed prevRef = do
       prevVal <- readIORef prevRef
       $(logDebug) ("Previous value: " <> showt prevVal)
       $(logDebug) ("New value: " <> showt newVal)
       if prevVal == Just newVal
-        then -- Already sent this alert, block.
-          pure True
+        then -- Already sent this alert, check if repeats are allowed.
+          if Set.member newVal allowed
+            then do
+              -- Repeats are allowed for this value.
+              $(logDebug) "Repeats are allowed for this value."
+              pure False
+            else
+              -- Repeats are not allowed for this value, block.
+              pure True
         else -- New alert, do not block.
           do
             writeIORef prevRef $ Just newVal
@@ -109,7 +120,10 @@ blockErr errorEvent = addNamespace "blockErr" $ do
       $(logDebug) "Error notes are on and repeats allowed"
       pure False
     -- Error events are on but repeats not allowed, must check.
-    AllowErrNote (NoRepeats ref) -> do
+    AllowErrNote (SomeRepeats _ ref) -> checkRepeat ref
+    AllowErrNote (NoRepeats ref) -> checkRepeat ref
+  where
+    checkRepeat ref = do
       prevErr <- readIORef ref
       case prevErr of
         -- Already sent this error, block

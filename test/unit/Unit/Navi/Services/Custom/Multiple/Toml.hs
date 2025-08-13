@@ -9,7 +9,7 @@ import Navi.Event.Toml
         ErrNoteNoRepeatsToml,
         NoErrNoteToml
       ),
-    RepeatEventToml (AllowRepeatsToml, NoRepeatsToml),
+    MultiRepeatEventToml (MultiAllowRepeatsToml, MultiNoRepeatsToml),
   )
 import Navi.Services.Custom.Multiple.Toml
   ( MultipleToml,
@@ -86,8 +86,8 @@ repeatEventTests :: TestTree
 repeatEventTests =
   testGroup
     "Parses repeat event"
-    [ parsesRepeatEvent "off" "false" NoRepeatsToml,
-      parsesRepeatEvent "on" "true" AllowRepeatsToml,
+    [ parsesRepeatEvent "off" "false" MultiNoRepeatsToml,
+      parsesRepeatEvent "on" "true" MultiAllowRepeatsToml,
       parsesExpected "<none>" txt Nothing (view #repeatEventCfg)
     ]
   where
@@ -99,7 +99,7 @@ repeatEventTests =
           "summary = \"a summary\""
         ]
 
-parsesRepeatEvent :: String -> Text -> RepeatEventToml -> TestTree
+parsesRepeatEvent :: String -> Text -> MultiRepeatEventToml -> TestTree
 parsesRepeatEvent desc flag ret =
   parsesExpected
     desc

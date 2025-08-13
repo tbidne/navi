@@ -1,7 +1,7 @@
 # Sets the notification system. Options are:
 #
-# Linux: "dbus" (default), "notify-send".
-# Macos: "apple-script" (default).
+# - Linux: "dbus" (default), "notify-send".
+# - Macos: "apple-script" (default).
 note-system = "dbus"
 
 # Some logging options.
@@ -19,7 +19,13 @@ size-mode = "delete 100.5 mb"
 
 # Built in battery percentage alerts.
 [battery-percentage]
+# Allow for repeating identical events. Options are true, false.
 repeat-events = false
+# How error are handled. Options are:
+#
+#  - "none": Do not send notifications for errors.
+#  - "no-repeats": Send notifications for errors, but no repeats.
+#  - "repeats": Send notifications for errors, allow repeats.
 error-events = "no-repeats"
 app = "sysfs"
 
@@ -73,7 +79,8 @@ body = "We're hot!"
 urgency = "critical"
 timeout = 10
 
-# Send alert when the current minute changes its even/odd parity.
+# Send alert when the current minute changes its even/odd parity. Has multiple
+# events, hence multiple triggers.
 [[multiple]]
 poll-interval = 10
 command = """
@@ -84,17 +91,26 @@ command = """
     echo -n "false"
   fi
 """
+# Multiple allow for more granularity with repeat events. Options are:
+#
+#   - false: No repeat events.
+#   - true: Repeat all events.
+#   - ["t1", "t2", ...]: Allow repeats for each trigger (string) in the list.
+#     Notice the empty list is equivalent to false.
+repeat-events = ["true"]
 
 [[multiple.trigger-note]]
 trigger = "true"
 summary = "Even/Odd"
-body = "Minute is even"
+# The special syntax '$trigger' will be replaced by the trigger value
+# (in this case "true").
+body = "Minute is even: $trigger"
 timeout = 10
 
 [[multiple.trigger-note]]
 trigger = "false"
 summary = "Even/Odd"
-body = "Minute is odd"
+body = "Minute is even: $trigger"
 timeout = 10
 
 # Built-in network notifications, based on when the connection state changes.

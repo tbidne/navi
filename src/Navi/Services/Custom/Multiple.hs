@@ -36,7 +36,7 @@ import Pythia.Data.Command (Command)
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent :: (MonadIORef m) => MultipleToml -> m AnyEvent
 toEvent toml = do
-  repeatEvent <- EventToml.mRepeatEventTomlToVal (toml ^. #repeatEventCfg)
+  repeatEvent <- EventToml.mMultiRepeatEventTomlToVal (toml ^. #repeatEventCfg)
   errorNote <- EventToml.mErrorNoteTomlToVal (toml ^. #errEventCfg)
   pure
     $ MkAnyEvent

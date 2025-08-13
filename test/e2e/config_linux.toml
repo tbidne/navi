@@ -32,15 +32,16 @@ command = """
     echo -n "false"
   fi
 """
+repeat-events = ["false"]
 
 [[multiple.trigger-note]]
 trigger = "true"
 summary = "Even/Odd"
-body = "Minute is even"
+body = "Minute is even: $trigger"
 timeout = 2
 
 [[multiple.trigger-note]]
 trigger = "false"
 summary = "Even/Odd"
-body = "Minute is odd"
+body = "Minute is even: $trigger"
 timeout = 2

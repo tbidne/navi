@@ -153,7 +153,7 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
     errorNote = event ^. #errorNote
 
     handleSuccess ::
-      (HasCallStack, Eq result, Show result) =>
+      (HasCallStack, Ord result, Show result) =>
       EventSuccess result ->
       m ()
     handleSuccess (MkEventSuccess result repeatEvent raiseAlert) =

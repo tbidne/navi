@@ -12,9 +12,9 @@ import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
   ( ErrorNoteToml,
-    RepeatEventToml,
+    MultiRepeatEventToml,
     errorNoteOptDecoder,
-    repeatEventOptDecoder,
+    multiRepeatEventOptDecoder,
   )
 import Navi.Prelude
 import Navi.Utils (commandDecoder)
@@ -49,7 +49,7 @@ data MultipleToml = MkMultipleToml
     -- | The poll interval.
     pollInterval :: Maybe PollInterval,
     -- | Determines how we treat repeat alerts.
-    repeatEventCfg :: Maybe RepeatEventToml,
+    repeatEventCfg :: Maybe MultiRepeatEventToml,
     -- | Determines how we handle errors.
     errEventCfg :: Maybe ErrorNoteToml
   }
@@ -65,5 +65,5 @@ instance DecodeTOML MultipleToml where
       <*> getFieldOpt "name"
       <*> getFieldWith tomlDecoder "trigger-note"
       <*> pollIntervalOptDecoder
-      <*> repeatEventOptDecoder
+      <*> multiRepeatEventOptDecoder
       <*> errorNoteOptDecoder

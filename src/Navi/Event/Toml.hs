@@ -2,10 +2,19 @@
 
 -- | This modules provides toml configuration related to events.
 module Navi.Event.Toml
-  ( RepeatEventToml (..),
+  ( -- * Normal events
+    RepeatEventToml (..),
     repeatEventOptDecoder,
     repeatEventTomlToVal,
     mRepeatEventTomlToVal,
+
+    -- * Multi events
+    MultiRepeatEventToml (..),
+    multiRepeatEventOptDecoder,
+    multiRepeatEventTomlToVal,
+    mMultiRepeatEventTomlToVal,
+
+    -- * Errors
     ErrorNoteToml (..),
     errorNoteOptDecoder,
     errorNoteTomlToVal,
@@ -13,11 +22,15 @@ module Navi.Event.Toml
   )
 where
 
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Navi.Event.Types
   ( ErrorNote (AllowErrNote, NoErrNote),
-    RepeatEvent (AllowRepeats, NoRepeats),
+    RepeatEvent (AllowRepeats, NoRepeats, SomeRepeats),
   )
 import Navi.Prelude
+import TOML (Value (Array))
+import TOML.Value (Value (Boolean))
 
 -- | TOML for 'RepeatEvent'.
 data RepeatEventToml
@@ -52,6 +65,50 @@ mRepeatEventTomlToVal :: (MonadIORef m) => Maybe RepeatEventToml -> m (RepeatEve
 mRepeatEventTomlToVal Nothing = repeatEventTomlToVal NoRepeatsToml
 mRepeatEventTomlToVal (Just t) = repeatEventTomlToVal t
 {-# INLINEABLE mRepeatEventTomlToVal #-}
+
+-- | TOML for 'RepeatEvent' that allows repeating some (text) events.
+data MultiRepeatEventToml
+  = MultiNoRepeatsToml
+  | MultiSomeRepeatsToml (Set Text)
+  | MultiAllowRepeatsToml
+  deriving stock (Eq, Show)
+
+-- | @since 0.1
+instance DecodeTOML MultiRepeatEventToml where
+  tomlDecoder = makeDecoder $ \case
+    Boolean b ->
+      pure
+        $ if b
+          then MultiAllowRepeatsToml
+          else MultiNoRepeatsToml
+    Array xs -> do
+      ys <- traverse decodeStr xs
+      pure $ MultiSomeRepeatsToml $ Set.fromList ys
+    other -> typeMismatch other
+    where
+      decodeStr (String s) = pure s
+      decodeStr other = typeMismatch other
+
+-- | TOML decoder for optional 'RepeatEventToml' with field name
+-- "repeat-events".
+--
+-- @since 0.1
+multiRepeatEventOptDecoder :: Decoder (Maybe MultiRepeatEventToml)
+multiRepeatEventOptDecoder = getFieldOptWith tomlDecoder "repeat-events"
+
+-- | Constructs a mutable 'RepeatEvent' from 'RepeatEventToml'.
+multiRepeatEventTomlToVal :: (MonadIORef m) => MultiRepeatEventToml -> m (RepeatEvent Text)
+multiRepeatEventTomlToVal MultiAllowRepeatsToml = pure AllowRepeats
+multiRepeatEventTomlToVal (MultiSomeRepeatsToml st) = SomeRepeats st <$> newIORef Nothing
+multiRepeatEventTomlToVal MultiNoRepeatsToml = NoRepeats <$> newIORef Nothing
+{-# INLINEABLE multiRepeatEventTomlToVal #-}
+
+-- | Constructs a mutable 'RepeatEvent' from 'RepeatEventToml'. If none is
+-- provided, defaults to 'NoRepeatsToml', i.e., no repeats.
+mMultiRepeatEventTomlToVal :: (MonadIORef m) => Maybe MultiRepeatEventToml -> m (RepeatEvent Text)
+mMultiRepeatEventTomlToVal Nothing = multiRepeatEventTomlToVal MultiNoRepeatsToml
+mMultiRepeatEventTomlToVal (Just t) = multiRepeatEventTomlToVal t
+{-# INLINEABLE mMultiRepeatEventTomlToVal #-}
 
 -- | TOML for 'ErrorNote'.
 data ErrorNoteToml
