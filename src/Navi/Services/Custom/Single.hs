@@ -6,7 +6,11 @@ module Navi.Services.Custom.Single
 where
 
 import Data.Text qualified as T
-import Navi.Data.NaviNote (NaviNote, replaceTrigger)
+import Navi.Data.NaviNote
+  ( CustomResult (CustomOut, CustomText),
+    NaviNote,
+    replaceOut,
+  )
 import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -51,18 +55,23 @@ mkSingleEvent ::
   Command ->
   PollInterval ->
   (Text, NaviNote) ->
-  RepeatEvent Text ->
+  RepeatEvent CustomResult ->
   ErrorNote ->
-  Event Text
+  Event CustomResult
 mkSingleEvent mname cmd pollInterval (triggerVal, note) repeatEvent errorNote =
   MkEvent
     { name,
       pollInterval,
       serviceType = Single cmd,
-      raiseAlert = \b ->
-        if b == triggerVal
-          then Just $ replaceTrigger b note
-          else Nothing,
+      raiseAlert = \case
+        CustomText result ->
+          if result == triggerVal
+            then Just note
+            else Nothing
+        CustomOut (result, out) ->
+          if result == triggerVal
+            then Just $ replaceOut out note
+            else Nothing,
       repeatEvent,
       errorNote
     }

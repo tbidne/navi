@@ -19,15 +19,15 @@ tests =
   testGroup
     "Navi.Config"
     [ readsExample verifyConfig [osp|examples/config.toml|],
-      readsExample verifySimple [osp|examples/simple.toml|],
-      readsExample verifyMultiple [osp|examples/multiple.toml|]
+      readsExample verifySimple [osp|test/unit/simple.toml|],
+      readsExample verifyMultiple [osp|test/unit/multiple.toml|]
     ]
   where
     verifyConfig cfg = do
       NotifySend @=? cfg ^. #noteSystem
-      Just LevelDebug @=? cfg ^. #logging % #severity
-      Nothing @=? cfg ^. #logging % #location
-      6 @=? length (cfg ^. #events)
+      Nothing @=? cfg ^. #logging % #severity
+      Just Stdout @=? cfg ^. #logging % #location
+      7 @=? length (cfg ^. #events)
 
     verifySimple cfg = do
       NotifySend @=? cfg ^. #noteSystem

@@ -15,7 +15,7 @@ import Effects.Concurrent.Async qualified as Async
 import FileSystem.OsPath (decodeLenient)
 import Integration.Prelude
 import Navi (runNavi)
-import Navi.Data.NaviNote (NaviNote)
+import Navi.Data.NaviNote (CustomResult, NaviNote, parseCustomResult)
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
@@ -141,15 +141,16 @@ instance MonadSystemInfo MockAppT where
 getResponseOrDefault ::
   Lens' MockEnv (IORef [Text]) ->
   Text ->
-  MockAppT Text
-getResponseOrDefault l def = do
-  ref <- asks (view l)
-  singleResponses <- readIORef ref
-  case singleResponses of
-    [] -> pure def
-    r : rs -> do
-      writeIORef ref rs
-      pure r
+  MockAppT CustomResult
+getResponseOrDefault l def =
+  parseCustomResult <$> do
+    ref <- asks (view l)
+    singleResponses <- readIORef ref
+    case singleResponses of
+      [] -> pure def
+      r : rs -> do
+        writeIORef ref rs
+        pure r
 
 runMockApp :: Word8 -> OsPath -> IO MockEnv
 runMockApp = runMockAppEnv pure

@@ -6,7 +6,7 @@ module Navi.Effects.MonadSystemInfo
   )
 where
 
-import Data.Text qualified as T
+import Navi.Data.NaviNote (CustomResult, parseCustomResult)
 import Navi.Event.Types (EventError (MkEventError, long, name, short))
 import Navi.Prelude
 import Navi.Services.Types
@@ -63,10 +63,12 @@ instance (MonadSystemInfo m) => MonadSystemInfo (ReaderT e m) where
   query = lift . query
   {-# INLINEABLE query #-}
 
-querySimple :: Command -> IO Text
+querySimple :: Command -> IO CustomResult
 querySimple cmd = do
-  let shellApp = mkApp cmd
-   in T.strip <$> ShellApp.runSimple shellApp
+  result <- ShellApp.runSimple shellApp
+  pure $ parseCustomResult result
+  where
+    shellApp = mkApp cmd
 
 mkApp :: (Applicative f) => Command -> SimpleShell f EventError Text
 mkApp cmd =

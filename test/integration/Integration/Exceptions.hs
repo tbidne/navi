@@ -31,6 +31,7 @@ import Effects.Time
 import FileSystem.OsPath (decodeLenient)
 import Integration.Prelude
 import Navi (runNavi)
+import Navi.Data.NaviNote (CustomResult (CustomText))
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
@@ -130,8 +131,8 @@ instance MonadSystemInfo ExceptionsT where
     BatteryPercentage _ -> error "battery percentage unimplemented"
     BatteryStatus _ -> error "battery status unimplemented"
     NetworkInterface _ _ -> error "network interface unimplemented"
-    Single _ -> pure "single"
-    Multiple _ -> pure "multiple"
+    Single _ -> pure $ CustomText "single"
+    Multiple _ -> pure $ CustomText "multiple"
 
 instance MonadLogger ExceptionsT where
   monadLoggerLog loc _src lvl msg = do

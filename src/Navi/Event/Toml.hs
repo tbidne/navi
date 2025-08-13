@@ -24,6 +24,7 @@ where
 
 import Data.Set (Set)
 import Data.Set qualified as Set
+import Navi.Data.NaviNote (CustomResult (CustomText))
 import Navi.Event.Types
   ( ErrorNote (AllowErrNote, NoErrNote),
     RepeatEvent (AllowRepeats, NoRepeats, SomeRepeats),
@@ -97,15 +98,15 @@ multiRepeatEventOptDecoder :: Decoder (Maybe MultiRepeatEventToml)
 multiRepeatEventOptDecoder = getFieldOptWith tomlDecoder "repeat-events"
 
 -- | Constructs a mutable 'RepeatEvent' from 'RepeatEventToml'.
-multiRepeatEventTomlToVal :: (MonadIORef m) => MultiRepeatEventToml -> m (RepeatEvent Text)
+multiRepeatEventTomlToVal :: (MonadIORef m) => MultiRepeatEventToml -> m (RepeatEvent CustomResult)
 multiRepeatEventTomlToVal MultiAllowRepeatsToml = pure AllowRepeats
-multiRepeatEventTomlToVal (MultiSomeRepeatsToml st) = SomeRepeats st <$> newIORef Nothing
+multiRepeatEventTomlToVal (MultiSomeRepeatsToml st) = SomeRepeats (Set.map CustomText st) <$> newIORef Nothing
 multiRepeatEventTomlToVal MultiNoRepeatsToml = NoRepeats <$> newIORef Nothing
 {-# INLINEABLE multiRepeatEventTomlToVal #-}
 
 -- | Constructs a mutable 'RepeatEvent' from 'RepeatEventToml'. If none is
 -- provided, defaults to 'NoRepeatsToml', i.e., no repeats.
-mMultiRepeatEventTomlToVal :: (MonadIORef m) => Maybe MultiRepeatEventToml -> m (RepeatEvent Text)
+mMultiRepeatEventTomlToVal :: (MonadIORef m) => Maybe MultiRepeatEventToml -> m (RepeatEvent CustomResult)
 mMultiRepeatEventTomlToVal Nothing = multiRepeatEventTomlToVal MultiNoRepeatsToml
 mMultiRepeatEventTomlToVal (Just t) = multiRepeatEventTomlToVal t
 {-# INLINEABLE mMultiRepeatEventTomlToVal #-}

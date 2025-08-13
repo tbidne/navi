@@ -8,7 +8,11 @@ where
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict qualified as Map
 import Data.Text qualified as T
-import Navi.Data.NaviNote (NaviNote, replaceTrigger)
+import Navi.Data.NaviNote
+  ( CustomResult (CustomOut, CustomText),
+    NaviNote,
+    replaceOut,
+  )
 import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -58,15 +62,17 @@ mkMultipleEvent ::
   Command ->
   NonEmpty (Text, NaviNote) ->
   PollInterval ->
-  RepeatEvent Text ->
+  RepeatEvent CustomResult ->
   ErrorNote ->
-  Event Text
+  Event CustomResult
 mkMultipleEvent mname cmd noteList pollInterval repeatEvent errorNote =
   MkEvent
     { name,
       serviceType = Multiple cmd,
       pollInterval,
-      raiseAlert = \b -> replaceTrigger b <$> Map.lookup b noteMap,
+      raiseAlert = \case
+        CustomText result -> Map.lookup result noteMap
+        CustomOut (result, out) -> replaceOut out <$> Map.lookup result noteMap,
       repeatEvent,
       errorNote
     }

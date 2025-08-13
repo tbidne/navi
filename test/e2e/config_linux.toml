@@ -27,9 +27,9 @@ poll-interval = 3
 command = """
   min=`date +%M`;
   if [[ \"$min % 2\" -eq 0 ]]; then
-    echo -n "true"
+    echo -n "(true, $min)"
   else
-    echo -n "false"
+    echo -n "(false, $min)"
   fi
 """
 repeat-events = ["false"]
@@ -37,11 +37,11 @@ repeat-events = ["false"]
 [[multiple.trigger-note]]
 trigger = "true"
 summary = "Even/Odd"
-body = "Minute is even: $trigger"
+body = "Minute is even: $out"
 timeout = 2
 
 [[multiple.trigger-note]]
 trigger = "false"
 summary = "Even/Odd"
-body = "Minute is even: $trigger"
+body = "Minute is odd: $out"
 timeout = 2

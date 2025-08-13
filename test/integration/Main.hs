@@ -15,6 +15,7 @@ module Main (main) where
 
 import DBus.Notify (UrgencyLevel (Critical))
 import Data.List qualified as L
+import Data.List.NonEmpty qualified as NE
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as T
@@ -23,8 +24,8 @@ import Effects.FileSystem.PathWriter qualified as Dir
 import Integration.Exceptions qualified as Exceptions
 import Integration.MockApp (MockEnv, runMockAppEnv)
 import Integration.Prelude
-import Navi.Data.NaviNote (NaviNote (MkNaviNote, body, summary, timeout, urgency))
-import Navi.Event (EventError (MkEventError))
+import Navi.Data.NaviNote (NaviNote (MkNaviNote, body, summary, timeout, urgency), Timeout (Seconds))
+import Navi.Event (AnyEvent (MkAnyEvent), EventError (MkEventError))
 import Test.Tasty qualified as Tasty
 
 -- | Runs integration tests.
@@ -42,6 +43,7 @@ main = do
         testSendExceptionDies,
         testReplaceText,
         testMultipleRepeats,
+        testMultipleCustomText,
         Exceptions.tests
       ]
 
@@ -119,7 +121,7 @@ testSendExceptionDies = testCase "Exception in send kills program" $ do
     expected = Just $ MkEventError "SentException" "sending mock exception" ""
 
 testReplaceText :: TestTree
-testReplaceText = testCase "Replaces trigger text" $ do
+testReplaceText = testCase "Replaces output text" $ do
   mockEnv <- runMockEnv modEnv 3 cfg
 
   sentNotes <- mockEnvToNotes mockEnv
@@ -129,19 +131,19 @@ testReplaceText = testCase "Replaces trigger text" $ do
       Set.fromList
         [ MkNaviNote
             { summary = "Multiple",
-              body = Just "Result is t2",
+              body = Just "Result is o2",
               urgency = Nothing,
               timeout = Nothing
             },
           MkNaviNote
             { summary = "Multiple",
-              body = Just "Result is t1",
+              body = Just "Result is o1",
               urgency = Nothing,
               timeout = Nothing
             },
           MkNaviNote
             { summary = "Single",
-              body = Just "result is: single trigger",
+              body = Just "result is: o1",
               urgency = Nothing,
               timeout = Nothing
             }
@@ -149,7 +151,8 @@ testReplaceText = testCase "Replaces trigger text" $ do
 
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
-      writeIORef (env ^. #multipleResponses) ["t1", "t2"]
+      writeIORef (env ^. #singleResponses) ["(t1, o1)"]
+      writeIORef (env ^. #multipleResponses) ["(t1, o1)", "(t2, o2)"]
       pure env
 
     cfg =
@@ -157,11 +160,11 @@ testReplaceText = testCase "Replaces trigger text" $ do
         [ "[[single]]",
           "poll-interval = 1",
           "command = \"cmd\"",
-          "trigger = \"single trigger\"",
+          "trigger = \"t1\"",
           "",
           "[single.note]",
           "summary = \"Single\"",
-          "body = \"result is: $trigger\"",
+          "body = \"result is: $out\"",
           "",
           "[[multiple]]",
           "poll-interval = 1",
@@ -170,12 +173,12 @@ testReplaceText = testCase "Replaces trigger text" $ do
           "[[multiple.trigger-note]]",
           "trigger = \"t1\"",
           "summary = \"Multiple\"",
-          "body = \"Result is $trigger\"",
+          "body = \"Result is $out\"",
           "",
           "[[multiple.trigger-note]]",
           "trigger = \"t2\"",
           "summary = \"Multiple\"",
-          "body = \"Result is $trigger\""
+          "body = \"Result is $out\""
         ]
 
 testMultipleRepeats :: TestTree
@@ -188,7 +191,7 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
     expected =
       MkNaviNote
         { summary = "Multiple",
-          body = Just "Result is t1",
+          body = Just "Result is o1",
           urgency = Nothing,
           timeout = Nothing
         }
@@ -198,14 +201,16 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
       replicate 3
         $ MkNaviNote
           { summary = "Multiple",
-            body = Just "Result is t2",
+            body = Just "Result is o2",
             urgency = Nothing,
             timeout = Nothing
           }
 
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
-      writeIORef (env ^. #multipleResponses) ["t1", "t1", "t2", "t2", "t2"]
+      let t1 = "(t1, o1)"
+          t2 = "(t2, o2)"
+      writeIORef (env ^. #multipleResponses) [t1, t1, t2, t2, t2]
       pure env
 
     cfg =
@@ -218,13 +223,91 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
           "[[multiple.trigger-note]]",
           "trigger = \"t1\"",
           "summary = \"Multiple\"",
-          "body = \"Result is $trigger\"",
+          "body = \"Result is $out\"",
           "",
           "[[multiple.trigger-note]]",
           "trigger = \"t2\"",
           "summary = \"Multiple\"",
-          "body = \"Result is $trigger\""
+          "body = \"Result is $out\""
         ]
+
+testMultipleCustomText :: TestTree
+testMultipleCustomText = testCase "Tests multiple dynamic example" $ do
+  -- Tests complex config example that involves dynamic output and
+  -- some repeat events.
+
+  cfg <- modNoteSys <$> readFileUtf8ThrowM [ospPathSep|examples/config.toml|]
+
+  mockEnv <- runMockNoConfigEnv modEnv 10 cfg
+
+  sentNotes <- mockEnvToNotes mockEnv
+  expected @=? sentNotes
+  where
+    expected =
+      [ MkNaviNote
+          { summary = "Battery Percentage",
+            body = Just "Battery is good: 70",
+            urgency = Nothing,
+            timeout = Just $ Seconds 10
+          },
+        MkNaviNote
+          { summary = "Battery Percentage",
+            body = Just "Battery is medium: 35",
+            urgency = Nothing,
+            timeout = Just $ Seconds 10
+          },
+        MkNaviNote
+          { summary = "Battery Percentage",
+            body = Just "Battery is low: 5",
+            urgency = Just Critical,
+            timeout = Just $ Seconds 10
+          },
+        MkNaviNote
+          { summary = "Battery Percentage",
+            body = Just "Battery is low: 4",
+            urgency = Just Critical,
+            timeout = Just $ Seconds 10
+          }
+      ]
+
+    -- In addition to mocking the script responses, we want to filter out
+    -- all the config examples we do not care about. We also need to set the
+    -- poll-interval to something faster.
+    modEnv :: MockEnv -> IO MockEnv
+    modEnv env = do
+      let t1 = "(good, 70)"
+          t2 = "(good, 60)"
+          t3 = "(med, 35)"
+          t4 = "(med, 30)"
+          t5 = "(low, 5)"
+          t6 = "(low, 4)"
+      writeIORef (env ^. #multipleResponses) [t1, t2, t3, t4, t5, t6]
+
+      let evts = case modEvts of
+            [] -> error "empty list: "
+            [e] -> NE.singleton e
+            es@(_ : _ : _) -> error $ "Filter failed:" ++ show es
+
+      pure
+        . set' (#coreEnv % #events) evts
+        $ env
+      where
+        takeExact (MkAnyEvent evt) = evt ^. #name == "battery-manual"
+
+        modEvts =
+          fmap (\(MkAnyEvent e) -> MkAnyEvent (set' #pollInterval 1 e))
+            . NE.filter takeExact
+            $ env
+            ^. (#coreEnv % #events)
+
+-- Hacky, but we need to make some changes to examples/config.toml before
+-- it is parsed into the Env.
+modNoteSys :: Text -> Text
+#if OSX
+modNoteSys = T.replace "notify-send" "apple-script"
+#else
+modNoteSys = id
+#endif
 
 runMock :: Word8 -> Text -> IO MockEnv
 runMock = runMockEnv pure
@@ -244,6 +327,16 @@ runMockEnv modEnv maxSeconds config = do
         [ headerConfig,
           config
         ]
+
+runMockNoConfigEnv :: (MockEnv -> IO MockEnv) -> Word8 -> Text -> IO MockEnv
+runMockNoConfigEnv modEnv maxSeconds config = do
+  -- setup file
+  tmp <- Dir.getTemporaryDirectory
+  let configFp = tmp </> [osp|int.toml|]
+  writeFileUtf8 configFp config
+  mockEnv <- runMockAppEnv modEnv maxSeconds configFp
+  Dir.removeFile configFp
+  pure mockEnv
 
 batteryPercentageEventConfig :: Text
 batteryPercentageEventConfig =
