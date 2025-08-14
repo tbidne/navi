@@ -11,18 +11,22 @@ module Navi.Services.Battery.Percentage.Toml
 where
 
 import DBus.Notify (UrgencyLevel)
+import Data.List.NonEmpty qualified as NE
+import Data.Set (Set)
+import Data.Set qualified as Set
+import Data.Text qualified as T
 import Navi.Data.NaviNote (Timeout, timeoutOptDecoder)
 import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
   ( ErrorNoteToml,
-    MultiRepeatEventToml,
+    MultiRepeatEventToml (MultiSomeRepeatsToml),
     errorNoteOptDecoder,
     multiRepeatEventOptDecoder,
   )
 import Navi.Prelude
 import Navi.Services.Battery.Common (batteryAppDecoder)
 import Navi.Utils (urgencyLevelOptDecoder)
-import Pythia.Data.Percentage (mkPercentage)
+import Pythia.Data.Percentage (mkPercentage, _MkPercentage)
 import Pythia.Data.Percentage qualified as Percentage
 import Pythia.Services.Battery (BatteryApp, Percentage)
 
@@ -124,16 +128,16 @@ percentageDecoder =
 data BatteryPercentageToml = MkBatteryPercentageToml
   { -- | All alerts for this service.
     alerts :: NonEmpty BatteryPercentageNoteToml,
+    -- | Determines how we should query the system for battery information.
+    app :: BatteryApp,
+    -- | Determines how we handle errors.
+    errorNote :: Maybe ErrorNoteToml,
     -- | The poll interval.
     pollInterval :: Maybe PollInterval,
     -- | Determines how we treat repeat alerts. We are given exact percentages,
     -- so if the user wants a repeatEvent to apply to a range, they should
     -- give the _lower_ bound.
-    repeatEvent :: Maybe (MultiRepeatEventToml Percentage),
-    -- | Determines how we handle errors.
-    errorNote :: Maybe ErrorNoteToml,
-    -- | Determines how we should query the system for battery information.
-    app :: BatteryApp
+    repeatEvent :: Maybe (MultiRepeatEventToml Percentage)
   }
   deriving stock (Eq, Show)
 
@@ -141,15 +145,51 @@ makeFieldLabelsNoPrefix ''BatteryPercentageToml
 
 -- | @since 0.1
 instance DecodeTOML BatteryPercentageToml where
-  tomlDecoder =
-    MkBatteryPercentageToml
-      <$> getFieldWith tomlDecoder "alert"
-      <*> pollIntervalOptDecoder
-      <*> multiRepeatEventOptDecoder decodePercentage
-      <*> errorNoteOptDecoder
-      <*> getFieldWith batteryAppDecoder "app"
+  tomlDecoder = do
+    alerts <- getFieldWith tomlDecoder "alert"
+    app <- getFieldWith batteryAppDecoder "app"
+    errorNote <- errorNoteOptDecoder
+    pollInterval <- pollIntervalOptDecoder
+    repeatEvent <- multiRepeatEventOptDecoder decodePercentage
+
+    case repeatEvent of
+      Just (MultiSomeRepeatsToml percentRefs) -> do
+        let alertsPercents = mkAlertPercents alerts
+            d = Set.difference percentRefs alertsPercents
+            msg =
+              mconcat
+                [ "Found repeat-events that referenced non-extant alert ",
+                  "percentages. All references should correspond to an alert ",
+                  "'percent' or 'lower': ",
+                  showSet d
+                ]
+        unless (Set.null d) $ fail msg
+      _ -> pure ()
+
+    pure
+      $ MkBatteryPercentageToml
+        { alerts,
+          app,
+          errorNote,
+          pollInterval,
+          repeatEvent
+        }
     where
       decodePercentage (Integer s) = case mkPercentage (fromIntegral s) of
         Just p -> pure p
         Nothing -> fail $ "Failed to parse percentage: " ++ show s
       decodePercentage other = typeMismatch other
+
+      mkAlertPercents :: NonEmpty BatteryPercentageNoteToml -> Set Percentage
+      mkAlertPercents =
+        Set.fromList
+          . NE.toList
+          . fmap (toPercentage . view #percentage)
+
+      showSet :: Set Percentage -> String
+      showSet =
+        unpack
+          . (<> ".")
+          . T.intercalate ", "
+          . fmap (showt . view _MkPercentage)
+          . Set.toList

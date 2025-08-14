@@ -149,5 +149,5 @@ updatePrevTrigger repeatEvent newVal =
     SomeRepeats _ ref -> do
       val <- readIORef ref
       when (val /= newVal) $ writeIORef ref newVal
-    _ -> pure ()
+    AllowRepeats -> pure ()
 {-# INLINEABLE updatePrevTrigger #-}

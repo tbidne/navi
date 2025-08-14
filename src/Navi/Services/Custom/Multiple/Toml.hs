@@ -8,11 +8,15 @@ module Navi.Services.Custom.Multiple.Toml
   )
 where
 
+import Data.List.NonEmpty qualified as NE
+import Data.Set (Set)
+import Data.Set qualified as Set
+import Data.Text qualified as T
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
   ( ErrorNoteToml,
-    MultiRepeatEventToml,
+    MultiRepeatEventToml (MultiSomeRepeatsToml),
     errorNoteOptDecoder,
     multiRepeatEventOptDecoder,
   )
@@ -42,16 +46,16 @@ instance DecodeTOML TriggerNoteToml where
 data MultipleToml = MkMultipleToml
   { -- | The command to run.
     command :: Command,
+    -- | Determines how we handle errors.
+    errEventCfg :: Maybe ErrorNoteToml,
     -- | An optional name to be used with logging.
     name :: Maybe Text,
-    -- | The alert triggers.
-    triggerNotes :: NonEmpty TriggerNoteToml,
     -- | The poll interval.
     pollInterval :: Maybe PollInterval,
     -- | Determines how we treat repeat alerts.
     repeatEventCfg :: Maybe (MultiRepeatEventToml Text),
-    -- | Determines how we handle errors.
-    errEventCfg :: Maybe ErrorNoteToml
+    -- | The alert triggers.
+    triggerNotes :: NonEmpty TriggerNoteToml
   }
   deriving stock (Eq, Show)
 
@@ -59,14 +63,49 @@ makeFieldLabelsNoPrefix ''MultipleToml
 
 -- | @since 0.1
 instance DecodeTOML MultipleToml where
-  tomlDecoder =
-    MkMultipleToml
-      <$> commandDecoder
-      <*> getFieldOpt "name"
-      <*> getFieldWith tomlDecoder "trigger-note"
-      <*> pollIntervalOptDecoder
-      <*> multiRepeatEventOptDecoder decodeStr
-      <*> errorNoteOptDecoder
+  tomlDecoder = do
+    command <- commandDecoder
+    errEventCfg <- errorNoteOptDecoder
+    name <- getFieldOpt "name"
+    pollInterval <- pollIntervalOptDecoder
+    repeatEventCfg <- multiRepeatEventOptDecoder decodeStr
+    triggerNotes <- getFieldWith tomlDecoder "trigger-note"
+
+    case repeatEventCfg of
+      Just (MultiSomeRepeatsToml txtRefs) -> do
+        let triggers = mkTriggerTxts triggerNotes
+            d = Set.difference txtRefs triggers
+            msg =
+              mconcat
+                [ "Found repeat-events that referenced non-extant triggers. ",
+                  "All references should correspond to a note 'trigger': ",
+                  showSet d
+                ]
+        unless (Set.null d) $ fail msg
+      _ -> pure ()
+
+    pure
+      $ MkMultipleToml
+        { command,
+          errEventCfg,
+          name,
+          pollInterval,
+          repeatEventCfg,
+          triggerNotes
+        }
     where
       decodeStr (String s) = pure s
       decodeStr other = typeMismatch other
+
+      mkTriggerTxts :: NonEmpty TriggerNoteToml -> Set Text
+      mkTriggerTxts =
+        Set.fromList
+          . NE.toList
+          . fmap (view #trigger)
+
+      showSet :: Set Text -> String
+      showSet =
+        unpack
+          . (<> ".")
+          . T.intercalate ", "
+          . Set.toList

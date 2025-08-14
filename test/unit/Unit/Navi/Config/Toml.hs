@@ -100,11 +100,60 @@ tests =
   testGroup
     "Navi.Config.Toml"
     [ parsesFull,
+      parsePercentageRepeatRefFailure,
+      parseMultipleRepeatRefFailure,
       logTests
     ]
 
 parsesFull :: TestTree
 parsesFull = parsesConfig fullConfig expectedFull "Parses full config"
+
+parsePercentageRepeatRefFailure :: TestTree
+parsePercentageRepeatRefFailure = parsesConfigFail cfg expected desc
+  where
+    desc = "battery-percentage repeat-events bad reference fail"
+    expected =
+      mconcat
+        [ "Decode error at '.battery-percentage': Found repeat-events that ",
+          "referenced non-extant alert percentages. All references should ",
+          "correspond to an alert 'percent' or 'lower': 30, 40."
+        ]
+    cfg =
+      T.unlines
+        [ "[battery-percentage]",
+          "app = \"upower\"",
+          "repeat-events = [20, 30, 40, 50]",
+          "",
+          "[[battery-percentage.alert]]",
+          "percent = 50",
+          "[[battery-percentage.alert]]",
+          "lower = 20",
+          "upper = 30"
+        ]
+
+parseMultipleRepeatRefFailure :: TestTree
+parseMultipleRepeatRefFailure = parsesConfigFail cfg expected desc
+  where
+    desc = "multiple repeat-events bad reference fail"
+    expected =
+      mconcat
+        [ "Decode error at '.multiple[0]': Found repeat-events that ",
+          "referenced non-extant triggers. All references should correspond ",
+          "to a note 'trigger': t1, t3."
+        ]
+    cfg =
+      T.unlines
+        [ "[[multiple]]",
+          "command = \"some_cmd\"",
+          "repeat-events = [\"t1\", \"t2\", \"t3\", \"t4\"]",
+          "",
+          "[[multiple.trigger-note]]",
+          "trigger = \"t2\"",
+          "summary = \"s1\"",
+          "[[multiple.trigger-note]]",
+          "trigger = \"t4\"",
+          "summary = \"s2\""
+        ]
 
 logTests :: TestTree
 logTests =
@@ -140,6 +189,13 @@ parsesConfig config expected desc = testCase desc $ do
   case eResult of
     Left err -> assertFailure $ "Parse failed: " <> show err
     Right result -> expected @=? result
+
+parsesConfigFail :: Text -> String -> String -> TestTree
+parsesConfigFail config expected desc = testCase desc $ do
+  let eResult = decode @ConfigToml config
+  case eResult of
+    Left err -> expected @=? displayException err
+    Right result -> assertFailure $ "Parse succeeded: " <> show result
 
 expectedFull :: ConfigToml
 expectedFull =
