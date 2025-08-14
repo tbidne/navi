@@ -95,11 +95,10 @@
 # #
 # #   - false: No repeat events.
 # #   - true: Repeat all events.
-# #   - [t1, t2, ...]: Allow repeats for each percentage alert (int) in the list.
-# #     Notice the empty list is equivalent to false. For ranges, this should
-# #     be the _lower_ bound of the range. For instance, specifying 0 here means
-# #     that every value in the corresponding [0, 11) range will trigger a
-# #     repeat.
+# #   - [p1, p2, ...]: Allow repeats for each percentage alert (int) in the list.
+# #     For ranges, this should be the _lower_ bound of the range. For instance,
+# #     specifying 0 here means that every value in the corresponding [0, 11)
+# #     range will trigger a notification.
 # repeat-events = [0]
 # error-events = "no-repeats"
 # # Same apps as battery-status
@@ -111,8 +110,8 @@
 # #
 # # or a range:
 # #
-# #    lower = L
-# #    upper = U
+# #     lower = L
+# #     upper = U
 # #
 # # Lower is closed, and upper is open. For best results, percents/ranges
 # # should not overlap.
