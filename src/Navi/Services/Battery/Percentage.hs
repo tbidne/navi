@@ -64,7 +64,9 @@ tomlToNote toml =
     percentage = toml ^. #percentage
     summary = "Battery Percentage"
 
--- NOTE: A battery percentage event has result Battery and trigger
+-- NOTE: [Battery Percentage Result/Trigger]
+--
+-- A battery percentage event has result Battery and trigger
 -- PercentageData. There are two reasons why these are not the same type.
 --
 -- 1. We should only raise an alert when the battery status is discharging,

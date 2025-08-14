@@ -66,15 +66,21 @@ makeFieldLabelsNoPrefix ''EventError
 --
 -- 1. Query for information (i.e. run a shell command).
 -- 2. Parse the result.
--- 3. Raise an alert if the result matches some condition.
+-- 3. Map the result to a trigger.
+-- 4. Raise an alert if the trigger matches some condition.
 --
--- For most services, result and trigger will be identical. For example,
--- custom single/multiple services are both 'Text', and NetInterfaces is
--- NetInterface. In these cases, there is an exact correspondonce between
--- the service query result and the trigger.
+-- For most services, the (result -> trigger) map will be trivial i.e.
+-- result and trigger will be identical.
 --
--- But for e.g. battery percentage, the result is Battery (percentage and status)
--- whereas trigger is PercentageData.
+-- For example, custom single/multiple services are both 'Text', and
+-- NetInterfaces is NetInterface. In these cases, there is an exact
+-- correspondonce between the service query result and the trigger.
+--
+-- But for e.g. battery percentage, the result is Battery (percentage and
+-- status) whereas trigger is PercentageData.
+--
+-- See NOTE: [Battery Percentage Result/Trigger] for an explanation on why
+-- this might be desirable.
 data Event result trigger = MkEvent
   { -- | Determines how we handle errors.
     errorNote :: ErrorNote,
