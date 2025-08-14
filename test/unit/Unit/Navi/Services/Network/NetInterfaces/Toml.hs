@@ -60,7 +60,7 @@ appTests =
 parsesApp :: Text -> NetInterfaceApp -> TestTree
 parsesApp appName app =
   parsesExpected
-    (unpack appName)
+    (unpackText appName)
     txt
     app
     (view #app)

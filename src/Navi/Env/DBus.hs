@@ -59,7 +59,7 @@ naviToDBus :: NaviNote -> Note
 naviToDBus naviNote =
   DBusN.Note
     { appName = "Navi",
-      summary = unpack $ naviNote ^. #summary,
+      summary = unpackText $ naviNote ^. #summary,
       body = body,
       appImage = Nothing,
       hints = hints,
@@ -67,7 +67,7 @@ naviToDBus naviNote =
       actions = []
     }
   where
-    body = DBusN.Text . unpack <$> naviNote ^. #body
+    body = DBusN.Text . unpackText <$> naviNote ^. #body
     hints = maybeToList $ Urgency <$> naviNote ^. #urgency
     timeout = maybe defTimeout naviToDBusTimeout $ naviNote ^. #timeout
     defTimeout = DBusN.Milliseconds 10_000

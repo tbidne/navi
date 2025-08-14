@@ -125,4 +125,4 @@ data ConfigErr
 instance Exception ConfigErr where
   displayException (FileErr ex) = "Error reading file: <" <> displayException ex <> ">"
   displayException NoEvents = "No events found"
-  displayException (TomlError err) = unpack $ renderTOMLError err
+  displayException (TomlError err) = unpackText $ renderTOMLError err

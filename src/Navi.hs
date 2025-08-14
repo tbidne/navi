@@ -13,7 +13,6 @@ where
 
 import DBus.Client (ClientError (clientErrorFatal))
 import DBus.Notify (UrgencyLevel (Critical, Normal))
-import Data.Text qualified as T
 import Effects.Concurrent.Async qualified as Async
 import Effects.Concurrent.STM (flushTBQueueA)
 import Effects.Concurrent.Thread (MonadThread (labelThread, myThreadId), sleep)
@@ -119,7 +118,7 @@ runNavi = do
 
     logExAndRethrow :: Text -> m a -> m a
     logExAndRethrow prefix io = catchSync io $ \ex -> do
-      $(logError) (prefix <> pack (displayException ex))
+      $(logError) (prefix <> displayExceptiont ex)
       throwM ex
 {-# INLINEABLE runNavi #-}
 
@@ -138,9 +137,9 @@ processEvent ::
   ) =>
   AnyEvent ->
   m Void
-processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
+processEvent (MkAnyEvent event) = addNamespace name $ do
   tid <- myThreadId
-  labelThread tid (fromString $ unpack name)
+  labelThread tid (unpackText name)
   let pi = event ^. (#pollInterval % #unPollInterval)
   forever $ do
     $(logInfo) ("Checking " <> name)
@@ -184,7 +183,7 @@ processEvent (MkAnyEvent event) = addNamespace (fromString $ unpack name) $ do
     handleErr :: (HasCallStack, Exception e) => (e -> NaviNote) -> e -> m ()
     handleErr toNote e = do
       blockErrEvent <- Event.blockErr errorNote
-      $(logError) (pack $ displayException e)
+      $(logError) (displayExceptiont e)
       if blockErrEvent
         then $(logDebug) "Error note blocked"
         else sendNoteQueue (toNote e)
@@ -203,7 +202,7 @@ exToNote :: SomeException -> NaviNote
 exToNote ex =
   MkNaviNote
     { summary = "Exception",
-      body = Just $ pack (U.displayInner ex),
+      body = Just $ packText (U.displayInner ex),
       urgency = Just Critical,
       timeout = Nothing
     }
@@ -231,7 +230,7 @@ pollNoteQueue = addNamespace "note-poller" $ do
           else
             $(logError)
               $ "Received non-fatal dbus error: "
-              <> T.pack (displayException ce)
+              <> packText (displayException ce)
 {-# INLINEABLE pollNoteQueue #-}
 
 pollLogQueue ::

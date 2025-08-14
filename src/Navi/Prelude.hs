@@ -23,6 +23,7 @@ module Navi.Prelude
     todo,
 
     -- * 'Text' utils.
+    displayExceptiont,
     showt,
     packText,
     unpackText,
@@ -97,7 +98,7 @@ import Data.Proxy as X (Proxy (Proxy))
 import Data.Semigroup as X (Semigroup ((<>)))
 import Data.Sequence as X (Seq ((:<|), (:|>)))
 import Data.String as X (IsString (fromString), String)
-import Data.Text as X (Text, concat, pack, unpack)
+import Data.Text as X (Text)
 import Data.Text qualified as T
 import Data.Text.Display as X (display)
 import Data.Traversable as X (Traversable (traverse))
@@ -207,7 +208,10 @@ import Prelude qualified as P
 
 -- | 'Text' version of 'P.show'.
 showt :: (P.Show a) => a -> Text
-showt = pack . P.show
+showt = T.pack . P.show
+
+displayExceptiont :: (Exception e) => e -> Text
+displayExceptiont = T.pack . displayException
 
 unpackText :: Text -> String
 unpackText = T.unpack

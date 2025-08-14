@@ -76,7 +76,7 @@ instance
         $(logDebug) noteTxt
         void $ TP.readProcess (mkProc noteTxt)
     where
-      mkProc = TP.shell . unpack
+      mkProc = TP.shell . unpackText
 
 instance
   ( MonadSTM m,

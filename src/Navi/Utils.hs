@@ -63,7 +63,7 @@ urgencyLevelDecoder = do
     "low" -> pure Low
     "normal" -> pure Normal
     "critical" -> pure Critical
-    bad -> fail $ unpack $ "Invalid value: " <> bad
+    bad -> fail $ unpackText $ "Invalid value: " <> bad
 
 -- | TOML decoder for 'Command' with field name "command".
 --

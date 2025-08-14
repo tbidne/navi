@@ -140,8 +140,8 @@ instance DecodeTOML ErrorNoteToml where
         "no-repeats" -> pure ErrNoteNoRepeatsToml
         bad ->
           fail
-            $ unpack
-            $ concat
+            $ unpackText
+            $ mconcat
               [ "Unexpected error-events string: ",
                 bad,
                 ". Expected one of <none | repeats | no-repeats>."

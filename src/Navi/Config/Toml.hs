@@ -90,7 +90,7 @@ severityDecoder =
     "info" -> pure $ Just LevelInfo
     "error" -> pure $ Just LevelError
     "none" -> pure Nothing
-    bad -> fail $ unpack $ "Unsupported severity: " <> bad
+    bad -> fail $ unpackText $ "Unsupported severity: " <> bad
 
 locationDecoderOpt :: Decoder (Maybe LogLoc)
 locationDecoderOpt = getFieldOptWith locationDecoder "location"
@@ -108,7 +108,7 @@ noteSystemDecoder =
     "apple-script" -> pure AppleScript
     "dbus" -> pure $ DBus ()
     "notify-send" -> pure NotifySend
-    bad -> fail $ unpack $ "Unsupported NoteSystem: " <> bad
+    bad -> fail $ unpackText $ "Unsupported NoteSystem: " <> bad
 
 sizeModeDecoderOpt :: Decoder (Maybe FilesSizeMode)
 sizeModeDecoderOpt = getFieldOptWith sizeModeDecoder "size-mode"
@@ -120,10 +120,10 @@ sizeModeDecoder = do
   cons <- case m of
     "warn" -> pure FilesSizeModeWarn
     "delete" -> pure FilesSizeModeDelete
-    bad -> fail $ "Unrecognized size-mode: " <> unpack bad
+    bad -> fail $ "Unrecognized size-mode: " <> unpackText bad
   case parseByteText byteTxt of
     Right b -> pure $ cons b
-    Left err -> fail $ "Could not parse size-mode size: " <> unpack err
+    Left err -> fail $ "Could not parse size-mode size: " <> unpackText err
   where
     parseByteText :: Text -> Either Text (Bytes B Natural)
     parseByteText txt =

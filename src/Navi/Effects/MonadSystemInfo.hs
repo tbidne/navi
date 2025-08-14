@@ -56,7 +56,7 @@ rethrowPythia n io =
       $ MkEventError
         { name = n,
           short = "PythiaException",
-          long = pack $ U.displayInner e
+          long = packText $ U.displayInner e
         }
 
 instance (MonadSystemInfo m) => MonadSystemInfo (ReaderT e m) where

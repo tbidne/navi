@@ -129,7 +129,7 @@ argsParser =
 defaultConfig :: Parser (a -> a)
 defaultConfig =
   OptApp.infoOption
-    (unpack $$TH.defaultToml)
+    (unpackText $$TH.defaultToml)
     (OptApp.long "default-config" <> mkHelp help)
   where
     help = "Writes a default config.toml file to stdout."

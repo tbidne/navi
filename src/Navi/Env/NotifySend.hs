@@ -59,7 +59,7 @@ naviToNotifySend naviNote = txt
 
     timeoutToNS Never = ""
     timeoutToNS (Seconds s) =
-      pack
+      packText
         $ " --expire-time "
         <> show (s * 1_000)
         <> " "

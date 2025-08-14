@@ -34,8 +34,8 @@ instance Bounded PollInterval where
 instance DecodeTOML PollInterval where
   tomlDecoder = makeDecoder $ \case
     String t ->
-      case Rel.fromString (unpack t) of
-        Left _ -> fail $ unpack $ "Could not parse poll-interval: " <> t
+      case Rel.fromString (unpackText t) of
+        Left _ -> fail $ unpackText $ "Could not parse poll-interval: " <> t
         Right relTime -> ltRelTimeBounds $ Rel.toSeconds relTime
     Integer i -> ltRelTimeBounds (fromIntegral i)
     badTy -> typeMismatch badTy
@@ -45,7 +45,7 @@ ltRelTimeBounds n
   | MkPollInterval n <= maxBound = pure $ MkPollInterval n
   | otherwise =
       fail
-        $ unpack
+        $ unpackText
         $ T.concat
           [ "Given poll interval of ",
             showt n,

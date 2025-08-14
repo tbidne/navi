@@ -24,8 +24,8 @@ batteryAppDecoder =
     "upower" -> pure BatteryAppUPower
     bad ->
       fail
-        $ unpack
-        $ concat
+        $ unpackText
+        $ mconcat
           [ "Unexpected battery app: ",
             bad,
             ". Expected one of <acpi | sysfs | upower>."

@@ -117,8 +117,8 @@ percentageDecoder =
       Just n -> pure n
       Nothing ->
         fail
-          $ unpack
-          $ concat
+          $ unpackText
+          $ mconcat
             [ "Unexpected percent: ",
               showt x,
               ". Expected integer in [0, 100]."
@@ -188,7 +188,7 @@ instance DecodeTOML BatteryPercentageToml where
 
       showSet :: Set Percentage -> String
       showSet =
-        unpack
+        unpackText
           . (<> ".")
           . T.intercalate ", "
           . fmap (showt . view _MkPercentage)

@@ -55,7 +55,7 @@ appTests =
 parsesApp :: Text -> BatteryApp -> TestTree
 parsesApp appName app =
   parsesExpected
-    (unpack appName)
+    (unpackText appName)
     ("app = \"" <> appName <> "\"")
     app
     (view #app)

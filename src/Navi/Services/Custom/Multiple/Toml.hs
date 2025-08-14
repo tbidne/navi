@@ -105,7 +105,7 @@ instance DecodeTOML MultipleToml where
 
       showSet :: Set Text -> String
       showSet =
-        unpack
+        unpackText
           . (<> ".")
           . T.intercalate ", "
           . Set.toList

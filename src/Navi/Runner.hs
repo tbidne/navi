@@ -223,7 +223,7 @@ writeConfigErr ex = do
   xdgBase <- Dir.getXdgState [osp|navi|]
   let logFile = xdgBase </> [osp|config_fatal.log|]
   renameIfExists logFile
-  writeFileUtf8 logFile $ "Couldn't read config: " <> pack (displayException ex)
+  writeFileUtf8 logFile $ "Couldn't read config: " <> displayExceptiont ex
   throwM ex
 
 renameIfExists ::
@@ -295,7 +295,7 @@ handleLogSize naviState sizeMode = do
     sizeWarning warnSize fp fileSize =
       mconcat
         [ "Warning: log dir '",
-          T.pack $ show fp,
+          showt fp,
           "' has size: ",
           formatBytes fileSize,
           ", but specified threshold is: ",
