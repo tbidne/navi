@@ -51,9 +51,6 @@ data MockEnv = MkMockEnv
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
     sentNotes :: IORef [NaviNote],
-    -- | caches the last battery percentage "reading". This way we can
-    -- ensure we have a new percentage every time.
-    lastPercentage :: IORef Percentage,
     multipleResponses :: IORef [Text],
     percentageResponses :: IORef [Percentage],
     singleResponses :: IORef [Text]
@@ -128,16 +125,7 @@ instance MonadSystemInfo MockAppT where
       (r : rs) -> do
         writeIORef responsesRef rs
         pure r
-      [] -> do
-        bpRef <- asks (view #lastPercentage)
-        oldVal <- Percentage.unPercentage <$> readIORef bpRef
-        let !newVal =
-              if oldVal == 0
-                then 100
-                else oldVal - 1
-            newBp = Percentage.unsafePercentage newVal
-        liftIO $ writeIORef bpRef newBp
-        pure newBp
+      [] -> pure $ Percentage.unsafePercentage 80
     pure $ MkBattery newBp Discharging
   -- Constant service. Can test duplicate behavior.
   query (BatteryStatus _) = pure Charging
@@ -166,7 +154,6 @@ runMockApp = runMockAppEnv pure
 
 runMockAppEnv :: (MockEnv -> IO MockEnv) -> Word8 -> OsPath -> IO MockEnv
 runMockAppEnv modEnv maxSeconds configPath = do
-  lastPercentage <- newIORef $ Percentage.unsafePercentage 6
   multipleResponses <- newIORef []
   percentageResponses <- newIORef []
   singleResponses <- newIORef []
@@ -176,7 +163,6 @@ runMockAppEnv modEnv maxSeconds configPath = do
         let env =
               MkMockEnv
                 { coreEnv,
-                  lastPercentage,
                   sentNotes,
                   multipleResponses,
                   percentageResponses,

@@ -51,10 +51,10 @@ main = do
 
 testMultiNotifs :: TestTree
 testMultiNotifs = testCase "Sends multiple new notifications" $ do
-  mockEnv <- runMock 6 batteryPercentageEventConfig
+  mockEnv <- runMockEnv modEnv 6 batteryPercentageEventConfig
 
   sentNotes <- mockEnvToNotes mockEnv
-  expected @=? sentNotes
+  assertNotesOrder expected sentNotes
   where
     -- Percentage is counting down, hence we receive them in order 5 .. 1.
     expected = L.reverse $ fmap toNote [1 .. 5 :: Int]
@@ -65,6 +65,13 @@ testMultiNotifs = testCase "Sends multiple new notifications" $ do
           urgency = Nothing,
           timeout = Nothing
         }
+
+    modEnv :: MockEnv -> IO MockEnv
+    modEnv env = do
+      writeIORef
+        (env ^. #percentageResponses)
+        (unsafePercentage <$> [5, 4, 3, 2, 1])
+      pure env
 
 testDuplicates :: TestTree
 testDuplicates = testCase "Send duplicate notifications" $ do
@@ -346,7 +353,7 @@ testBatteryPercentage = testCase "Tests battery percentage example" $ do
 
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
-      let ps = [50, 45, 15, 11, 10, 8] ++ L.repeat 2
+      let ps = [50, 45, 15, 11, 10, 8, 2]
       writeIORef (env ^. #percentageResponses) (unsafePercentage <$> ps)
 
       let evts = case modEvts of
