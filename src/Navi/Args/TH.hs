@@ -8,6 +8,7 @@ module Navi.Args.TH
 where
 
 import Control.Applicative (liftA3)
+import Data.Text qualified as T
 import Data.Time.Clock.POSIX (POSIXTime)
 import Data.Time.Clock.POSIX qualified as PosixTime
 import Data.Time.Format qualified as Fmt
@@ -148,7 +149,18 @@ displayUnixTime var unixTimeOsStr = do
         }
 
 defaultToml :: Code Q Text
-defaultToml = liftIOToTH $ readFileUtf8ThrowM [ospPathSep|examples/default.toml|]
+defaultToml = liftIOToTH $ do
+  contents <- readFileUtf8ThrowM [ospPathSep|examples/config.toml|]
+  pure
+    . T.unlines
+    . fmap prependComment
+    . T.lines
+    $ contents
+  where
+    prependComment l =
+      if T.null l
+        then l
+        else "# " <> l
 
 -- | Binds an IO action to TH.
 bindIOToTH :: (HasCallStack, Lift b) => ((HasCallStack) => a -> IO b) -> a -> Code Q b
