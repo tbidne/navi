@@ -6,7 +6,8 @@ module Navi.Effects.MonadSystemInfo
   )
 where
 
-import Navi.Data.NaviNote (CustomResult, parseCustomResult)
+import Navi.Data.CommandResult (CommandResult)
+import Navi.Data.CommandResultParser (CommandResultParser)
 import Navi.Event.Types (EventError (MkEventError, long, name, short))
 import Navi.Prelude
 import Navi.Services.Types
@@ -46,8 +47,8 @@ instance MonadSystemInfo IO where
       rethrowPythia "Battery Status" $ view #status <$> Pythia.queryBattery bp
     NetworkInterface device cp ->
       rethrowPythia "NetInterface" $ Pythia.queryNetInterface device cp
-    Single cmd -> rethrowPythia "Single" $ querySimple cmd
-    Multiple cmd -> rethrowPythia "Multiple" $ querySimple cmd
+    Single cmd parser -> rethrowPythia "Single" $ querySimple cmd parser
+    Multiple cmd parser -> rethrowPythia "Multiple" $ querySimple cmd parser
 
 rethrowPythia :: Text -> IO a -> IO a
 rethrowPythia n io =
@@ -63,17 +64,19 @@ instance (MonadSystemInfo m) => MonadSystemInfo (ReaderT e m) where
   query = lift . query
   {-# INLINEABLE query #-}
 
-querySimple :: Command -> IO CustomResult
-querySimple cmd = do
-  result <- ShellApp.runSimple shellApp
-  pure $ parseCustomResult result
+querySimple :: Command -> CommandResultParser -> IO CommandResult
+querySimple cmd parser = ShellApp.runSimple shellApp
   where
-    shellApp = mkApp cmd
+    shellApp = mkApp cmd (parser ^. #unCommandResultParser)
 
-mkApp :: (Applicative f) => Command -> SimpleShell f EventError Text
-mkApp cmd =
+mkApp ::
+  (Applicative f) =>
+  Command ->
+  (Text -> Either EventError CommandResult) ->
+  SimpleShell f EventError CommandResult
+mkApp cmd parser =
   MkSimpleShell
     { command = cmd,
       isSupported = pure True,
-      parser = Right
+      parser
     }

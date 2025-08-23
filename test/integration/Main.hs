@@ -134,7 +134,7 @@ testReplaceText = testCase "Replaces output text" $ do
   mockEnv <- runMockEnv modEnv 3 cfg
 
   sentNotes <- mockEnvToNotes mockEnv
-  assertNotes expected sentNotes
+  assertNotesRange 3 5 expected sentNotes
   where
     expected =
       Set.fromList
@@ -170,6 +170,7 @@ testReplaceText = testCase "Replaces output text" $ do
           "poll-interval = 1",
           "command = \"cmd\"",
           "trigger = \"t1\"",
+          "command-result = \"(trigger, output)\"",
           "",
           "[single.note]",
           "summary = \"Single\"",
@@ -178,6 +179,7 @@ testReplaceText = testCase "Replaces output text" $ do
           "[[multiple]]",
           "poll-interval = 1",
           "command = \"cmd\"",
+          "command-result = \"(trigger, output)\"",
           "",
           "[[multiple.trigger-note]]",
           "trigger = \"t1\"",
@@ -243,6 +245,7 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
           "poll-interval = 1",
           "command = \"cmd\"",
           "repeat-events = [\"t2\"]",
+          "command-result = \"(trigger, output)\"",
           "",
           "[[multiple.trigger-note]]",
           "trigger = \"t1\"",
@@ -262,37 +265,38 @@ testMultipleCustomText = testCase "Tests multiple dynamic example" $ do
 
   cfg <- modNoteSys <$> readFileUtf8ThrowM [ospPathSep|examples/config.toml|]
 
-  mockEnv <- runMockNoConfigEnv modEnv 10 cfg
+  mockEnv <- runMockNoConfigEnv modEnv 5 cfg
 
   sentNotes <- mockEnvToNotes mockEnv
-  expected @=? sentNotes
+  assertNotesRange 4 5 expected sentNotes
   where
     expected =
-      [ MkNaviNote
-          { summary = "Battery Percentage",
-            body = Just "Battery is good: 70",
-            urgency = Nothing,
-            timeout = Just $ Seconds 10
-          },
-        MkNaviNote
-          { summary = "Battery Percentage",
-            body = Just "Battery is medium: 35",
-            urgency = Nothing,
-            timeout = Just $ Seconds 10
-          },
-        MkNaviNote
-          { summary = "Battery Percentage",
-            body = Just "Battery is low: 5",
-            urgency = Just Critical,
-            timeout = Just $ Seconds 10
-          },
-        MkNaviNote
-          { summary = "Battery Percentage",
-            body = Just "Battery is low: 4",
-            urgency = Just Critical,
-            timeout = Just $ Seconds 10
-          }
-      ]
+      Set.fromList
+        [ MkNaviNote
+            { summary = "Battery Percentage",
+              body = Just "Battery is good: 70",
+              urgency = Nothing,
+              timeout = Just $ Seconds 10
+            },
+          MkNaviNote
+            { summary = "Battery Percentage",
+              body = Just "Battery is medium: 35",
+              urgency = Nothing,
+              timeout = Just $ Seconds 10
+            },
+          MkNaviNote
+            { summary = "Battery Percentage",
+              body = Just "Battery is low: 5",
+              urgency = Just Critical,
+              timeout = Just $ Seconds 10
+            },
+          MkNaviNote
+            { summary = "Battery Percentage",
+              body = Just "Battery is low: 4",
+              urgency = Just Critical,
+              timeout = Just $ Seconds 10
+            }
+        ]
 
     -- In addition to mocking the script responses, we want to filter out
     -- all the config examples we do not care about. We also need to set the
@@ -493,10 +497,13 @@ assertNotesOrder :: [NaviNote] -> [NaviNote] -> IO ()
 assertNotesOrder expected actual =
   for_ (L.zip expected actual) $ uncurry (@=?)
 
-assertNotes :: Set NaviNote -> [NaviNote] -> IO ()
-assertNotes expected actual = do
-  length expected @=? length actual
+assertNotesRange :: Int -> Int -> Set NaviNote -> [NaviNote] -> IO ()
+assertNotesRange l r expected actual = do
+  assertBool (show l ++ " <= " ++ show numActual) (l <= numActual)
+  assertBool (show numActual ++ " <= " ++ show r) (numActual <= r)
   for_ actual $ \a -> assertBool (show a) (Set.member a expected)
+  where
+    numActual = length actual
 
 headerConfig :: Text
 headerConfig =

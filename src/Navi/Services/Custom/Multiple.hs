@@ -8,11 +8,12 @@ where
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict qualified as Map
 import Data.Text qualified as T
-import Navi.Data.NaviNote
-  ( CustomResult (CustomOut, CustomText),
-    NaviNote,
-    replaceOut,
+import Navi.Data.CommandResult (CommandResult (MkCommandResult))
+import Navi.Data.CommandResultParser
+  ( CommandResultParserToml (MkCommandResultParserToml),
+    defaultParser,
   )
+import Navi.Data.NaviNote (NaviNote, replaceOut)
 import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -40,7 +41,7 @@ import Pythia.Data.Command (Command)
 -- | Transforms toml configuration data into an 'AnyEvent'.
 toEvent :: (MonadIORef m) => MultipleToml -> m AnyEvent
 toEvent toml = do
-  repeatEvent <- EventToml.mMultiRepeatEventTomlToVal CustomText (toml ^. #repeatEventCfg)
+  repeatEvent <- EventToml.mMultiRepeatEventTomlToVal toCommandResult (toml ^. #repeatEventCfg)
   errorNote <- EventToml.mErrorNoteTomlToVal (toml ^. #errEventCfg)
   pure
     $ MkAnyEvent
@@ -51,10 +52,13 @@ toEvent toml = do
       pi
       repeatEvent
       errorNote
+      (toml ^. #parser)
   where
     triggerNotePairs = fmap toPair (toml ^. #triggerNotes)
     toPair (MkTriggerNoteToml t n) = (T.strip t, n)
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
+
+    toCommandResult = MkCommandResult Nothing Nothing
 {-# INLINEABLE toEvent #-}
 
 mkMultipleEvent ::
@@ -62,20 +66,28 @@ mkMultipleEvent ::
   Command ->
   NonEmpty (Text, NaviNote) ->
   PollInterval ->
-  RepeatEvent CustomResult ->
+  RepeatEvent CommandResult ->
   ErrorNote ->
-  Event CustomResult CustomResult
-mkMultipleEvent mname cmd noteList pollInterval repeatEvent errorNote =
+  Maybe CommandResultParserToml ->
+  Event CommandResult CommandResult
+mkMultipleEvent mname cmd noteList pollInterval repeatEvent errorNote mParser =
   MkEvent
     { name,
-      serviceType = Multiple cmd,
+      serviceType = Multiple cmd parser,
       pollInterval,
-      raiseAlert = \case
-        r@(CustomText result) -> (r,) <$> Map.lookup result noteMap
-        r@(CustomOut (result, out)) -> (r,) . replaceOut out <$> Map.lookup result noteMap,
+      raiseAlert = \r -> do
+        note <- Map.lookup (r ^. #result) noteMap
+
+        pure $ case r ^. #output of
+          Nothing -> (r, note)
+          Just output -> (r, replaceOut output note),
       repeatEvent,
       errorNote
     }
   where
     noteMap = Map.fromList $ NE.toList noteList
     name = fromMaybe "multiple" mname
+
+    parser = case mParser of
+      Just (MkCommandResultParserToml p) -> p name
+      Nothing -> defaultParser

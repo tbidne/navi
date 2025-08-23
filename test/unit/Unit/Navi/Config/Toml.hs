@@ -74,6 +74,7 @@ import Navi.Services.Custom.Single.Toml
         errEventCfg,
         name,
         note,
+        parser,
         pollInterval,
         repeatEventCfg,
         triggerVal
@@ -220,6 +221,7 @@ expectedSingle =
   [ MkSingleToml
       { command = "  some multiline cmd\n  end cmd\n",
         name = Just "a-single",
+        parser = Nothing,
         triggerVal = "true",
         pollInterval = Just $ MkPollInterval 121,
         note = note,

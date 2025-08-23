@@ -4,7 +4,8 @@ module Navi.Services.Types
   )
 where
 
-import Navi.Data.NaviNote (CustomResult)
+import Navi.Data.CommandResult (CommandResult)
+import Navi.Data.CommandResultParser (CommandResultParser)
 import Navi.Prelude
 import Pythia.Data.Command (Command)
 import Pythia.Services.Battery (Battery, BatteryApp, BatteryStatus)
@@ -20,8 +21,8 @@ data ServiceType result where
   BatteryPercentage :: BatteryApp -> ServiceType Battery
   BatteryStatus :: BatteryApp -> ServiceType BatteryStatus
   NetworkInterface :: Device -> NetInterfaceApp -> ServiceType NetInterface
-  Single :: Command -> ServiceType CustomResult
-  Multiple :: Command -> ServiceType CustomResult
+  Single :: Command -> CommandResultParser -> ServiceType CommandResult
+  Multiple :: Command -> CommandResultParser -> ServiceType CommandResult
 
 deriving stock instance Show (ServiceType result)
 

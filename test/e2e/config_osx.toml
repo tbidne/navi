@@ -32,6 +32,7 @@ command = """
     echo -n "(false, $min)"
   fi
 """
+command-result = "(trigger, output)"
 repeat-events = ["false"]
 
 [[multiple.trigger-note]]

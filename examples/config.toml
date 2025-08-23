@@ -217,7 +217,8 @@ timeout = 10
 # notification trigger, and the RHS is custom output that can be referenced
 # in the notification body with $out.
 #
-# This allows us to have different outputs with the same trigger.
+# This allows us to have different outputs with the same trigger. This requires
+# setting the 'command-result' field (see below).
 
 [[multiple]]
 name = "battery-manual"
@@ -243,6 +244,16 @@ command = """
 """
 # Repeat 'low' events only.
 repeat-events = ["low"]
+
+# Optional field for the command result. The default assumes the output is a
+# the string trigger (equivalent to 'command-result = "trigger"'). Otherwise,
+# we can return a tuple (in any order) with the following keys:
+#
+#   - trigger
+#   - output
+#
+# In this example, we return (trigger, output).
+command-result = "(trigger, output)"
 
 [[multiple.trigger-note]]
 trigger = "good"

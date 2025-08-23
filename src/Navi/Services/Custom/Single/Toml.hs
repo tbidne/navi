@@ -7,6 +7,7 @@ module Navi.Services.Custom.Single.Toml
   )
 where
 
+import Navi.Data.CommandResultParser (CommandResultParserToml, commandResultParserDecoder)
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
@@ -27,6 +28,8 @@ data SingleToml = MkSingleToml
     name :: Maybe Text,
     -- | The alert trigger.
     triggerVal :: Text,
+    -- | Custom parsing.
+    parser :: Maybe CommandResultParserToml,
     -- | The poll interval.
     pollInterval :: Maybe PollInterval,
     -- | The notification to send.
@@ -47,6 +50,7 @@ instance DecodeTOML SingleToml where
       <$> commandDecoder
       <*> getFieldOpt "name"
       <*> getField "trigger"
+      <*> commandResultParserDecoder
       <*> pollIntervalOptDecoder
       <*> getField "note"
       <*> repeatEventOptDecoder

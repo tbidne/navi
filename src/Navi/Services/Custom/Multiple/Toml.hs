@@ -12,6 +12,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as T
+import Navi.Data.CommandResultParser (CommandResultParserToml, commandResultParserDecoder)
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
@@ -50,6 +51,8 @@ data MultipleToml = MkMultipleToml
     errEventCfg :: Maybe ErrorNoteToml,
     -- | An optional name to be used with logging.
     name :: Maybe Text,
+    -- | Custom parsing.
+    parser :: Maybe CommandResultParserToml,
     -- | The poll interval.
     pollInterval :: Maybe PollInterval,
     -- | Determines how we treat repeat alerts.
@@ -67,6 +70,7 @@ instance DecodeTOML MultipleToml where
     command <- commandDecoder
     errEventCfg <- errorNoteOptDecoder
     name <- getFieldOpt "name"
+    parser <- commandResultParserDecoder
     pollInterval <- pollIntervalOptDecoder
     repeatEventCfg <- multiRepeatEventOptDecoder decodeStr
     triggerNotes <- getFieldWith tomlDecoder "trigger-note"
@@ -89,6 +93,7 @@ instance DecodeTOML MultipleToml where
         { command,
           errEventCfg,
           name,
+          parser,
           pollInterval,
           repeatEventCfg,
           triggerNotes

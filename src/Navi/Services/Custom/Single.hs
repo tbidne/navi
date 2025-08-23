@@ -5,12 +5,14 @@ module Navi.Services.Custom.Single
   )
 where
 
+import Control.Monad (guard)
 import Data.Text qualified as T
-import Navi.Data.NaviNote
-  ( CustomResult (CustomOut, CustomText),
-    NaviNote,
-    replaceOut,
+import Navi.Data.CommandResult (CommandResult)
+import Navi.Data.CommandResultParser
+  ( CommandResultParserToml (MkCommandResultParserToml),
+    defaultParser,
   )
+import Navi.Data.NaviNote (NaviNote, replaceOut)
 import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -46,6 +48,7 @@ toEvent toml = do
       (T.strip (toml ^. #triggerVal), toml ^. #note)
       repeatEvent
       errorNote
+      (toml ^. #parser)
   where
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 {-# INLINEABLE toEvent #-}
@@ -55,25 +58,26 @@ mkSingleEvent ::
   Command ->
   PollInterval ->
   (Text, NaviNote) ->
-  RepeatEvent CustomResult ->
+  RepeatEvent CommandResult ->
   ErrorNote ->
-  Event CustomResult CustomResult
-mkSingleEvent mname cmd pollInterval (triggerVal, note) repeatEvent errorNote =
+  Maybe CommandResultParserToml ->
+  Event CommandResult CommandResult
+mkSingleEvent mname cmd pollInterval (triggerVal, note) repeatEvent errorNote mParser =
   MkEvent
     { name,
       pollInterval,
-      serviceType = Single cmd,
-      raiseAlert = \case
-        r@(CustomText result) ->
-          if result == triggerVal
-            then Just (r, note)
-            else Nothing
-        r@(CustomOut (result, out)) ->
-          if result == triggerVal
-            then Just (r, replaceOut out note)
-            else Nothing,
+      serviceType = Single cmd parser,
+      raiseAlert = \r -> do
+        guard (r ^. #result == triggerVal)
+        pure $ case r ^. #output of
+          Nothing -> (r, note)
+          Just output -> (r, replaceOut output note),
       repeatEvent,
       errorNote
     }
   where
     name = fromMaybe "single" mname
+
+    parser = case mParser of
+      Just (MkCommandResultParserToml p) -> p name
+      Nothing -> defaultParser

@@ -16,6 +16,7 @@ import Data.Set (Set)
 import GHC.Show (showSpace)
 import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.PollInterval (PollInterval)
+import Navi.Event.Types.EventError (EventError (MkEventError, long, name, short))
 import Navi.Prelude
 import Navi.Services.Types (ServiceType)
 import Text.Show (Show (showsPrec), showParen, showString)
@@ -47,20 +48,6 @@ data ErrorNote
   = NoErrNote
   | AllowErrNote (RepeatEvent ())
   deriving stock (Show)
-
--- | Represents an error when querying an 'Event'.
-data EventError = MkEventError
-  { -- | The name of the event.
-    name :: Text,
-    -- | Short description of the error.
-    short :: Text,
-    -- | Long description of the error.
-    long :: Text
-  }
-  deriving stock (Eq, Show)
-  deriving anyclass (Exception)
-
-makeFieldLabelsNoPrefix ''EventError
 
 -- | 'Event' represents sending notifications. An event will:
 --
