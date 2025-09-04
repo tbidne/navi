@@ -16,7 +16,6 @@ module Navi.Prelude
     headMaybe,
 
     -- * Misc utilities
-    (>.>),
     (<<$>>),
     maybeToEither,
     monoBimap,
@@ -43,6 +42,7 @@ import Control.Applicative as X
       ),
     (<**>),
   )
+import Control.Category as X (Category ((.)), (<<<), (>>>))
 import Control.DeepSeq as X (NFData)
 import Control.Exception.Utils as X (catchSync, throwText)
 import Control.Monad as X
@@ -85,7 +85,7 @@ import Data.Char as X (Char)
 import Data.Either as X (Either (Left, Right), either)
 import Data.Eq as X (Eq ((==)), (/=))
 import Data.Foldable as X (Foldable (elem, foldl'), for_, length, traverse_)
-import Data.Function as X (const, flip, id, ($), (.))
+import Data.Function as X (const, flip, id, ($))
 import Data.Functor as X (Functor (fmap), ($>), (<$>), (<&>))
 import Data.Int as X (Int32)
 import Data.Kind as X (Constraint, Type)
@@ -146,7 +146,7 @@ import Effects.Optparse as X (MonadOptparse)
 import Effects.Process.Typed as X (MonadTypedProcess, Process)
 import Effects.System.Terminal as X (MonadTerminal, putStrLn, putTextLn)
 import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
-import GHC.Enum as X (Bounded (maxBound, minBound))
+import GHC.Enum as X (Bounded (maxBound, minBound), Enum)
 import GHC.Err as X (error, undefined)
 import GHC.Exception (errorCallWithCallStackException)
 import GHC.Exts (RuntimeRep, TYPE, raise#)
@@ -232,12 +232,6 @@ maybeToEither _ (Just x) = Right x
 -- | Convenience function for mapping @(a -> b)@ over a monomorphic bifunctor.
 monoBimap :: (Bifunctor p) => (a -> b) -> p a a -> p b b
 monoBimap f = bimap f f
-
--- | Flipped version of '(.)'.
-(>.>) :: (a -> b) -> (b -> c) -> a -> c
-(>.>) = flip (.)
-
-infixr 8 >.>
 
 -- | Composed 'fmap'.
 (<<$>>) :: (Functor f, Functor g) => (a -> b) -> g (f a) -> g (f b)

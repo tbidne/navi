@@ -29,6 +29,7 @@ import Navi.Data.NaviNote
       ),
     Timeout (Seconds),
   )
+import Navi.Data.PollInterval (PollInterval)
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo)
 import Navi.Env.Core
@@ -41,7 +42,7 @@ import Navi.Event qualified as Event
 import Navi.Event.Types
   ( AnyEvent (MkAnyEvent),
     EventError,
-    EventSuccess (MkEventSuccess),
+    EventSuccess,
   )
 import Navi.NaviT (NaviT (..), runNaviT)
 import Navi.Prelude
@@ -140,22 +141,25 @@ processEvent ::
 processEvent (MkAnyEvent event) = addNamespace name $ do
   tid <- myThreadId
   labelThread tid (unpackText name)
-  let pi = event ^. (#pollInterval % #unPollInterval)
   forever $ do
     $(logInfo) ("Checking " <> name)
-    (Event.runEvent event >>= handleSuccess)
-      `catch` handleEventError
-      `catchSync` handleSomeException
-    sleep pi
+    dynamicPollInterval <-
+      (Event.runEvent event >>= handleSuccess)
+        `catch` (handleEventError >>> ($> Nothing))
+        `catchSync` (handleSomeException >>> ($> Nothing))
+    let pollInterval = fromMaybe staticPollInterval dynamicPollInterval
+    sleep (pollInterval ^. #unPollInterval)
   where
     name = event ^. #name
     errorNote = event ^. #errorNote
 
+    staticPollInterval = event ^. #pollInterval
+
     handleSuccess ::
       (HasCallStack, Ord trigger, Show result, Show trigger) =>
       EventSuccess result trigger ->
-      m ()
-    handleSuccess (MkEventSuccess result repeatEvent raiseAlert) =
+      m (Maybe PollInterval)
+    handleSuccess es =
       addNamespace "handleSuccess" $ do
         case raiseAlert result of
           Nothing -> do
@@ -169,6 +173,12 @@ processEvent (MkAnyEvent event) = addNamespace name $ do
                 $(logInfo) ("Sending note " <> showt note)
                 Event.updatePrevTrigger repeatEvent (Just trigger)
                 sendNoteQueue note
+        pure pollInterval
+      where
+        pollInterval = es ^. #pollInterval
+        raiseAlert = es ^. #raiseAlert
+        result = es ^. #result
+        repeatEvent = es ^. #repeatEvent
 
     handleEventError :: (HasCallStack) => EventError -> m ()
     handleEventError =

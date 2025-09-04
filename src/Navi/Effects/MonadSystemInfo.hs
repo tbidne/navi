@@ -8,6 +8,7 @@ where
 
 import Navi.Data.CommandResult (CommandResult)
 import Navi.Data.CommandResultParser (CommandResultParser)
+import Navi.Data.PollInterval (PollInterval)
 import Navi.Event.Types (EventError (MkEventError, long, name, short))
 import Navi.Prelude
 import Navi.Services.Types
@@ -36,17 +37,17 @@ import Pythia.Internal.ShellApp qualified as ShellApp
 
 -- | This class represents an effect of querying system information.
 class (Monad m) => MonadSystemInfo m where
-  query :: (HasCallStack) => ServiceType result -> m result
+  query :: (HasCallStack) => ServiceType result -> m (result, Maybe PollInterval)
 
 instance MonadSystemInfo IO where
-  query :: ServiceType result -> IO result
+  query :: ServiceType result -> IO (result, Maybe PollInterval)
   query = \case
     BatteryPercentage bp ->
-      rethrowPythia "Battery Percentage" $ Pythia.queryBattery bp
+      rethrowPythia "Battery Percentage" $ (,Nothing) <$> Pythia.queryBattery bp
     BatteryStatus bp ->
-      rethrowPythia "Battery Status" $ view #status <$> Pythia.queryBattery bp
+      rethrowPythia "Battery Status" $ (,Nothing) . view #status <$> Pythia.queryBattery bp
     NetworkInterface device cp ->
-      rethrowPythia "NetInterface" $ Pythia.queryNetInterface device cp
+      rethrowPythia "NetInterface" $ (,Nothing) <$> Pythia.queryNetInterface device cp
     Single cmd parser -> rethrowPythia "Single" $ querySimple cmd parser
     Multiple cmd parser -> rethrowPythia "Multiple" $ querySimple cmd parser
 
@@ -64,8 +65,8 @@ instance (MonadSystemInfo m) => MonadSystemInfo (ReaderT e m) where
   query = lift . query
   {-# INLINEABLE query #-}
 
-querySimple :: Command -> CommandResultParser -> IO CommandResult
-querySimple cmd parser = ShellApp.runSimple shellApp
+querySimple :: Command -> CommandResultParser -> IO (CommandResult, Maybe PollInterval)
+querySimple cmd parser = (\cr -> (cr, cr ^. #pollInterval)) <$> ShellApp.runSimple shellApp
   where
     shellApp = mkApp cmd (parser ^. #unCommandResultParser)
 

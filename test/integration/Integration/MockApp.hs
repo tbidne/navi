@@ -18,6 +18,7 @@ import Navi (runNavi)
 import Navi.Data.CommandResult (CommandResult)
 import Navi.Data.CommandResultParser (CommandResultParser)
 import Navi.Data.NaviNote (NaviNote)
+import Navi.Data.PollInterval (PollInterval)
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
@@ -128,9 +129,9 @@ instance MonadSystemInfo MockAppT where
         writeIORef responsesRef rs
         pure r
       [] -> pure $ Percentage.unsafePercentage 80
-    pure $ MkBattery newBp Discharging
+    pure (MkBattery newBp Discharging, Nothing)
   -- Constant service. Can test duplicate behavior.
-  query (BatteryStatus _) = pure Charging
+  query (BatteryStatus _) = pure (Charging, Nothing)
   -- Service error. Can test error behavior.
   query (NetworkInterface _ _) =
     throwM $ MkCommandException "nmcli" "Nmcli error"
@@ -141,7 +142,7 @@ getResponseOrDefault ::
   CommandResultParser ->
   Lens' MockEnv (IORef [Text]) ->
   Text ->
-  MockAppT CommandResult
+  MockAppT (CommandResult, Maybe PollInterval)
 getResponseOrDefault parser l def = do
   ref <- asks (view l)
   singleResponses <- readIORef ref
@@ -155,7 +156,7 @@ getResponseOrDefault parser l def = do
       parse r
   where
     parse txt = case (parser ^. #unCommandResultParser) txt of
-      Right x -> pure x
+      Right x -> pure (x, x ^. #pollInterval)
       Left err -> error $ displayException err
 
 runMockApp :: Word8 -> OsPath -> IO MockEnv

@@ -45,11 +45,12 @@ runEvent ::
   Event result trigger ->
   m (EventSuccess result trigger)
 runEvent event = addNamespace "runEvent" $ do
-  result <- query $ event ^. #serviceType
+  (result, pollInterval) <- query $ event ^. #serviceType
   $(logInfo) ("Shell returned: " <> showt result)
   pure
     $ MkEventSuccess
-      { result,
+      { pollInterval,
+        result,
         repeatEvent = event ^. #repeatEvent,
         raiseAlert = event ^. #raiseAlert
       }

@@ -46,6 +46,7 @@ main = do
         testMultipleRepeats,
         testMultipleCustomText,
         testBatteryPercentage,
+        testDynamicPollIntervals,
         Exceptions.tests
       ]
 
@@ -377,6 +378,89 @@ testBatteryPercentage = testCase "Tests battery percentage example" $ do
             $ env
             ^. (#coreEnv % #events)
 
+testDynamicPollIntervals :: TestTree
+testDynamicPollIntervals = testCase "Uses dynamic poll-interval" $ do
+  mockEnv <- runMockEnv modEnv 5 cfg
+
+  sentNotes <- mockEnvToNotes mockEnv
+  assertNotesRange 6 6 expected sentNotes
+  where
+    expected =
+      Set.fromList
+        [ MkNaviNote
+            { summary = "Single",
+              body = Just "Result is one",
+              urgency = Nothing,
+              timeout = Nothing
+            },
+          MkNaviNote
+            { summary = "Single",
+              body = Just "Result is two",
+              urgency = Nothing,
+              timeout = Nothing
+            },
+          MkNaviNote
+            { summary = "Single",
+              body = Just "Result is three",
+              urgency = Nothing,
+              timeout = Nothing
+            },
+          MkNaviNote
+            { summary = "Multiple",
+              body = Just "Result is one",
+              urgency = Nothing,
+              timeout = Nothing
+            },
+          MkNaviNote
+            { summary = "Multiple",
+              body = Just "Result is two",
+              urgency = Nothing,
+              timeout = Nothing
+            },
+          MkNaviNote
+            { summary = "Multiple",
+              body = Just "Result is three",
+              urgency = Nothing,
+              timeout = Nothing
+            }
+        ]
+
+    modEnv :: MockEnv -> IO MockEnv
+    modEnv env = do
+      writeIORef (env ^. #singleResponses) ["(t1, one, 1)", "(t1, two, 1)", "(t1, three, 30)", "(t1, four, 30)"]
+      writeIORef (env ^. #multipleResponses) ["(t1, 1, one)", "(t1, 1, two)", "(t2, 30, three)", "(t2, 30, four)"]
+      pure env
+
+    cfg =
+      T.unlines
+        [ "[[single]]",
+          "poll-interval = 40",
+          "command = \"cmd\"",
+          "trigger = \"t1\"",
+          "command-result = \"(trigger, output, poll-interval)\"",
+          "repeat-events = true",
+          "",
+          "[single.note]",
+          "summary = \"Single\"",
+          "body = \"Result is $out\"",
+          "",
+          "[[multiple]]",
+          "poll-interval = 40",
+          "command = \"cmd\"",
+          "command-result = \"(trigger, poll-interval, output)\"",
+          "repeat-events = [\"t1\", \"t2\"]",
+          "",
+          "[[multiple.trigger-note]]",
+          "trigger = \"t1\"",
+          "summary = \"Multiple\"",
+          "body = \"Result is $out\"",
+          "",
+          "[[multiple.trigger-note]]",
+          "trigger = \"t2\"",
+          "summary = \"Multiple\"",
+          "body = \"Result is $out\""
+        ]
+
 -- Hacky, but we need to make some changes to examples/config.toml before
 -- it is parsed into the Env.
 modNoteSys :: Text -> Text
@@ -497,13 +581,34 @@ assertNotesOrder :: [NaviNote] -> [NaviNote] -> IO ()
 assertNotesOrder expected actual =
   for_ (L.zip expected actual) $ uncurry (@=?)
 
+-- The idea is we have some set of expected notes and non-deterministic
+-- list of sent notes. We want to verify:
+--
+--   1. All expected were sent.
+--   2. The sent notes fall within some numeric range.
+--
+-- Expected doesn't actually have to be a set, though it is mildly
+-- convenient as it makes calling this function correctly easier.
 assertNotesRange :: Int -> Int -> Set NaviNote -> [NaviNote] -> IO ()
 assertNotesRange l r expected actual = do
-  assertBool (show l ++ " <= " ++ show numActual) (l <= numActual)
-  assertBool (show numActual ++ " <= " ++ show r) (numActual <= r)
-  for_ actual $ \a -> assertBool (show a) (Set.member a expected)
+  assertBool (mkErr $ showt l <> " <= " <> showt numActual) (l <= numActual)
+  assertBool (mkErr $ showt numActual <> " <= " <> showt r) (numActual <= r)
+  for_ expected $ \e -> do
+    assertBool (mkErr $ "Did not found expected " <> showt e) (Set.member e actualSet)
   where
     numActual = length actual
+    actualSet = Set.fromList actual
+
+    mkErr msg =
+      unpackText
+        $ mconcat
+          [ "Failed expectation '",
+            msg,
+            "': ",
+            renderEvts
+          ]
+
+    renderEvts = mconcat $ fmap (("\n  - " <>) . showt) actual
 
 headerConfig :: Text
 headerConfig =

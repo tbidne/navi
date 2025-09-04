@@ -6,6 +6,7 @@
 -- @since 0.1
 module Navi.Data.PollInterval
   ( PollInterval (..),
+    parsePollInterval,
     pollIntervalOptDecoder,
     toSleepTime,
   )
@@ -33,12 +34,14 @@ instance Bounded PollInterval where
 -- | @since 0.1
 instance DecodeTOML PollInterval where
   tomlDecoder = makeDecoder $ \case
-    String t ->
-      case Rel.fromString (unpackText t) of
-        Left _ -> fail $ unpackText $ "Could not parse poll-interval: " <> t
-        Right relTime -> ltRelTimeBounds $ Rel.toSeconds relTime
+    String t -> parsePollInterval t
     Integer i -> ltRelTimeBounds (fromIntegral i)
     badTy -> typeMismatch badTy
+
+parsePollInterval :: (MonadFail m) => Text -> m PollInterval
+parsePollInterval t = case Rel.fromString (unpackText t) of
+  Left _ -> fail $ unpackText $ "Could not parse poll-interval: " <> t
+  Right relTime -> ltRelTimeBounds $ Rel.toSeconds relTime
 
 ltRelTimeBounds :: (MonadFail f) => Natural -> f PollInterval
 ltRelTimeBounds n

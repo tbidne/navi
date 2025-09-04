@@ -135,7 +135,26 @@ upper = 11
 urgency = "critical"
 
 # --------------------------------------------------------------------------- #
-#                                    Single                                   #
+#                                Net Interface                                #
+# --------------------------------------------------------------------------- #
+
+# Built-in network notifications, based on when the connection state changes.
+[[net-interface]]
+# App to use: Options:
+#
+#   - nmcli
+#   - ip
+app = "nmcli"
+poll-interval = 30
+device = "wifi-device"
+
+[[net-interface]]
+app = "nmcli"
+poll-interval = 60
+device = "eth-device"
+
+# --------------------------------------------------------------------------- #
+#                                Custom Single                                #
 # --------------------------------------------------------------------------- #
 
 # Custom "single" event. Sends notification for a single text trigger. A
@@ -144,6 +163,7 @@ urgency = "critical"
 #
 # This example requires lm-sensors
 [[single]]
+name = "temperature"
 command = """
   temp_res=$(sensors | grep "Core 0")
   regex="Core 0:\\s*\\+([0-9]+)\\.[0-9]{0,2}°[C|F].*"
@@ -170,13 +190,63 @@ urgency = "critical"
 timeout = 10
 
 # --------------------------------------------------------------------------- #
-#                                   Multiple                                  #
+#                            Dynamic Poll-Interval                            #
+# --------------------------------------------------------------------------- #
+
+# Like the above example, except the poll-interval is dynamic i.e. returned
+# by the command itself. This can be useful e.g. if we want an event to
+# poll faster because it is "high priority".
+[[single]]
+name = "temperature-dynamic-poll-interval"
+command = """
+  temp_res=$(sensors | grep "Core 0")
+  regex="Core 0:\\s*\\+([0-9]+)\\.[0-9]{0,2}°[C|F].*"
+
+  if [[ $temp_res =~ $regex ]]; then
+    temp="${BASH_REMATCH[1]}"
+    # not actually that hot...
+    if [[ $temp -gt 20 ]]; then
+      echo "(true, 5)"
+    else
+      echo "(false, 30)"
+    fi
+  else
+    echo "couldn't parse: ${temp_res}"
+    exit 1
+  fi
+"""
+# Optional field for the command result. The default assumes the result is
+# the string trigger (equivalent to 'command-result = "trigger"'). Otherwise,
+# we can return a tuple (in any order) with the following keys:
+#
+#   - trigger: required trigger.
+#   - output: dynamic output.
+#   - poll-interval: dynamic poll-interval.
+#
+# In this example, we return (trigger, poll-interval). Another possibility is
+# (trigger, output, poll-interval) i.e. 2-tuples and 2-tuples are allowed.
+command-result = "(trigger, poll-interval)"
+trigger = "true"
+repeat-events = true
+# This will be overridden by command-result values.
+poll-interval = 20
+
+[single.note]
+summary = "Temperature"
+body = "We're hot!"
+urgency = "critical"
+timeout = 2
+
+
+# --------------------------------------------------------------------------- #
+#                                Custom Multiple                              #
 # --------------------------------------------------------------------------- #
 
 # Custom "multiple" event. Sends notifications for multiple triggers. A
 # single config can define multiple "multiple" services, hence this is a toml
 # list.
 [[multiple]]
+name = "minute-parity"
 poll-interval = 10
 command = """
   min=`date +%M`;
@@ -209,11 +279,11 @@ body = "Minute is odd"
 timeout = 10
 
 # --------------------------------------------------------------------------- #
-#                               Multiple Dynamic                              #
+#                                Dynamic Output                               #
 # --------------------------------------------------------------------------- #
 
 # Multiple example with dynamic output. Instead of our script simply
-# outputting some text trigger, we output (trigger, out). The LHS is the
+# outputting some text trigger, we output (trigger, output). The LHS is the
 # notification trigger, and the RHS is custom output that can be referenced
 # in the notification body with $out.
 #
@@ -245,14 +315,7 @@ command = """
 # Repeat 'low' events only.
 repeat-events = ["low"]
 
-# Optional field for the command result. The default assumes the output is a
-# the string trigger (equivalent to 'command-result = "trigger"'). Otherwise,
-# we can return a tuple (in any order) with the following keys:
-#
-#   - trigger
-#   - output
-#
-# In this example, we return (trigger, output).
+# Tell navi our command returns (trigger, output).
 command-result = "(trigger, output)"
 
 [[multiple.trigger-note]]
@@ -273,22 +336,3 @@ summary = "Battery Percentage"
 body = "Battery is low: $out"
 urgency = "critical"
 timeout = 10
-
-# --------------------------------------------------------------------------- #
-#                                Net Interface                                #
-# --------------------------------------------------------------------------- #
-
-# Built-in network notifications, based on when the connection state changes.
-[[net-interface]]
-# App to use: Options:
-#
-#   - nmcli
-#   - ip
-app = "nmcli"
-poll-interval = 30
-device = "wifi-device"
-
-[[net-interface]]
-app = "nmcli"
-poll-interval = 60
-device = "eth-device"

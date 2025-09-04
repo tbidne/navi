@@ -115,7 +115,8 @@ deriving stock instance Show AnyEvent
 --
 -- @since 0.1
 data EventSuccess result trigger = MkEventSuccess
-  { result :: result,
+  { pollInterval :: Maybe PollInterval,
+    result :: result,
     repeatEvent :: RepeatEvent trigger,
     raiseAlert :: result -> Maybe (trigger, NaviNote)
   }

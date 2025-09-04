@@ -65,6 +65,7 @@ library
     Navi.Data.NaviLog
     Navi.Data.NaviNote
     Navi.Data.PollInterval
+    Navi.Data.Result
     Navi.Effects
     Navi.Effects.MonadNotify
     Navi.Effects.MonadSystemInfo
@@ -152,16 +153,19 @@ test-suite unit
     Unit.Navi.Services.Custom.Single.Toml
     Unit.Navi.Services.Network.NetInterfaces.Toml
     Unit.Prelude
+    Unit.Utils
 
   build-depends:
     , base
     , containers
     , effects-fs
     , fdo-notify
+    , hedgehog        >=1.0.2   && <1.6
     , navi
     , pythia
-    , tasty        >=1.1.0.3 && <1.6
-    , tasty-hunit  >=0.9     && <0.11
+    , tasty           >=1.1.0.3 && <1.6
+    , tasty-hedgehog  >=1.0.0.2 && <1.5
+    , tasty-hunit     >=0.9     && <0.11
     , text
 
   hs-source-dirs: test/unit
