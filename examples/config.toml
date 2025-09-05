@@ -39,18 +39,18 @@ location = "stdout"
 
 # Common service options. All are optional:
 #
-#   - poll-interval: Optional. One of `[NATURAL | STRING]`. The provided
+#   - poll-interval: Optional. One of [NATURAL | STRING]. The provided
 #     interval must be either a raw natural (interpreted as seconds), or a
-#     "time string" e.g. `1d2m3h4s`, `3h20s`. Determines how often a service
+#     "time string" e.g. 1d2m3h4s, 3h20s. Determines how often a service
 #     is polled.
 #
-#   - repeat-events: One of `[true|false]`. Determines if we send off the same
-#     notification twice in a row. Defaults to `false` (i.e. no repeats) unless
+#   - repeat-events: One of [true|false]. Determines if we send off the same
+#     notification twice in a row. Defaults to false (i.e. no repeats) unless
 #     stated otherwise.
 #
-#   - error-events: One of `["none"|"repeats"|"no-repeats"]`. Determines if we
+#   - error-events: One of ["none"|"repeats"|"no-repeats"]. Determines if we
 #     send off notifications for errors, and how we handle repeats. Defaults
-#     to `"no-repeats"` unless stated otherwise i.e. we send error
+#     to "no-repeats" unless stated otherwise i.e. we send error
 #     notifications but no repeats.
 
 # Notification options. All are optional.
@@ -59,9 +59,9 @@ location = "stdout"
 #
 #   - body: Notification body.
 #
-#   - urgency: One of `["low"|"normal"|"critical"]`.
+#   - urgency: One of ["low"|"normal"|"critical"].
 #
-#   - timeout: One of `["never"|<seconds>]`. Determines how long
+#   - timeout: One of ["never"|<seconds>]. Determines how long
 #     notifications persist. Defaults to 10 seconds. Note that we are at the
 #     mercy of the underlying notification system e.g. some systems will never
 #     timeout critical notifications (KDE), whereas others do not reliably
