@@ -65,7 +65,7 @@ location = "stdout"
 #     notifications persist. Defaults to 10 seconds. Note that we are at the
 #     mercy of the underlying notification system e.g. some systems will never
 #     timeout critical notifications (KDE), whereas others do not reliably
-#     timeout at all (GNOME)
+#     timeout at all (GNOME).
 #
 # Summary and body are only available options on custom services i.e.
 # 'single' and 'multiple'. Built-ins have their own.
@@ -161,7 +161,7 @@ device = "eth-device"
 # single config can define multiple "single" services, hence this is a toml
 # list.
 #
-# This example requires lm-sensors
+# This example requires lm-sensors.
 [[single]]
 name = "temperature"
 command = """
@@ -181,6 +181,13 @@ command = """
     exit 1
   fi
 """
+# The optional 'command-result' key defaults to "trigger" i.e. simple text
+# output that is compared against the trigger. See below examples for more
+# complicated usage.
+#
+#command-result = "trigger"
+
+# 'trigger' defines what 'command' text result should trigger a notification.
 trigger = "true"
 
 [single.note]
@@ -215,20 +222,20 @@ command = """
     exit 1
   fi
 """
-# Optional field for the command result. The default assumes the result is
-# the string trigger (equivalent to 'command-result = "trigger"'). Otherwise,
-# we can return a tuple (in any order) with the following keys:
+# Instead of the implicit 'command-result = "trigger"', we can return a
+# tuple (in any order) with the following keys:
 #
 #   - trigger: required trigger.
 #   - output: dynamic output.
 #   - poll-interval: dynamic poll-interval.
 #
 # In this example, we return (trigger, poll-interval). Another possibility is
-# (trigger, output, poll-interval) i.e. 2-tuples and 2-tuples are allowed.
+# (trigger, output, poll-interval) i.e. 2-tuples and 3-tuples are allowed.
 command-result = "(trigger, poll-interval)"
 trigger = "true"
 repeat-events = true
-# This will be overridden by command-result values.
+# This will be overridden by command-result values (5 and 30, in this
+# example).
 poll-interval = 20
 
 [single.note]
