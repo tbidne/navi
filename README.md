@@ -124,7 +124,7 @@ Once you have `cabal` and `ghc`, `navi` can be built locally with `cabal build` 
 >
 > Nix does not require such a workaround.
 
-For further reproducibility, an optional freeze files can be used for the "blessed" compiler.
+For further reproducibility, an optional freeze file can be used for the "blessed" compiler.
 
 ```sh
 cabal build --project-file cabal.ghc<XYZ>.project
