@@ -37,7 +37,7 @@ Navi is useful for when we have a running notification server and want to define
 
 ```toml
 # requires lm-sensors
-[[single]]
+[[custom]]
 command = """
   temp_res=$(sensors | grep "Core 0")
   regex="Core 0:\\s*\\+([0-9]+)\\.[0-9]{0,2}°[C|F].*"
@@ -55,9 +55,9 @@ command = """
     exit 1
   fi
 """
-trigger = "true"
 
-[single.note]
+[[custom.trigger-note]]
+trigger = "true"
 summary = "Temperature"
 body = "We're hot!"
 urgency = "critical"
