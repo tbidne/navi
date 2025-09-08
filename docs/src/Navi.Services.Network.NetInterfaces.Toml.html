@@ -1,0 +1,224 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | This module provides toml configuration for the network</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- connectivity service.</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Services.Network.NetInterfaces.Toml.html"><span class="hs-identifier">Navi.Services.Network.NetInterfaces.Toml</span></a></span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Services.Network.NetInterfaces.Toml.html#NetInterfacesToml"><span class="hs-identifier">NetInterfacesToml</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html"><span class="hs-identifier">Navi.Data.NaviNote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.NaviNote.html#Timeout"><span class="hs-identifier">Timeout</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#timeoutOptDecoder"><span class="hs-identifier">timeoutOptDecoder</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html"><span class="hs-identifier">Navi.Data.PollInterval</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier">PollInterval</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#pollIntervalOptDecoder"><span class="hs-identifier">pollIntervalOptDecoder</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Event.Toml.html"><span class="hs-identifier">Navi.Event.Toml</span></a></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Event.Toml.html#ErrorNoteToml"><span class="hs-identifier">ErrorNoteToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Navi.Event.Toml.html#RepeatEventToml"><span class="hs-identifier">RepeatEventToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Navi.Event.Toml.html#errorNoteOptDecoder"><span class="hs-identifier">errorNoteOptDecoder</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Navi.Event.Toml.html#repeatEventOptDecoder"><span class="hs-identifier">repeatEventOptDecoder</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.NetInterface.html"><span class="hs-identifier">Pythia.Services.NetInterface</span></a></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.NetInterface.Types.html#NetInterfaceApp"><span class="hs-identifier">NetInterfaceApp</span></a></span><span>
+</span><span id="line-22"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.NetInterface.Types.html#NetInterfaceAppIp"><span class="hs-identifier">NetInterfaceAppIp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>        </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.NetInterface.Types.html#NetInterfaceAppNmCli"><span class="hs-identifier">NetInterfaceAppNmCli</span></a></span><span>
+</span><span id="line-24"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="annot"><span class="hs-comment">-- | TOML for the network connectivity service.</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">data</span><span> </span><span id="NetInterfacesToml"><span class="annot"><a href="Navi.Services.Network.NetInterfaces.Toml.html#NetInterfacesToml"><span class="hs-identifier hs-var">NetInterfacesToml</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkNetInterfacesToml"><span class="annot"><a href="Navi.Services.Network.NetInterfaces.Toml.html#MkNetInterfacesToml"><span class="hs-identifier hs-var">MkNetInterfacesToml</span></a></span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Determines how we should query the system for network information.</span></span><span>
+</span><span id="line-30"></span><span>    </span><span id="app"><span class="annot"><span class="annottext">NetInterfacesToml -&gt; NetInterfaceApp
+</span><a href="Navi.Services.Network.NetInterfaces.Toml.html#app"><span class="hs-identifier hs-var hs-var">app</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.NetInterface.Types.html#NetInterfaceApp"><span class="hs-identifier hs-type">NetInterfaceApp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-comment">-- | The name of the network device. For \&quot;standard\&quot; formats like</span><span>
+</span><span id="line-32"></span><span>    </span><span class="hs-comment">-- ifconfig or NetworkManager, this might be something like</span><span>
+</span><span id="line-33"></span><span>    </span><span class="hs-comment">-- wlp0s20f3 or enp0s31f6.</span><span>
+</span><span id="line-34"></span><span>    </span><span id="deviceName"><span class="annot"><span class="annottext">NetInterfacesToml -&gt; Text
+</span><a href="Navi.Services.Network.NetInterfaces.Toml.html#deviceName"><span class="hs-identifier hs-var hs-var">deviceName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The poll interval.</span></span><span>
+</span><span id="line-36"></span><span>    </span><span id="pollInterval"><span class="annot"><span class="annottext">NetInterfacesToml -&gt; Maybe PollInterval
+</span><a href="Navi.Services.Network.NetInterfaces.Toml.html#pollInterval"><span class="hs-identifier hs-var hs-var">pollInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Determines how we treat repeat alerts.</span></span><span>
+</span><span id="line-38"></span><span>    </span><span id="repeatEvent"><span class="annot"><span class="annottext">NetInterfacesToml -&gt; Maybe RepeatEventToml
+</span><a href="Navi.Services.Network.NetInterfaces.Toml.html#repeatEvent"><span class="hs-identifier hs-var hs-var">repeatEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Event.Toml.html#RepeatEventToml"><span class="hs-identifier hs-type">RepeatEventToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Determines how we handle errors.</span></span><span>
+</span><span id="line-40"></span><span>    </span><span id="errorNote"><span class="annot"><span class="annottext">NetInterfacesToml -&gt; Maybe ErrorNoteToml
+</span><a href="Navi.Services.Network.NetInterfaces.Toml.html#errorNote"><span class="hs-identifier hs-var hs-var">errorNote</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Event.Toml.html#ErrorNoteToml"><span class="hs-identifier hs-type">ErrorNoteToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The timeout for this alert.</span></span><span>
+</span><span id="line-42"></span><span>    </span><span id="mTimeout"><span class="annot"><span class="annottext">NetInterfacesToml -&gt; Maybe Timeout
+</span><a href="Navi.Services.Network.NetInterfaces.Toml.html#mTimeout"><span class="hs-identifier hs-var hs-var">mTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#Timeout"><span class="hs-identifier hs-type">Timeout</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679441995"><span id="local-6989586621679442009"><span class="annot"><span class="annottext">NetInterfacesToml -&gt; NetInterfacesToml -&gt; Bool
+(NetInterfacesToml -&gt; NetInterfacesToml -&gt; Bool)
+-&gt; (NetInterfacesToml -&gt; NetInterfacesToml -&gt; Bool)
+-&gt; Eq NetInterfacesToml
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: NetInterfacesToml -&gt; NetInterfacesToml -&gt; Bool
+== :: NetInterfacesToml -&gt; NetInterfacesToml -&gt; Bool
+$c/= :: NetInterfacesToml -&gt; NetInterfacesToml -&gt; Bool
+/= :: NetInterfacesToml -&gt; NetInterfacesToml -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679442018"><span id="local-6989586621679442035"><span id="local-6989586621679442039"><span class="annot"><span class="annottext">Int -&gt; NetInterfacesToml -&gt; ShowS
+[NetInterfacesToml] -&gt; ShowS
+NetInterfacesToml -&gt; String
+(Int -&gt; NetInterfacesToml -&gt; ShowS)
+-&gt; (NetInterfacesToml -&gt; String)
+-&gt; ([NetInterfacesToml] -&gt; ShowS)
+-&gt; Show NetInterfacesToml
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; NetInterfacesToml -&gt; ShowS
+showsPrec :: Int -&gt; NetInterfacesToml -&gt; ShowS
+$cshow :: NetInterfacesToml -&gt; String
+show :: NetInterfacesToml -&gt; String
+$cshowList :: [NetInterfacesToml] -&gt; ShowS
+showList :: [NetInterfacesToml] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span id="local-6989586621679441908"><span id="local-6989586621679441909"><span id="local-6989586621679441910"><span id="local-6989586621679441911"><span id="local-6989586621679441912"><span id="local-6989586621679441913"><span id="local-6989586621679441914"><span id="local-6989586621679441915"><span id="local-6989586621679441916"><span id="local-6989586621679441917"><span id="local-6989586621679441918"><span id="local-6989586621679441919"><span id="local-6989586621679441920"><span id="local-6989586621679441921"><span id="local-6989586621679441922"><span id="local-6989586621679441923"><span id="local-6989586621679441924"><span id="local-6989586621679441925"><span id="local-6989586621679442051"><span id="local-6989586621679442056"><span id="local-6989586621679442061"><span id="local-6989586621679442066"><span id="local-6989586621679442071"><span id="local-6989586621679442076"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">NetInterfacesToml</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="annot"><a href="Navi.Services.Network.NetInterfaces.Toml.html#NetInterfacesToml"><span class="hs-identifier hs-type">NetInterfacesToml</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621679442183"><span class="annot"><span class="annottext">tomlDecoder :: Decoder NetInterfacesToml
+</span><a href="#local-6989586621679442183"><span class="hs-identifier hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><span class="annottext">NetInterfaceApp
+-&gt; Text
+-&gt; Maybe PollInterval
+-&gt; Maybe RepeatEventToml
+-&gt; Maybe ErrorNoteToml
+-&gt; Maybe Timeout
+-&gt; NetInterfacesToml
+</span><a href="Navi.Services.Network.NetInterfaces.Toml.html#MkNetInterfacesToml"><span class="hs-identifier hs-var">MkNetInterfacesToml</span></a></span><span>
+</span><span id="line-52"></span><span>      </span><span class="annot"><span class="annottext">(NetInterfaceApp
+ -&gt; Text
+ -&gt; Maybe PollInterval
+ -&gt; Maybe RepeatEventToml
+ -&gt; Maybe ErrorNoteToml
+ -&gt; Maybe Timeout
+ -&gt; NetInterfacesToml)
+-&gt; Decoder NetInterfaceApp
+-&gt; Decoder
+     (Text
+      -&gt; Maybe PollInterval
+      -&gt; Maybe RepeatEventToml
+      -&gt; Maybe ErrorNoteToml
+      -&gt; Maybe Timeout
+      -&gt; NetInterfacesToml)
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Decoder NetInterfaceApp -&gt; Text -&gt; Decoder NetInterfaceApp
+forall a. Decoder a -&gt; Text -&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldWith"><span class="hs-identifier hs-var">getFieldWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder NetInterfaceApp
+</span><a href="Navi.Services.Network.NetInterfaces.Toml.html#decodeNetInterfaceApp"><span class="hs-identifier hs-var">decodeNetInterfaceApp</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;app&quot;</span></span><span>
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">Decoder
+  (Text
+   -&gt; Maybe PollInterval
+   -&gt; Maybe RepeatEventToml
+   -&gt; Maybe ErrorNoteToml
+   -&gt; Maybe Timeout
+   -&gt; NetInterfacesToml)
+-&gt; Decoder Text
+-&gt; Decoder
+     (Maybe PollInterval
+      -&gt; Maybe RepeatEventToml
+      -&gt; Maybe ErrorNoteToml
+      -&gt; Maybe Timeout
+      -&gt; NetInterfacesToml)
+forall a b. Decoder (a -&gt; b) -&gt; Decoder a -&gt; Decoder b
+forall (f :: Type -&gt; Type) a b.
+Applicative f =&gt;
+f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Decoder Text
+forall a. DecodeTOML a =&gt; Text -&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getField"><span class="hs-identifier hs-var">getField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;device&quot;</span></span><span>
+</span><span id="line-54"></span><span>      </span><span class="annot"><span class="annottext">Decoder
+  (Maybe PollInterval
+   -&gt; Maybe RepeatEventToml
+   -&gt; Maybe ErrorNoteToml
+   -&gt; Maybe Timeout
+   -&gt; NetInterfacesToml)
+-&gt; Decoder (Maybe PollInterval)
+-&gt; Decoder
+     (Maybe RepeatEventToml
+      -&gt; Maybe ErrorNoteToml -&gt; Maybe Timeout -&gt; NetInterfacesToml)
+forall a b. Decoder (a -&gt; b) -&gt; Decoder a -&gt; Decoder b
+forall (f :: Type -&gt; Type) a b.
+Applicative f =&gt;
+f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe PollInterval)
+</span><a href="Navi.Data.PollInterval.html#pollIntervalOptDecoder"><span class="hs-identifier hs-var">pollIntervalOptDecoder</span></a></span><span>
+</span><span id="line-55"></span><span>      </span><span class="annot"><span class="annottext">Decoder
+  (Maybe RepeatEventToml
+   -&gt; Maybe ErrorNoteToml -&gt; Maybe Timeout -&gt; NetInterfacesToml)
+-&gt; Decoder (Maybe RepeatEventToml)
+-&gt; Decoder
+     (Maybe ErrorNoteToml -&gt; Maybe Timeout -&gt; NetInterfacesToml)
+forall a b. Decoder (a -&gt; b) -&gt; Decoder a -&gt; Decoder b
+forall (f :: Type -&gt; Type) a b.
+Applicative f =&gt;
+f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe RepeatEventToml)
+</span><a href="Navi.Event.Toml.html#repeatEventOptDecoder"><span class="hs-identifier hs-var">repeatEventOptDecoder</span></a></span><span>
+</span><span id="line-56"></span><span>      </span><span class="annot"><span class="annottext">Decoder (Maybe ErrorNoteToml -&gt; Maybe Timeout -&gt; NetInterfacesToml)
+-&gt; Decoder (Maybe ErrorNoteToml)
+-&gt; Decoder (Maybe Timeout -&gt; NetInterfacesToml)
+forall a b. Decoder (a -&gt; b) -&gt; Decoder a -&gt; Decoder b
+forall (f :: Type -&gt; Type) a b.
+Applicative f =&gt;
+f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe ErrorNoteToml)
+</span><a href="Navi.Event.Toml.html#errorNoteOptDecoder"><span class="hs-identifier hs-var">errorNoteOptDecoder</span></a></span><span>
+</span><span id="line-57"></span><span>      </span><span class="annot"><span class="annottext">Decoder (Maybe Timeout -&gt; NetInterfacesToml)
+-&gt; Decoder (Maybe Timeout) -&gt; Decoder NetInterfacesToml
+forall a b. Decoder (a -&gt; b) -&gt; Decoder a -&gt; Decoder b
+forall (f :: Type -&gt; Type) a b.
+Applicative f =&gt;
+f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe Timeout)
+</span><a href="Navi.Data.NaviNote.html#timeoutOptDecoder"><span class="hs-identifier hs-var">timeoutOptDecoder</span></a></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="annot"><a href="Navi.Services.Network.NetInterfaces.Toml.html#decodeNetInterfaceApp"><span class="hs-identifier hs-type">decodeNetInterfaceApp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.NetInterface.Types.html#NetInterfaceApp"><span class="hs-identifier hs-type">NetInterfaceApp</span></a></span><span>
+</span><span id="line-60"></span><span id="decodeNetInterfaceApp"><span class="annot"><span class="annottext">decodeNetInterfaceApp :: Decoder NetInterfaceApp
+</span><a href="Navi.Services.Network.NetInterfaces.Toml.html#decodeNetInterfaceApp"><span class="hs-identifier hs-var hs-var">decodeNetInterfaceApp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><span class="annottext">Decoder Text
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Text
+-&gt; (Text -&gt; Decoder NetInterfaceApp) -&gt; Decoder NetInterfaceApp
+forall a b. Decoder a -&gt; (a -&gt; Decoder b) -&gt; Decoder b
+forall (m :: Type -&gt; Type) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;nmcli&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NetInterfaceApp -&gt; Decoder NetInterfaceApp
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">NetInterfaceApp
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.NetInterface.Types.html#NetInterfaceAppNmCli"><span class="hs-identifier hs-var">NetInterfaceAppNmCli</span></a></span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;ip&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NetInterfaceApp -&gt; Decoder NetInterfaceApp
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">NetInterfaceApp
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.NetInterface.Types.html#NetInterfaceAppIp"><span class="hs-identifier hs-var">NetInterfaceAppIp</span></a></span><span>
+</span><span id="line-64"></span><span>    </span><span id="local-6989586621679442189"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679442189"><span class="hs-identifier hs-var">bad</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; Decoder NetInterfaceApp
+forall a. String -&gt; Decoder a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-66"></span><span>        </span><span class="annot"><span class="annottext">(String -&gt; Decoder NetInterfaceApp)
+-&gt; String -&gt; Decoder NetInterfaceApp
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-67"></span><span>        </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-68"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Unexpected net-interface app: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-69"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679442189"><span class="hs-identifier hs-var">bad</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;. Expected one of &lt;nmcli | ip&gt;.&quot;</span></span><span>
+</span><span id="line-71"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-72"></span></pre></body></html>

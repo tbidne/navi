@@ -1,0 +1,372 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Data.Result.html"><span class="hs-identifier">Navi.Data.Result</span></a></span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier">Result</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Navi.Data.Result.html#ResultDefault"><span class="hs-identifier">ResultDefault</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Elimination</span></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier">onResult</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Navi.Data.Result.html#onErr"><span class="hs-identifier">onErr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Navi.Data.Result.html#onOk"><span class="hs-identifier">onOk</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Navi.Data.Result.html#errorErr"><span class="hs-identifier">errorErr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Navi.Data.Result.html#failErr"><span class="hs-identifier">failErr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Navi.Data.Result.html#throwErr"><span class="hs-identifier">throwErr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.DeepSeq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NFData</span></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Exception</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Catch</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadThrow</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">throwM</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Bifoldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Bifoldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">bifoldMap</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Bifunctor</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Bifunctor</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">bimap</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Bitraversable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Bitraversable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">bitraverse</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">IsString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromString</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Generics</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Stack</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HasCallStack</span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Core.html"><span class="hs-identifier">Optics.Core</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Internal.Optic.Types.html#An_Iso"><span class="hs-identifier">An_Iso</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Label.html#LabelOptic"><span class="hs-identifier">LabelOptic</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Iso.html#iso"><span class="hs-identifier">iso</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Label.html"><span class="hs-identifier">Optics.Label</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Label.html#LabelOptic"><span class="hs-identifier">LabelOptic</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Label.html#labelOptic"><span class="hs-identifier">labelOptic</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="annot"><span class="hs-comment">-- | General type for error handling, with convenient MonadFail instance.</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">data</span><span> </span><span id="Result"><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-var">Result</span></a></span></span><span> </span><span id="local-6989586621679437765"><span class="annot"><a href="#local-6989586621679437765"><span class="hs-identifier hs-type">e</span></a></span></span><span> </span><span id="local-6989586621679437764"><span class="annot"><a href="#local-6989586621679437764"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Err"><span class="annot"><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679437765"><span class="hs-identifier hs-type">e</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Ok"><span class="annot"><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679437764"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679437948"><span id="local-6989586621679437955"><span class="annot"><span class="annottext">Result e a -&gt; Result e a -&gt; Bool
+(Result e a -&gt; Result e a -&gt; Bool)
+-&gt; (Result e a -&gt; Result e a -&gt; Bool) -&gt; Eq (Result e a)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall e a. (Eq e, Eq a) =&gt; Result e a -&gt; Result e a -&gt; Bool
+$c== :: forall e a. (Eq e, Eq a) =&gt; Result e a -&gt; Result e a -&gt; Bool
+== :: Result e a -&gt; Result e a -&gt; Bool
+$c/= :: forall e a. (Eq e, Eq a) =&gt; Result e a -&gt; Result e a -&gt; Bool
+/= :: Result e a -&gt; Result e a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679437960"><span id="local-6989586621679437962"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; Result e a -&gt; Result e b)
+-&gt; (forall a b. a -&gt; Result e b -&gt; Result e a)
+-&gt; Functor (Result e)
+forall a b. a -&gt; Result e b -&gt; Result e a
+forall a b. (a -&gt; b) -&gt; Result e a -&gt; Result e b
+forall e a b. a -&gt; Result e b -&gt; Result e a
+forall e a b. (a -&gt; b) -&gt; Result e a -&gt; Result e b
+forall (f :: Type -&gt; Type).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall e a b. (a -&gt; b) -&gt; Result e a -&gt; Result e b
+fmap :: forall a b. (a -&gt; b) -&gt; Result e a -&gt; Result e b
+$c&lt;$ :: forall e a b. a -&gt; Result e b -&gt; Result e a
+&lt;$ :: forall a b. a -&gt; Result e b -&gt; Result e a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679437967"><span id="local-6989586621679437969"><span class="annot"><span class="annottext">(forall x. Result e a -&gt; Rep (Result e a) x)
+-&gt; (forall x. Rep (Result e a) x -&gt; Result e a)
+-&gt; Generic (Result e a)
+forall x. Rep (Result e a) x -&gt; Result e a
+forall x. Result e a -&gt; Rep (Result e a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall e a x. Rep (Result e a) x -&gt; Result e a
+forall e a x. Result e a -&gt; Rep (Result e a) x
+$cfrom :: forall e a x. Result e a -&gt; Rep (Result e a) x
+from :: forall x. Result e a -&gt; Rep (Result e a) x
+$cto :: forall e a x. Rep (Result e a) x -&gt; Result e a
+to :: forall x. Rep (Result e a) x -&gt; Result e a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679437977"><span id="local-6989586621679437984"><span id="local-6989586621679437988"><span class="annot"><span class="annottext">Int -&gt; Result e a -&gt; ShowS
+[Result e a] -&gt; ShowS
+Result e a -&gt; String
+(Int -&gt; Result e a -&gt; ShowS)
+-&gt; (Result e a -&gt; String)
+-&gt; ([Result e a] -&gt; ShowS)
+-&gt; Show (Result e a)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall e a. (Show e, Show a) =&gt; Int -&gt; Result e a -&gt; ShowS
+forall e a. (Show e, Show a) =&gt; [Result e a] -&gt; ShowS
+forall e a. (Show e, Show a) =&gt; Result e a -&gt; String
+$cshowsPrec :: forall e a. (Show e, Show a) =&gt; Int -&gt; Result e a -&gt; ShowS
+showsPrec :: Int -&gt; Result e a -&gt; ShowS
+$cshow :: forall e a. (Show e, Show a) =&gt; Result e a -&gt; String
+show :: Result e a -&gt; String
+$cshowList :: forall e a. (Show e, Show a) =&gt; [Result e a] -&gt; ShowS
+showList :: [Result e a] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679437995"><span class="annot"><span class="annottext">Result e a -&gt; ()
+(Result e a -&gt; ()) -&gt; NFData (Result e a)
+forall a. (a -&gt; ()) -&gt; NFData a
+forall e a. (NFData e, NFData a) =&gt; Result e a -&gt; ()
+$crnf :: forall e a. (NFData e, NFData a) =&gt; Result e a -&gt; ()
+rnf :: Result e a -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621679437749"><span id="local-6989586621679437750"><span id="local-6989586621679437751"><span id="local-6989586621679437752"><span id="local-6989586621679437753"><span class="hs-special">(</span><span> </span><span class="annot"><a href="#local-6989586621679437749"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">~</span></span><span> </span><span class="annot"><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Internal.Optic.Types.html#An_Iso"><span class="hs-identifier hs-type">An_Iso</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><a href="#local-6989586621679437750"><span class="hs-identifier hs-type">x</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">~</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="#local-6989586621679437751"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437752"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><a href="#local-6989586621679437753"><span class="hs-identifier hs-type">y</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">~</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="#local-6989586621679437751"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437752"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Label.html#LabelOptic"><span class="hs-identifier hs-type">LabelOptic</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;eitherIso&quot;</span></span><span> </span><span class="annot"><a href="#local-6989586621679437749"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437751"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437752"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437751"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437752"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679437750"><span class="hs-identifier hs-type">x</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437753"><span class="hs-identifier hs-type">y</span></a></span></span></span></span></span></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621679438021"><span class="annot"><span class="annottext">labelOptic :: Optic k NoIx (Result e a) (Result e a) x y
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Label.html#labelOptic"><span class="hs-identifier hs-var hs-var hs-var">labelOptic</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><span class="annottext">(Result e a -&gt; x)
+-&gt; (y -&gt; Result e a) -&gt; Iso (Result e a) (Result e a) x y
+forall s a b t. (s -&gt; a) -&gt; (b -&gt; t) -&gt; Iso s t a b
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Iso.html#iso"><span class="hs-identifier hs-var">iso</span></a></span><span>
+</span><span id="line-46"></span><span>      </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679438022"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679438022"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Either e a
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679438022"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">;</span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679438023"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438023"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">e -&gt; Either e a
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438023"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>      </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679438024"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679438024"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Result e a
+forall e a. a -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679438024"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679438025"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438025"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">e -&gt; Result e a
+forall e a. e -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438025"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">type</span><span> </span><span id="ResultDefault"><span class="annot"><a href="Navi.Data.Result.html#ResultDefault"><span class="hs-identifier hs-var">ResultDefault</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679437778"><span id="local-6989586621679438031"><span id="local-6989586621679438035"><span id="local-6989586621679438038"><span class="annot"><span class="hs-identifier hs-type">Applicative</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437778"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621679438041"><span class="annot"><span class="annottext">pure :: forall a. a -&gt; Result e a
+</span><span class="hs-identifier hs-var hs-var hs-var">pure</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Result e a
+forall e a. a -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679438042"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438042"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679438043"><span class="annot"><span class="annottext">&lt;*&gt; :: forall a b. Result e (a -&gt; b) -&gt; Result e a -&gt; Result e b
+</span><span class="hs-operator hs-var hs-var hs-var">&lt;*&gt;</span></span></span><span> </span><span class="annot"><span class="annottext">Result e a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">e -&gt; Result e b
+forall e a. e -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438042"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><span class="annottext">Result e (a -&gt; b)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679438044"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438044"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">e -&gt; Result e b
+forall e a. e -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438044"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679438045"><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679438045"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679438046"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679438046"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; Result e b
+forall e a. a -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679438045"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679438046"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679437789"><span id="local-6989586621679438051"><span id="local-6989586621679438055"><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437789"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679438058"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438058"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679438059"><span class="annot"><span class="annottext">&gt;&gt;= :: forall a b. Result e a -&gt; (a -&gt; Result e b) -&gt; Result e b
+</span><span class="hs-operator hs-var hs-var hs-var">&gt;&gt;=</span></span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Result e b
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">e -&gt; Result e b
+forall e a. e -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438058"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679438060"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679438060"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span id="local-6989586621679438061"><span class="annot"><span class="annottext">a -&gt; Result e b
+</span><a href="#local-6989586621679438061"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Result e b
+</span><a href="#local-6989586621679438061"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679438060"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679437816"><span id="local-6989586621679438063"><span id="local-6989586621679438069"><span id="local-6989586621679438074"><span id="local-6989586621679438080"><span id="local-6989586621679438083"><span id="local-6989586621679438086"><span id="local-6989586621679438089"><span id="local-6989586621679438092"><span id="local-6989586621679438095"><span id="local-6989586621679438098"><span id="local-6989586621679438101"><span id="local-6989586621679438104"><span id="local-6989586621679438109"><span id="local-6989586621679438114"><span id="local-6989586621679438119"><span id="local-6989586621679438124"><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437816"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621679438129"><span class="annot"><span class="annottext">foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; Result e a -&gt; b
+</span><a href="#local-6989586621679438129"><span class="hs-identifier hs-var hs-var hs-var">foldr</span></a></span></span><span> </span><span id="local-6989586621679438131"><span class="annot"><span class="annottext">a -&gt; b -&gt; b
+</span><a href="#local-6989586621679438131"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679438132"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679438132"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+forall e b a. (e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+</span><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var">onResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">b -&gt; e -&gt; b
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679438132"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; b -&gt; b
+</span><a href="#local-6989586621679438131"><span class="hs-operator hs-var">`f`</span></a></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621679438132"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679437838"><span id="local-6989586621679438141"><span id="local-6989586621679438147"><span class="annot"><span class="hs-identifier hs-type">Traversable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437838"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621679438157"><span class="annot"><span class="annottext">sequenceA :: forall (f :: Type -&gt; Type) a.
+Applicative f =&gt;
+Result e (f a) -&gt; f (Result e a)
+</span><a href="#local-6989586621679438157"><span class="hs-identifier hs-var hs-var hs-var">sequenceA</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(e -&gt; f (Result e a))
+-&gt; (f a -&gt; f (Result e a)) -&gt; Result e (f a) -&gt; f (Result e a)
+forall e b a. (e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+</span><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var">onResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Result e a -&gt; f (Result e a)
+forall a. a -&gt; f a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Result e a -&gt; f (Result e a))
+-&gt; (e -&gt; Result e a) -&gt; e -&gt; f (Result e a)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">e -&gt; Result e a
+forall e a. e -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(a -&gt; Result e a) -&gt; f a -&gt; f (Result e a)
+forall a b. (a -&gt; b) -&gt; f a -&gt; f b
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Result e a
+forall e a. a -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621679438164"><span class="annot"><span class="annottext">traverse :: forall (f :: Type -&gt; Type) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; Result e a -&gt; f (Result e b)
+</span><a href="#local-6989586621679438164"><span class="hs-identifier hs-var hs-var hs-var">traverse</span></a></span></span><span> </span><span id="local-6989586621679438166"><span class="annot"><span class="annottext">a -&gt; f b
+</span><a href="#local-6989586621679438166"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(e -&gt; f (Result e b))
+-&gt; (a -&gt; f (Result e b)) -&gt; Result e a -&gt; f (Result e b)
+forall e b a. (e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+</span><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var">onResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Result e b -&gt; f (Result e b)
+forall a. a -&gt; f a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Result e b -&gt; f (Result e b))
+-&gt; (e -&gt; Result e b) -&gt; e -&gt; f (Result e b)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">e -&gt; Result e b
+forall e a. e -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(b -&gt; Result e b) -&gt; f b -&gt; f (Result e b)
+forall a b. (a -&gt; b) -&gt; f a -&gt; f b
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">b -&gt; Result e b
+forall e a. a -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span> </span><span class="annot"><span class="annottext">(f b -&gt; f (Result e b)) -&gt; (a -&gt; f b) -&gt; a -&gt; f (Result e b)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; f b
+</span><a href="#local-6989586621679438166"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679437850"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621679437850"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437850"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621679438174"><span class="annot"><span class="annottext">fail :: forall a. String -&gt; Result e a
+</span><span class="hs-identifier hs-var hs-var hs-var">fail</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">e -&gt; Result e a
+forall e a. e -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">(e -&gt; Result e a) -&gt; (String -&gt; e) -&gt; String -&gt; Result e a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; e
+forall a. IsString a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">fromString</span></span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679438179"><span id="local-6989586621679438183"><span class="annot"><span class="hs-identifier hs-type">Bifunctor</span></span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621679438186"><span class="annot"><span class="annottext">bimap :: forall a b c d. (a -&gt; b) -&gt; (c -&gt; d) -&gt; Result a c -&gt; Result b d
+</span><span class="hs-identifier hs-var hs-var hs-var">bimap</span></span></span><span> </span><span id="local-6989586621679438187"><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679438187"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679438188"><span class="annot"><span class="annottext">c -&gt; d
+</span><a href="#local-6989586621679438188"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; Result b d) -&gt; (c -&gt; Result b d) -&gt; Result a c -&gt; Result b d
+forall e b a. (e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+</span><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var">onResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">b -&gt; Result b d
+forall e a. e -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">(b -&gt; Result b d) -&gt; (a -&gt; b) -&gt; a -&gt; Result b d
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679438187"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">d -&gt; Result b d
+forall e a. a -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span> </span><span class="annot"><span class="annottext">(d -&gt; Result b d) -&gt; (c -&gt; d) -&gt; c -&gt; Result b d
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">c -&gt; d
+</span><a href="#local-6989586621679438188"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679438190"><span id="local-6989586621679438197"><span id="local-6989586621679438200"><span class="annot"><span class="hs-identifier hs-type">Bifoldable</span></span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-77"></span><span>  </span><span id="local-6989586621679438204"><span class="annot"><span class="annottext">bifoldMap :: forall m a b. Monoid m =&gt; (a -&gt; m) -&gt; (b -&gt; m) -&gt; Result a b -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var">bifoldMap</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; m) -&gt; (b -&gt; m) -&gt; Result a b -&gt; m
+forall e b a. (e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+</span><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var">onResult</span></a></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bitraversable</span></span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621679438216"><span class="annot"><span class="annottext">bitraverse :: forall (f :: Type -&gt; Type) a c b d.
+Applicative f =&gt;
+(a -&gt; f c) -&gt; (b -&gt; f d) -&gt; Result a b -&gt; f (Result c d)
+</span><span class="hs-identifier hs-var hs-var hs-var">bitraverse</span></span></span><span> </span><span id="local-6989586621679438217"><span class="annot"><span class="annottext">a -&gt; f c
+</span><a href="#local-6989586621679438217"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679438218"><span class="annot"><span class="annottext">b -&gt; f d
+</span><a href="#local-6989586621679438218"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; f (Result c d))
+-&gt; (b -&gt; f (Result c d)) -&gt; Result a b -&gt; f (Result c d)
+forall e b a. (e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+</span><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var">onResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(c -&gt; Result c d) -&gt; f c -&gt; f (Result c d)
+forall a b. (a -&gt; b) -&gt; f a -&gt; f b
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">c -&gt; Result c d
+forall e a. e -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-var">Err</span></a></span><span> </span><span class="annot"><span class="annottext">(f c -&gt; f (Result c d)) -&gt; (a -&gt; f c) -&gt; a -&gt; f (Result c d)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; f c
+</span><a href="#local-6989586621679438217"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(d -&gt; Result c d) -&gt; f d -&gt; f (Result c d)
+forall a b. (a -&gt; b) -&gt; f a -&gt; f b
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">d -&gt; Result c d
+forall e a. a -&gt; Result e a
+</span><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-var">Ok</span></a></span><span> </span><span class="annot"><span class="annottext">(f d -&gt; f (Result c d)) -&gt; (b -&gt; f d) -&gt; b -&gt; f (Result c d)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">b -&gt; f d
+</span><a href="#local-6989586621679438218"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="annot"><span class="hs-comment">-- | Eliminates 'Err' via 'error'.</span></span><span>
+</span><span id="line-83"></span><span id="local-6989586621679437899"><span class="annot"><a href="Navi.Data.Result.html#errorErr"><span class="hs-identifier hs-type">errorErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Navi.Data.Result.html#ResultDefault"><span class="hs-identifier hs-type">ResultDefault</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437899"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679437899"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-84"></span><span id="errorErr"><span class="annot"><span class="annottext">errorErr :: forall a. HasCallStack =&gt; ResultDefault a -&gt; a
+</span><a href="Navi.Data.Result.html#errorErr"><span class="hs-identifier hs-var hs-var">errorErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; a) -&gt; Result String a -&gt; a
+forall e a. (e -&gt; a) -&gt; Result e a -&gt; a
+</span><a href="Navi.Data.Result.html#onErr"><span class="hs-identifier hs-var">onErr</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; a
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="annot"><span class="hs-comment">-- | Eliminates 'Err' via 'MonadFail'.</span></span><span>
+</span><span id="line-87"></span><span id="local-6989586621679437906"><span id="local-6989586621679437907"><span class="annot"><a href="Navi.Data.Result.html#failErr"><span class="hs-identifier hs-type">failErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679437906"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Navi.Data.Result.html#ResultDefault"><span class="hs-identifier hs-type">ResultDefault</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437907"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679437906"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437907"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-88"></span><span id="failErr"><span class="annot"><span class="annottext">failErr :: forall (m :: Type -&gt; Type) a. MonadFail m =&gt; ResultDefault a -&gt; m a
+</span><a href="Navi.Data.Result.html#failErr"><span class="hs-identifier hs-var hs-var">failErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; m a) -&gt; (a -&gt; m a) -&gt; Result String a -&gt; m a
+forall e b a. (e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+</span><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var">onResult</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; m a
+forall a. String -&gt; m a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; m a
+forall a. a -&gt; m a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="annot"><span class="hs-comment">-- | Eliminates 'Err' via 'MonadThrow'.</span></span><span>
+</span><span id="line-91"></span><span id="local-6989586621679437910"><span id="local-6989586621679437912"><span id="local-6989586621679437914"><span class="annot"><a href="Navi.Data.Result.html#throwErr"><span class="hs-identifier hs-type">throwErr</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="#local-6989586621679437910"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadThrow</span></span><span> </span><span class="annot"><a href="#local-6989586621679437912"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-96"></span><span>  </span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437910"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437914"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679437912"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437914"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-97"></span><span id="throwErr"><span class="annot"><span class="annottext">throwErr :: forall e (m :: Type -&gt; Type) a.
+(Exception e, HasCallStack, MonadThrow m) =&gt;
+Result e a -&gt; m a
+</span><a href="Navi.Data.Result.html#throwErr"><span class="hs-identifier hs-var hs-var">throwErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(e -&gt; m a) -&gt; (a -&gt; m a) -&gt; Result e a -&gt; m a
+forall e b a. (e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+</span><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var">onResult</span></a></span><span> </span><span class="annot"><span class="annottext">e -&gt; m a
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; m a
+forall (m :: Type -&gt; Type) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; m a
+forall a. a -&gt; m a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span class="annot"><span class="hs-comment">-- | General eliminator.</span></span><span>
+</span><span id="line-100"></span><span id="local-6989586621679437819"><span id="local-6989586621679437820"><span id="local-6989586621679437821"><span class="annot"><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-type">onResult</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679437819"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679437820"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679437821"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679437820"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437819"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437821"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679437820"><span class="hs-identifier hs-type">b</span></a></span></span></span></span><span>
+</span><span id="line-101"></span><span id="onResult"><span class="annot"><span class="annottext">onResult :: forall e b a. (e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+</span><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var hs-var">onResult</span></a></span></span><span> </span><span id="local-6989586621679438241"><span class="annot"><span class="annottext">e -&gt; b
+</span><a href="#local-6989586621679438241"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="annot"><span class="annottext">a -&gt; b
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.Result.html#Err"><span class="hs-identifier hs-type">Err</span></a></span><span> </span><span id="local-6989586621679438242"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438242"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">e -&gt; b
+</span><a href="#local-6989586621679438241"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679438242"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-102"></span><span class="annot"><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var">onResult</span></a></span><span> </span><span class="annot"><span class="annottext">e -&gt; b
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679438243"><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679438243"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.Result.html#Ok"><span class="hs-identifier hs-type">Ok</span></a></span><span> </span><span id="local-6989586621679438244"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679438244"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679438243"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679438244"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="annot"><span class="hs-comment">-- | 'Err' eliminator.</span></span><span>
+</span><span id="line-105"></span><span id="local-6989586621679437902"><span id="local-6989586621679437903"><span class="annot"><a href="Navi.Data.Result.html#onErr"><span class="hs-identifier hs-type">onErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679437902"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679437903"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437902"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437903"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679437903"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-106"></span><span id="onErr"><span class="annot"><span class="annottext">onErr :: forall e a. (e -&gt; a) -&gt; Result e a -&gt; a
+</span><a href="Navi.Data.Result.html#onErr"><span class="hs-identifier hs-var hs-var">onErr</span></a></span></span><span> </span><span id="local-6989586621679438245"><span class="annot"><span class="annottext">e -&gt; a
+</span><a href="#local-6989586621679438245"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(e -&gt; a) -&gt; (a -&gt; a) -&gt; Result e a -&gt; a
+forall e b a. (e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+</span><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var">onResult</span></a></span><span> </span><span class="annot"><span class="annottext">e -&gt; a
+</span><a href="#local-6989586621679438245"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span class="annot"><span class="hs-comment">-- | 'Ok' eliminator.</span></span><span>
+</span><span id="line-109"></span><span id="local-6989586621679437927"><span id="local-6989586621679437928"><span class="annot"><a href="Navi.Data.Result.html#onOk"><span class="hs-identifier hs-type">onOk</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679437927"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679437928"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Navi.Data.Result.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437928"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679437927"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679437928"><span class="hs-identifier hs-type">e</span></a></span></span></span><span>
+</span><span id="line-110"></span><span id="onOk"><span class="annot"><span class="annottext">onOk :: forall a e. (a -&gt; e) -&gt; Result e a -&gt; e
+</span><a href="Navi.Data.Result.html#onOk"><span class="hs-identifier hs-var hs-var">onOk</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(e -&gt; e) -&gt; (a -&gt; e) -&gt; Result e a -&gt; e
+forall e b a. (e -&gt; b) -&gt; (a -&gt; b) -&gt; Result e a -&gt; b
+</span><a href="Navi.Data.Result.html#onResult"><span class="hs-identifier hs-var">onResult</span></a></span><span> </span><span class="annot"><span class="annottext">e -&gt; e
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-111"></span></pre></body></html>

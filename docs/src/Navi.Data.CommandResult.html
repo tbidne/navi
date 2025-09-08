@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Data.CommandResult.html"><span class="hs-identifier">Navi.Data.CommandResult</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Data.CommandResult.html#CommandResult"><span class="hs-identifier">CommandResult</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html"><span class="hs-identifier">Navi.Data.PollInterval</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier">PollInterval</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- The result of running a custom command.</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">data</span><span> </span><span id="CommandResult"><span class="annot"><a href="Navi.Data.CommandResult.html#CommandResult"><span class="hs-identifier hs-var">CommandResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkCommandResult"><span class="annot"><a href="Navi.Data.CommandResult.html#MkCommandResult"><span class="hs-identifier hs-var">MkCommandResult</span></a></span></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Potential output text.</span></span><span>
+</span><span id="line-15"></span><span>    </span><span id="output"><span class="annot"><span class="annottext">CommandResult -&gt; Maybe Text
+</span><a href="Navi.Data.CommandResult.html#output"><span class="hs-identifier hs-var hs-var">output</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Potential poll interval.</span></span><span>
+</span><span id="line-17"></span><span>    </span><span id="pollInterval"><span class="annot"><span class="annottext">CommandResult -&gt; Maybe PollInterval
+</span><a href="Navi.Data.CommandResult.html#pollInterval"><span class="hs-identifier hs-var hs-var">pollInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The actual result, corresponding to possible triggers.</span></span><span>
+</span><span id="line-19"></span><span>    </span><span id="result"><span class="annot"><span class="annottext">CommandResult -&gt; Text
+</span><a href="Navi.Data.CommandResult.html#result"><span class="hs-identifier hs-var hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679439242"><span id="local-6989586621679439252"><span id="local-6989586621679439256"><span class="annot"><span class="annottext">Int -&gt; CommandResult -&gt; ShowS
+[CommandResult] -&gt; ShowS
+CommandResult -&gt; String
+(Int -&gt; CommandResult -&gt; ShowS)
+-&gt; (CommandResult -&gt; String)
+-&gt; ([CommandResult] -&gt; ShowS)
+-&gt; Show CommandResult
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; CommandResult -&gt; ShowS
+showsPrec :: Int -&gt; CommandResult -&gt; ShowS
+$cshow :: CommandResult -&gt; String
+show :: CommandResult -&gt; String
+$cshowList :: [CommandResult] -&gt; ShowS
+showList :: [CommandResult] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span id="local-6989586621679439181"><span id="local-6989586621679439182"><span id="local-6989586621679439183"><span id="local-6989586621679439203"><span id="local-6989586621679439204"><span id="local-6989586621679439205"><span id="local-6989586621679439206"><span id="local-6989586621679439207"><span id="local-6989586621679439208"><span id="local-6989586621679439266"><span id="local-6989586621679439271"><span id="local-6989586621679439276"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CommandResult</span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679439317"><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="Navi.Data.CommandResult.html#CommandResult"><span class="hs-identifier hs-type">CommandResult</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621679439323"><span class="annot"><span class="annottext">CommandResult
+</span><a href="#local-6989586621679439323"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679439324"><span class="annot"><span class="annottext">== :: CommandResult -&gt; CommandResult -&gt; Bool
+</span><span class="hs-operator hs-var hs-var hs-var">==</span></span></span><span> </span><span id="local-6989586621679439325"><span class="annot"><span class="annottext">CommandResult
+</span><a href="#local-6989586621679439325"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CommandResult -&gt; Text
+</span><a href="Navi.Data.CommandResult.html#toResult"><span class="hs-identifier hs-var">toResult</span></a></span><span> </span><span class="annot"><span class="annottext">CommandResult
+</span><a href="#local-6989586621679439323"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">CommandResult -&gt; Text
+</span><a href="Navi.Data.CommandResult.html#toResult"><span class="hs-identifier hs-var">toResult</span></a></span><span> </span><span class="annot"><span class="annottext">CommandResult
+</span><a href="#local-6989586621679439325"><span class="hs-identifier hs-var">y</span></a></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679439330"><span id="local-6989586621679439334"><span id="local-6989586621679439338"><span id="local-6989586621679439341"><span id="local-6989586621679439344"><span id="local-6989586621679439347"><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="Navi.Data.CommandResult.html#CommandResult"><span class="hs-identifier hs-type">CommandResult</span></a></span></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621679439352"><span class="annot"><span class="annottext">CommandResult
+</span><a href="#local-6989586621679439352"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679439353"><span class="annot"><span class="annottext">&lt;= :: CommandResult -&gt; CommandResult -&gt; Bool
+</span><a href="#local-6989586621679439353"><span class="hs-operator hs-var hs-var hs-var">&lt;=</span></a></span></span><span> </span><span id="local-6989586621679439355"><span class="annot"><span class="annottext">CommandResult
+</span><a href="#local-6989586621679439355"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CommandResult -&gt; Text
+</span><a href="Navi.Data.CommandResult.html#toResult"><span class="hs-identifier hs-var">toResult</span></a></span><span> </span><span class="annot"><span class="annottext">CommandResult
+</span><a href="#local-6989586621679439352"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">CommandResult -&gt; Text
+</span><a href="Navi.Data.CommandResult.html#toResult"><span class="hs-identifier hs-var">toResult</span></a></span><span> </span><span class="annot"><span class="annottext">CommandResult
+</span><a href="#local-6989586621679439355"><span class="hs-identifier hs-var">y</span></a></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="annot"><a href="Navi.Data.CommandResult.html#toResult"><span class="hs-identifier hs-type">toResult</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Data.CommandResult.html#CommandResult"><span class="hs-identifier hs-type">CommandResult</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-32"></span><span id="toResult"><span class="annot"><span class="annottext">toResult :: CommandResult -&gt; Text
+</span><a href="Navi.Data.CommandResult.html#toResult"><span class="hs-identifier hs-var hs-var">toResult</span></a></span></span><span> </span><span id="local-6989586621679439356"><span class="annot"><span class="annottext">CommandResult
+</span><a href="#local-6989586621679439356"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CommandResult
+</span><a href="#local-6989586621679439356"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">CommandResult -&gt; Optic' A_Lens NoIx CommandResult Text -&gt; Text
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx CommandResult Text
+</span><span class="">#result</span></span><span>
+</span><span id="line-33"></span></pre></body></html>

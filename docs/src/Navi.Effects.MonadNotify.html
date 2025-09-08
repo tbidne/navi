@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | Provides an effect for sending system notifications.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Effects.MonadNotify.html"><span class="hs-identifier">Navi.Effects.MonadNotify</span></a></span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier">MonadNotify</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html"><span class="hs-identifier">Navi.Data.NaviNote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier">NaviNote</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-comment">{- HLINT ignore MonadNotify &quot;Redundant bracket&quot; -}</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="annot"><span class="hs-comment">-- | This class represents sending desktop notifications.</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621679444978"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="MonadNotify"><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier hs-var">MonadNotify</span></a></span></span><span> </span><span id="local-6989586621679444978"><span class="annot"><a href="#local-6989586621679444978"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span>  </span><span id="sendNote"><span class="annot"><a href="Navi.Effects.MonadNotify.html#sendNote"><span class="hs-identifier hs-type">sendNote</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679444978"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679444987"><span id="local-6989586621679444988"><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier hs-type">MonadNotify</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679444987"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier hs-type">MonadNotify</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621679444988"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679444987"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-17"></span><span>  </span><span id="local-6989586621679445019"><span class="annot"><span class="annottext">sendNote :: HasCallStack =&gt; NaviNote -&gt; ReaderT e m ()
+</span><a href="Navi.Effects.MonadNotify.html#sendNote"><span class="hs-identifier hs-var hs-var hs-var">sendNote</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m () -&gt; ReaderT e m ()
+forall (m :: Type -&gt; Type) a. Monad m =&gt; m a -&gt; ReaderT e m a
+forall (t :: (Type -&gt; Type) -&gt; Type -&gt; Type) (m :: Type -&gt; Type) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; ReaderT e m ())
+-&gt; (NaviNote -&gt; m ()) -&gt; NaviNote -&gt; ReaderT e m ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">NaviNote -&gt; m ()
+forall (m :: Type -&gt; Type).
+(MonadNotify m, HasCallStack) =&gt;
+NaviNote -&gt; m ()
+</span><a href="Navi.Effects.MonadNotify.html#sendNote"><span class="hs-identifier hs-var">sendNote</span></a></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.Effects.MonadNotify.html#sendNote"><span class="hs-pragma hs-type">sendNote</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-19"></span></pre></body></html>

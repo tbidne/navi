@@ -1,0 +1,425 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="annot"><span class="hs-comment">-- | This module provides functionality for handling events.</span></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Event.html"><span class="hs-identifier">Navi.Event</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Event type</span></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#Event"><span class="hs-identifier">Event</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier">AnyEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Navi.Event.html#runEvent"><span class="hs-identifier">runEvent</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Results</span></span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#EventSuccess"><span class="hs-identifier">EventSuccess</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.EventError.html#EventError"><span class="hs-identifier">EventError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Caching previous events/errors</span></span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier">RepeatEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#ErrorNote"><span class="hs-identifier">ErrorNote</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Navi.Event.html#blockRepeat"><span class="hs-identifier">blockRepeat</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Navi.Event.html#blockErr"><span class="hs-identifier">blockErr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Navi.Event.html#updatePrevTrigger"><span class="hs-identifier">updatePrevTrigger</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.html"><span class="hs-identifier">Navi.Effects</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html#MonadSystemInfo"><span class="hs-identifier">MonadSystemInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html#query"><span class="hs-identifier">query</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Event.Types.html"><span class="hs-identifier">Navi.Event.Types</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier">AnyEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#ErrorNote"><span class="hs-identifier">ErrorNote</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#Event"><span class="hs-identifier">Event</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.EventError.html#EventError"><span class="hs-identifier">EventError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#EventSuccess"><span class="hs-identifier">EventSuccess</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier">RepeatEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- | Runs an event, i.e.,</span><span>
+</span><span id="line-36"></span><span class="hs-comment">--</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- 1. Queries the system via 'MonadSystemInfo'.</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- 2. Returns the parsed result.</span><span>
+</span><span id="line-39"></span><span id="local-6989586621679445027"><span id="local-6989586621679445028"><span id="local-6989586621679445029"><span id="local-6989586621679445032"><span id="local-6989586621679445033"><span class="annot"><a href="Navi.Event.html#runEvent"><span class="hs-identifier hs-type">runEvent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#MonadLoggerNS"><span class="hs-identifier hs-type">MonadLoggerNS</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445027"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445028"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445029"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html#MonadSystemInfo"><span class="hs-identifier hs-type">MonadSystemInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445027"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679445032"><span class="hs-identifier hs-type">result</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="Navi.Event.Types.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445032"><span class="hs-identifier hs-type">result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445033"><span class="hs-identifier hs-type">trigger</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><a href="#local-6989586621679445027"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#EventSuccess"><span class="hs-identifier hs-type">EventSuccess</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445032"><span class="hs-identifier hs-type">result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445033"><span class="hs-identifier hs-type">trigger</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-47"></span><span id="runEvent"><span class="annot"><span class="annottext">runEvent :: forall (m :: Type -&gt; Type) env k result trigger.
+(HasCallStack, MonadLoggerNS m env k, MonadSystemInfo m,
+ Show result) =&gt;
+Event result trigger -&gt; m (EventSuccess result trigger)
+</span><a href="Navi.Event.html#runEvent"><span class="hs-identifier hs-var hs-var">runEvent</span></a></span></span><span> </span><span id="local-6989586621679445225"><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679445225"><span class="hs-identifier hs-var">event</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; m (EventSuccess result trigger)
+-&gt; m (EventSuccess result trigger)
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;runEvent&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m (EventSuccess result trigger)
+ -&gt; m (EventSuccess result trigger))
+-&gt; m (EventSuccess result trigger)
+-&gt; m (EventSuccess result trigger)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621679445227"><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679445227"><span class="hs-identifier hs-var">result</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679445228"><span class="annot"><span class="annottext">Maybe PollInterval
+</span><a href="#local-6989586621679445228"><span class="hs-identifier hs-var">pollInterval</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServiceType result -&gt; m (result, Maybe PollInterval)
+forall result.
+HasCallStack =&gt;
+ServiceType result -&gt; m (result, Maybe PollInterval)
+forall (m :: Type -&gt; Type) result.
+(MonadSystemInfo m, HasCallStack) =&gt;
+ServiceType result -&gt; m (result, Maybe PollInterval)
+</span><a href="Navi.Effects.MonadSystemInfo.html#query"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="annot"><span class="annottext">(ServiceType result -&gt; m (result, Maybe PollInterval))
+-&gt; ServiceType result -&gt; m (result, Maybe PollInterval)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679445225"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+-&gt; Optic' A_Lens NoIx (Event result trigger) (ServiceType result)
+-&gt; ServiceType result
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event result trigger) (ServiceType result)
+</span><span class="">#serviceType</span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logInfo"><span class="hs-identifier hs-type">logInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Shell returned: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">result -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679445227"><span class="hs-identifier hs-var">result</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#MkEventSuccess"><span class="hs-identifier hs-type">MkEventSuccess</span></a></span><span>
+</span><span id="line-52"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe PollInterval
+pollInterval :: Maybe PollInterval
+pollInterval :: Maybe PollInterval
+</span><a href="#local-6989586621679445228"><span class="hs-identifier hs-var hs-var">pollInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>        </span><span class="annot"><span class="annottext">result
+result :: result
+result :: result
+</span><a href="#local-6989586621679445227"><span class="hs-identifier hs-var hs-var">result</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">repeatEvent :: RepeatEvent trigger
+</span><a href="Navi.Event.Types.html#repeatEvent"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679445225"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+-&gt; Optic' A_Lens NoIx (Event result trigger) (RepeatEvent trigger)
+-&gt; RepeatEvent trigger
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event result trigger) (RepeatEvent trigger)
+</span><span class="">#repeatEvent</span></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>        </span><span class="annot"><span class="annottext">raiseAlert :: result -&gt; Maybe (trigger, NaviNote)
+</span><a href="Navi.Event.Types.html#raiseAlert"><span class="hs-identifier hs-var">raiseAlert</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679445225"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+-&gt; Optic'
+     A_Lens
+     NoIx
+     (Event result trigger)
+     (result -&gt; Maybe (trigger, NaviNote))
+-&gt; result
+-&gt; Maybe (trigger, NaviNote)
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic'
+  A_Lens
+  NoIx
+  (Event result trigger)
+  (result -&gt; Maybe (trigger, NaviNote))
+</span><span class="">#raiseAlert</span></span><span>
+</span><span id="line-56"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-57"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.Event.html#runEvent"><span class="hs-pragma hs-type">runEvent</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- | Determines if we should block the event. The semantics are:</span><span>
+</span><span id="line-60"></span><span class="hs-comment">--</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- 1. 'AllowRepeats': never block (returns 'False').</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- 2. 'NoRepeats': block only if the parameter @a@ equals the previous @a@</span><span>
+</span><span id="line-63"></span><span class="hs-comment">--    stored in our @ref@.</span><span>
+</span><span id="line-64"></span><span id="local-6989586621679445124"><span id="local-6989586621679445125"><span id="local-6989586621679445126"><span id="local-6989586621679445127"><span class="annot"><a href="Navi.Event.html#blockRepeat"><span class="hs-identifier hs-type">blockRepeat</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679445124"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#MonadLoggerNS"><span class="hs-identifier hs-type">MonadLoggerNS</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445125"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445126"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445127"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#MonadIORef"><span class="hs-identifier hs-type">MonadIORef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445125"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679445124"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier hs-type">RepeatEvent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445124"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="#local-6989586621679445124"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><a href="#local-6989586621679445125"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span></span></span></span><span>
+</span><span id="line-73"></span><span id="blockRepeat"><span class="annot"><span class="annottext">blockRepeat :: forall a (m :: Type -&gt; Type) env k.
+(Ord a, MonadLoggerNS m env k, MonadIORef m, Show a) =&gt;
+RepeatEvent a -&gt; a -&gt; m Bool
+</span><a href="Navi.Event.html#blockRepeat"><span class="hs-identifier hs-var hs-var">blockRepeat</span></a></span></span><span> </span><span id="local-6989586621679445295"><span class="annot"><span class="annottext">RepeatEvent a
+</span><a href="#local-6989586621679445295"><span class="hs-identifier hs-var">repeatEvent</span></a></span></span><span> </span><span id="local-6989586621679445296"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679445296"><span class="hs-identifier hs-var">newVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Bool -&gt; m Bool
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;blockRepeat&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m Bool -&gt; m Bool) -&gt; m Bool -&gt; m Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RepeatEvent a
+</span><a href="#local-6989586621679445295"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-comment">-- Repeat events are allowed, so do not block.</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">RepeatEvent a
+</span><a href="Navi.Event.Types.html#AllowRepeats"><span class="hs-identifier hs-var">AllowRepeats</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; m Bool
+forall a. a -&gt; m a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-comment">-- Repeat events are not allowed, must check.</span><span>
+</span><span id="line-78"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#SomeRepeats"><span class="hs-identifier hs-type">SomeRepeats</span></a></span><span> </span><span id="local-6989586621679445298"><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621679445298"><span class="hs-identifier hs-var">allowed</span></a></span></span><span> </span><span id="local-6989586621679445299"><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445299"><span class="hs-identifier hs-var">prevRef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Set a -&gt; IORef (Maybe a) -&gt; m Bool
+</span><a href="#local-6989586621679445300"><span class="hs-identifier hs-var">checkRepeat</span></a></span><span> </span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621679445298"><span class="hs-identifier hs-var">allowed</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445299"><span class="hs-identifier hs-var">prevRef</span></a></span><span>
+</span><span id="line-79"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#NoRepeats"><span class="hs-identifier hs-type">NoRepeats</span></a></span><span> </span><span id="local-6989586621679445301"><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445301"><span class="hs-identifier hs-var">prevRef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Set a -&gt; IORef (Maybe a) -&gt; m Bool
+</span><a href="#local-6989586621679445300"><span class="hs-identifier hs-var">checkRepeat</span></a></span><span> </span><span class="annot"><span class="annottext">Set a
+forall a. Set a
+</span><span class="hs-identifier hs-var">Set.empty</span></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445301"><span class="hs-identifier hs-var">prevRef</span></a></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>    </span><span id="local-6989586621679445300"><span class="annot"><span class="annottext">checkRepeat :: Set a -&gt; IORef (Maybe a) -&gt; m Bool
+</span><a href="#local-6989586621679445300"><span class="hs-identifier hs-var hs-var">checkRepeat</span></a></span></span><span> </span><span id="local-6989586621679445303"><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621679445303"><span class="hs-identifier hs-var">allowed</span></a></span></span><span> </span><span id="local-6989586621679445304"><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445304"><span class="hs-identifier hs-var">prevRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-82"></span><span>      </span><span id="local-6989586621679445305"><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445305"><span class="hs-identifier hs-var">prevVal</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a) -&gt; m (Maybe a)
+forall a. HasCallStack =&gt; IORef a -&gt; m a
+forall (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#readIORef"><span class="hs-identifier hs-var">readIORef</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445304"><span class="hs-identifier hs-var">prevRef</span></a></span><span>
+</span><span id="line-83"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Previous value: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445305"><span class="hs-identifier hs-var">prevVal</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;New value: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679445296"><span class="hs-identifier hs-var">newVal</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445305"><span class="hs-identifier hs-var">prevVal</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; Maybe a -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679445296"><span class="hs-identifier hs-var">newVal</span></a></span><span>
+</span><span id="line-86"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="hs-comment">-- Already sent this alert, check if repeats are allowed.</span><span>
+</span><span id="line-87"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">a -&gt; Set a -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><span class="hs-identifier hs-var">Set.member</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679445296"><span class="hs-identifier hs-var">newVal</span></a></span><span> </span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621679445303"><span class="hs-identifier hs-var">allowed</span></a></span><span>
+</span><span id="line-88"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-89"></span><span>              </span><span class="hs-comment">-- Repeats are allowed for this value.</span><span>
+</span><span id="line-90"></span><span>              </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Repeats are allowed for this value.&quot;</span></span><span>
+</span><span id="line-91"></span><span>              </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-92"></span><span>            </span><span class="hs-keyword">else</span><span>
+</span><span id="line-93"></span><span>              </span><span class="hs-comment">-- Repeats are not allowed for this value, block.</span><span>
+</span><span id="line-94"></span><span>              </span><span class="annot"><span class="annottext">Bool -&gt; m Bool
+forall a. a -&gt; m a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-95"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="hs-comment">-- New alert, do not block.</span><span>
+</span><span id="line-96"></span><span>          </span><span class="hs-keyword">do</span><span>
+</span><span id="line-97"></span><span>            </span><span class="annot"><span class="annottext">IORef (Maybe a) -&gt; Maybe a -&gt; m ()
+forall a. HasCallStack =&gt; IORef a -&gt; a -&gt; m ()
+forall (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; a -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#writeIORef"><span class="hs-identifier hs-var">writeIORef</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445304"><span class="hs-identifier hs-var">prevRef</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe a -&gt; m ()) -&gt; Maybe a -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679445296"><span class="hs-identifier hs-var">newVal</span></a></span><span>
+</span><span id="line-98"></span><span>            </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-99"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.Event.html#blockRepeat"><span class="hs-pragma hs-type">blockRepeat</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span class="hs-comment">-- | Determines if we should block the error event. The semantics are:</span><span>
+</span><span id="line-102"></span><span class="hs-comment">--</span><span>
+</span><span id="line-103"></span><span class="hs-comment">-- 1. 'NoErrNote': always block (returns 'True').</span><span>
+</span><span id="line-104"></span><span class="hs-comment">-- 2. 'AllowErrNote' 'AllowRepeats': never block (returns 'False').</span><span>
+</span><span id="line-105"></span><span class="hs-comment">-- 3. 'AllowErrNote' 'NoRepeats': block only if we have sent a notifcation</span><span>
+</span><span id="line-106"></span><span class="hs-comment">--    for this error before.</span><span>
+</span><span id="line-107"></span><span id="local-6989586621679445147"><span id="local-6989586621679445148"><span id="local-6989586621679445149"><span class="annot"><a href="Navi.Event.html#blockErr"><span class="hs-identifier hs-type">blockErr</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#MonadLoggerNS"><span class="hs-identifier hs-type">MonadLoggerNS</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445147"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445148"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445149"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#MonadIORef"><span class="hs-identifier hs-type">MonadIORef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445147"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-111"></span><span>  </span><span class="annot"><a href="Navi.Event.Types.html#ErrorNote"><span class="hs-identifier hs-type">ErrorNote</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-112"></span><span>  </span><span class="annot"><a href="#local-6989586621679445147"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span></span></span><span>
+</span><span id="line-113"></span><span id="blockErr"><span class="annot"><span class="annottext">blockErr :: forall (m :: Type -&gt; Type) env k.
+(MonadLoggerNS m env k, MonadIORef m) =&gt;
+ErrorNote -&gt; m Bool
+</span><a href="Navi.Event.html#blockErr"><span class="hs-identifier hs-var hs-var">blockErr</span></a></span></span><span> </span><span id="local-6989586621679445339"><span class="annot"><span class="annottext">ErrorNote
+</span><a href="#local-6989586621679445339"><span class="hs-identifier hs-var">errorEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Bool -&gt; m Bool
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;blockErr&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m Bool -&gt; m Bool) -&gt; m Bool -&gt; m Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ErrorNote
+</span><a href="#local-6989586621679445339"><span class="hs-identifier hs-var">errorEvent</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-115"></span><span>    </span><span class="hs-comment">-- Error events are off, block.</span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><span class="annottext">ErrorNote
+</span><a href="Navi.Event.Types.html#NoErrNote"><span class="hs-identifier hs-var">NoErrNote</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-117"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Error notes are off&quot;</span></span><span>
+</span><span id="line-118"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-119"></span><span>    </span><span class="hs-comment">-- Error events are on and repeats allowed, do not block.</span><span>
+</span><span id="line-120"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#AllowErrNote"><span class="hs-identifier hs-type">AllowErrNote</span></a></span><span> </span><span class="annot"><span class="annottext">RepeatEvent ()
+</span><a href="Navi.Event.Types.html#AllowRepeats"><span class="hs-identifier hs-var">AllowRepeats</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-121"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Error notes are on and repeats allowed&quot;</span></span><span>
+</span><span id="line-122"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-123"></span><span>    </span><span class="hs-comment">-- Error events are on but repeats not allowed, must check.</span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#AllowErrNote"><span class="hs-identifier hs-type">AllowErrNote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#SomeRepeats"><span class="hs-identifier hs-type">SomeRepeats</span></a></span><span> </span><span class="annot"><span class="annottext">Set ()
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679445340"><span class="annot"><span class="annottext">IORef (Maybe ())
+</span><a href="#local-6989586621679445340"><span class="hs-identifier hs-var">ref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IORef (Maybe ()) -&gt; m Bool
+forall {m :: Type -&gt; Type}.
+(MonadIORef m, MonadLogger m) =&gt;
+IORef (Maybe ()) -&gt; m Bool
+</span><a href="#local-6989586621679445341"><span class="hs-identifier hs-var">checkRepeat</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe ())
+</span><a href="#local-6989586621679445340"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#AllowErrNote"><span class="hs-identifier hs-type">AllowErrNote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#NoRepeats"><span class="hs-identifier hs-type">NoRepeats</span></a></span><span> </span><span id="local-6989586621679445342"><span class="annot"><span class="annottext">IORef (Maybe ())
+</span><a href="#local-6989586621679445342"><span class="hs-identifier hs-var">ref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IORef (Maybe ()) -&gt; m Bool
+forall {m :: Type -&gt; Type}.
+(MonadIORef m, MonadLogger m) =&gt;
+IORef (Maybe ()) -&gt; m Bool
+</span><a href="#local-6989586621679445341"><span class="hs-identifier hs-var">checkRepeat</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe ())
+</span><a href="#local-6989586621679445342"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-127"></span><span>    </span><span id="local-6989586621679445341"><span class="annot"><span class="annottext">checkRepeat :: IORef (Maybe ()) -&gt; m Bool
+</span><a href="#local-6989586621679445341"><span class="hs-identifier hs-var hs-var">checkRepeat</span></a></span></span><span> </span><span id="local-6989586621679445374"><span class="annot"><span class="annottext">IORef (Maybe ())
+</span><a href="#local-6989586621679445374"><span class="hs-identifier hs-var">ref</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-128"></span><span>      </span><span id="local-6989586621679445375"><span class="annot"><span class="annottext">Maybe ()
+</span><a href="#local-6989586621679445375"><span class="hs-identifier hs-var">prevErr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IORef (Maybe ()) -&gt; m (Maybe ())
+forall a. HasCallStack =&gt; IORef a -&gt; m a
+forall (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#readIORef"><span class="hs-identifier hs-var">readIORef</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe ())
+</span><a href="#local-6989586621679445374"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><span id="line-129"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe ()
+</span><a href="#local-6989586621679445375"><span class="hs-identifier hs-var">prevErr</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-130"></span><span>        </span><span class="hs-comment">-- Already sent this error, block</span><span>
+</span><span id="line-131"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-132"></span><span>          </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Already sent error&quot;</span></span><span>
+</span><span id="line-133"></span><span>          </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-134"></span><span>        </span><span class="hs-comment">-- Error not send, do not block</span><span>
+</span><span id="line-135"></span><span>        </span><span class="annot"><span class="annottext">Maybe ()
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-136"></span><span>          </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Send error&quot;</span></span><span>
+</span><span id="line-137"></span><span>          </span><span class="annot"><span class="annottext">IORef (Maybe ()) -&gt; Maybe () -&gt; m ()
+forall a. HasCallStack =&gt; IORef a -&gt; a -&gt; m ()
+forall (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; a -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#writeIORef"><span class="hs-identifier hs-var">writeIORef</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe ())
+</span><a href="#local-6989586621679445374"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe () -&gt; m ()) -&gt; Maybe () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">() -&gt; Maybe ()
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-138"></span><span>          </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-139"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.Event.html#blockErr"><span class="hs-pragma hs-type">blockErr</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span class="hs-comment">-- | If the reference is 'NoRepeats' or 'SomeRepeats' then we overwrite the</span><span>
+</span><span id="line-142"></span><span class="hs-comment">-- previous reference with the new parameter. Otherwise we do nothing.</span><span>
+</span><span id="line-143"></span><span id="local-6989586621679445155"><span id="local-6989586621679445156"><span class="annot"><a href="Navi.Event.html#updatePrevTrigger"><span class="hs-identifier hs-type">updatePrevTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621679445155"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#MonadIORef"><span class="hs-identifier hs-type">MonadIORef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445156"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier hs-type">RepeatEvent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445155"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621679445155"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679445156"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-144"></span><span id="updatePrevTrigger"><span class="annot"><span class="annottext">updatePrevTrigger :: forall a (m :: Type -&gt; Type).
+(Eq a, MonadIORef m) =&gt;
+RepeatEvent a -&gt; Maybe a -&gt; m ()
+</span><a href="Navi.Event.html#updatePrevTrigger"><span class="hs-identifier hs-var hs-var">updatePrevTrigger</span></a></span></span><span> </span><span id="local-6989586621679445399"><span class="annot"><span class="annottext">RepeatEvent a
+</span><a href="#local-6989586621679445399"><span class="hs-identifier hs-var">repeatEvent</span></a></span></span><span> </span><span id="local-6989586621679445400"><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445400"><span class="hs-identifier hs-var">newVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-comment">-- Only overwrite value if it's new</span><span>
+</span><span id="line-146"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RepeatEvent a
+</span><a href="#local-6989586621679445399"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-147"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#NoRepeats"><span class="hs-identifier hs-type">NoRepeats</span></a></span><span> </span><span id="local-6989586621679445401"><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445401"><span class="hs-identifier hs-var">ref</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-148"></span><span>      </span><span id="local-6989586621679445402"><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445402"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a) -&gt; m (Maybe a)
+forall a. HasCallStack =&gt; IORef a -&gt; m a
+forall (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#readIORef"><span class="hs-identifier hs-var">readIORef</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445401"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><span id="line-149"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: Type -&gt; Type). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445402"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; Maybe a -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445400"><span class="hs-identifier hs-var">newVal</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a) -&gt; Maybe a -&gt; m ()
+forall a. HasCallStack =&gt; IORef a -&gt; a -&gt; m ()
+forall (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; a -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#writeIORef"><span class="hs-identifier hs-var">writeIORef</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445401"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445400"><span class="hs-identifier hs-var">newVal</span></a></span><span>
+</span><span id="line-150"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#SomeRepeats"><span class="hs-identifier hs-type">SomeRepeats</span></a></span><span> </span><span class="annot"><span class="annottext">Set a
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679445405"><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445405"><span class="hs-identifier hs-var">ref</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-151"></span><span>      </span><span id="local-6989586621679445406"><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445406"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a) -&gt; m (Maybe a)
+forall a. HasCallStack =&gt; IORef a -&gt; m a
+forall (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#readIORef"><span class="hs-identifier hs-var">readIORef</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445405"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><span id="line-152"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
+forall (f :: Type -&gt; Type). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445406"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; Maybe a -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445400"><span class="hs-identifier hs-var">newVal</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a) -&gt; Maybe a -&gt; m ()
+forall a. HasCallStack =&gt; IORef a -&gt; a -&gt; m ()
+forall (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; a -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#writeIORef"><span class="hs-identifier hs-var">writeIORef</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><a href="#local-6989586621679445405"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679445400"><span class="hs-identifier hs-var">newVal</span></a></span><span>
+</span><span id="line-153"></span><span>    </span><span class="annot"><span class="annottext">RepeatEvent a
+</span><a href="Navi.Event.Types.html#AllowRepeats"><span class="hs-identifier hs-var">AllowRepeats</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
+forall a. a -&gt; m a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-154"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.Event.html#updatePrevTrigger"><span class="hs-pragma hs-type">updatePrevTrigger</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-155"></span></pre></body></html>

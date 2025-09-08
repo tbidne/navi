@@ -1,0 +1,88 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="annot"><span class="hs-comment">-- | This module provides types for defining notification events.</span></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Event.Types.EventError.html"><span class="hs-identifier">Navi.Event.Types.EventError</span></a></span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Event.Types.EventError.html#EventError"><span class="hs-identifier">EventError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="annot"><span class="hs-comment">-- | Represents an error when querying an 'Event'.</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">data</span><span> </span><span id="EventError"><span class="annot"><a href="Navi.Event.Types.EventError.html#EventError"><span class="hs-identifier hs-var">EventError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkEventError"><span class="annot"><a href="Navi.Event.Types.EventError.html#MkEventError"><span class="hs-identifier hs-var">MkEventError</span></a></span></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | The name of the event.</span></span><span>
+</span><span id="line-15"></span><span>    </span><span id="name"><span class="annot"><span class="annottext">EventError -&gt; Text
+</span><a href="Navi.Event.Types.EventError.html#name"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Short description of the error.</span></span><span>
+</span><span id="line-17"></span><span>    </span><span id="short"><span class="annot"><span class="annottext">EventError -&gt; Text
+</span><a href="Navi.Event.Types.EventError.html#short"><span class="hs-identifier hs-var hs-var">short</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Long description of the error.</span></span><span>
+</span><span id="line-19"></span><span>    </span><span id="long"><span class="annot"><span class="annottext">EventError -&gt; Text
+</span><a href="Navi.Event.Types.EventError.html#long"><span class="hs-identifier hs-var hs-var">long</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679438614"><span id="local-6989586621679438620"><span class="annot"><span class="annottext">EventError -&gt; EventError -&gt; Bool
+(EventError -&gt; EventError -&gt; Bool)
+-&gt; (EventError -&gt; EventError -&gt; Bool) -&gt; Eq EventError
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: EventError -&gt; EventError -&gt; Bool
+== :: EventError -&gt; EventError -&gt; Bool
+$c/= :: EventError -&gt; EventError -&gt; Bool
+/= :: EventError -&gt; EventError -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679438625"><span id="local-6989586621679438633"><span id="local-6989586621679438637"><span class="annot"><span class="annottext">Int -&gt; EventError -&gt; ShowS
+[EventError] -&gt; ShowS
+EventError -&gt; String
+(Int -&gt; EventError -&gt; ShowS)
+-&gt; (EventError -&gt; String)
+-&gt; ([EventError] -&gt; ShowS)
+-&gt; Show EventError
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; EventError -&gt; ShowS
+showsPrec :: Int -&gt; EventError -&gt; ShowS
+$cshow :: EventError -&gt; String
+show :: EventError -&gt; String
+$cshowList :: [EventError] -&gt; ShowS
+showList :: [EventError] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span id="local-6989586621679438563"><span id="local-6989586621679438564"><span id="local-6989586621679438565"><span id="local-6989586621679438566"><span id="local-6989586621679438567"><span id="local-6989586621679438568"><span id="local-6989586621679438569"><span id="local-6989586621679438570"><span id="local-6989586621679438571"><span id="local-6989586621679438645"><span id="local-6989586621679438650"><span id="local-6989586621679438655"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EventError</span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679438700"><span id="local-6989586621679438704"><span id="local-6989586621679438708"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Navi.Event.Types.EventError.html#EventError"><span class="hs-identifier hs-type">EventError</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621679438739"><span class="annot"><span class="annottext">displayException :: EventError -&gt; String
+</span><a href="#local-6989586621679438739"><span class="hs-identifier hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span id="local-6989586621679438741"><span class="annot"><span class="annottext">EventError
+</span><a href="#local-6989586621679438741"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-28"></span><span>      </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-29"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">EventError
+</span><a href="#local-6989586621679438741"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">EventError -&gt; Optic' A_Lens NoIx EventError Text -&gt; Text
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx EventError Text
+</span><span class="">#name</span></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>          </span><span class="annot"><span class="annottext">EventError
+</span><a href="#local-6989586621679438741"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">EventError -&gt; Optic' A_Lens NoIx EventError Text -&gt; Text
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx EventError Text
+</span><span class="">#short</span></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;. &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>          </span><span class="annot"><span class="annottext">EventError
+</span><a href="#local-6989586621679438741"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">EventError -&gt; Optic' A_Lens NoIx EventError Text -&gt; Text
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx EventError Text
+</span><span class="">#long</span></span><span>
+</span><span id="line-34"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-35"></span></pre></body></html>

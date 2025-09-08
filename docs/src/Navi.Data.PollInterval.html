@@ -1,0 +1,304 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | Provides the 'PollInterval' type.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">--</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html"><span class="hs-identifier">Navi.Data.PollInterval</span></a></span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier">PollInterval</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Navi.Data.PollInterval.html#parsePollInterval"><span class="hs-identifier">parsePollInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Navi.Data.PollInterval.html#pollIntervalOptDecoder"><span class="hs-identifier">pollIntervalOptDecoder</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Navi.Data.PollInterval.html#toSleepTime"><span class="hs-identifier">toSleepTime</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/relative-time-0.1-465add6894e6224501f79d317456cbbb93543cc9ca2c68abbc8f5b9445afbbc3/share/doc/html/src/Data.Time.Relative.html"><span class="hs-identifier">Data.Time.Relative</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Rel</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- | Represents how often to poll for service changes, in seconds.</span><span>
+</span><span id="line-20"></span><span class="hs-comment">--</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">newtype</span><span> </span><span id="PollInterval"><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-var">PollInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkPollInterval"><span class="annot"><a href="Navi.Data.PollInterval.html#MkPollInterval"><span class="hs-identifier hs-var">MkPollInterval</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unPollInterval"><span class="annot"><span class="annottext">PollInterval -&gt; Natural
+</span><a href="Navi.Data.PollInterval.html#unPollInterval"><span class="hs-identifier hs-var hs-var">unPollInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">}</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679438859"><span id="local-6989586621679438863"><span class="annot"><span class="annottext">PollInterval -&gt; PollInterval -&gt; Bool
+(PollInterval -&gt; PollInterval -&gt; Bool)
+-&gt; (PollInterval -&gt; PollInterval -&gt; Bool) -&gt; Eq PollInterval
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: PollInterval -&gt; PollInterval -&gt; Bool
+== :: PollInterval -&gt; PollInterval -&gt; Bool
+$c/= :: PollInterval -&gt; PollInterval -&gt; Bool
+/= :: PollInterval -&gt; PollInterval -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679438870"><span id="local-6989586621679438874"><span id="local-6989586621679438877"><span id="local-6989586621679438881"><span id="local-6989586621679438884"><span id="local-6989586621679438887"><span id="local-6989586621679438890"><span class="annot"><span class="annottext">Eq PollInterval
+Eq PollInterval =&gt;
+(PollInterval -&gt; PollInterval -&gt; Ordering)
+-&gt; (PollInterval -&gt; PollInterval -&gt; Bool)
+-&gt; (PollInterval -&gt; PollInterval -&gt; Bool)
+-&gt; (PollInterval -&gt; PollInterval -&gt; Bool)
+-&gt; (PollInterval -&gt; PollInterval -&gt; Bool)
+-&gt; (PollInterval -&gt; PollInterval -&gt; PollInterval)
+-&gt; (PollInterval -&gt; PollInterval -&gt; PollInterval)
+-&gt; Ord PollInterval
+PollInterval -&gt; PollInterval -&gt; Bool
+PollInterval -&gt; PollInterval -&gt; Ordering
+PollInterval -&gt; PollInterval -&gt; PollInterval
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+$ccompare :: PollInterval -&gt; PollInterval -&gt; Ordering
+compare :: PollInterval -&gt; PollInterval -&gt; Ordering
+$c&lt; :: PollInterval -&gt; PollInterval -&gt; Bool
+&lt; :: PollInterval -&gt; PollInterval -&gt; Bool
+$c&lt;= :: PollInterval -&gt; PollInterval -&gt; Bool
+&lt;= :: PollInterval -&gt; PollInterval -&gt; Bool
+$c&gt; :: PollInterval -&gt; PollInterval -&gt; Bool
+&gt; :: PollInterval -&gt; PollInterval -&gt; Bool
+$c&gt;= :: PollInterval -&gt; PollInterval -&gt; Bool
+&gt;= :: PollInterval -&gt; PollInterval -&gt; Bool
+$cmax :: PollInterval -&gt; PollInterval -&gt; PollInterval
+max :: PollInterval -&gt; PollInterval -&gt; PollInterval
+$cmin :: PollInterval -&gt; PollInterval -&gt; PollInterval
+min :: PollInterval -&gt; PollInterval -&gt; PollInterval
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679438898"><span id="local-6989586621679438904"><span id="local-6989586621679438908"><span class="annot"><span class="annottext">Int -&gt; PollInterval -&gt; ShowS
+[PollInterval] -&gt; ShowS
+PollInterval -&gt; String
+(Int -&gt; PollInterval -&gt; ShowS)
+-&gt; (PollInterval -&gt; String)
+-&gt; ([PollInterval] -&gt; ShowS)
+-&gt; Show PollInterval
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; PollInterval -&gt; ShowS
+showsPrec :: Int -&gt; PollInterval -&gt; ShowS
+$cshow :: PollInterval -&gt; String
+show :: PollInterval -&gt; String
+$cshowList :: [PollInterval] -&gt; ShowS
+showList :: [PollInterval] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679438913"><span id="local-6989586621679438917"><span id="local-6989586621679438921"><span id="local-6989586621679438925"><span id="local-6989586621679438929"><span id="local-6989586621679438933"><span id="local-6989586621679438937"><span class="annot"><span class="annottext">Integer -&gt; PollInterval
+PollInterval -&gt; PollInterval
+PollInterval -&gt; PollInterval -&gt; PollInterval
+(PollInterval -&gt; PollInterval -&gt; PollInterval)
+-&gt; (PollInterval -&gt; PollInterval -&gt; PollInterval)
+-&gt; (PollInterval -&gt; PollInterval -&gt; PollInterval)
+-&gt; (PollInterval -&gt; PollInterval)
+-&gt; (PollInterval -&gt; PollInterval)
+-&gt; (PollInterval -&gt; PollInterval)
+-&gt; (Integer -&gt; PollInterval)
+-&gt; Num PollInterval
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+$c+ :: PollInterval -&gt; PollInterval -&gt; PollInterval
++ :: PollInterval -&gt; PollInterval -&gt; PollInterval
+$c- :: PollInterval -&gt; PollInterval -&gt; PollInterval
+- :: PollInterval -&gt; PollInterval -&gt; PollInterval
+$c* :: PollInterval -&gt; PollInterval -&gt; PollInterval
+* :: PollInterval -&gt; PollInterval -&gt; PollInterval
+$cnegate :: PollInterval -&gt; PollInterval
+negate :: PollInterval -&gt; PollInterval
+$cabs :: PollInterval -&gt; PollInterval
+abs :: PollInterval -&gt; PollInterval
+$csignum :: PollInterval -&gt; PollInterval
+signum :: PollInterval -&gt; PollInterval
+$cfromInteger :: Integer -&gt; PollInterval
+fromInteger :: Integer -&gt; PollInterval
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-27"></span><span id="local-6989586621679438767"><span id="local-6989586621679438768"><span id="local-6989586621679438769"><span id="local-6989586621679438950"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PollInterval</span></span></span></span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bounded</span></span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621679438963"><span class="annot"><span class="annottext">minBound :: PollInterval
+</span><a href="#local-6989586621679438963"><span class="hs-identifier hs-var hs-var hs-var">minBound</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; PollInterval
+</span><a href="Navi.Data.PollInterval.html#MkPollInterval"><span class="hs-identifier hs-var">MkPollInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621679438965"><span class="annot"><span class="annottext">maxBound :: PollInterval
+</span><a href="#local-6989586621679438965"><span class="hs-identifier hs-var hs-var hs-var">maxBound</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PollInterval
+</span><a href="Navi.Data.PollInterval.html#maxPollInterval"><span class="hs-identifier hs-var">maxPollInterval</span></a></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621679438976"><span class="annot"><span class="annottext">tomlDecoder :: Decoder PollInterval
+</span><a href="#local-6989586621679438976"><span class="hs-identifier hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Value -&gt; DecodeM PollInterval) -&gt; Decoder PollInterval
+forall a. (Value -&gt; DecodeM a) -&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#makeDecoder"><span class="hs-identifier hs-var">makeDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">((Value -&gt; DecodeM PollInterval) -&gt; Decoder PollInterval)
+-&gt; (Value -&gt; DecodeM PollInterval) -&gt; Decoder PollInterval
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Value.html#String"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span id="local-6989586621679438980"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679438980"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; DecodeM PollInterval
+forall (m :: Type -&gt; Type). MonadFail m =&gt; Text -&gt; m PollInterval
+</span><a href="Navi.Data.PollInterval.html#parsePollInterval"><span class="hs-identifier hs-var">parsePollInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679438980"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Value.html#Integer"><span class="hs-identifier hs-type">Integer</span></a></span><span> </span><span id="local-6989586621679438982"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679438982"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; DecodeM PollInterval
+forall (f :: Type -&gt; Type).
+MonadFail f =&gt;
+Natural -&gt; f PollInterval
+</span><a href="Navi.Data.PollInterval.html#ltRelTimeBounds"><span class="hs-identifier hs-var">ltRelTimeBounds</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Natural
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679438982"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621679438984"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679438984"><span class="hs-identifier hs-var">badTy</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; DecodeM PollInterval
+forall a. Value -&gt; DecodeM a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#typeMismatch"><span class="hs-identifier hs-var">typeMismatch</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679438984"><span class="hs-identifier hs-var">badTy</span></a></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span id="local-6989586621679438799"><span class="annot"><a href="Navi.Data.PollInterval.html#parsePollInterval"><span class="hs-identifier hs-type">parsePollInterval</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679438799"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679438799"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span></span><span>
+</span><span id="line-42"></span><span id="parsePollInterval"><span class="annot"><span class="annottext">parsePollInterval :: forall (m :: Type -&gt; Type). MonadFail m =&gt; Text -&gt; m PollInterval
+</span><a href="Navi.Data.PollInterval.html#parsePollInterval"><span class="hs-identifier hs-var hs-var">parsePollInterval</span></a></span></span><span> </span><span id="local-6989586621679438992"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679438992"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String RelativeTime
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/relative-time-0.1-465add6894e6224501f79d317456cbbb93543cc9ca2c68abbc8f5b9445afbbc3/share/doc/html/src/Data.Time.Relative.html#fromString"><span class="hs-identifier hs-var">Rel.fromString</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679438992"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; m PollInterval
+forall a. String -&gt; m a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; m PollInterval) -&gt; String -&gt; m PollInterval
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Could not parse poll-interval: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679438992"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679438995"><span class="annot"><span class="annottext">RelativeTime
+</span><a href="#local-6989586621679438995"><span class="hs-identifier hs-var">relTime</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; m PollInterval
+forall (f :: Type -&gt; Type).
+MonadFail f =&gt;
+Natural -&gt; f PollInterval
+</span><a href="Navi.Data.PollInterval.html#ltRelTimeBounds"><span class="hs-identifier hs-var">ltRelTimeBounds</span></a></span><span> </span><span class="annot"><span class="annottext">(Natural -&gt; m PollInterval) -&gt; Natural -&gt; m PollInterval
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RelativeTime -&gt; Natural
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/relative-time-0.1-465add6894e6224501f79d317456cbbb93543cc9ca2c68abbc8f5b9445afbbc3/share/doc/html/src/Data.Time.Relative.html#toSeconds"><span class="hs-identifier hs-var">Rel.toSeconds</span></a></span><span> </span><span class="annot"><span class="annottext">RelativeTime
+</span><a href="#local-6989586621679438995"><span class="hs-identifier hs-var">relTime</span></a></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span id="local-6989586621679438800"><span class="annot"><a href="Navi.Data.PollInterval.html#ltRelTimeBounds"><span class="hs-identifier hs-type">ltRelTimeBounds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679438800"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679438800"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span></span><span>
+</span><span id="line-47"></span><span id="ltRelTimeBounds"><span class="annot"><span class="annottext">ltRelTimeBounds :: forall (f :: Type -&gt; Type).
+MonadFail f =&gt;
+Natural -&gt; f PollInterval
+</span><a href="Navi.Data.PollInterval.html#ltRelTimeBounds"><span class="hs-identifier hs-var hs-var">ltRelTimeBounds</span></a></span></span><span> </span><span id="local-6989586621679439011"><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679439011"><span class="hs-identifier hs-var">n</span></a></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; PollInterval
+</span><a href="Navi.Data.PollInterval.html#MkPollInterval"><span class="hs-identifier hs-var">MkPollInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679439011"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">PollInterval -&gt; PollInterval -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">PollInterval
+forall a. Bounded a =&gt; a
+</span><span class="hs-identifier hs-var">maxBound</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PollInterval -&gt; f PollInterval
+forall a. a -&gt; f a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(PollInterval -&gt; f PollInterval) -&gt; PollInterval -&gt; f PollInterval
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; PollInterval
+</span><a href="Navi.Data.PollInterval.html#MkPollInterval"><span class="hs-identifier hs-var">MkPollInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679439011"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; f PollInterval
+forall a. String -&gt; f a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-51"></span><span>        </span><span class="annot"><span class="annottext">(String -&gt; f PollInterval) -&gt; String -&gt; f PollInterval
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-52"></span><span>        </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><span class="hs-identifier hs-var">T.concat</span></span><span>
+</span><span id="line-53"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Given poll interval of &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>            </span><span class="annot"><span class="annottext">Natural -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679439011"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; is too large. Maximum seconds is &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>            </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span> </span><span class="annot"><span class="annottext">PollInterval
+forall a. Bounded a =&gt; a
+</span><span class="hs-identifier hs-var">maxBound</span></span><span>
+</span><span id="line-57"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- | TOML decoder for optional 'PollInterval' with field name 'poll-interval'.</span><span>
+</span><span id="line-60"></span><span class="hs-comment">--</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-62"></span><span class="annot"><a href="Navi.Data.PollInterval.html#pollIntervalOptDecoder"><span class="hs-identifier hs-type">pollIntervalOptDecoder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span id="pollIntervalOptDecoder"><span class="annot"><span class="annottext">pollIntervalOptDecoder :: Decoder (Maybe PollInterval)
+</span><a href="Navi.Data.PollInterval.html#pollIntervalOptDecoder"><span class="hs-identifier hs-var hs-var">pollIntervalOptDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder PollInterval -&gt; Text -&gt; Decoder (Maybe PollInterval)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder PollInterval
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;poll-interval&quot;</span></span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- | Converts a 'PollInterval' into an 'Int' suitable to be used with</span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- threadDelay.</span><span>
+</span><span id="line-67"></span><span class="hs-comment">--</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-69"></span><span class="annot"><a href="Navi.Data.PollInterval.html#toSleepTime"><span class="hs-identifier hs-type">toSleepTime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-70"></span><span id="toSleepTime"><span class="annot"><span class="annottext">toSleepTime :: PollInterval -&gt; Int
+</span><a href="Navi.Data.PollInterval.html#toSleepTime"><span class="hs-identifier hs-var hs-var">toSleepTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">(Natural -&gt; Int)
+-&gt; (PollInterval -&gt; Natural) -&gt; PollInterval -&gt; Int
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Natural
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-number">1_000_000</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Natural -&gt; Natural)
+-&gt; (PollInterval -&gt; Natural) -&gt; PollInterval -&gt; Natural
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Optic' An_Iso NoIx PollInterval Natural -&gt; PollInterval -&gt; Natural
+forall k (is :: IxList) s a.
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' An_Iso NoIx PollInterval Natural
+</span><span class="">#unPollInterval</span></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="annot"><a href="Navi.Data.PollInterval.html#maxPollInterval"><span class="hs-identifier hs-type">maxPollInterval</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span>
+</span><span id="line-73"></span><span id="maxPollInterval"><span class="annot"><span class="annottext">maxPollInterval :: PollInterval
+</span><a href="Navi.Data.PollInterval.html#maxPollInterval"><span class="hs-identifier hs-var hs-var">maxPollInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; PollInterval
+</span><a href="Navi.Data.PollInterval.html#MkPollInterval"><span class="hs-identifier hs-var">MkPollInterval</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Natural
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679439017"><span class="hs-identifier hs-var">mx</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-comment">-- PollInterval represents seconds, and we eventually want to use it in</span><span>
+</span><span id="line-76"></span><span>    </span><span class="hs-comment">-- threadDelay (which requires an Int). This means we have to multiply</span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-comment">-- by 1_000_000, thus the maximum value we can safely store is</span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-comment">-- (maxInt / 1_000_000).</span><span>
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621679439017"><span class="annot"><span class="annottext">mx :: Int
+</span><a href="#local-6989586621679439017"><span class="hs-identifier hs-var hs-var">mx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+forall a. Bounded a =&gt; a
+</span><span class="hs-identifier hs-var">maxBound</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Integral a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">`div`</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1_000_000</span></span><span>
+</span><span id="line-80"></span></pre></body></html>

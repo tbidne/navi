@@ -1,0 +1,512 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="annot"><span class="hs-comment">-- | Provides functionality for parsing command-line arguments.</span></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Args.html"><span class="hs-identifier">Navi.Args</span></a></span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Args.html#Args"><span class="hs-identifier">Args</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Navi.Args.html#getArgs"><span class="hs-identifier">getArgs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Applicative</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Functor.Classes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Show1</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Functor.Classes</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Functor</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Functor.Identity</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Identity</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Identity</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Version</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">showVersion</span></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-fs-0.1-939bb2cbf42411240e371281dbd18acb7c2362452fb536058a1de1cb3f641bb3/share/doc/html/src/Effects.FileSystem.PathReader.html"><span class="hs-identifier">Effects.FileSystem.PathReader</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Dir</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-optparse-0.1-54d7e989620d13d99828e25212af11878db4908c096c46d043459b7c4caddc9e/share/doc/html/src/Effects.Optparse.html"><span class="hs-identifier">Effects.Optparse</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-optparse-0.1-54d7e989620d13d99828e25212af11878db4908c096c46d043459b7c4caddc9e/share/doc/html/src/Effects.Optparse.html#execParser"><span class="hs-identifier">execParser</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-optparse-0.1-54d7e989620d13d99828e25212af11878db4908c096c46d043459b7c4caddc9e/share/doc/html/src/Effects.Optparse.html#osPath"><span class="hs-identifier">osPath</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/fs-utils-0.1-797e36c7cf412445c50285f8d3e59bbabbc28585c046e40b74676c1091471c31/share/doc/html/src/FileSystem.OsString.html"><span class="hs-identifier">FileSystem.OsString</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">OsString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/fs-utils-0.1-797e36c7cf412445c50285f8d3e59bbabbc28585c046e40b74676c1091471c31/share/doc/html/src/FileSystem.OsString.html"><span class="hs-identifier">FileSystem.OsString</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OsString</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Args.TH.html"><span class="hs-identifier">Navi.Args.TH</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TH</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#ParserInfo"><span class="hs-identifier">ParserInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#ParserInfo"><span class="hs-identifier">ParserInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OptApp</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html"><span class="hs-identifier">Options.Applicative.Help.Chunk</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html#Chunk"><span class="hs-identifier">Chunk</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html#Chunk"><span class="hs-identifier">Chunk</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html"><span class="hs-identifier">Options.Applicative.Help.Chunk</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Chunk</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Pretty.html"><span class="hs-identifier">Options.Applicative.Help.Pretty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Pretty</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html"><span class="hs-identifier">Options.Applicative.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#ArgPolicy"><span class="hs-identifier">ArgPolicy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#Intersperse"><span class="hs-identifier">Intersperse</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Paths_navi.html"><span class="hs-identifier">Paths_navi</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Paths</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.Info</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Info</span></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="VersionInfo"><span class="annot"><a href="Navi.Args.html#VersionInfo"><span class="hs-identifier hs-var">VersionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkVersionInfo"><span class="annot"><a href="Navi.Args.html#MkVersionInfo"><span class="hs-identifier hs-var">MkVersionInfo</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="gitCommitDate"><span class="annot"><span class="annottext">VersionInfo -&gt; OsPath
+</span><a href="Navi.Args.html#gitCommitDate"><span class="hs-identifier hs-var hs-var">gitCommitDate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsString</span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span id="ghc"><span class="annot"><span class="annottext">VersionInfo -&gt; String
+</span><a href="Navi.Args.html#ghc"><span class="hs-identifier hs-var hs-var">ghc</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span id="gitHash"><span class="annot"><span class="annottext">VersionInfo -&gt; OsPath
+</span><a href="Navi.Args.html#gitHash"><span class="hs-identifier hs-var hs-var">gitHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsString</span></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span id="gitShortHash"><span class="annot"><span class="annottext">VersionInfo -&gt; OsPath
+</span><a href="Navi.Args.html#gitShortHash"><span class="hs-identifier hs-var hs-var">gitShortHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsString</span></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span id="local-6989586621679450915"><span id="local-6989586621679450916"><span id="local-6989586621679450917"><span id="local-6989586621679450918"><span id="local-6989586621679450919"><span id="local-6989586621679450920"><span id="local-6989586621679450921"><span id="local-6989586621679450922"><span id="local-6989586621679450923"><span id="local-6989586621679450924"><span id="local-6989586621679450925"><span id="local-6989586621679450926"><span id="local-6989586621679451148"><span id="local-6989586621679451153"><span id="local-6989586621679451158"><span id="local-6989586621679451163"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">VersionInfo</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- | Represents command-line arguments. We use the \&quot;higher-kinded data\&quot;</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- approach for:</span><span>
+</span><span id="line-44"></span><span class="hs-comment">--</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- 1. Parsing optional arguments (@'Args' 'Maybe'@).</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- 2. Filling missing arguments with defaults (@'Args' 'Identity'@).</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">newtype</span><span> </span><span id="Args"><span class="annot"><a href="Navi.Args.html#Args"><span class="hs-identifier hs-var">Args</span></a></span></span><span> </span><span id="local-6989586621679450958"><span class="annot"><a href="#local-6989586621679450958"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkArgs"><span class="annot"><a href="Navi.Args.html#MkArgs"><span class="hs-identifier hs-var">MkArgs</span></a></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Path to the configuration file.</span></span><span>
+</span><span id="line-49"></span><span>    </span><span id="configFile"><span class="annot"><span class="annottext">forall (f :: Type -&gt; Type). Args f -&gt; f OsPath
+</span><a href="Navi.Args.html#configFile"><span class="hs-identifier hs-var hs-var">configFile</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679450958"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span id="local-6989586621679450958"><span id="local-6989586621679450967"><span id="local-6989586621679450968"><span id="local-6989586621679450969"><span id="local-6989586621679450970"><span id="local-6989586621679451221"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Args</span></span></span></span></span></span></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679450980"><span id="local-6989586621679451230"><span id="local-6989586621679451235"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Show1</span></span><span> </span><span class="annot"><a href="#local-6989586621679450980"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Args.html#Args"><span class="hs-identifier hs-type">Args</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679450980"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621679451243"><span class="annot"><span class="annottext">show :: Args f -&gt; String
+</span><a href="#local-6989586621679451243"><span class="hs-identifier hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="annot"><a href="Navi.Args.html#MkArgs"><span class="hs-identifier hs-type">MkArgs</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621679451245"><span class="annot"><span class="annottext">f OsPath
+configFile :: forall (f :: Type -&gt; Type). Args f -&gt; f OsPath
+configFile :: f OsPath
+</span><a href="Navi.Args.html#configFile"><span class="hs-identifier hs-var hs-var">configFile</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;MkArgs &quot;</span></span><span>
+</span><span id="line-57"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; f OsPath -&gt; ShowS
+forall (f :: Type -&gt; Type) a.
+(Show1 f, Show a) =&gt;
+Int -&gt; f a -&gt; ShowS
+</span><span class="hs-identifier hs-var">Functor.showsPrec1</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">9</span></span><span> </span><span class="annot"><span class="annottext">f OsPath
+</span><a href="#local-6989586621679451245"><span class="hs-identifier hs-var">configFile</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; &quot;</span></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- | Parses cli args and fills in defaults. These defaults are based on the</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- detected XDG Base Directory and default names.</span><span>
+</span><span id="line-61"></span><span id="local-6989586621679450986"><span class="annot"><a href="Navi.Args.html#getArgs"><span class="hs-identifier hs-type">getArgs</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-optparse-0.1-54d7e989620d13d99828e25212af11878db4908c096c46d043459b7c4caddc9e/share/doc/html/src/Effects.Optparse.html#MonadOptparse"><span class="hs-identifier hs-type">MonadOptparse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679450986"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-fs-0.1-939bb2cbf42411240e371281dbd18acb7c2362452fb536058a1de1cb3f641bb3/share/doc/html/src/Effects.FileSystem.PathReader.html#MonadPathReader"><span class="hs-identifier hs-type">MonadPathReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679450986"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="#local-6989586621679450986"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Args.html#Args"><span class="hs-identifier hs-type">Args</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-67"></span><span id="getArgs"><span class="annot"><span class="annottext">getArgs :: forall (m :: Type -&gt; Type).
+(HasCallStack, MonadOptparse m, MonadPathReader m) =&gt;
+m (Args Identity)
+</span><a href="Navi.Args.html#getArgs"><span class="hs-identifier hs-var hs-var">getArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621679451259"><span class="annot"><span class="annottext">Args Maybe
+</span><a href="#local-6989586621679451259"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParserInfo (Args Maybe) -&gt; m (Args Maybe)
+forall a. HasCallStack =&gt; ParserInfo a -&gt; m a
+forall (m :: Type -&gt; Type) a.
+(MonadOptparse m, HasCallStack) =&gt;
+ParserInfo a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-optparse-0.1-54d7e989620d13d99828e25212af11878db4908c096c46d043459b7c4caddc9e/share/doc/html/src/Effects.Optparse.html#execParser"><span class="hs-identifier hs-var">execParser</span></a></span><span> </span><span class="annot"><span class="annottext">ParserInfo (Args Maybe)
+</span><a href="Navi.Args.html#parserInfoArgs"><span class="hs-identifier hs-var">parserInfoArgs</span></a></span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><span class="annottext">Args Maybe -&gt; m (Args Identity)
+forall (m :: Type -&gt; Type).
+(HasCallStack, MonadPathReader m) =&gt;
+Args Maybe -&gt; m (Args Identity)
+</span><a href="Navi.Args.html#fillMissingDefaults"><span class="hs-identifier hs-var">fillMissingDefaults</span></a></span><span> </span><span class="annot"><span class="annottext">Args Maybe
+</span><a href="#local-6989586621679451259"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-70"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.Args.html#getArgs"><span class="hs-pragma hs-type">getArgs</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span id="local-6989586621679450997"><span class="annot"><a href="Navi.Args.html#fillMissingDefaults"><span class="hs-identifier hs-type">fillMissingDefaults</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-fs-0.1-939bb2cbf42411240e371281dbd18acb7c2362452fb536058a1de1cb3f641bb3/share/doc/html/src/Effects.FileSystem.PathReader.html#MonadPathReader"><span class="hs-identifier hs-type">MonadPathReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679450997"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="Navi.Args.html#Args"><span class="hs-identifier hs-type">Args</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679450997"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Args.html#Args"><span class="hs-identifier hs-type">Args</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-77"></span><span id="fillMissingDefaults"><span class="annot"><span class="annottext">fillMissingDefaults :: forall (m :: Type -&gt; Type).
+(HasCallStack, MonadPathReader m) =&gt;
+Args Maybe -&gt; m (Args Identity)
+</span><a href="Navi.Args.html#fillMissingDefaults"><span class="hs-identifier hs-var hs-var">fillMissingDefaults</span></a></span></span><span> </span><span id="local-6989586621679451286"><span class="annot"><span class="annottext">Args Maybe
+</span><a href="#local-6989586621679451286"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-78"></span><span>  </span><span id="local-6989586621679451287"><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451287"><span class="hs-identifier hs-var">configFile'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe OsPath
+</span><a href="#local-6989586621679451288"><span class="hs-identifier hs-var">configFile</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-79"></span><span>    </span><span class="hs-comment">-- No custom paths provided, use default</span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">Maybe OsPath
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-81"></span><span>      </span><span id="local-6989586621679451289"><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451289"><span class="hs-identifier hs-var">xdgBase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; m OsPath
+forall (m :: Type -&gt; Type).
+(HasCallStack, MonadPathReader m) =&gt;
+OsPath -&gt; m OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-fs-0.1-939bb2cbf42411240e371281dbd18acb7c2362452fb536058a1de1cb3f641bb3/share/doc/html/src/Effects.FileSystem.PathReader.html#getXdgConfig"><span class="hs-identifier hs-var">Dir.getXdgConfig</span></a></span><span> </span><span class="annot"><span class="">[osp|navi|]</span></span><span>
+</span><span id="line-82"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679451295"><span class="annot"><span class="annottext">defConfigName :: OsPath
+</span><a href="#local-6989586621679451295"><span class="hs-identifier hs-var hs-var">defConfigName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[osp|config.toml|]</span></span><span>
+</span><span id="line-83"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451289"><span class="hs-identifier hs-var">xdgBase</span></a></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; OsPath -&gt; OsPath
+</span><span class="hs-operator hs-var">&lt;/&gt;</span></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451295"><span class="hs-identifier hs-var">defConfigName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span>    </span><span class="hs-comment">-- Custom config provided, override</span><span>
+</span><span id="line-85"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679451297"><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451297"><span class="hs-identifier hs-var">customFile</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; m OsPath
+forall a. a -&gt; m a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451297"><span class="hs-identifier hs-var">customFile</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-87"></span><span>    </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Navi.Args.html#MkArgs"><span class="hs-identifier hs-type">MkArgs</span></a></span><span>
+</span><span id="line-88"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">configFile :: Identity OsPath
+</span><a href="Navi.Args.html#configFile"><span class="hs-identifier hs-var">configFile</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; Identity OsPath
+forall a. a -&gt; Identity a
+</span><span class="hs-identifier hs-var">Identity</span></span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451287"><span class="hs-identifier hs-var">configFile'</span></a></span><span>
+</span><span id="line-89"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-91"></span><span>    </span><span id="local-6989586621679451288"><span class="annot"><span class="annottext">configFile :: Maybe OsPath
+</span><a href="#local-6989586621679451288"><span class="hs-identifier hs-var hs-var">configFile</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Args Maybe
+</span><a href="#local-6989586621679451286"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="annot"><span class="annottext">Args Maybe
+-&gt; Optic' An_Iso NoIx (Args Maybe) (Maybe OsPath) -&gt; Maybe OsPath
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' An_Iso NoIx (Args Maybe) (Maybe OsPath)
+</span><span class="">#configFile</span></span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span class="annot"><span class="hs-comment">-- | 'ParserInfo' type for parsing 'Args'.</span></span><span>
+</span><span id="line-94"></span><span class="annot"><a href="Navi.Args.html#parserInfoArgs"><span class="hs-identifier hs-type">parserInfoArgs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#ParserInfo"><span class="hs-identifier hs-type">ParserInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Args.html#Args"><span class="hs-identifier hs-type">Args</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span id="parserInfoArgs"><span class="annot"><span class="annottext">parserInfoArgs :: ParserInfo (Args Maybe)
+</span><a href="Navi.Args.html#parserInfoArgs"><span class="hs-identifier hs-var hs-var">parserInfoArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-96"></span><span>  </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#ParserInfo"><span class="hs-identifier hs-type">ParserInfo</span></a></span><span>
+</span><span id="line-97"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">infoParser :: Parser (Args Maybe)
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#infoParser"><span class="hs-identifier hs-var">infoParser</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser (Args Maybe)
+</span><a href="Navi.Args.html#argsParser"><span class="hs-identifier hs-var">argsParser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">infoFullDesc :: Bool
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#infoFullDesc"><span class="hs-identifier hs-var">infoFullDesc</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>      </span><span class="annot"><span class="annottext">infoProgDesc :: Chunk Doc
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#infoProgDesc"><span class="hs-identifier hs-var">infoProgDesc</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Chunk Doc
+</span><a href="#local-6989586621679451303"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">infoHeader :: Chunk Doc
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#infoHeader"><span class="hs-identifier hs-var">infoHeader</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Doc -&gt; Chunk Doc
+forall a. Maybe a -&gt; Chunk a
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html#Chunk"><span class="hs-identifier hs-var">Chunk</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Doc
+</span><a href="#local-6989586621679451305"><span class="hs-identifier hs-var">header</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-101"></span><span>      </span><span class="annot"><span class="annottext">infoFooter :: Chunk Doc
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#infoFooter"><span class="hs-identifier hs-var">infoFooter</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Doc -&gt; Chunk Doc
+forall a. Maybe a -&gt; Chunk a
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html#Chunk"><span class="hs-identifier hs-var">Chunk</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Doc
+</span><a href="#local-6989586621679451307"><span class="hs-identifier hs-var">footer</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-102"></span><span>      </span><span class="annot"><span class="annottext">infoFailureCode :: Int
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#infoFailureCode"><span class="hs-identifier hs-var">infoFailureCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span class="hs-special">,</span><span>
+</span><span id="line-103"></span><span>      </span><span class="annot"><span class="annottext">infoPolicy :: ArgPolicy
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#infoPolicy"><span class="hs-identifier hs-var">infoPolicy</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ArgPolicy
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#Intersperse"><span class="hs-identifier hs-var">Intersperse</span></a></span><span>
+</span><span id="line-104"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-106"></span><span>    </span><span id="local-6989586621679451305"><span class="annot"><span class="annottext">header :: Maybe Doc
+</span><a href="#local-6989586621679451305"><span class="hs-identifier hs-var hs-var">header</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">Doc -&gt; Maybe Doc
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span>
+</span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">(Doc -&gt; Maybe Doc) -&gt; Doc -&gt; Maybe Doc
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Doc
+</span><span class="hs-string">&quot;Navi: A program for monitoring system status via &quot;</span></span><span>
+</span><span id="line-109"></span><span>        </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Doc
+</span><span class="hs-string">&quot;desktop notifications.&quot;</span></span><span>
+</span><span id="line-110"></span><span>    </span><span id="local-6989586621679451307"><span class="annot"><span class="annottext">footer :: Maybe Doc
+</span><a href="#local-6989586621679451307"><span class="hs-identifier hs-var hs-var">footer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Maybe Doc
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Doc -&gt; Maybe Doc) -&gt; Doc -&gt; Maybe Doc
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Doc
+forall a. IsString a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">fromString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="Navi.Args.html#versShort"><span class="hs-identifier hs-var">versShort</span></a></span><span>
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621679451303"><span class="annot"><span class="annottext">desc :: Chunk Doc
+</span><a href="#local-6989586621679451303"><span class="hs-identifier hs-var hs-var">desc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-112"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; Chunk Doc
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html#paragraph"><span class="hs-identifier hs-var">Chunk.paragraph</span></a></span><span>
+</span><span id="line-113"></span><span>        </span><span class="annot"><span class="annottext">(String -&gt; Chunk Doc) -&gt; String -&gt; Chunk Doc
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Navi allows one to easily define custom notification 'services'&quot;</span></span><span>
+</span><span id="line-114"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; that hook into a running notification server. For example, one&quot;</span></span><span>
+</span><span id="line-115"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; can provide a bash script that, say, queries the connection&quot;</span></span><span>
+</span><span id="line-116"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; status of a given network device. Navi will periodically run&quot;</span></span><span>
+</span><span id="line-117"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; this query and send a desktop notification if the status has&quot;</span></span><span>
+</span><span id="line-118"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; changed. See github.com/tbidne/navi#README for full&quot;</span></span><span>
+</span><span id="line-119"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; documentation.&quot;</span></span><span>
+</span><span id="line-120"></span><span>
+</span><span id="line-121"></span><span class="annot"><a href="Navi.Args.html#argsParser"><span class="hs-identifier hs-type">argsParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Args.html#Args"><span class="hs-identifier hs-type">Args</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span id="argsParser"><span class="annot"><span class="annottext">argsParser :: Parser (Args Maybe)
+</span><a href="Navi.Args.html#argsParser"><span class="hs-identifier hs-var hs-var">argsParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-123"></span><span>  </span><span class="annot"><span class="annottext">Maybe OsPath -&gt; Args Maybe
+forall (f :: Type -&gt; Type). f OsPath -&gt; Args f
+</span><a href="Navi.Args.html#MkArgs"><span class="hs-identifier hs-var">MkArgs</span></a></span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><span class="annottext">(Maybe OsPath -&gt; Args Maybe)
+-&gt; Parser (Maybe OsPath) -&gt; Parser (Args Maybe)
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe OsPath)
+</span><a href="Navi.Args.html#configFileParser"><span class="hs-identifier hs-var">configFileParser</span></a></span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><span class="annottext">Parser (Args Maybe)
+-&gt; Parser (Args Maybe -&gt; Args Maybe) -&gt; Parser (Args Maybe)
+forall (f :: Type -&gt; Type) a b.
+Applicative f =&gt;
+f a -&gt; f (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;**&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Args Maybe -&gt; Args Maybe)
+forall a. Parser (a -&gt; a)
+</span><a href="Navi.Args.html#defaultConfig"><span class="hs-identifier hs-var">defaultConfig</span></a></span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">Parser (Args Maybe)
+-&gt; Parser (Args Maybe -&gt; Args Maybe) -&gt; Parser (Args Maybe)
+forall (f :: Type -&gt; Type) a b.
+Applicative f =&gt;
+f a -&gt; f (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;**&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Args Maybe -&gt; Args Maybe)
+forall a. Parser (a -&gt; a)
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Extra.html#helper"><span class="hs-identifier hs-var">OptApp.helper</span></a></span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><span class="annottext">Parser (Args Maybe)
+-&gt; Parser (Args Maybe -&gt; Args Maybe) -&gt; Parser (Args Maybe)
+forall (f :: Type -&gt; Type) a b.
+Applicative f =&gt;
+f a -&gt; f (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;**&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Args Maybe -&gt; Args Maybe)
+forall a. Parser (a -&gt; a)
+</span><a href="Navi.Args.html#version"><span class="hs-identifier hs-var">version</span></a></span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span id="local-6989586621679451030"><span class="annot"><a href="Navi.Args.html#defaultConfig"><span class="hs-identifier hs-type">defaultConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679451030"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679451030"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-130"></span><span id="defaultConfig"><span class="annot"><span class="annottext">defaultConfig :: forall a. Parser (a -&gt; a)
+</span><a href="Navi.Args.html#defaultConfig"><span class="hs-identifier hs-var hs-var">defaultConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields (a -&gt; a) -&gt; Parser (a -&gt; a)
+forall a. String -&gt; Mod OptionFields (a -&gt; a) -&gt; Parser (a -&gt; a)
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html#infoOption"><span class="hs-identifier hs-var">OptApp.infoOption</span></a></span><span>
+</span><span id="line-132"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="hs-special">$$</span><span class="annot"><span class="annottext">Addr#
+Int#
+Addr# -&gt; Int -&gt; Text
+Int# -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var">TH.defaultToml</span></span><span class="hs-special">)</span><span>
+</span><span id="line-133"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields (a -&gt; a)
+forall (f :: Type -&gt; Type) a. HasName f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OptApp.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;default-config&quot;</span></span><span> </span><span class="annot"><span class="annottext">Mod OptionFields (a -&gt; a)
+-&gt; Mod OptionFields (a -&gt; a) -&gt; Mod OptionFields (a -&gt; a)
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields (a -&gt; a)
+forall (f :: Type -&gt; Type) a. String -&gt; Mod f a
+</span><a href="Navi.Args.html#mkHelp"><span class="hs-identifier hs-var">mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679451346"><span class="hs-identifier hs-var">help</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-135"></span><span>    </span><span id="local-6989586621679451346"><span class="annot"><span class="annottext">help :: String
+</span><a href="#local-6989586621679451346"><span class="hs-identifier hs-var hs-var">help</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Writes a default config.toml file to stdout.&quot;</span></span><span>
+</span><span id="line-136"></span><span>
+</span><span id="line-137"></span><span id="local-6989586621679451348"><span class="annot"><a href="Navi.Args.html#version"><span class="hs-identifier hs-type">version</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679451348"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679451348"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-138"></span><span id="version"><span class="annot"><span class="annottext">version :: forall a. Parser (a -&gt; a)
+</span><a href="Navi.Args.html#version"><span class="hs-identifier hs-var hs-var">version</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields (a -&gt; a) -&gt; Parser (a -&gt; a)
+forall a. String -&gt; Mod OptionFields (a -&gt; a) -&gt; Parser (a -&gt; a)
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html#infoOption"><span class="hs-identifier hs-var">OptApp.infoOption</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="Navi.Args.html#versLong"><span class="hs-identifier hs-var">versLong</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields (a -&gt; a)
+forall (f :: Type -&gt; Type) a. HasName f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OptApp.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">Mod OptionFields (a -&gt; a)
+-&gt; Mod OptionFields (a -&gt; a) -&gt; Mod OptionFields (a -&gt; a)
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields (a -&gt; a)
+forall (f :: Type -&gt; Type) a. HasName f =&gt; Char -&gt; Mod f a
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">OptApp.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'v'</span></span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span>
+</span><span id="line-140"></span><span class="annot"><a href="Navi.Args.html#versShort"><span class="hs-identifier hs-type">versShort</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-141"></span><span id="versShort"><span class="annot"><span class="annottext">versShort :: String
+</span><a href="Navi.Args.html#versShort"><span class="hs-identifier hs-var hs-var">versShort</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-142"></span><span>  </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-143"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Version: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-144"></span><span>      </span><span class="annot"><span class="annottext">Version -&gt; String
+</span><span class="hs-identifier hs-var">showVersion</span></span><span> </span><span class="annot"><span class="annottext">Version
+</span><a href="Paths_navi.html#version"><span class="hs-identifier hs-var">Paths.version</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-145"></span><span>      </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; (&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-146"></span><span>      </span><span class="annot"><span class="annottext">OsPath -&gt; String
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/fs-utils-0.1-797e36c7cf412445c50285f8d3e59bbabbc28585c046e40b74676c1091471c31/share/doc/html/src/FileSystem.OsString.html#decodeLenient"><span class="hs-identifier hs-var">OsString.decodeLenient</span></a></span><span> </span><span class="annot"><span class="annottext">(OsPath -&gt; String) -&gt; OsPath -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">VersionInfo
+</span><a href="Navi.Args.html#versionInfo"><span class="hs-identifier hs-var">versionInfo</span></a></span><span> </span><span class="annot"><span class="annottext">VersionInfo -&gt; Optic' A_Lens NoIx VersionInfo OsPath -&gt; OsPath
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx VersionInfo OsPath
+</span><span class="">#gitShortHash</span></span><span class="hs-special">,</span><span>
+</span><span id="line-147"></span><span>      </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;)&quot;</span></span><span>
+</span><span id="line-148"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span class="annot"><a href="Navi.Args.html#versLong"><span class="hs-identifier hs-type">versLong</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-151"></span><span id="versLong"><span class="annot"><span class="annottext">versLong :: String
+</span><a href="Navi.Args.html#versLong"><span class="hs-identifier hs-var hs-var">versLong</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-152"></span><span>  </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; String
+forall a. [a] -&gt; [[a]] -&gt; [a]
+</span><span class="hs-identifier hs-var">L.intercalate</span></span><span>
+</span><span id="line-153"></span><span>    </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;\n&quot;</span></span><span>
+</span><span id="line-154"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Navi: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Version -&gt; String
+</span><span class="hs-identifier hs-var">showVersion</span></span><span> </span><span class="annot"><span class="annottext">Version
+</span><a href="Paths_navi.html#version"><span class="hs-identifier hs-var">Paths.version</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-155"></span><span>      </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; - Git revision: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; String
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/fs-utils-0.1-797e36c7cf412445c50285f8d3e59bbabbc28585c046e40b74676c1091471c31/share/doc/html/src/FileSystem.OsString.html#decodeLenient"><span class="hs-identifier hs-var">OsString.decodeLenient</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">VersionInfo
+</span><a href="Navi.Args.html#versionInfo"><span class="hs-identifier hs-var">versionInfo</span></a></span><span> </span><span class="annot"><span class="annottext">VersionInfo -&gt; Optic' A_Lens NoIx VersionInfo OsPath -&gt; OsPath
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx VersionInfo OsPath
+</span><span class="">#gitHash</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-156"></span><span>      </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; - Commit date:  &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; String
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/fs-utils-0.1-797e36c7cf412445c50285f8d3e59bbabbc28585c046e40b74676c1091471c31/share/doc/html/src/FileSystem.OsString.html#decodeLenient"><span class="hs-identifier hs-var">OsString.decodeLenient</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">VersionInfo
+</span><a href="Navi.Args.html#versionInfo"><span class="hs-identifier hs-var">versionInfo</span></a></span><span> </span><span class="annot"><span class="annottext">VersionInfo -&gt; Optic' A_Lens NoIx VersionInfo OsPath -&gt; OsPath
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx VersionInfo OsPath
+</span><span class="">#gitCommitDate</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-157"></span><span>      </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; - GHC version:  &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">VersionInfo
+</span><a href="Navi.Args.html#versionInfo"><span class="hs-identifier hs-var">versionInfo</span></a></span><span> </span><span class="annot"><span class="annottext">VersionInfo -&gt; Optic' A_Lens NoIx VersionInfo String -&gt; String
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx VersionInfo String
+</span><span class="">#ghc</span></span><span>
+</span><span id="line-158"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-159"></span><span>
+</span><span id="line-160"></span><span class="annot"><a href="Navi.Args.html#versionInfo"><span class="hs-identifier hs-type">versionInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Args.html#VersionInfo"><span class="hs-identifier hs-type">VersionInfo</span></a></span><span>
+</span><span id="line-161"></span><span id="versionInfo"><span class="annot"><span class="annottext">versionInfo :: VersionInfo
+</span><a href="Navi.Args.html#versionInfo"><span class="hs-identifier hs-var hs-var">versionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-162"></span><span>  </span><span class="annot"><a href="Navi.Args.html#MkVersionInfo"><span class="hs-identifier hs-type">MkVersionInfo</span></a></span><span>
+</span><span id="line-163"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">gitCommitDate :: OsPath
+</span><a href="Navi.Args.html#gitCommitDate"><span class="hs-identifier hs-var">gitCommitDate</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451358"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-164"></span><span>      </span><span class="annot"><span class="annottext">ghc :: String
+</span><a href="Navi.Args.html#ghc"><span class="hs-identifier hs-var">ghc</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Version -&gt; String
+</span><span class="hs-identifier hs-var">showVersion</span></span><span> </span><span class="annot"><span class="annottext">Version
+</span><span class="hs-identifier hs-var">Info.compilerVersion</span></span><span class="hs-special">,</span><span>
+</span><span id="line-165"></span><span>      </span><span class="annot"><span class="annottext">gitHash :: OsPath
+</span><a href="Navi.Args.html#gitHash"><span class="hs-identifier hs-var">gitHash</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451360"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-166"></span><span>      </span><span class="annot"><span class="annottext">gitShortHash :: OsPath
+</span><a href="Navi.Args.html#gitShortHash"><span class="hs-identifier hs-var">gitShortHash</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451361"><span class="hs-identifier hs-var">sh</span></a></span><span>
+</span><span id="line-167"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-168"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-169"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621679451358"><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451358"><span class="hs-identifier hs-var">d</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679451360"><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451360"><span class="hs-identifier hs-var">h</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679451361"><span class="annot"><span class="annottext">OsPath
+</span><a href="#local-6989586621679451361"><span class="hs-identifier hs-var">sh</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$$</span><span class="annot"><span class="annottext">Addr#
+Int
+Int -&gt; Addr# -&gt; ByteArray
+ByteArray -&gt; ShortByteString
+ShortByteString -&gt; PosixString
+PosixString -&gt; OsPath
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">TH.gitData</span></span><span>
+</span><span id="line-170"></span><span>
+</span><span id="line-171"></span><span class="annot"><a href="Navi.Args.html#configFileParser"><span class="hs-identifier hs-type">configFileParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span class="hs-special">)</span><span>
+</span><span id="line-172"></span><span id="configFileParser"><span class="annot"><span class="annottext">configFileParser :: Parser (Maybe OsPath)
+</span><a href="Navi.Args.html#configFileParser"><span class="hs-identifier hs-var hs-var">configFileParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-173"></span><span>  </span><span class="annot"><span class="annottext">Parser OsPath -&gt; Parser (Maybe OsPath)
+forall (f :: Type -&gt; Type) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><span class="hs-identifier hs-var">A.optional</span></span><span>
+</span><span id="line-174"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">ReadM OsPath -&gt; Mod OptionFields OsPath -&gt; Parser OsPath
+forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">OptApp.option</span></a></span><span>
+</span><span id="line-175"></span><span>        </span><span class="annot"><span class="annottext">ReadM OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-optparse-0.1-54d7e989620d13d99828e25212af11878db4908c096c46d043459b7c4caddc9e/share/doc/html/src/Effects.Optparse.html#osPath"><span class="hs-identifier hs-var">osPath</span></a></span><span>
+</span><span id="line-176"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields OsPath
+forall (f :: Type -&gt; Type) a. HasName f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">OptApp.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;config-file&quot;</span></span><span>
+</span><span id="line-177"></span><span>            </span><span class="annot"><span class="annottext">Mod OptionFields OsPath
+-&gt; Mod OptionFields OsPath -&gt; Mod OptionFields OsPath
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields OsPath
+forall (f :: Type -&gt; Type) a. HasName f =&gt; Char -&gt; Mod f a
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">OptApp.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'c'</span></span><span>
+</span><span id="line-178"></span><span>            </span><span class="annot"><span class="annottext">Mod OptionFields OsPath
+-&gt; Mod OptionFields OsPath -&gt; Mod OptionFields OsPath
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields OsPath
+forall (f :: Type -&gt; Type) a. String -&gt; Mod f a
+</span><a href="Navi.Args.html#mkHelp"><span class="hs-identifier hs-var">mkHelp</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679451365"><span class="hs-identifier hs-var">helpTxt</span></a></span><span>
+</span><span id="line-179"></span><span>            </span><span class="annot"><span class="annottext">Mod OptionFields OsPath
+-&gt; Mod OptionFields OsPath -&gt; Mod OptionFields OsPath
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields OsPath
+forall (f :: Type -&gt; Type) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">OptApp.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;PATH&quot;</span></span><span>
+</span><span id="line-180"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-182"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-183"></span><span>    </span><span id="local-6989586621679451365"><span class="annot"><span class="annottext">helpTxt :: String
+</span><a href="#local-6989586621679451365"><span class="hs-identifier hs-var hs-var">helpTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-184"></span><span>      </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Path to config file. Defaults to &lt;xdg-config&gt;/navi/config.toml.&quot;</span></span><span>
+</span><span id="line-185"></span><span>
+</span><span id="line-186"></span><span id="local-6989586621679451036"><span id="local-6989586621679451037"><span class="annot"><a href="Navi.Args.html#mkHelp"><span class="hs-identifier hs-type">mkHelp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.Internal.html#Mod"><span class="hs-identifier hs-type">OptApp.Mod</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679451036"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679451037"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-187"></span><span id="mkHelp"><span class="annot"><span class="annottext">mkHelp :: forall (f :: Type -&gt; Type) a. String -&gt; Mod f a
+</span><a href="Navi.Args.html#mkHelp"><span class="hs-identifier hs-var hs-var">mkHelp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-188"></span><span>  </span><span class="annot"><span class="annottext">Maybe Doc -&gt; Mod f a
+forall (f :: Type -&gt; Type) a. Maybe Doc -&gt; Mod f a
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Builder.html#helpDoc"><span class="hs-identifier hs-var">OptApp.helpDoc</span></a></span><span>
+</span><span id="line-189"></span><span>    </span><span class="annot"><span class="annottext">(Maybe Doc -&gt; Mod f a)
+-&gt; (String -&gt; Maybe Doc) -&gt; String -&gt; Mod f a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Doc -&gt; Doc) -&gt; Maybe Doc -&gt; Maybe Doc
+forall a b. (a -&gt; b) -&gt; Maybe a -&gt; Maybe b
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Doc
+forall ann. Doc ann
+</span><a href="file:///nix/store/jamq9axnyf6qyjxh1qfviq8hvsfyzr9g-prettyprinter-1.7.1-doc/share/doc/prettyprinter-1.7.1/html/src/Prettyprinter.Internal.html#hardline"><span class="hs-identifier hs-var">Pretty.hardline</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-190"></span><span>    </span><span class="annot"><span class="annottext">(Maybe Doc -&gt; Maybe Doc)
+-&gt; (String -&gt; Maybe Doc) -&gt; String -&gt; Maybe Doc
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Chunk Doc -&gt; Maybe Doc
+forall a. Chunk a -&gt; Maybe a
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html#unChunk"><span class="hs-identifier hs-var">Chunk.unChunk</span></a></span><span>
+</span><span id="line-191"></span><span>    </span><span class="annot"><span class="annottext">(Chunk Doc -&gt; Maybe Doc)
+-&gt; (String -&gt; Chunk Doc) -&gt; String -&gt; Maybe Doc
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Chunk Doc
+</span><a href="file:///nix/store/gx8660d3bbhd9imx0jwigai147bkwzwz-optparse-applicative-0.18.1.0-doc/share/doc/optparse-applicative-0.18.1.0/html/src/Options.Applicative.Help.Chunk.html#paragraph"><span class="hs-identifier hs-var">Chunk.paragraph</span></a></span><span>
+</span><span id="line-192"></span></pre></body></html>

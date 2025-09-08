@@ -1,0 +1,324 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="annot"><span class="hs-comment">-- | This module provides types for defining notification events.</span></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Event.Types.html"><span class="hs-identifier">Navi.Event.Types</span></a></span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#Event"><span class="hs-identifier">Event</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier">AnyEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier">RepeatEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#ErrorNote"><span class="hs-identifier">ErrorNote</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.EventError.html#EventError"><span class="hs-identifier">EventError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#EventSuccess"><span class="hs-identifier">EventSuccess</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Set</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">showSpace</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html"><span class="hs-identifier">Navi.Data.NaviNote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier">NaviNote</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html"><span class="hs-identifier">Navi.Data.PollInterval</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier">PollInterval</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Event.Types.EventError.html"><span class="hs-identifier">Navi.Event.Types.EventError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.EventError.html#EventError"><span class="hs-identifier">EventError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.EventError.html#MkEventError"><span class="hs-identifier">MkEventError</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Event.Types.EventError.html#long"><span class="hs-identifier">long</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Event.Types.EventError.html#name"><span class="hs-identifier">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Event.Types.EventError.html#short"><span class="hs-identifier">short</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Services.Types.html"><span class="hs-identifier">Navi.Services.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Services.Types.html#ServiceType"><span class="hs-identifier">ServiceType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Text.Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">showsPrec</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">showParen</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">showString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- | Determines if we are allowed to send off duplicate notifications</span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- simultaneously. If we are not, then 'NoRepeats' holds the last trigger</span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- so that we can detect duplicates.</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">data</span><span> </span><span id="RepeatEvent"><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier hs-var">RepeatEvent</span></a></span></span><span> </span><span id="local-6989586621679441221"><span class="annot"><a href="#local-6989586621679441221"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="NoRepeats"><span class="annot"><a href="Navi.Event.Types.html#NoRepeats"><span class="hs-identifier hs-var">NoRepeats</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IORef</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621679441221"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SomeRepeats"><span class="annot"><a href="Navi.Event.Types.html#SomeRepeats"><span class="hs-identifier hs-var">SomeRepeats</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="#local-6989586621679441221"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IORef</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621679441221"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AllowRepeats"><span class="annot"><a href="Navi.Event.Types.html#AllowRepeats"><span class="hs-identifier hs-var">AllowRepeats</span></a></span></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679441028"><span id="local-6989586621679441227"><span id="local-6989586621679441231"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679441028"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier hs-type">RepeatEvent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679441028"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621679441244"><span class="annot"><span class="annottext">showsPrec :: Int -&gt; RepeatEvent a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var">showsPrec</span></span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#NoRepeats"><span class="hs-identifier hs-type">NoRepeats</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;NoRepeats &lt;ref&gt;&quot;</span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">showsPrec</span></span><span> </span><span id="local-6989586621679441245"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679441245"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#SomeRepeats"><span class="hs-identifier hs-type">SomeRepeats</span></a></span><span> </span><span id="local-6989586621679441246"><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621679441246"><span class="hs-identifier hs-var">st</span></a></span></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe a)
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; ShowS -&gt; ShowS
+</span><span class="hs-identifier hs-var">showParen</span></span><span>
+</span><span id="line-36"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679441245"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">11</span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;SomeRepeats&quot;</span></span><span>
+</span><span id="line-38"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">showSpace</span></span><span>
+</span><span id="line-39"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Set a -&gt; ShowS
+forall a. Show a =&gt; Int -&gt; a -&gt; ShowS
+</span><span class="hs-identifier hs-var">showsPrec</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679441245"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621679441246"><span class="hs-identifier hs-var">st</span></a></span><span>
+</span><span id="line-40"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">showSpace</span></span><span>
+</span><span id="line-41"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&lt;ref&gt;&quot;</span></span><span>
+</span><span id="line-42"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">showsPrec</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">RepeatEvent a
+</span><a href="Navi.Event.Types.html#AllowRepeats"><span class="hs-identifier hs-var">AllowRepeats</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;AllowRepeats&quot;</span></span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- | Determines if we should send notifications for errors and, if so, if we</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- allow repeats.</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">data</span><span> </span><span id="ErrorNote"><span class="annot"><a href="Navi.Event.Types.html#ErrorNote"><span class="hs-identifier hs-var">ErrorNote</span></a></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="NoErrNote"><span class="annot"><a href="Navi.Event.Types.html#NoErrNote"><span class="hs-identifier hs-var">NoErrNote</span></a></span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AllowErrNote"><span class="annot"><a href="Navi.Event.Types.html#AllowErrNote"><span class="hs-identifier hs-var">AllowErrNote</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier hs-type">RepeatEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679441251"><span id="local-6989586621679441256"><span id="local-6989586621679441260"><span class="annot"><span class="annottext">Int -&gt; ErrorNote -&gt; ShowS
+[ErrorNote] -&gt; ShowS
+ErrorNote -&gt; String
+(Int -&gt; ErrorNote -&gt; ShowS)
+-&gt; (ErrorNote -&gt; String)
+-&gt; ([ErrorNote] -&gt; ShowS)
+-&gt; Show ErrorNote
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ErrorNote -&gt; ShowS
+showsPrec :: Int -&gt; ErrorNote -&gt; ShowS
+$cshow :: ErrorNote -&gt; String
+show :: ErrorNote -&gt; String
+$cshowList :: [ErrorNote] -&gt; ShowS
+showList :: [ErrorNote] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- | 'Event' represents sending notifications. An event will:</span><span>
+</span><span id="line-53"></span><span class="hs-comment">--</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- 1. Query for information (i.e. run a shell command).</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- 2. Parse the result.</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- 3. Map the result to a trigger.</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- 4. Raise an alert if the trigger matches some condition.</span><span>
+</span><span id="line-58"></span><span class="hs-comment">--</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- For most services, the (result -&gt; trigger) map will be trivial i.e.</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- result and trigger will be identical.</span><span>
+</span><span id="line-61"></span><span class="hs-comment">--</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- For example, custom servicess is 'Text', and NetInterfaces is</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- NetInterface. In these cases, there is an exact</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- correspondonce between the service query result and the trigger.</span><span>
+</span><span id="line-65"></span><span class="hs-comment">--</span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- But for e.g. battery percentage, the result is Battery (percentage and</span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- status) whereas trigger is PercentageData.</span><span>
+</span><span id="line-68"></span><span class="hs-comment">--</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- See NOTE: [Battery Percentage Result/Trigger] for an explanation on why</span><span>
+</span><span id="line-70"></span><span class="hs-comment">-- this might be desirable.</span><span>
+</span><span id="line-71"></span><span class="hs-keyword">data</span><span> </span><span id="Event"><span class="annot"><a href="Navi.Event.Types.html#Event"><span class="hs-identifier hs-var">Event</span></a></span></span><span> </span><span id="local-6989586621679441041"><span class="annot"><a href="#local-6989586621679441041"><span class="hs-identifier hs-type">result</span></a></span></span><span> </span><span id="local-6989586621679441042"><span class="annot"><a href="#local-6989586621679441042"><span class="hs-identifier hs-type">trigger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkEvent"><span class="annot"><a href="Navi.Event.Types.html#MkEvent"><span class="hs-identifier hs-var">MkEvent</span></a></span></span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Determines how we handle errors.</span></span><span>
+</span><span id="line-73"></span><span>    </span><span id="errorNote"><span class="annot"><span class="annottext">forall result trigger. Event result trigger -&gt; ErrorNote
+</span><a href="Navi.Event.Types.html#errorNote"><span class="hs-identifier hs-var hs-var">errorNote</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#ErrorNote"><span class="hs-identifier hs-type">ErrorNote</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The name of this event.</span></span><span>
+</span><span id="line-75"></span><span>    </span><span id="name"><span class="annot"><span class="annottext">forall result trigger. Event result trigger -&gt; Text
+</span><a href="Navi.Event.Types.html#name"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><span class="hs-comment">-- | How often to poll for this event, in seconds.</span></span><span>
+</span><span id="line-77"></span><span>    </span><span id="pollInterval"><span class="annot"><span class="annottext">forall result trigger. Event result trigger -&gt; PollInterval
+</span><a href="Navi.Event.Types.html#pollInterval"><span class="hs-identifier hs-var hs-var">pollInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-comment">-- | Conditionally raises an alert based on the (result -&gt; trigger)</span><span>
+</span><span id="line-79"></span><span>    </span><span class="hs-comment">-- mapping.</span><span>
+</span><span id="line-80"></span><span>    </span><span id="raiseAlert"><span class="annot"><span class="annottext">forall result trigger.
+Event result trigger -&gt; result -&gt; Maybe (trigger, NaviNote)
+</span><a href="Navi.Event.Types.html#raiseAlert"><span class="hs-identifier hs-var hs-var">raiseAlert</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679441041"><span class="hs-identifier hs-type">result</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679441042"><span class="hs-identifier hs-type">trigger</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Determines how we handle repeat alerts.</span></span><span>
+</span><span id="line-82"></span><span>    </span><span id="repeatEvent"><span class="annot"><span class="annottext">forall result trigger. Event result trigger -&gt; RepeatEvent trigger
+</span><a href="Navi.Event.Types.html#repeatEvent"><span class="hs-identifier hs-var hs-var">repeatEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier hs-type">RepeatEvent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679441042"><span class="hs-identifier hs-type">trigger</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-83"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The service to run.</span></span><span>
+</span><span id="line-84"></span><span>    </span><span id="serviceType"><span class="annot"><span class="annottext">forall result trigger. Event result trigger -&gt; ServiceType result
+</span><a href="Navi.Event.Types.html#serviceType"><span class="hs-identifier hs-var hs-var">serviceType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Services.Types.html#ServiceType"><span class="hs-identifier hs-type">ServiceType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679441041"><span class="hs-identifier hs-type">result</span></a></span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span id="local-6989586621679441041"><span id="local-6989586621679441042"><span id="local-6989586621679441102"><span id="local-6989586621679441103"><span id="local-6989586621679441104"><span id="local-6989586621679441105"><span id="local-6989586621679441106"><span id="local-6989586621679441107"><span id="local-6989586621679441108"><span id="local-6989586621679441109"><span id="local-6989586621679441110"><span id="local-6989586621679441111"><span id="local-6989586621679441112"><span id="local-6989586621679441113"><span id="local-6989586621679441114"><span id="local-6989586621679441115"><span id="local-6989586621679441116"><span id="local-6989586621679441117"><span id="local-6989586621679441118"><span id="local-6989586621679441119"><span id="local-6989586621679441274"><span id="local-6989586621679441279"><span id="local-6989586621679441284"><span id="local-6989586621679441289"><span id="local-6989586621679441294"><span id="local-6989586621679441299"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Event</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679441137"><span id="local-6989586621679441138"><span id="local-6989586621679441396"><span id="local-6989586621679441399"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679441137"><span class="hs-identifier hs-type">trigger</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679441138"><span class="hs-identifier hs-type">result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679441137"><span class="hs-identifier hs-type">trigger</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621679441458"><span class="annot"><span class="annottext">showsPrec :: Int -&gt; Event result trigger -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var">showsPrec</span></span></span><span> </span><span id="local-6989586621679441459"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679441459"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621679441460"><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679441460"><span class="hs-identifier hs-var">event</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-91"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; ShowS -&gt; ShowS
+</span><span class="hs-identifier hs-var">showParen</span></span><span>
+</span><span id="line-92"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679441459"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">11</span></span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;MkEvent {errorNote = &quot;</span></span><span>
+</span><span id="line-94"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ErrorNote -&gt; ShowS
+forall a. Show a =&gt; Int -&gt; a -&gt; ShowS
+</span><span class="hs-identifier hs-var">showsPrec</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679441459"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679441460"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+-&gt; Optic' A_Lens NoIx (Event result trigger) ErrorNote -&gt; ErrorNote
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event result trigger) ErrorNote
+</span><span class="">#errorNote</span></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;, name = &quot;</span></span><span>
+</span><span id="line-96"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; ShowS
+forall a. Show a =&gt; Int -&gt; a -&gt; ShowS
+</span><span class="hs-identifier hs-var">showsPrec</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679441459"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679441460"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+-&gt; Optic' A_Lens NoIx (Event result trigger) Text -&gt; Text
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event result trigger) Text
+</span><span class="">#name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;, pollInterval = &quot;</span></span><span>
+</span><span id="line-98"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; PollInterval -&gt; ShowS
+forall a. Show a =&gt; Int -&gt; a -&gt; ShowS
+</span><span class="hs-identifier hs-var">showsPrec</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679441459"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679441460"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+-&gt; Optic' A_Lens NoIx (Event result trigger) PollInterval
+-&gt; PollInterval
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event result trigger) PollInterval
+</span><span class="">#pollInterval</span></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;, raiseAlert = &lt;func&gt;, repeatEvent = &quot;</span></span><span>
+</span><span id="line-100"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; RepeatEvent trigger -&gt; ShowS
+forall a. Show a =&gt; Int -&gt; a -&gt; ShowS
+</span><span class="hs-identifier hs-var">showsPrec</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679441459"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679441460"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+-&gt; Optic' A_Lens NoIx (Event result trigger) (RepeatEvent trigger)
+-&gt; RepeatEvent trigger
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event result trigger) (RepeatEvent trigger)
+</span><span class="">#repeatEvent</span></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;, serviceType = &quot;</span></span><span>
+</span><span id="line-102"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ServiceType result -&gt; ShowS
+forall a. Show a =&gt; Int -&gt; a -&gt; ShowS
+</span><span class="hs-identifier hs-var">showsPrec</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679441459"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679441460"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+-&gt; Optic' A_Lens NoIx (Event result trigger) (ServiceType result)
+-&gt; ServiceType result
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event result trigger) (ServiceType result)
+</span><span class="">#serviceType</span></span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span>          </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;}&quot;</span></span><span>
+</span><span id="line-104"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-105"></span><span>
+</span><span id="line-106"></span><span class="hs-comment">-- | Existentially quantifies result type on an 'Event'. Used so that we can</span><span>
+</span><span id="line-107"></span><span class="hs-comment">-- store different events in the same list.</span><span>
+</span><span id="line-108"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier hs-type">AnyEvent</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
+</span><span id="line-109"></span><span class="hs-keyword">data</span><span> </span><span id="AnyEvent"><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier hs-var">AnyEvent</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-110"></span><span>  </span><span id="local-6989586621679441462"><span id="local-6989586621679441463"><span id="MkAnyEvent"><span class="annot"><a href="Navi.Event.Types.html#MkAnyEvent"><span class="hs-identifier hs-var">MkAnyEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679441462"><span class="hs-identifier hs-type">trigger</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679441463"><span class="hs-identifier hs-type">result</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679441462"><span class="hs-identifier hs-type">trigger</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#Event"><span class="hs-identifier hs-type">Event</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679441463"><span class="hs-identifier hs-type">result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679441462"><span class="hs-identifier hs-type">trigger</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier hs-type">AnyEvent</span></a></span></span></span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span id="local-6989586621679441466"><span id="local-6989586621679441468"><span id="local-6989586621679441472"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier hs-type">AnyEvent</span></a></span></span></span></span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="hs-comment">-- | Holds the 'Event' data used after an event is successfully run.</span><span>
+</span><span id="line-115"></span><span class="hs-comment">--</span><span>
+</span><span id="line-116"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-117"></span><span class="hs-keyword">data</span><span> </span><span id="EventSuccess"><span class="annot"><a href="Navi.Event.Types.html#EventSuccess"><span class="hs-identifier hs-var">EventSuccess</span></a></span></span><span> </span><span id="local-6989586621679441157"><span class="annot"><a href="#local-6989586621679441157"><span class="hs-identifier hs-type">result</span></a></span></span><span> </span><span id="local-6989586621679441158"><span class="annot"><a href="#local-6989586621679441158"><span class="hs-identifier hs-type">trigger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkEventSuccess"><span class="annot"><a href="Navi.Event.Types.html#MkEventSuccess"><span class="hs-identifier hs-var">MkEventSuccess</span></a></span></span><span>
+</span><span id="line-118"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="pollInterval"><span class="annot"><span class="annottext">forall result trigger.
+EventSuccess result trigger -&gt; Maybe PollInterval
+</span><a href="Navi.Event.Types.html#pollInterval"><span class="hs-identifier hs-var hs-var">pollInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-119"></span><span>    </span><span id="result"><span class="annot"><span class="annottext">forall result trigger. EventSuccess result trigger -&gt; result
+</span><a href="Navi.Event.Types.html#result"><span class="hs-identifier hs-var hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679441157"><span class="hs-identifier hs-type">result</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-120"></span><span>    </span><span id="repeatEvent"><span class="annot"><span class="annottext">forall result trigger.
+EventSuccess result trigger -&gt; RepeatEvent trigger
+</span><a href="Navi.Event.Types.html#repeatEvent"><span class="hs-identifier hs-var hs-var">repeatEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#RepeatEvent"><span class="hs-identifier hs-type">RepeatEvent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679441158"><span class="hs-identifier hs-type">trigger</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-121"></span><span>    </span><span id="raiseAlert"><span class="annot"><span class="annottext">forall result trigger.
+EventSuccess result trigger -&gt; result -&gt; Maybe (trigger, NaviNote)
+</span><a href="Navi.Event.Types.html#raiseAlert"><span class="hs-identifier hs-var hs-var">raiseAlert</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679441157"><span class="hs-identifier hs-type">result</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679441158"><span class="hs-identifier hs-type">trigger</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span id="local-6989586621679441157"><span id="local-6989586621679441158"><span id="local-6989586621679441188"><span id="local-6989586621679441189"><span id="local-6989586621679441190"><span id="local-6989586621679441191"><span id="local-6989586621679441192"><span id="local-6989586621679441193"><span id="local-6989586621679441194"><span id="local-6989586621679441195"><span id="local-6989586621679441196"><span id="local-6989586621679441197"><span id="local-6989586621679441198"><span id="local-6989586621679441199"><span id="local-6989586621679441483"><span id="local-6989586621679441488"><span id="local-6989586621679441493"><span id="local-6989586621679441498"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EventSuccess</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-125"></span></pre></body></html>

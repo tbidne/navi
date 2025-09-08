@@ -1,0 +1,495 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | This module provides functionality for decoding data from a toml</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- configuration file.</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Config.Toml.html"><span class="hs-identifier">Navi.Config.Toml</span></a></span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Config.Toml.html#ConfigToml"><span class="hs-identifier">ConfigToml</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.html"><span class="hs-identifier">Data.Bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Internal.html#SomeSize"><span class="hs-identifier">SomeSize</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.html"><span class="hs-identifier">Data.Bytes</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Bytes</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Char</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Ch</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/fs-utils-0.1-797e36c7cf412445c50285f8d3e59bbabbc28585c046e40b74676c1091471c31/share/doc/html/src/FileSystem.OsPath.html"><span class="hs-identifier">FileSystem.OsPath</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/fs-utils-0.1-797e36c7cf412445c50285f8d3e59bbabbc28585c046e40b74676c1091471c31/share/doc/html/src/FileSystem.OsPath.html#encodeFail"><span class="hs-identifier">encodeFail</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Real</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">truncate</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Config.Phase.html"><span class="hs-identifier">Navi.Config.Phase</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhase"><span class="hs-identifier">ConfigPhase</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhaseToml"><span class="hs-identifier">ConfigPhaseToml</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Config.Types.html"><span class="hs-identifier">Navi.Config.Types</span></a></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#FilesSizeMode"><span class="hs-identifier">FilesSizeMode</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#FilesSizeModeDelete"><span class="hs-identifier">FilesSizeModeDelete</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#FilesSizeModeWarn"><span class="hs-identifier">FilesSizeModeWarn</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#LogLoc"><span class="hs-identifier">LogLoc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#DefPath"><span class="hs-identifier">DefPath</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#File"><span class="hs-identifier">File</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#Stdout"><span class="hs-identifier">Stdout</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#Logging"><span class="hs-identifier">Logging</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#MkLogging"><span class="hs-identifier">MkLogging</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#NoteSystem"><span class="hs-identifier">NoteSystem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#AppleScript"><span class="hs-identifier">AppleScript</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#DBus"><span class="hs-identifier">DBus</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#NotifySend"><span class="hs-identifier">NotifySend</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html"><span class="hs-identifier">Navi.Services.Battery.Percentage.Toml</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageToml"><span class="hs-identifier">BatteryPercentageToml</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Status.Toml.html"><span class="hs-identifier">Navi.Services.Battery.Status.Toml</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Services.Battery.Status.Toml.html#BatteryStatusToml"><span class="hs-identifier">BatteryStatusToml</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Services.Custom.Toml.html"><span class="hs-identifier">Navi.Services.Custom.Toml</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Services.Custom.Toml.html#CustomToml"><span class="hs-identifier">CustomToml</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Services.Network.NetInterfaces.Toml.html"><span class="hs-identifier">Navi.Services.Network.NetInterfaces.Toml</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Services.Network.NetInterfaces.Toml.html#NetInterfacesToml"><span class="hs-identifier">NetInterfacesToml</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Utils.html"><span class="hs-identifier">Navi.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Utils.html#getFieldOptArrayOf"><span class="hs-identifier">getFieldOptArrayOf</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="annot"><span class="hs-comment">-- | 'ConfigToml' holds the data that is defined in the configuration file.</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">data</span><span> </span><span id="ConfigToml"><span class="annot"><a href="Navi.Config.Toml.html#ConfigToml"><span class="hs-identifier hs-var">ConfigToml</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkConfigToml"><span class="annot"><a href="Navi.Config.Toml.html#MkConfigToml"><span class="hs-identifier hs-var">MkConfigToml</span></a></span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="batteryPercentageToml"><span class="annot"><span class="annottext">ConfigToml -&gt; Maybe BatteryPercentageToml
+</span><a href="Navi.Config.Toml.html#batteryPercentageToml"><span class="hs-identifier hs-var hs-var">batteryPercentageToml</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageToml"><span class="hs-identifier hs-type">BatteryPercentageToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span id="batteryStatusToml"><span class="annot"><span class="annottext">ConfigToml -&gt; Maybe BatteryStatusToml
+</span><a href="Navi.Config.Toml.html#batteryStatusToml"><span class="hs-identifier hs-var hs-var">batteryStatusToml</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Services.Battery.Status.Toml.html#BatteryStatusToml"><span class="hs-identifier hs-type">BatteryStatusToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span id="customToml"><span class="annot"><span class="annottext">ConfigToml -&gt; [CustomToml]
+</span><a href="Navi.Config.Toml.html#customToml"><span class="hs-identifier hs-var hs-var">customToml</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Navi.Services.Custom.Toml.html#CustomToml"><span class="hs-identifier hs-type">CustomToml</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span id="logToml"><span class="annot"><span class="annottext">ConfigToml -&gt; Maybe Logging
+</span><a href="Navi.Config.Toml.html#logToml"><span class="hs-identifier hs-var hs-var">logToml</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Config.Types.html#Logging"><span class="hs-identifier hs-type">Logging</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span id="netInterfacesToml"><span class="annot"><span class="annottext">ConfigToml -&gt; [NetInterfacesToml]
+</span><a href="Navi.Config.Toml.html#netInterfacesToml"><span class="hs-identifier hs-var hs-var">netInterfacesToml</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Navi.Services.Network.NetInterfaces.Toml.html#NetInterfacesToml"><span class="hs-identifier hs-type">NetInterfacesToml</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span id="noteSystemToml"><span class="annot"><span class="annottext">ConfigToml -&gt; Maybe (NoteSystem 'ConfigPhaseToml)
+</span><a href="Navi.Config.Toml.html#noteSystemToml"><span class="hs-identifier hs-var hs-var">noteSystemToml</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#NoteSystem"><span class="hs-identifier hs-type">NoteSystem</span></a></span><span> </span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhaseToml"><span class="hs-identifier hs-type">ConfigPhaseToml</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679446884"><span id="local-6989586621679446899"><span class="annot"><span class="annottext">ConfigToml -&gt; ConfigToml -&gt; Bool
+(ConfigToml -&gt; ConfigToml -&gt; Bool)
+-&gt; (ConfigToml -&gt; ConfigToml -&gt; Bool) -&gt; Eq ConfigToml
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ConfigToml -&gt; ConfigToml -&gt; Bool
+== :: ConfigToml -&gt; ConfigToml -&gt; Bool
+$c/= :: ConfigToml -&gt; ConfigToml -&gt; Bool
+/= :: ConfigToml -&gt; ConfigToml -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679446910"><span id="local-6989586621679446928"><span id="local-6989586621679446932"><span class="annot"><span class="annottext">Int -&gt; ConfigToml -&gt; ShowS
+[ConfigToml] -&gt; ShowS
+ConfigToml -&gt; String
+(Int -&gt; ConfigToml -&gt; ShowS)
+-&gt; (ConfigToml -&gt; String)
+-&gt; ([ConfigToml] -&gt; ShowS)
+-&gt; Show ConfigToml
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ConfigToml -&gt; ShowS
+showsPrec :: Int -&gt; ConfigToml -&gt; ShowS
+$cshow :: ConfigToml -&gt; String
+show :: ConfigToml -&gt; String
+$cshowList :: [ConfigToml] -&gt; ShowS
+showList :: [ConfigToml] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span id="local-6989586621679446685"><span id="local-6989586621679446686"><span id="local-6989586621679446687"><span id="local-6989586621679446688"><span id="local-6989586621679446689"><span id="local-6989586621679446690"><span id="local-6989586621679446691"><span id="local-6989586621679446692"><span id="local-6989586621679446693"><span id="local-6989586621679446694"><span id="local-6989586621679446695"><span id="local-6989586621679446696"><span id="local-6989586621679446697"><span id="local-6989586621679446698"><span id="local-6989586621679446699"><span id="local-6989586621679446700"><span id="local-6989586621679446701"><span id="local-6989586621679446702"><span id="local-6989586621679446946"><span id="local-6989586621679446951"><span id="local-6989586621679446956"><span id="local-6989586621679446961"><span id="local-6989586621679446966"><span id="local-6989586621679446971"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ConfigToml</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="annot"><a href="Navi.Config.Toml.html#ConfigToml"><span class="hs-identifier hs-type">ConfigToml</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621679447087"><span class="annot"><span class="annottext">tomlDecoder :: Decoder ConfigToml
+</span><a href="#local-6989586621679447087"><span class="hs-identifier hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-47"></span><span>    </span><span id="local-6989586621679447089"><span class="annot"><span class="annottext">Maybe BatteryPercentageToml
+</span><a href="#local-6989586621679447089"><span class="hs-identifier hs-var">batteryPercentageToml</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder BatteryPercentageToml
+-&gt; Text -&gt; Decoder (Maybe BatteryPercentageToml)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder BatteryPercentageToml
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;battery-percentage&quot;</span></span><span>
+</span><span id="line-48"></span><span>    </span><span id="local-6989586621679447091"><span class="annot"><span class="annottext">Maybe BatteryStatusToml
+</span><a href="#local-6989586621679447091"><span class="hs-identifier hs-var">batteryStatusToml</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder BatteryStatusToml
+-&gt; Text -&gt; Decoder (Maybe BatteryStatusToml)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder BatteryStatusToml
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;battery-status&quot;</span></span><span>
+</span><span id="line-49"></span><span>    </span><span id="local-6989586621679447092"><span class="annot"><span class="annottext">[CustomToml]
+</span><a href="#local-6989586621679447092"><span class="hs-identifier hs-var">customToml</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Decoder [CustomToml]
+forall a. DecodeTOML a =&gt; Text -&gt; Decoder [a]
+</span><a href="Navi.Utils.html#getFieldOptArrayOf"><span class="hs-identifier hs-var">getFieldOptArrayOf</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;custom&quot;</span></span><span>
+</span><span id="line-50"></span><span>    </span><span id="local-6989586621679447093"><span class="annot"><span class="annottext">Maybe Logging
+</span><a href="#local-6989586621679447093"><span class="hs-identifier hs-var">logToml</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe Logging)
+</span><a href="Navi.Config.Toml.html#logDecoderOpt"><span class="hs-identifier hs-var">logDecoderOpt</span></a></span><span>
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621679447095"><span class="annot"><span class="annottext">[NetInterfacesToml]
+</span><a href="#local-6989586621679447095"><span class="hs-identifier hs-var">netInterfacesToml</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Decoder [NetInterfacesToml]
+forall a. DecodeTOML a =&gt; Text -&gt; Decoder [a]
+</span><a href="Navi.Utils.html#getFieldOptArrayOf"><span class="hs-identifier hs-var">getFieldOptArrayOf</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;net-interface&quot;</span></span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621679447096"><span class="annot"><span class="annottext">Maybe (NoteSystem 'ConfigPhaseToml)
+</span><a href="#local-6989586621679447096"><span class="hs-identifier hs-var">noteSystemToml</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder (NoteSystem 'ConfigPhaseToml)
+-&gt; Text -&gt; Decoder (Maybe (NoteSystem 'ConfigPhaseToml))
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder (NoteSystem 'ConfigPhaseToml)
+</span><a href="Navi.Config.Toml.html#noteSystemDecoder"><span class="hs-identifier hs-var">noteSystemDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;note-system&quot;</span></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-55"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Navi.Config.Toml.html#MkConfigToml"><span class="hs-identifier hs-type">MkConfigToml</span></a></span><span>
+</span><span id="line-56"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">Maybe BatteryPercentageToml
+batteryPercentageToml :: Maybe BatteryPercentageToml
+batteryPercentageToml :: Maybe BatteryPercentageToml
+</span><a href="Navi.Config.Toml.html#batteryPercentageToml"><span class="hs-identifier hs-var hs-var">batteryPercentageToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>          </span><span class="annot"><span class="annottext">Maybe BatteryStatusToml
+batteryStatusToml :: Maybe BatteryStatusToml
+batteryStatusToml :: Maybe BatteryStatusToml
+</span><a href="Navi.Config.Toml.html#batteryStatusToml"><span class="hs-identifier hs-var hs-var">batteryStatusToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>          </span><span class="annot"><span class="annottext">[CustomToml]
+customToml :: [CustomToml]
+customToml :: [CustomToml]
+</span><a href="Navi.Config.Toml.html#customToml"><span class="hs-identifier hs-var hs-var">customToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>          </span><span class="annot"><span class="annottext">Maybe Logging
+logToml :: Maybe Logging
+logToml :: Maybe Logging
+</span><a href="Navi.Config.Toml.html#logToml"><span class="hs-identifier hs-var hs-var">logToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>          </span><span class="annot"><span class="annottext">[NetInterfacesToml]
+netInterfacesToml :: [NetInterfacesToml]
+netInterfacesToml :: [NetInterfacesToml]
+</span><a href="Navi.Config.Toml.html#netInterfacesToml"><span class="hs-identifier hs-var hs-var">netInterfacesToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>          </span><span class="annot"><span class="annottext">Maybe (NoteSystem 'ConfigPhaseToml)
+noteSystemToml :: Maybe (NoteSystem 'ConfigPhaseToml)
+noteSystemToml :: Maybe (NoteSystem 'ConfigPhaseToml)
+</span><a href="Navi.Config.Toml.html#noteSystemToml"><span class="hs-identifier hs-var hs-var">noteSystemToml</span></a></span><span>
+</span><span id="line-62"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="annot"><a href="Navi.Config.Toml.html#logDecoderOpt"><span class="hs-identifier hs-type">logDecoderOpt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Config.Types.html#Logging"><span class="hs-identifier hs-type">Logging</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span id="logDecoderOpt"><span class="annot"><span class="annottext">logDecoderOpt :: Decoder (Maybe Logging)
+</span><a href="Navi.Config.Toml.html#logDecoderOpt"><span class="hs-identifier hs-var hs-var">logDecoderOpt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder Logging -&gt; Text -&gt; Decoder (Maybe Logging)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Logging
+</span><a href="Navi.Config.Toml.html#logDecoder"><span class="hs-identifier hs-var">logDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;logging&quot;</span></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="annot"><a href="Navi.Config.Toml.html#logDecoder"><span class="hs-identifier hs-type">logDecoder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="annot"><a href="Navi.Config.Types.html#Logging"><span class="hs-identifier hs-type">Logging</span></a></span><span>
+</span><span id="line-68"></span><span id="logDecoder"><span class="annot"><span class="annottext">logDecoder :: Decoder Logging
+</span><a href="Navi.Config.Toml.html#logDecoder"><span class="hs-identifier hs-var hs-var">logDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><span class="annottext">Maybe LogLevel -&gt; Maybe LogLoc -&gt; Maybe FilesSizeMode -&gt; Logging
+</span><a href="Navi.Config.Types.html#MkLogging"><span class="hs-identifier hs-var">MkLogging</span></a></span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><span class="annottext">(Maybe LogLevel -&gt; Maybe LogLoc -&gt; Maybe FilesSizeMode -&gt; Logging)
+-&gt; Decoder (Maybe LogLevel)
+-&gt; Decoder (Maybe LogLoc -&gt; Maybe FilesSizeMode -&gt; Logging)
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe LogLevel)
+</span><a href="Navi.Config.Toml.html#severityDecoderOpt"><span class="hs-identifier hs-var">severityDecoderOpt</span></a></span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">Decoder (Maybe LogLoc -&gt; Maybe FilesSizeMode -&gt; Logging)
+-&gt; Decoder (Maybe LogLoc)
+-&gt; Decoder (Maybe FilesSizeMode -&gt; Logging)
+forall a b. Decoder (a -&gt; b) -&gt; Decoder a -&gt; Decoder b
+forall (f :: Type -&gt; Type) a b.
+Applicative f =&gt;
+f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe LogLoc)
+</span><a href="Navi.Config.Toml.html#locationDecoderOpt"><span class="hs-identifier hs-var">locationDecoderOpt</span></a></span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">Decoder (Maybe FilesSizeMode -&gt; Logging)
+-&gt; Decoder (Maybe FilesSizeMode) -&gt; Decoder Logging
+forall a b. Decoder (a -&gt; b) -&gt; Decoder a -&gt; Decoder b
+forall (f :: Type -&gt; Type) a b.
+Applicative f =&gt;
+f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe FilesSizeMode)
+</span><a href="Navi.Config.Toml.html#sizeModeDecoderOpt"><span class="hs-identifier hs-var">sizeModeDecoderOpt</span></a></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="annot"><a href="Navi.Config.Toml.html#severityDecoderOpt"><span class="hs-identifier hs-type">severityDecoderOpt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#LogLevel"><span class="hs-identifier hs-type">LogLevel</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span id="severityDecoderOpt"><span class="annot"><span class="annottext">severityDecoderOpt :: Decoder (Maybe LogLevel)
+</span><a href="Navi.Config.Toml.html#severityDecoderOpt"><span class="hs-identifier hs-var hs-var">severityDecoderOpt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe LogLevel) -&gt; Maybe LogLevel
+</span><a href="#local-6989586621679447103"><span class="hs-identifier hs-var">setDef</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe (Maybe LogLevel) -&gt; Maybe LogLevel)
+-&gt; Decoder (Maybe (Maybe LogLevel)) -&gt; Decoder (Maybe LogLevel)
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe LogLevel)
+-&gt; Text -&gt; Decoder (Maybe (Maybe LogLevel))
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe LogLevel)
+</span><a href="Navi.Config.Toml.html#severityDecoder"><span class="hs-identifier hs-var">severityDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;severity&quot;</span></span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-comment">-- NOTE: We want the following semantics:</span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-79"></span><span>    </span><span class="hs-comment">-- 1. User sets a log-level, use it.</span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-comment">-- 2. User can disable logging w/ 'none'.</span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-comment">-- 3. If no option is given, default to LevelError.</span><span>
+</span><span id="line-82"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-83"></span><span>    </span><span class="hs-comment">-- Hence 'getFieldOptWith severityDecoder' returns Maybe (Maybe LogLevel),</span><span>
+</span><span id="line-84"></span><span>    </span><span class="hs-comment">-- where the outer maybe refers to the field existence, and the inner</span><span>
+</span><span id="line-85"></span><span>    </span><span class="hs-comment">-- maybe handle 'none'.</span><span>
+</span><span id="line-86"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-87"></span><span>    </span><span class="hs-comment">-- Here we join the levels, so that Nothing means 'none', o/w logging is</span><span>
+</span><span id="line-88"></span><span>    </span><span class="hs-comment">-- on.</span><span>
+</span><span id="line-89"></span><span>    </span><span id="local-6989586621679447103"><span class="annot"><span class="annottext">setDef :: Maybe (Maybe LogLevel) -&gt; Maybe LogLevel
+</span><a href="#local-6989586621679447103"><span class="hs-identifier hs-var hs-var">setDef</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe LogLevel)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; Maybe LogLevel
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><a href="#local-6989586621679447103"><span class="hs-identifier hs-var">setDef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679447106"><span class="annot"><span class="annottext">Maybe LogLevel
+</span><a href="#local-6989586621679447106"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe LogLevel
+</span><a href="#local-6989586621679447106"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="annot"><a href="Navi.Config.Toml.html#severityDecoder"><span class="hs-identifier hs-type">severityDecoder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#LogLevel"><span class="hs-identifier hs-type">LogLevel</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span id="severityDecoder"><span class="annot"><span class="annottext">severityDecoder :: Decoder (Maybe LogLevel)
+</span><a href="Navi.Config.Toml.html#severityDecoder"><span class="hs-identifier hs-var hs-var">severityDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-94"></span><span>  </span><span class="annot"><span class="annottext">Decoder Text
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Text
+-&gt; (Text -&gt; Decoder (Maybe LogLevel)) -&gt; Decoder (Maybe LogLevel)
+forall a b. Decoder a -&gt; (a -&gt; Decoder b) -&gt; Decoder b
+forall (m :: Type -&gt; Type) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;debug&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe LogLevel -&gt; Decoder (Maybe LogLevel)
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Maybe LogLevel -&gt; Decoder (Maybe LogLevel))
+-&gt; Maybe LogLevel -&gt; Decoder (Maybe LogLevel)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; Maybe LogLevel
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#LevelDebug"><span class="hs-identifier hs-var">LevelDebug</span></a></span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;info&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe LogLevel -&gt; Decoder (Maybe LogLevel)
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Maybe LogLevel -&gt; Decoder (Maybe LogLevel))
+-&gt; Maybe LogLevel -&gt; Decoder (Maybe LogLevel)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; Maybe LogLevel
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe LogLevel -&gt; Decoder (Maybe LogLevel)
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Maybe LogLevel -&gt; Decoder (Maybe LogLevel))
+-&gt; Maybe LogLevel -&gt; Decoder (Maybe LogLevel)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; Maybe LogLevel
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;none&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe LogLevel -&gt; Decoder (Maybe LogLevel)
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe LogLevel
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-99"></span><span>    </span><span id="local-6989586621679447109"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447109"><span class="hs-identifier hs-var">bad</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder (Maybe LogLevel)
+forall a. String -&gt; Decoder a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Decoder (Maybe LogLevel))
+-&gt; String -&gt; Decoder (Maybe LogLevel)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Unsupported severity: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447109"><span class="hs-identifier hs-var">bad</span></a></span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span class="annot"><a href="Navi.Config.Toml.html#locationDecoderOpt"><span class="hs-identifier hs-type">locationDecoderOpt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Config.Types.html#LogLoc"><span class="hs-identifier hs-type">LogLoc</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span id="locationDecoderOpt"><span class="annot"><span class="annottext">locationDecoderOpt :: Decoder (Maybe LogLoc)
+</span><a href="Navi.Config.Toml.html#locationDecoderOpt"><span class="hs-identifier hs-var hs-var">locationDecoderOpt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder LogLoc -&gt; Text -&gt; Decoder (Maybe LogLoc)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder LogLoc
+</span><a href="Navi.Config.Toml.html#locationDecoder"><span class="hs-identifier hs-var">locationDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;location&quot;</span></span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="annot"><a href="Navi.Config.Toml.html#locationDecoder"><span class="hs-identifier hs-type">locationDecoder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="annot"><a href="Navi.Config.Types.html#LogLoc"><span class="hs-identifier hs-type">LogLoc</span></a></span><span>
+</span><span id="line-105"></span><span id="locationDecoder"><span class="annot"><span class="annottext">locationDecoder :: Decoder LogLoc
+</span><a href="Navi.Config.Toml.html#locationDecoder"><span class="hs-identifier hs-var hs-var">locationDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><span class="annottext">Decoder String
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder String -&gt; (String -&gt; Decoder LogLoc) -&gt; Decoder LogLoc
+forall a b. Decoder a -&gt; (a -&gt; Decoder b) -&gt; Decoder b
+forall (m :: Type -&gt; Type) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;default&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLoc -&gt; Decoder LogLoc
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">LogLoc
+</span><a href="Navi.Config.Types.html#DefPath"><span class="hs-identifier hs-var">DefPath</span></a></span><span>
+</span><span id="line-108"></span><span>    </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;stdout&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogLoc -&gt; Decoder LogLoc
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">LogLoc
+</span><a href="Navi.Config.Types.html#Stdout"><span class="hs-identifier hs-var">Stdout</span></a></span><span>
+</span><span id="line-109"></span><span>    </span><span id="local-6989586621679447112"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679447112"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OsPath -&gt; LogLoc
+</span><a href="Navi.Config.Types.html#File"><span class="hs-identifier hs-var">File</span></a></span><span> </span><span class="annot"><span class="annottext">(OsPath -&gt; LogLoc) -&gt; Decoder OsPath -&gt; Decoder LogLoc
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder OsPath
+forall (m :: Type -&gt; Type).
+(HasCallStack, MonadFail m) =&gt;
+String -&gt; m OsPath
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/fs-utils-0.1-797e36c7cf412445c50285f8d3e59bbabbc28585c046e40b74676c1091471c31/share/doc/html/src/FileSystem.OsPath.html#encodeFail"><span class="hs-identifier hs-var">encodeFail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679447112"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-110"></span><span>
+</span><span id="line-111"></span><span class="annot"><a href="Navi.Config.Toml.html#noteSystemDecoder"><span class="hs-identifier hs-type">noteSystemDecoder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#NoteSystem"><span class="hs-identifier hs-type">NoteSystem</span></a></span><span> </span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhaseToml"><span class="hs-identifier hs-type">ConfigPhaseToml</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span id="noteSystemDecoder"><span class="annot"><span class="annottext">noteSystemDecoder :: Decoder (NoteSystem 'ConfigPhaseToml)
+</span><a href="Navi.Config.Toml.html#noteSystemDecoder"><span class="hs-identifier hs-var hs-var">noteSystemDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-113"></span><span>  </span><span class="annot"><span class="annottext">Decoder Text
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Text
+-&gt; (Text -&gt; Decoder (NoteSystem 'ConfigPhaseToml))
+-&gt; Decoder (NoteSystem 'ConfigPhaseToml)
+forall a b. Decoder a -&gt; (a -&gt; Decoder b) -&gt; Decoder b
+forall (m :: Type -&gt; Type) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-114"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;apple-script&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NoteSystem 'ConfigPhaseToml
+-&gt; Decoder (NoteSystem 'ConfigPhaseToml)
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">NoteSystem 'ConfigPhaseToml
+forall (p :: ConfigPhase). NoteSystem p
+</span><a href="Navi.Config.Types.html#AppleScript"><span class="hs-identifier hs-var">AppleScript</span></a></span><span>
+</span><span id="line-115"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;dbus&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NoteSystem 'ConfigPhaseToml
+-&gt; Decoder (NoteSystem 'ConfigPhaseToml)
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(NoteSystem 'ConfigPhaseToml
+ -&gt; Decoder (NoteSystem 'ConfigPhaseToml))
+-&gt; NoteSystem 'ConfigPhaseToml
+-&gt; Decoder (NoteSystem 'ConfigPhaseToml)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">DBusF 'ConfigPhaseToml -&gt; NoteSystem 'ConfigPhaseToml
+forall (p :: ConfigPhase). DBusF p -&gt; NoteSystem p
+</span><a href="Navi.Config.Types.html#DBus"><span class="hs-identifier hs-var">DBus</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;notify-send&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NoteSystem 'ConfigPhaseToml
+-&gt; Decoder (NoteSystem 'ConfigPhaseToml)
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">NoteSystem 'ConfigPhaseToml
+forall (p :: ConfigPhase). NoteSystem p
+</span><a href="Navi.Config.Types.html#NotifySend"><span class="hs-identifier hs-var">NotifySend</span></a></span><span>
+</span><span id="line-117"></span><span>    </span><span id="local-6989586621679447113"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447113"><span class="hs-identifier hs-var">bad</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder (NoteSystem 'ConfigPhaseToml)
+forall a. String -&gt; Decoder a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Decoder (NoteSystem 'ConfigPhaseToml))
+-&gt; String -&gt; Decoder (NoteSystem 'ConfigPhaseToml)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Unsupported NoteSystem: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447113"><span class="hs-identifier hs-var">bad</span></a></span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span class="annot"><a href="Navi.Config.Toml.html#sizeModeDecoderOpt"><span class="hs-identifier hs-type">sizeModeDecoderOpt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Config.Types.html#FilesSizeMode"><span class="hs-identifier hs-type">FilesSizeMode</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span id="sizeModeDecoderOpt"><span class="annot"><span class="annottext">sizeModeDecoderOpt :: Decoder (Maybe FilesSizeMode)
+</span><a href="Navi.Config.Toml.html#sizeModeDecoderOpt"><span class="hs-identifier hs-var hs-var">sizeModeDecoderOpt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Decoder FilesSizeMode -&gt; Text -&gt; Decoder (Maybe FilesSizeMode)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder FilesSizeMode
+</span><a href="Navi.Config.Toml.html#sizeModeDecoder"><span class="hs-identifier hs-var">sizeModeDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;size-mode&quot;</span></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span class="annot"><a href="Navi.Config.Toml.html#sizeModeDecoder"><span class="hs-identifier hs-type">sizeModeDecoder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="annot"><a href="Navi.Config.Types.html#FilesSizeMode"><span class="hs-identifier hs-type">FilesSizeMode</span></a></span><span>
+</span><span id="line-123"></span><span id="sizeModeDecoder"><span class="annot"><span class="annottext">sizeModeDecoder :: Decoder FilesSizeMode
+</span><a href="Navi.Config.Toml.html#sizeModeDecoder"><span class="hs-identifier hs-var hs-var">sizeModeDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-124"></span><span>  </span><span id="local-6989586621679447115"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447115"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder Text
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679447116"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447116"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679447117"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447117"><span class="hs-identifier hs-var">byteTxt</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Text -&gt; (Text, Text)
+</span><span class="hs-identifier hs-var">T.break</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
+</span><span class="hs-identifier hs-var">Ch.isSpace</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447115"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><span id="line-126"></span><span>  </span><span id="local-6989586621679447120"><span class="annot"><span class="annottext">Bytes 'B Natural -&gt; FilesSizeMode
+</span><a href="#local-6989586621679447120"><span class="hs-identifier hs-var">cons</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447116"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;warn&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Bytes 'B Natural -&gt; FilesSizeMode)
+-&gt; Decoder (Bytes 'B Natural -&gt; FilesSizeMode)
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Bytes 'B Natural -&gt; FilesSizeMode
+</span><a href="Navi.Config.Types.html#FilesSizeModeWarn"><span class="hs-identifier hs-var">FilesSizeModeWarn</span></a></span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;delete&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Bytes 'B Natural -&gt; FilesSizeMode)
+-&gt; Decoder (Bytes 'B Natural -&gt; FilesSizeMode)
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Bytes 'B Natural -&gt; FilesSizeMode
+</span><a href="Navi.Config.Types.html#FilesSizeModeDelete"><span class="hs-identifier hs-var">FilesSizeModeDelete</span></a></span><span>
+</span><span id="line-129"></span><span>    </span><span id="local-6989586621679447121"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447121"><span class="hs-identifier hs-var">bad</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder (Bytes 'B Natural -&gt; FilesSizeMode)
+forall a. String -&gt; Decoder a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Decoder (Bytes 'B Natural -&gt; FilesSizeMode))
+-&gt; String -&gt; Decoder (Bytes 'B Natural -&gt; FilesSizeMode)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Unrecognized size-mode: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447121"><span class="hs-identifier hs-var">bad</span></a></span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text (Bytes 'B Natural)
+</span><a href="#local-6989586621679447122"><span class="hs-identifier hs-var">parseByteText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447117"><span class="hs-identifier hs-var">byteTxt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-131"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679447123"><span class="annot"><span class="annottext">Bytes 'B Natural
+</span><a href="#local-6989586621679447123"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FilesSizeMode -&gt; Decoder FilesSizeMode
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(FilesSizeMode -&gt; Decoder FilesSizeMode)
+-&gt; FilesSizeMode -&gt; Decoder FilesSizeMode
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bytes 'B Natural -&gt; FilesSizeMode
+</span><a href="#local-6989586621679447120"><span class="hs-identifier hs-var">cons</span></a></span><span> </span><span class="annot"><span class="annottext">Bytes 'B Natural
+</span><a href="#local-6989586621679447123"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-132"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679447124"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447124"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder FilesSizeMode
+forall a. String -&gt; Decoder a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Decoder FilesSizeMode)
+-&gt; String -&gt; Decoder FilesSizeMode
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Could not parse size-mode size: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447124"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-133"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-134"></span><span>    </span><span class="annot"><a href="#local-6989586621679447122"><span class="hs-identifier hs-type">parseByteText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Internal.html#Bytes"><span class="hs-identifier hs-type">Bytes</span></a></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Size.html#B"><span class="hs-identifier hs-type">B</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">)</span><span>
+</span><span id="line-135"></span><span>    </span><span id="local-6989586621679447122"><span class="annot"><span class="annottext">parseByteText :: Text -&gt; Either Text (Bytes 'B Natural)
+</span><a href="#local-6989586621679447122"><span class="hs-identifier hs-var hs-var">parseByteText</span></a></span></span><span> </span><span id="local-6989586621679447125"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447125"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-136"></span><span>      </span><span class="hs-comment">-- NOTE: Try conversion to natural first for more precision. Fall back</span><span>
+</span><span id="line-137"></span><span>      </span><span class="hs-comment">-- to double if that fails.</span><span>
+</span><span id="line-138"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall a. Parser a =&gt; Text -&gt; Either Text a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Class.Parser.html#parse"><span class="hs-identifier hs-var">Bytes.parse</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Internal.html#SomeSize"><span class="hs-identifier hs-type">SomeSize</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447125"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-139"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679447127"><span class="annot"><span class="annottext">SomeSize Natural
+</span><a href="#local-6989586621679447127"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Converted 'B (SomeSize Natural)
+-&gt; Either Text (Converted 'B (SomeSize Natural))
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Converted 'B (SomeSize Natural)
+ -&gt; Either Text (Converted 'B (SomeSize Natural)))
+-&gt; Converted 'B (SomeSize Natural)
+-&gt; Either Text (Converted 'B (SomeSize Natural))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall a (t :: Size). (Conversion a, SingI t) =&gt; a -&gt; Converted t a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Class.Conversion.html#convert_"><span class="hs-identifier hs-var">Bytes.convert_</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Size.html#B"><span class="hs-identifier hs-type">B</span></a></span><span> </span><span class="annot"><span class="annottext">SomeSize Natural
+</span><a href="#local-6989586621679447127"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-140"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall a. Parser a =&gt; Text -&gt; Either Text a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Class.Parser.html#parse"><span class="hs-identifier hs-var">Bytes.parse</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Internal.html#SomeSize"><span class="hs-identifier hs-type">SomeSize</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447125"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-141"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679447129"><span class="annot"><span class="annottext">SomeSize Double
+</span><a href="#local-6989586621679447129"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bytes 'B Natural -&gt; Either Text (Bytes 'B Natural)
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Natural
+forall b. Integral b =&gt; Double -&gt; b
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">truncate</span></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; Natural) -&gt; Bytes 'B Double -&gt; Bytes 'B Natural
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">forall a (t :: Size). (Conversion a, SingI t) =&gt; a -&gt; Converted t a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Class.Conversion.html#convert_"><span class="hs-identifier hs-var">Bytes.convert_</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Size.html#B"><span class="hs-identifier hs-type">B</span></a></span><span> </span><span class="annot"><span class="annottext">SomeSize Double
+</span><a href="#local-6989586621679447129"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679447130"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447130"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text (Bytes 'B Natural)
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679447130"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-143"></span></pre></body></html>

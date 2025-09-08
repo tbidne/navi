@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | Provides common functionality for battery services.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Common.html"><span class="hs-identifier">Navi.Services.Battery.Common</span></a></span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Common.html#batteryAppDecoder"><span class="hs-identifier">batteryAppDecoder</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.html"><span class="hs-identifier">Pythia.Services.Battery</span></a></span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.Types.html#BatteryApp"><span class="hs-identifier">BatteryApp</span></a></span><span>
+</span><span id="line-10"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.Types.html#BatteryAppAcpi"><span class="hs-identifier">BatteryAppAcpi</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>        </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.Types.html#BatteryAppSysFs"><span class="hs-identifier">BatteryAppSysFs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>        </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.Types.html#BatteryAppUPower"><span class="hs-identifier">BatteryAppUPower</span></a></span><span>
+</span><span id="line-13"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- | TOML decoder for 'BatteryApp'.</span><span>
+</span><span id="line-17"></span><span class="hs-comment">--</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-19"></span><span class="annot"><a href="Navi.Services.Battery.Common.html#batteryAppDecoder"><span class="hs-identifier hs-type">batteryAppDecoder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.Types.html#BatteryApp"><span class="hs-identifier hs-type">BatteryApp</span></a></span><span>
+</span><span id="line-20"></span><span id="batteryAppDecoder"><span class="annot"><span class="annottext">batteryAppDecoder :: Decoder BatteryApp
+</span><a href="Navi.Services.Battery.Common.html#batteryAppDecoder"><span class="hs-identifier hs-var hs-var">batteryAppDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><span class="annottext">Decoder Text
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Text -&gt; (Text -&gt; Decoder BatteryApp) -&gt; Decoder BatteryApp
+forall a b. Decoder a -&gt; (a -&gt; Decoder b) -&gt; Decoder b
+forall (m :: Type -&gt; Type) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;acpi&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BatteryApp -&gt; Decoder BatteryApp
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">BatteryApp
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.Types.html#BatteryAppAcpi"><span class="hs-identifier hs-var">BatteryAppAcpi</span></a></span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;sysfs&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BatteryApp -&gt; Decoder BatteryApp
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">BatteryApp
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.Types.html#BatteryAppSysFs"><span class="hs-identifier hs-var">BatteryAppSysFs</span></a></span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;upower&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BatteryApp -&gt; Decoder BatteryApp
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">BatteryApp
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.Types.html#BatteryAppUPower"><span class="hs-identifier hs-var">BatteryAppUPower</span></a></span><span>
+</span><span id="line-25"></span><span>    </span><span id="local-6989586621679440320"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679440320"><span class="hs-identifier hs-var">bad</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-26"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; Decoder BatteryApp
+forall a. String -&gt; Decoder a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-27"></span><span>        </span><span class="annot"><span class="annottext">(String -&gt; Decoder BatteryApp) -&gt; String -&gt; Decoder BatteryApp
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-28"></span><span>        </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-29"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Unexpected battery app: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679440320"><span class="hs-identifier hs-var">bad</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;. Expected one of &lt;acpi | sysfs | upower&gt;.&quot;</span></span><span>
+</span><span id="line-32"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-33"></span></pre></body></html>

@@ -1,0 +1,625 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE ViewPatterns #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="annot"><span class="hs-comment">-- | This module provides toml configuration for the battery percentage service.</span></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html"><span class="hs-identifier">Navi.Services.Battery.Percentage.Toml</span></a></span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageToml"><span class="hs-identifier">BatteryPercentageToml</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageNoteToml"><span class="hs-identifier">BatteryPercentageNoteToml</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageData"><span class="hs-identifier">PercentageData</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/kdwapafxh1d365gbb6q2lr5bvqs8fbw2-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html"><span class="hs-identifier">DBus.Notify</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/kdwapafxh1d365gbb6q2lr5bvqs8fbw2-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#UrgencyLevel"><span class="hs-identifier">UrgencyLevel</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Set</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html"><span class="hs-identifier">Navi.Data.NaviNote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.NaviNote.html#Timeout"><span class="hs-identifier">Timeout</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#timeoutOptDecoder"><span class="hs-identifier">timeoutOptDecoder</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html"><span class="hs-identifier">Navi.Data.PollInterval</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier">PollInterval</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#pollIntervalOptDecoder"><span class="hs-identifier">pollIntervalOptDecoder</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Event.Toml.html"><span class="hs-identifier">Navi.Event.Toml</span></a></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Event.Toml.html#ErrorNoteToml"><span class="hs-identifier">ErrorNoteToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Navi.Event.Toml.html#MultiRepeatEventToml"><span class="hs-identifier">MultiRepeatEventToml</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Toml.html#MultiSomeRepeatsToml"><span class="hs-identifier">MultiSomeRepeatsToml</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Navi.Event.Toml.html#errorNoteOptDecoder"><span class="hs-identifier">errorNoteOptDecoder</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="Navi.Event.Toml.html#multiRepeatEventOptDecoder"><span class="hs-identifier">multiRepeatEventOptDecoder</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Common.html"><span class="hs-identifier">Navi.Services.Battery.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Services.Battery.Common.html#batteryAppDecoder"><span class="hs-identifier">batteryAppDecoder</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Utils.html"><span class="hs-identifier">Navi.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Utils.html#urgencyLevelOptDecoder"><span class="hs-identifier">urgencyLevelOptDecoder</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.html"><span class="hs-identifier">Pythia.Data.Percentage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.html#mkPercentage"><span class="hs-identifier">mkPercentage</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.html#_MkPercentage"><span class="hs-identifier">_MkPercentage</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.html"><span class="hs-identifier">Pythia.Data.Percentage</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Percentage</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.html"><span class="hs-identifier">Pythia.Services.Battery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.Types.html#BatteryApp"><span class="hs-identifier">BatteryApp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.Internal.html#Percentage"><span class="hs-identifier">Percentage</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- | Exact percentage or range. Equality/Ord is based on the _lower_ part of</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- the range only. This allows us to have a total order and make lookups</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- sensible.</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">data</span><span> </span><span id="PercentageData"><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageData"><span class="hs-identifier hs-var">PercentageData</span></a></span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | Exact percentage.</span></span><span>
+</span><span id="line-38"></span><span>    </span><span id="PercentageExact"><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageExact"><span class="hs-identifier hs-var">PercentageExact</span></a></span></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.Internal.html#Percentage"><span class="hs-identifier hs-type">Percentage</span></a></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Percentage range. The LHS should be &lt;= RHS.</span></span><span>
+</span><span id="line-40"></span><span>    </span><span id="PercentageRange"><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageRange"><span class="hs-identifier hs-var">PercentageRange</span></a></span></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.Internal.html#Percentage"><span class="hs-identifier hs-type">Percentage</span></a></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.Internal.html#Percentage"><span class="hs-identifier hs-type">Percentage</span></a></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679443932"><span id="local-6989586621679443941"><span id="local-6989586621679443945"><span class="annot"><span class="annottext">Int -&gt; PercentageData -&gt; ShowS
+[PercentageData] -&gt; ShowS
+PercentageData -&gt; String
+(Int -&gt; PercentageData -&gt; ShowS)
+-&gt; (PercentageData -&gt; String)
+-&gt; ([PercentageData] -&gt; ShowS)
+-&gt; Show PercentageData
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; PercentageData -&gt; ShowS
+showsPrec :: Int -&gt; PercentageData -&gt; ShowS
+$cshow :: PercentageData -&gt; String
+show :: PercentageData -&gt; String
+$cshowList :: [PercentageData] -&gt; ShowS
+showList :: [PercentageData] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679443951"><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageData"><span class="hs-identifier hs-type">PercentageData</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621679443957"><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679443957"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679443958"><span class="annot"><span class="annottext">== :: PercentageData -&gt; PercentageData -&gt; Bool
+</span><span class="hs-operator hs-var hs-var hs-var">==</span></span></span><span> </span><span id="local-6989586621679443959"><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679443959"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PercentageData -&gt; Percentage
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#toPercentage"><span class="hs-identifier hs-var">toPercentage</span></a></span><span> </span><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679443957"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Percentage -&gt; Percentage -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">PercentageData -&gt; Percentage
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#toPercentage"><span class="hs-identifier hs-var">toPercentage</span></a></span><span> </span><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679443959"><span class="hs-identifier hs-var">y</span></a></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679443964"><span id="local-6989586621679443968"><span id="local-6989586621679443972"><span id="local-6989586621679443975"><span id="local-6989586621679443978"><span id="local-6989586621679443981"><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageData"><span class="hs-identifier hs-type">PercentageData</span></a></span></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621679443985"><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679443985"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679443986"><span class="annot"><span class="annottext">&lt;= :: PercentageData -&gt; PercentageData -&gt; Bool
+</span><a href="#local-6989586621679443986"><span class="hs-operator hs-var hs-var hs-var">&lt;=</span></a></span></span><span> </span><span id="local-6989586621679443988"><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679443988"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PercentageData -&gt; Percentage
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#toPercentage"><span class="hs-identifier hs-var">toPercentage</span></a></span><span> </span><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679443985"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Percentage -&gt; Percentage -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">PercentageData -&gt; Percentage
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#toPercentage"><span class="hs-identifier hs-var">toPercentage</span></a></span><span> </span><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679443988"><span class="hs-identifier hs-var">y</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#toPercentage"><span class="hs-identifier hs-type">toPercentage</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageData"><span class="hs-identifier hs-type">PercentageData</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.Internal.html#Percentage"><span class="hs-identifier hs-type">Percentage</span></a></span><span>
+</span><span id="line-50"></span><span id="toPercentage"><span class="annot"><span class="annottext">toPercentage :: PercentageData -&gt; Percentage
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#toPercentage"><span class="hs-identifier hs-var hs-var">toPercentage</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageExact"><span class="hs-identifier hs-type">PercentageExact</span></a></span><span> </span><span id="local-6989586621679443989"><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679443989"><span class="hs-identifier hs-var">p</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679443989"><span class="hs-identifier hs-var">p</span></a></span><span>
+</span><span id="line-51"></span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#toPercentage"><span class="hs-identifier hs-var">toPercentage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageRange"><span class="hs-identifier hs-type">PercentageRange</span></a></span><span> </span><span id="local-6989586621679443990"><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679443990"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679443990"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="annot"><span class="hs-comment">-- | TOML for each individual battery percentage.</span></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">data</span><span> </span><span id="BatteryPercentageNoteToml"><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageNoteToml"><span class="hs-identifier hs-var">BatteryPercentageNoteToml</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkBatteryPercentageNoteToml"><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#MkBatteryPercentageNoteToml"><span class="hs-identifier hs-var">MkBatteryPercentageNoteToml</span></a></span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | The percentage (range) for this alert.</span></span><span>
+</span><span id="line-56"></span><span>    </span><span id="percentage"><span class="annot"><span class="annottext">BatteryPercentageNoteToml -&gt; PercentageData
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#percentage"><span class="hs-identifier hs-var hs-var">percentage</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageData"><span class="hs-identifier hs-type">PercentageData</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The urgency for this alert.</span></span><span>
+</span><span id="line-58"></span><span>    </span><span id="urgency"><span class="annot"><span class="annottext">BatteryPercentageNoteToml -&gt; Maybe UrgencyLevel
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#urgency"><span class="hs-identifier hs-var hs-var">urgency</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///nix/store/kdwapafxh1d365gbb6q2lr5bvqs8fbw2-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#UrgencyLevel"><span class="hs-identifier hs-type">UrgencyLevel</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The timeout for this alert.</span></span><span>
+</span><span id="line-60"></span><span>    </span><span id="mTimeout"><span class="annot"><span class="annottext">BatteryPercentageNoteToml -&gt; Maybe Timeout
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#mTimeout"><span class="hs-identifier hs-var hs-var">mTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#Timeout"><span class="hs-identifier hs-type">Timeout</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679443996"><span id="local-6989586621679444004"><span class="annot"><span class="annottext">BatteryPercentageNoteToml -&gt; BatteryPercentageNoteToml -&gt; Bool
+(BatteryPercentageNoteToml -&gt; BatteryPercentageNoteToml -&gt; Bool)
+-&gt; (BatteryPercentageNoteToml -&gt; BatteryPercentageNoteToml -&gt; Bool)
+-&gt; Eq BatteryPercentageNoteToml
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: BatteryPercentageNoteToml -&gt; BatteryPercentageNoteToml -&gt; Bool
+== :: BatteryPercentageNoteToml -&gt; BatteryPercentageNoteToml -&gt; Bool
+$c/= :: BatteryPercentageNoteToml -&gt; BatteryPercentageNoteToml -&gt; Bool
+/= :: BatteryPercentageNoteToml -&gt; BatteryPercentageNoteToml -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679444010"><span id="local-6989586621679444019"><span id="local-6989586621679444023"><span class="annot"><span class="annottext">Int -&gt; BatteryPercentageNoteToml -&gt; ShowS
+[BatteryPercentageNoteToml] -&gt; ShowS
+BatteryPercentageNoteToml -&gt; String
+(Int -&gt; BatteryPercentageNoteToml -&gt; ShowS)
+-&gt; (BatteryPercentageNoteToml -&gt; String)
+-&gt; ([BatteryPercentageNoteToml] -&gt; ShowS)
+-&gt; Show BatteryPercentageNoteToml
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; BatteryPercentageNoteToml -&gt; ShowS
+showsPrec :: Int -&gt; BatteryPercentageNoteToml -&gt; ShowS
+$cshow :: BatteryPercentageNoteToml -&gt; String
+show :: BatteryPercentageNoteToml -&gt; String
+$cshowList :: [BatteryPercentageNoteToml] -&gt; ShowS
+showList :: [BatteryPercentageNoteToml] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span id="local-6989586621679443746"><span id="local-6989586621679443747"><span id="local-6989586621679443748"><span id="local-6989586621679443749"><span id="local-6989586621679443750"><span id="local-6989586621679443751"><span id="local-6989586621679443752"><span id="local-6989586621679443753"><span id="local-6989586621679443754"><span id="local-6989586621679444031"><span id="local-6989586621679444036"><span id="local-6989586621679444041"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">BatteryPercentageNoteToml</span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageNoteToml"><span class="hs-identifier hs-type">BatteryPercentageNoteToml</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621679444087"><span class="annot"><span class="annottext">tomlDecoder :: Decoder BatteryPercentageNoteToml
+</span><a href="#local-6989586621679444087"><span class="hs-identifier hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-69"></span><span>    </span><span id="local-6989586621679444089"><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679444089"><span class="hs-identifier hs-var">percentage</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder PercentageData
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#percentageDataDecoder"><span class="hs-identifier hs-var">percentageDataDecoder</span></a></span><span>
+</span><span id="line-70"></span><span>    </span><span id="local-6989586621679444091"><span class="annot"><span class="annottext">Maybe Timeout
+</span><a href="#local-6989586621679444091"><span class="hs-identifier hs-var">mTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe Timeout)
+</span><a href="Navi.Data.NaviNote.html#timeoutOptDecoder"><span class="hs-identifier hs-var">timeoutOptDecoder</span></a></span><span>
+</span><span id="line-71"></span><span>    </span><span id="local-6989586621679444092"><span class="annot"><span class="annottext">Maybe UrgencyLevel
+</span><a href="#local-6989586621679444092"><span class="hs-identifier hs-var">urgency</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe UrgencyLevel)
+</span><a href="Navi.Utils.html#urgencyLevelOptDecoder"><span class="hs-identifier hs-var">urgencyLevelOptDecoder</span></a></span><span>
+</span><span id="line-72"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-73"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#MkBatteryPercentageNoteToml"><span class="hs-identifier hs-type">MkBatteryPercentageNoteToml</span></a></span><span>
+</span><span id="line-74"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">PercentageData
+percentage :: PercentageData
+percentage :: PercentageData
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#percentage"><span class="hs-identifier hs-var hs-var">percentage</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>          </span><span class="annot"><span class="annottext">Maybe Timeout
+mTimeout :: Maybe Timeout
+mTimeout :: Maybe Timeout
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#mTimeout"><span class="hs-identifier hs-var hs-var">mTimeout</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>          </span><span class="annot"><span class="annottext">Maybe UrgencyLevel
+urgency :: Maybe UrgencyLevel
+urgency :: Maybe UrgencyLevel
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#urgency"><span class="hs-identifier hs-var hs-var">urgency</span></a></span><span>
+</span><span id="line-77"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#percentageDataDecoder"><span class="hs-identifier hs-type">percentageDataDecoder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageData"><span class="hs-identifier hs-type">PercentageData</span></a></span><span>
+</span><span id="line-80"></span><span id="percentageDataDecoder"><span class="annot"><span class="annottext">percentageDataDecoder :: Decoder PercentageData
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#percentageDataDecoder"><span class="hs-identifier hs-var hs-var">percentageDataDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621679444093"><span class="annot"><span class="annottext">Maybe PercentageData
+</span><a href="#local-6989586621679444093"><span class="hs-identifier hs-var">mExact</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe PercentageData)
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#exactDecoder"><span class="hs-identifier hs-var">exactDecoder</span></a></span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621679444095"><span class="annot"><span class="annottext">Maybe PercentageData
+</span><a href="#local-6989586621679444095"><span class="hs-identifier hs-var">mRange</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe PercentageData)
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#rangeDecoder"><span class="hs-identifier hs-var">rangeDecoder</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PercentageData
+</span><a href="#local-6989586621679444093"><span class="hs-identifier hs-var">mExact</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe PercentageData
+</span><a href="#local-6989586621679444095"><span class="hs-identifier hs-var">mRange</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-84"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679444097"><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679444097"><span class="hs-identifier hs-var">exact</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe PercentageData
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PercentageData -&gt; Decoder PercentageData
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679444097"><span class="hs-identifier hs-var">exact</span></a></span><span>
+</span><span id="line-85"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PercentageData
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679444098"><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679444098"><span class="hs-identifier hs-var">range</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PercentageData -&gt; Decoder PercentageData
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">PercentageData
+</span><a href="#local-6989586621679444098"><span class="hs-identifier hs-var">range</span></a></span><span>
+</span><span id="line-86"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">PercentageData
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">PercentageData
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder PercentageData
+forall a. String -&gt; Decoder a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Expected 'percent' or ('lower' and 'upper'), not both!&quot;</span></span><span>
+</span><span id="line-87"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe PercentageData
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe PercentageData
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder PercentageData
+forall a. String -&gt; Decoder a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Expected 'percent' or ('lower' and 'upper'), received neither!&quot;</span></span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#exactDecoder"><span class="hs-identifier hs-type">exactDecoder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageData"><span class="hs-identifier hs-type">PercentageData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span id="exactDecoder"><span class="annot"><span class="annottext">exactDecoder :: Decoder (Maybe PercentageData)
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#exactDecoder"><span class="hs-identifier hs-var hs-var">exactDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Percentage -&gt; PercentageData)
+-&gt; Maybe Percentage -&gt; Maybe PercentageData
+forall a b. (a -&gt; b) -&gt; Maybe a -&gt; Maybe b
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">Percentage -&gt; PercentageData
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageExact"><span class="hs-identifier hs-var">PercentageExact</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Percentage -&gt; Maybe PercentageData)
+-&gt; Decoder (Maybe Percentage) -&gt; Decoder (Maybe PercentageData)
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Decoder Percentage -&gt; Text -&gt; Decoder (Maybe Percentage)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Percentage
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#percentageDecoder"><span class="hs-identifier hs-var">percentageDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;percent&quot;</span></span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#rangeDecoder"><span class="hs-identifier hs-type">rangeDecoder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageData"><span class="hs-identifier hs-type">PercentageData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span id="rangeDecoder"><span class="annot"><span class="annottext">rangeDecoder :: Decoder (Maybe PercentageData)
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#rangeDecoder"><span class="hs-identifier hs-var hs-var">rangeDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621679444102"><span class="annot"><span class="annottext">Maybe Percentage
+</span><a href="#local-6989586621679444102"><span class="hs-identifier hs-var">mLow</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder Percentage -&gt; Text -&gt; Decoder (Maybe Percentage)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Percentage
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#percentageDecoder"><span class="hs-identifier hs-var">percentageDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;lower&quot;</span></span><span>
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621679444103"><span class="annot"><span class="annottext">Maybe Percentage
+</span><a href="#local-6989586621679444103"><span class="hs-identifier hs-var">mHigh</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder Percentage -&gt; Text -&gt; Decoder (Maybe Percentage)
+forall a. Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Percentage
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#percentageDecoder"><span class="hs-identifier hs-var">percentageDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;upper&quot;</span></span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Percentage
+</span><a href="#local-6989586621679444102"><span class="hs-identifier hs-var">mLow</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Percentage
+</span><a href="#local-6989586621679444103"><span class="hs-identifier hs-var">mHigh</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-98"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679444104"><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444104"><span class="hs-identifier hs-var">low</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679444105"><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444105"><span class="hs-identifier hs-var">high</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-99"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679444106"><span class="annot"><span class="annottext">msg :: String
+</span><a href="#local-6989586621679444106"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-100"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-101"></span><span>              </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-102"></span><span>                </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Percentage 'upper = &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-103"></span><span>                  </span><span class="annot"><span class="annottext">Percentage -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/vxbl9hh80gxp4wqbvzdy5vi8ybha6dsa-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444105"><span class="hs-identifier hs-var">high</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-104"></span><span>                  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;' &lt; 'lower = &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-105"></span><span>                  </span><span class="annot"><span class="annottext">Percentage -&gt; Text
+forall a. Display a =&gt; a -&gt; Text
+</span><a href="file:///nix/store/vxbl9hh80gxp4wqbvzdy5vi8ybha6dsa-text-display-1.0.0.0-doc/share/doc/text-display-1.0.0.0/html/src/Data.Text.Display.Core.html#display"><span class="hs-identifier hs-var">display</span></a></span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444104"><span class="hs-identifier hs-var">low</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>                  </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;'.&quot;</span></span><span>
+</span><span id="line-107"></span><span>                </span><span class="hs-special">]</span><span>
+</span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Decoder () -&gt; Decoder ()
+forall (f :: Type -&gt; Type). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444105"><span class="hs-identifier hs-var">high</span></a></span><span> </span><span class="annot"><span class="annottext">Percentage -&gt; Percentage -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444104"><span class="hs-identifier hs-var">low</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Decoder () -&gt; Decoder ()) -&gt; Decoder () -&gt; Decoder ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder ()
+forall a. String -&gt; Decoder a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679444106"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">PercentageData -&gt; Maybe PercentageData
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(PercentageData -&gt; Maybe PercentageData)
+-&gt; PercentageData -&gt; Maybe PercentageData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Percentage -&gt; Percentage -&gt; PercentageData
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#PercentageRange"><span class="hs-identifier hs-var">PercentageRange</span></a></span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444104"><span class="hs-identifier hs-var">low</span></a></span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444105"><span class="hs-identifier hs-var">high</span></a></span><span>
+</span><span id="line-111"></span><span>    </span><span class="annot"><span class="annottext">(Maybe Percentage, Maybe Percentage)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe PercentageData -&gt; Decoder (Maybe PercentageData)
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe PercentageData
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#percentageDecoder"><span class="hs-identifier hs-type">percentageDecoder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#Decoder"><span class="hs-identifier hs-type">Decoder</span></a></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.Internal.html#Percentage"><span class="hs-identifier hs-type">Percentage</span></a></span><span>
+</span><span id="line-114"></span><span id="percentageDecoder"><span class="annot"><span class="annottext">percentageDecoder :: Decoder Percentage
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#percentageDecoder"><span class="hs-identifier hs-var hs-var">percentageDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-115"></span><span>  </span><span class="annot"><span class="annottext">Decoder Word8
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder Word8
+-&gt; (Word8 -&gt; Decoder Percentage) -&gt; Decoder Percentage
+forall a b. Decoder a -&gt; (a -&gt; Decoder b) -&gt; Decoder b
+forall (m :: Type -&gt; Type) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679444111"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679444111"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-116"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Maybe Percentage
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.html#mkPercentage"><span class="hs-identifier hs-var">Percentage.mkPercentage</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679444111"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-117"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679444112"><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444112"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Percentage -&gt; Decoder Percentage
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444112"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-118"></span><span>      </span><span class="annot"><span class="annottext">Maybe Percentage
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-119"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; Decoder Percentage
+forall a. String -&gt; Decoder a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-120"></span><span>          </span><span class="annot"><span class="annottext">(String -&gt; Decoder Percentage) -&gt; String -&gt; Decoder Percentage
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-121"></span><span>          </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-122"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Unexpected percent: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-123"></span><span>              </span><span class="annot"><span class="annottext">Word8 -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679444111"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-124"></span><span>              </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;. Expected integer in [0, 100].&quot;</span></span><span>
+</span><span id="line-125"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span class="annot"><span class="hs-comment">-- | TOML for the battery percentage service.</span></span><span>
+</span><span id="line-128"></span><span class="hs-keyword">data</span><span> </span><span id="BatteryPercentageToml"><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageToml"><span class="hs-identifier hs-var">BatteryPercentageToml</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkBatteryPercentageToml"><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#MkBatteryPercentageToml"><span class="hs-identifier hs-var">MkBatteryPercentageToml</span></a></span></span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | All alerts for this service.</span></span><span>
+</span><span id="line-130"></span><span>    </span><span id="alerts"><span class="annot"><span class="annottext">BatteryPercentageToml -&gt; NonEmpty BatteryPercentageNoteToml
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#alerts"><span class="hs-identifier hs-var hs-var">alerts</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageNoteToml"><span class="hs-identifier hs-type">BatteryPercentageNoteToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-131"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Determines how we should query the system for battery information.</span></span><span>
+</span><span id="line-132"></span><span>    </span><span id="app"><span class="annot"><span class="annottext">BatteryPercentageToml -&gt; BatteryApp
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#app"><span class="hs-identifier hs-var hs-var">app</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Services.Battery.Types.html#BatteryApp"><span class="hs-identifier hs-type">BatteryApp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Determines how we handle errors.</span></span><span>
+</span><span id="line-134"></span><span>    </span><span id="errorNote"><span class="annot"><span class="annottext">BatteryPercentageToml -&gt; Maybe ErrorNoteToml
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#errorNote"><span class="hs-identifier hs-var hs-var">errorNote</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Event.Toml.html#ErrorNoteToml"><span class="hs-identifier hs-type">ErrorNoteToml</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The poll interval.</span></span><span>
+</span><span id="line-136"></span><span>    </span><span id="pollInterval"><span class="annot"><span class="annottext">BatteryPercentageToml -&gt; Maybe PollInterval
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#pollInterval"><span class="hs-identifier hs-var hs-var">pollInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-137"></span><span>    </span><span class="hs-comment">-- | Determines how we treat repeat alerts. We are given exact percentages,</span><span>
+</span><span id="line-138"></span><span>    </span><span class="hs-comment">-- so if the user wants a repeatEvent to apply to a range, they should</span><span>
+</span><span id="line-139"></span><span>    </span><span class="hs-comment">-- give the _lower_ bound.</span><span>
+</span><span id="line-140"></span><span>    </span><span id="repeatEvent"><span class="annot"><span class="annottext">BatteryPercentageToml -&gt; Maybe (MultiRepeatEventToml Percentage)
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#repeatEvent"><span class="hs-identifier hs-var hs-var">repeatEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Toml.html#MultiRepeatEventToml"><span class="hs-identifier hs-type">MultiRepeatEventToml</span></a></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.Internal.html#Percentage"><span class="hs-identifier hs-type">Percentage</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-141"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-142"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679444121"><span id="local-6989586621679444134"><span class="annot"><span class="annottext">BatteryPercentageToml -&gt; BatteryPercentageToml -&gt; Bool
+(BatteryPercentageToml -&gt; BatteryPercentageToml -&gt; Bool)
+-&gt; (BatteryPercentageToml -&gt; BatteryPercentageToml -&gt; Bool)
+-&gt; Eq BatteryPercentageToml
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: BatteryPercentageToml -&gt; BatteryPercentageToml -&gt; Bool
+== :: BatteryPercentageToml -&gt; BatteryPercentageToml -&gt; Bool
+$c/= :: BatteryPercentageToml -&gt; BatteryPercentageToml -&gt; Bool
+/= :: BatteryPercentageToml -&gt; BatteryPercentageToml -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679444142"><span id="local-6989586621679444156"><span id="local-6989586621679444160"><span class="annot"><span class="annottext">Int -&gt; BatteryPercentageToml -&gt; ShowS
+[BatteryPercentageToml] -&gt; ShowS
+BatteryPercentageToml -&gt; String
+(Int -&gt; BatteryPercentageToml -&gt; ShowS)
+-&gt; (BatteryPercentageToml -&gt; String)
+-&gt; ([BatteryPercentageToml] -&gt; ShowS)
+-&gt; Show BatteryPercentageToml
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; BatteryPercentageToml -&gt; ShowS
+showsPrec :: Int -&gt; BatteryPercentageToml -&gt; ShowS
+$cshow :: BatteryPercentageToml -&gt; String
+show :: BatteryPercentageToml -&gt; String
+$cshowList :: [BatteryPercentageToml] -&gt; ShowS
+showList :: [BatteryPercentageToml] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>
+</span><span id="line-144"></span><span id="local-6989586621679443814"><span id="local-6989586621679443815"><span id="local-6989586621679443816"><span id="local-6989586621679443817"><span id="local-6989586621679443818"><span id="local-6989586621679443819"><span id="local-6989586621679443820"><span id="local-6989586621679443821"><span id="local-6989586621679443822"><span id="local-6989586621679443823"><span id="local-6989586621679443824"><span id="local-6989586621679443825"><span id="local-6989586621679443826"><span id="local-6989586621679443827"><span id="local-6989586621679443828"><span id="local-6989586621679444170"><span id="local-6989586621679444175"><span id="local-6989586621679444180"><span id="local-6989586621679444185"><span id="local-6989586621679444190"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">BatteryPercentageToml</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-145"></span><span>
+</span><span id="line-146"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-147"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageToml"><span class="hs-identifier hs-type">BatteryPercentageToml</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-148"></span><span>  </span><span id="local-6989586621679444317"><span class="annot"><span class="annottext">tomlDecoder :: Decoder BatteryPercentageToml
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-149"></span><span>    </span><span id="local-6989586621679444318"><span class="annot"><span class="annottext">NonEmpty BatteryPercentageNoteToml
+</span><a href="#local-6989586621679444318"><span class="hs-identifier hs-var">alerts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder (NonEmpty BatteryPercentageNoteToml)
+-&gt; Text -&gt; Decoder (NonEmpty BatteryPercentageNoteToml)
+forall a. Decoder a -&gt; Text -&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldWith"><span class="hs-identifier hs-var">getFieldWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder (NonEmpty BatteryPercentageNoteToml)
+forall a. DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;alert&quot;</span></span><span>
+</span><span id="line-150"></span><span>    </span><span id="local-6989586621679444320"><span class="annot"><span class="annottext">BatteryApp
+</span><a href="#local-6989586621679444320"><span class="hs-identifier hs-var">app</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder BatteryApp -&gt; Text -&gt; Decoder BatteryApp
+forall a. Decoder a -&gt; Text -&gt; Decoder a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#getFieldWith"><span class="hs-identifier hs-var">getFieldWith</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder BatteryApp
+</span><a href="Navi.Services.Battery.Common.html#batteryAppDecoder"><span class="hs-identifier hs-var">batteryAppDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;app&quot;</span></span><span>
+</span><span id="line-151"></span><span>    </span><span id="local-6989586621679444321"><span class="annot"><span class="annottext">Maybe ErrorNoteToml
+</span><a href="#local-6989586621679444321"><span class="hs-identifier hs-var">errorNote</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe ErrorNoteToml)
+</span><a href="Navi.Event.Toml.html#errorNoteOptDecoder"><span class="hs-identifier hs-var">errorNoteOptDecoder</span></a></span><span>
+</span><span id="line-152"></span><span>    </span><span id="local-6989586621679444322"><span class="annot"><span class="annottext">Maybe PollInterval
+</span><a href="#local-6989586621679444322"><span class="hs-identifier hs-var">pollInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe PollInterval)
+</span><a href="Navi.Data.PollInterval.html#pollIntervalOptDecoder"><span class="hs-identifier hs-var">pollIntervalOptDecoder</span></a></span><span>
+</span><span id="line-153"></span><span>    </span><span id="local-6989586621679444323"><span class="annot"><span class="annottext">Maybe (MultiRepeatEventToml Percentage)
+</span><a href="#local-6989586621679444323"><span class="hs-identifier hs-var">repeatEvent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Value -&gt; DecodeM Percentage)
+-&gt; Decoder (Maybe (MultiRepeatEventToml Percentage))
+forall a.
+Ord a =&gt;
+(Value -&gt; DecodeM a) -&gt; Decoder (Maybe (MultiRepeatEventToml a))
+</span><a href="Navi.Event.Toml.html#multiRepeatEventOptDecoder"><span class="hs-identifier hs-var">multiRepeatEventOptDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; DecodeM Percentage
+</span><a href="#local-6989586621679444324"><span class="hs-identifier hs-var">decodePercentage</span></a></span><span>
+</span><span id="line-154"></span><span>
+</span><span id="line-155"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (MultiRepeatEventToml Percentage)
+</span><a href="#local-6989586621679444323"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-156"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Toml.html#MultiSomeRepeatsToml"><span class="hs-identifier hs-type">MultiSomeRepeatsToml</span></a></span><span> </span><span id="local-6989586621679444325"><span class="annot"><span class="annottext">Set Percentage
+</span><a href="#local-6989586621679444325"><span class="hs-identifier hs-var">percentRefs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-157"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679444326"><span class="annot"><span class="annottext">alertsPercents :: Set Percentage
+</span><a href="#local-6989586621679444326"><span class="hs-identifier hs-var hs-var">alertsPercents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty BatteryPercentageNoteToml -&gt; Set Percentage
+</span><a href="#local-6989586621679444327"><span class="hs-identifier hs-var">mkAlertPercents</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty BatteryPercentageNoteToml
+</span><a href="#local-6989586621679444318"><span class="hs-identifier hs-var">alerts</span></a></span><span>
+</span><span id="line-158"></span><span>            </span><span id="local-6989586621679444328"><span class="annot"><span class="annottext">d :: Set Percentage
+</span><a href="#local-6989586621679444328"><span class="hs-identifier hs-var hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set Percentage -&gt; Set Percentage -&gt; Set Percentage
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><span class="hs-identifier hs-var">Set.difference</span></span><span> </span><span class="annot"><span class="annottext">Set Percentage
+</span><a href="#local-6989586621679444325"><span class="hs-identifier hs-var">percentRefs</span></a></span><span> </span><span class="annot"><span class="annottext">Set Percentage
+</span><a href="#local-6989586621679444326"><span class="hs-identifier hs-var">alertsPercents</span></a></span><span>
+</span><span id="line-159"></span><span>            </span><span id="local-6989586621679444330"><span class="annot"><span class="annottext">msg :: String
+</span><a href="#local-6989586621679444330"><span class="hs-identifier hs-var hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-160"></span><span>              </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-161"></span><span>                </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Found repeat-events that referenced non-extant alert &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-162"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;percentages. All references should correspond to an alert &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-163"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;'percent' or 'lower': &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-164"></span><span>                  </span><span class="annot"><span class="annottext">Set Percentage -&gt; String
+</span><a href="#local-6989586621679444331"><span class="hs-identifier hs-var">showSet</span></a></span><span> </span><span class="annot"><span class="annottext">Set Percentage
+</span><a href="#local-6989586621679444328"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-165"></span><span>                </span><span class="hs-special">]</span><span>
+</span><span id="line-166"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Decoder () -&gt; Decoder ()
+forall (f :: Type -&gt; Type). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set Percentage -&gt; Bool
+forall a. Set a -&gt; Bool
+</span><span class="hs-identifier hs-var">Set.null</span></span><span> </span><span class="annot"><span class="annottext">Set Percentage
+</span><a href="#local-6989586621679444328"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Decoder () -&gt; Decoder ()) -&gt; Decoder () -&gt; Decoder ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Decoder ()
+forall a. String -&gt; Decoder a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679444330"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><span id="line-167"></span><span>      </span><span class="annot"><span class="annottext">Maybe (MultiRepeatEventToml Percentage)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; Decoder ()
+forall a. a -&gt; Decoder a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-168"></span><span>
+</span><span id="line-169"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-170"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#MkBatteryPercentageToml"><span class="hs-identifier hs-type">MkBatteryPercentageToml</span></a></span><span>
+</span><span id="line-171"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">NonEmpty BatteryPercentageNoteToml
+alerts :: NonEmpty BatteryPercentageNoteToml
+alerts :: NonEmpty BatteryPercentageNoteToml
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#alerts"><span class="hs-identifier hs-var hs-var">alerts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-172"></span><span>          </span><span class="annot"><span class="annottext">BatteryApp
+app :: BatteryApp
+app :: BatteryApp
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#app"><span class="hs-identifier hs-var hs-var">app</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-173"></span><span>          </span><span class="annot"><span class="annottext">Maybe ErrorNoteToml
+errorNote :: Maybe ErrorNoteToml
+errorNote :: Maybe ErrorNoteToml
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#errorNote"><span class="hs-identifier hs-var hs-var">errorNote</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-174"></span><span>          </span><span class="annot"><span class="annottext">Maybe PollInterval
+pollInterval :: Maybe PollInterval
+pollInterval :: Maybe PollInterval
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#pollInterval"><span class="hs-identifier hs-var hs-var">pollInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-175"></span><span>          </span><span class="annot"><span class="annottext">Maybe (MultiRepeatEventToml Percentage)
+repeatEvent :: Maybe (MultiRepeatEventToml Percentage)
+repeatEvent :: Maybe (MultiRepeatEventToml Percentage)
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#repeatEvent"><span class="hs-identifier hs-var hs-var">repeatEvent</span></a></span><span>
+</span><span id="line-176"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-177"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-178"></span><span>      </span><span id="local-6989586621679444324"><span class="annot"><span class="annottext">decodePercentage :: Value -&gt; DecodeM Percentage
+</span><a href="#local-6989586621679444324"><span class="hs-identifier hs-var hs-var">decodePercentage</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Value.html#Integer"><span class="hs-identifier hs-type">Integer</span></a></span><span> </span><span id="local-6989586621679444347"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679444347"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Maybe Percentage
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.html#mkPercentage"><span class="hs-identifier hs-var">mkPercentage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Word8
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679444347"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-179"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679444348"><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444348"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Percentage -&gt; DecodeM Percentage
+forall a. a -&gt; DecodeM a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Percentage
+</span><a href="#local-6989586621679444348"><span class="hs-identifier hs-var">p</span></a></span><span>
+</span><span id="line-180"></span><span>        </span><span class="annot"><span class="annottext">Maybe Percentage
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; DecodeM Percentage
+forall a. String -&gt; DecodeM a
+forall (m :: Type -&gt; Type) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; DecodeM Percentage) -&gt; String -&gt; DecodeM Percentage
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Failed to parse percentage: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679444347"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-181"></span><span>      </span><span class="annot"><a href="#local-6989586621679444324"><span class="hs-identifier hs-var">decodePercentage</span></a></span><span> </span><span id="local-6989586621679444350"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679444350"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; DecodeM Percentage
+forall a. Value -&gt; DecodeM a
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Decode.html#typeMismatch"><span class="hs-identifier hs-var">typeMismatch</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621679444350"><span class="hs-identifier hs-var">other</span></a></span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span>      </span><span class="annot"><a href="#local-6989586621679444327"><span class="hs-identifier hs-type">mkAlertPercents</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Navi.Services.Battery.Percentage.Toml.html#BatteryPercentageNoteToml"><span class="hs-identifier hs-type">BatteryPercentageNoteToml</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.Internal.html#Percentage"><span class="hs-identifier hs-type">Percentage</span></a></span><span>
+</span><span id="line-184"></span><span>      </span><span id="local-6989586621679444327"><span class="annot"><span class="annottext">mkAlertPercents :: NonEmpty BatteryPercentageNoteToml -&gt; Set Percentage
+</span><a href="#local-6989586621679444327"><span class="hs-identifier hs-var hs-var">mkAlertPercents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-185"></span><span>        </span><span class="annot"><span class="annottext">[Percentage] -&gt; Set Percentage
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">Set.fromList</span></span><span>
+</span><span id="line-186"></span><span>          </span><span class="annot"><span class="annottext">([Percentage] -&gt; Set Percentage)
+-&gt; (NonEmpty BatteryPercentageNoteToml -&gt; [Percentage])
+-&gt; NonEmpty BatteryPercentageNoteToml
+-&gt; Set Percentage
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty Percentage -&gt; [Percentage]
+forall a. NonEmpty a -&gt; [a]
+</span><span class="hs-identifier hs-var">NE.toList</span></span><span>
+</span><span id="line-187"></span><span>          </span><span class="annot"><span class="annottext">(NonEmpty Percentage -&gt; [Percentage])
+-&gt; (NonEmpty BatteryPercentageNoteToml -&gt; NonEmpty Percentage)
+-&gt; NonEmpty BatteryPercentageNoteToml
+-&gt; [Percentage]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(BatteryPercentageNoteToml -&gt; Percentage)
+-&gt; NonEmpty BatteryPercentageNoteToml -&gt; NonEmpty Percentage
+forall a b. (a -&gt; b) -&gt; NonEmpty a -&gt; NonEmpty b
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PercentageData -&gt; Percentage
+</span><a href="Navi.Services.Battery.Percentage.Toml.html#toPercentage"><span class="hs-identifier hs-var">toPercentage</span></a></span><span> </span><span class="annot"><span class="annottext">(PercentageData -&gt; Percentage)
+-&gt; (BatteryPercentageNoteToml -&gt; PercentageData)
+-&gt; BatteryPercentageNoteToml
+-&gt; Percentage
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx BatteryPercentageNoteToml PercentageData
+-&gt; BatteryPercentageNoteToml -&gt; PercentageData
+forall k (is :: IxList) s a.
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx BatteryPercentageNoteToml PercentageData
+</span><span class="">#percentage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-188"></span><span>
+</span><span id="line-189"></span><span>      </span><span class="annot"><a href="#local-6989586621679444331"><span class="hs-identifier hs-type">showSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.Internal.html#Percentage"><span class="hs-identifier hs-type">Percentage</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-190"></span><span>      </span><span id="local-6989586621679444331"><span class="annot"><span class="annottext">showSet :: Set Percentage -&gt; String
+</span><a href="#local-6989586621679444331"><span class="hs-identifier hs-var hs-var">showSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-191"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-192"></span><span>          </span><span class="annot"><span class="annottext">(Text -&gt; String)
+-&gt; (Set Percentage -&gt; Text) -&gt; Set Percentage -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;.&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-193"></span><span>          </span><span class="annot"><span class="annottext">(Text -&gt; Text)
+-&gt; (Set Percentage -&gt; Text) -&gt; Set Percentage -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
+</span><span class="hs-identifier hs-var">T.intercalate</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;, &quot;</span></span><span>
+</span><span id="line-194"></span><span>          </span><span class="annot"><span class="annottext">([Text] -&gt; Text)
+-&gt; (Set Percentage -&gt; [Text]) -&gt; Set Percentage -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Percentage -&gt; Text) -&gt; [Percentage] -&gt; [Text]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word8 -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Text) -&gt; (Percentage -&gt; Word8) -&gt; Percentage -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Optic' A_ReversedPrism NoIx Percentage Word8 -&gt; Percentage -&gt; Word8
+forall k (is :: IxList) s a.
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_ReversedPrism NoIx Percentage Word8
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/pythia-0.1-63837c689f415530b275e570e0728b5fabd52ffc3fecd34bf018c06b78b52108/share/doc/html/src/Pythia.Data.Percentage.html#_MkPercentage"><span class="hs-identifier hs-var">_MkPercentage</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-195"></span><span>          </span><span class="annot"><span class="annottext">([Percentage] -&gt; [Text])
+-&gt; (Set Percentage -&gt; [Percentage]) -&gt; Set Percentage -&gt; [Text]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Set Percentage -&gt; [Percentage]
+forall a. Set a -&gt; [a]
+</span><span class="hs-identifier hs-var">Set.toList</span></span><span>
+</span><span id="line-196"></span></pre></body></html>

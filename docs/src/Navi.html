@@ -1,0 +1,1049 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="annot"><span class="hs-comment">-- | This module provides the core application type and logic.</span></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.html"><span class="hs-identifier">Navi</span></a></span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Entry point</span></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Navi.html#runNavi"><span class="hs-identifier">runNavi</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Application Types</span></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Navi.NaviT.html#NaviT"><span class="hs-identifier">NaviT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Navi.NaviT.html#runNaviT"><span class="hs-identifier">runNaviT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/9wf5qn5d8b19y8x23msw7ilw9v6gzxbr-dbus-1.3.11-doc/share/doc/dbus-1.3.11/html/src/DBus.Client.html"><span class="hs-identifier">DBus.Client</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/9wf5qn5d8b19y8x23msw7ilw9v6gzxbr-dbus-1.3.11-doc/share/doc/dbus-1.3.11/html/src/DBus.Client.html#ClientError"><span class="hs-identifier">ClientError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/9wf5qn5d8b19y8x23msw7ilw9v6gzxbr-dbus-1.3.11-doc/share/doc/dbus-1.3.11/html/src/DBus.Client.html#clientErrorFatal"><span class="hs-identifier">clientErrorFatal</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/kdwapafxh1d365gbb6q2lr5bvqs8fbw2-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html"><span class="hs-identifier">DBus.Notify</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/kdwapafxh1d365gbb6q2lr5bvqs8fbw2-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#UrgencyLevel"><span class="hs-identifier">UrgencyLevel</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/kdwapafxh1d365gbb6q2lr5bvqs8fbw2-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#Critical"><span class="hs-identifier">Critical</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/kdwapafxh1d365gbb6q2lr5bvqs8fbw2-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#Normal"><span class="hs-identifier">Normal</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-async-0.1-92505361e9389c19c3a5d53a84746fea7444a136440f9d5dc875dfd7fe4e81c0/share/doc/html/src/Effects.Concurrent.Async.html"><span class="hs-identifier">Effects.Concurrent.Async</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Async</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html"><span class="hs-identifier">Effects.Concurrent.STM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#flushTBQueueA"><span class="hs-identifier">flushTBQueueA</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html"><span class="hs-identifier">Effects.Concurrent.Thread</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#MonadThread"><span class="hs-identifier">MonadThread</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#labelThread"><span class="hs-identifier">labelThread</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#myThreadId"><span class="hs-identifier">myThreadId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#sleep"><span class="hs-identifier">sleep</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html"><span class="hs-identifier">Effects.Logger.Namespace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Utils.html#logStrToBs"><span class="hs-identifier">logStrToBs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-terminal-0.1-5e9320c252a0a4f19fc23b01106505f5ee3c09507f1c769f2d400dfcdae28ef8/share/doc/html/src/Effects.System.Terminal.html"><span class="hs-identifier">Effects.System.Terminal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-terminal-0.1-5e9320c252a0a4f19fc23b01106505f5ee3c09507f1c769f2d400dfcdae28ef8/share/doc/html/src/Effects.System.Terminal.html#MonadTerminal"><span class="hs-identifier">MonadTerminal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-terminal-0.1-5e9320c252a0a4f19fc23b01106505f5ee3c09507f1c769f2d400dfcdae28ef8/share/doc/html/src/Effects.System.Terminal.html#putBinary"><span class="hs-identifier">putBinary</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.NaviLog.html"><span class="hs-identifier">Navi.Data.NaviLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.NaviLog.html#LogEnv"><span class="hs-identifier">LogEnv</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html"><span class="hs-identifier">Navi.Data.NaviNote</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier">NaviNote</span></a></span><span>
+</span><span id="line-24"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#MkNaviNote"><span class="hs-identifier">MkNaviNote</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>        </span><span class="annot"><a href="Navi.Data.NaviNote.html#body"><span class="hs-identifier">body</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>        </span><span class="annot"><a href="Navi.Data.NaviNote.html#summary"><span class="hs-identifier">summary</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>        </span><span class="annot"><a href="Navi.Data.NaviNote.html#timeout"><span class="hs-identifier">timeout</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>        </span><span class="annot"><a href="Navi.Data.NaviNote.html#urgency"><span class="hs-identifier">urgency</span></a></span><span>
+</span><span id="line-29"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><a href="Navi.Data.NaviNote.html#Timeout"><span class="hs-identifier">Timeout</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.NaviNote.html#Seconds"><span class="hs-identifier">Seconds</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html"><span class="hs-identifier">Navi.Data.PollInterval</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier">PollInterval</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.MonadNotify.html"><span class="hs-identifier">Navi.Effects.MonadNotify</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier">MonadNotify</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadNotify.html#sendNote"><span class="hs-identifier">sendNote</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html"><span class="hs-identifier">Navi.Effects.MonadSystemInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html#MonadSystemInfo"><span class="hs-identifier">MonadSystemInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Env.Core.html"><span class="hs-identifier">Navi.Env.Core</span></a></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Env.Core.html#HasEvents"><span class="hs-identifier">HasEvents</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Env.Core.html#getEvents"><span class="hs-identifier">getEvents</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasLogEnv"><span class="hs-identifier">HasLogEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Env.Core.html#getLogEnv"><span class="hs-identifier">getLogEnv</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasNoteQueue"><span class="hs-identifier">HasNoteQueue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Env.Core.html#getNoteQueue"><span class="hs-identifier">getNoteQueue</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#sendNoteQueue"><span class="hs-identifier">sendNoteQueue</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Event.html"><span class="hs-identifier">Navi.Event</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Event</span></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Event.Types.html"><span class="hs-identifier">Navi.Event.Types</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier">AnyEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#MkAnyEvent"><span class="hs-identifier">MkAnyEvent</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.EventError.html#EventError"><span class="hs-identifier">EventError</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Navi.Event.Types.html#EventSuccess"><span class="hs-identifier">EventSuccess</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.NaviT.html"><span class="hs-identifier">Navi.NaviT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.NaviT.html#NaviT"><span class="hs-identifier">NaviT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.NaviT.html#runNaviT"><span class="hs-identifier">runNaviT</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Utils.html"><span class="hs-identifier">Navi.Utils</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">U</span></span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="annot"><span class="hs-comment">-- | Entry point for the application.</span></span><span>
+</span><span id="line-52"></span><span class="annot"><a href="Navi.html#runNavi"><span class="hs-identifier hs-type">runNavi</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679449869"><span class="annot"><a href="#local-6989586621679449869"><span class="hs-identifier hs-type">env</span></a></span></span><span> </span><span id="local-6989586621679449873"><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621679449877"><span class="annot"><a href="#local-6989586621679449877"><span class="hs-identifier hs-type">k</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasEvents"><span class="hs-identifier hs-type">HasEvents</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449869"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasLogEnv"><span class="hs-identifier hs-type">HasLogEnv</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449869"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasNoteQueue"><span class="hs-identifier hs-type">HasNoteQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449869"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-async-0.1-92505361e9389c19c3a5d53a84746fea7444a136440f9d5dc875dfd7fe4e81c0/share/doc/html/src/Effects.Concurrent.Async.html#MonadAsync"><span class="hs-identifier hs-type">MonadAsync</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-fs-0.1-939bb2cbf42411240e371281dbd18acb7c2362452fb536058a1de1cb3f641bb3/share/doc/html/src/Effects.FileSystem.HandleWriter.html#MonadHandleWriter"><span class="hs-identifier hs-type">MonadHandleWriter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#MonadIORef"><span class="hs-identifier hs-type">MonadIORef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#MonadLoggerNS"><span class="hs-identifier hs-type">MonadLoggerNS</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449869"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449877"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadMask</span></span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier hs-type">MonadNotify</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#MonadSTM"><span class="hs-identifier hs-type">MonadSTM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html#MonadSystemInfo"><span class="hs-identifier hs-type">MonadSystemInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-terminal-0.1-5e9320c252a0a4f19fc23b01106505f5ee3c09507f1c769f2d400dfcdae28ef8/share/doc/html/src/Effects.System.Terminal.html#MonadTerminal"><span class="hs-identifier hs-type">MonadTerminal</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#MonadThread"><span class="hs-identifier hs-type">MonadThread</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
+</span><span id="line-70"></span><span id="runNavi"><span class="annot"><span class="annottext">runNavi :: forall env (m :: Type -&gt; Type) k.
+(HasCallStack, HasEvents env, HasLogEnv env, HasNoteQueue env,
+ MonadAsync m, MonadHandleWriter m, MonadIORef m,
+ MonadLoggerNS m env k, MonadMask m, MonadNotify m, MonadSTM m,
+ MonadSystemInfo m, MonadTerminal m, MonadThread m) =&gt;
+m Void
+</span><a href="Navi.html#runNavi"><span class="hs-identifier hs-var hs-var">runNavi</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679450218"><span class="annot"><span class="annottext">welcome :: NaviNote
+</span><a href="#local-6989586621679450218"><span class="hs-identifier hs-var hs-var">welcome</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-72"></span><span>        </span><span class="annot"><a href="Navi.Data.NaviNote.html#MkNaviNote"><span class="hs-identifier hs-type">MkNaviNote</span></a></span><span>
+</span><span id="line-73"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">summary :: Text
+</span><a href="Navi.Data.NaviNote.html#summary"><span class="hs-identifier hs-var">summary</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Navi&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>            </span><span class="annot"><span class="annottext">body :: Maybe Text
+</span><a href="Navi.Data.NaviNote.html#body"><span class="hs-identifier hs-var">body</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Navi is up :-)&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>            </span><span class="annot"><span class="annottext">urgency :: Maybe UrgencyLevel
+</span><a href="Navi.Data.NaviNote.html#urgency"><span class="hs-identifier hs-var">urgency</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UrgencyLevel -&gt; Maybe UrgencyLevel
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">UrgencyLevel
+</span><a href="file:///nix/store/kdwapafxh1d365gbb6q2lr5bvqs8fbw2-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#Normal"><span class="hs-identifier hs-var">Normal</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>            </span><span class="annot"><span class="annottext">timeout :: Maybe Timeout
+</span><a href="Navi.Data.NaviNote.html#timeout"><span class="hs-identifier hs-var">timeout</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Timeout -&gt; Maybe Timeout
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Timeout -&gt; Maybe Timeout) -&gt; Timeout -&gt; Maybe Timeout
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Word16 -&gt; Timeout
+</span><a href="Navi.Data.NaviNote.html#Seconds"><span class="hs-identifier hs-var">Seconds</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><span class="hs-number">10</span></span><span>
+</span><span id="line-77"></span><span>          </span><span class="hs-special">}</span><span>
+</span><span id="line-78"></span><span>  </span><span class="annot"><span class="annottext">NaviNote -&gt; m ()
+forall env (m :: Type -&gt; Type).
+(HasCallStack, HasNoteQueue env, MonadReader env m, MonadSTM m) =&gt;
+NaviNote -&gt; m ()
+</span><a href="Navi.Env.Core.html#sendNoteQueue"><span class="hs-identifier hs-var">sendNoteQueue</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679450218"><span class="hs-identifier hs-var">welcome</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621679450219"><span class="annot"><span class="annottext">NonEmpty AnyEvent
+</span><a href="#local-6989586621679450219"><span class="hs-identifier hs-var">events</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(env -&gt; NonEmpty AnyEvent) -&gt; m (NonEmpty AnyEvent)
+forall r (m :: Type -&gt; Type) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">env -&gt; NonEmpty AnyEvent
+forall env. HasEvents env =&gt; env -&gt; NonEmpty AnyEvent
+</span><a href="Navi.Env.Core.html#getEvents"><span class="hs-identifier hs-var">getEvents</span></a></span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><span class="annottext">NonEmpty AnyEvent -&gt; m Void
+forall (t :: Type -&gt; Type).
+(HasCallStack, Traversable t) =&gt;
+t AnyEvent -&gt; m Void
+</span><a href="#local-6989586621679450221"><span class="hs-identifier hs-var">runAllAsync</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty AnyEvent
+</span><a href="#local-6989586621679450219"><span class="hs-identifier hs-var">events</span></a></span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-82"></span><span>    </span><span id="local-6989586621679449924"><span class="annot"><a href="#local-6989586621679450221"><span class="hs-identifier hs-type">runAllAsync</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-83"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-84"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Traversable</span></span><span> </span><span class="annot"><a href="#local-6989586621679449924"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-85"></span><span>      </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-86"></span><span>      </span><span class="annot"><a href="#local-6989586621679449924"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier hs-type">AnyEvent</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-87"></span><span>      </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span></span><span>
+</span><span id="line-88"></span><span>    </span><span id="local-6989586621679450221"><span class="annot"><span class="annottext">runAllAsync :: forall (t :: Type -&gt; Type).
+(HasCallStack, Traversable t) =&gt;
+t AnyEvent -&gt; m Void
+</span><a href="#local-6989586621679450221"><span class="hs-identifier hs-var hs-var">runAllAsync</span></a></span></span><span> </span><span id="local-6989586621679450287"><span class="annot"><span class="annottext">t AnyEvent
+</span><a href="#local-6989586621679450287"><span class="hs-identifier hs-var">evts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-89"></span><span>      </span><span id="local-6989586621679450288"><span class="annot"><span class="annottext">Maybe LogEnv
+</span><a href="#local-6989586621679450288"><span class="hs-identifier hs-var">mLogEnv</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(env -&gt; Maybe LogEnv) -&gt; m (Maybe LogEnv)
+forall r (m :: Type -&gt; Type) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">env -&gt; Maybe LogEnv
+forall env. HasLogEnv env =&gt; env -&gt; Maybe LogEnv
+</span><a href="Navi.Env.Core.html#getLogEnv"><span class="hs-identifier hs-var">getLogEnv</span></a></span><span>
+</span><span id="line-90"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe LogEnv
+</span><a href="#local-6989586621679450288"><span class="hs-identifier hs-var">mLogEnv</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-91"></span><span>        </span><span class="hs-comment">-- 1. No logging: just run the events.</span><span>
+</span><span id="line-92"></span><span>        </span><span class="annot"><span class="annottext">Maybe LogEnv
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">t AnyEvent -&gt; m Void
+forall (t :: Type -&gt; Type).
+(HasCallStack, Traversable t) =&gt;
+t AnyEvent -&gt; m Void
+</span><a href="#local-6989586621679450289"><span class="hs-identifier hs-var">runEvents</span></a></span><span> </span><span class="annot"><span class="annottext">t AnyEvent
+</span><a href="#local-6989586621679450287"><span class="hs-identifier hs-var">evts</span></a></span><span>
+</span><span id="line-93"></span><span>        </span><span class="hs-comment">-- 2. Logging: Run the events and the logger.</span><span>
+</span><span id="line-94"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679450290"><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679450290"><span class="hs-identifier hs-var">logEnv</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-95"></span><span>          </span><span class="annot"><span class="annottext">m Void -&gt; (Async Void -&gt; m Void) -&gt; m Void
+forall a b. HasCallStack =&gt; m a -&gt; (Async a -&gt; m b) -&gt; m b
+forall (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+m a -&gt; (Async a -&gt; m b) -&gt; m b
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-async-0.1-92505361e9389c19c3a5d53a84746fea7444a136440f9d5dc875dfd7fe4e81c0/share/doc/html/src/Effects.Concurrent.Async.html#withAsync"><span class="hs-identifier hs-var">Async.withAsync</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogEnv -&gt; m Void
+forall (m :: Type -&gt; Type) env k.
+(HasCallStack, MonadLoggerNS m env k, MonadHandleWriter m,
+ MonadMask m, MonadSTM m, MonadTerminal m) =&gt;
+LogEnv -&gt; m Void
+</span><a href="Navi.html#pollLogQueue"><span class="hs-identifier hs-var">pollLogQueue</span></a></span><span> </span><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679450290"><span class="hs-identifier hs-var">logEnv</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((Async Void -&gt; m Void) -&gt; m Void)
+-&gt; (Async Void -&gt; m Void) -&gt; m Void
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679450293"><span class="annot"><span class="annottext">Async Void
+</span><a href="#local-6989586621679450293"><span class="hs-identifier hs-var">logThread</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-96"></span><span>            </span><span class="hs-comment">-- NOTE: Need the link here _before_ we run the other two threads.</span><span>
+</span><span id="line-97"></span><span>            </span><span class="hs-comment">-- This ensures that a logger exception successfully kills the entire</span><span>
+</span><span id="line-98"></span><span>            </span><span class="hs-comment">-- app.</span><span>
+</span><span id="line-99"></span><span>            </span><span class="annot"><span class="annottext">Async Void -&gt; m ()
+forall a. HasCallStack =&gt; Async a -&gt; m ()
+forall (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-async-0.1-92505361e9389c19c3a5d53a84746fea7444a136440f9d5dc875dfd7fe4e81c0/share/doc/html/src/Effects.Concurrent.Async.html#link"><span class="hs-identifier hs-var">Async.link</span></a></span><span> </span><span class="annot"><span class="annottext">Async Void
+</span><a href="#local-6989586621679450293"><span class="hs-identifier hs-var">logThread</span></a></span><span>
+</span><span id="line-100"></span><span>            </span><span class="annot"><span class="annottext">t AnyEvent -&gt; m Void
+forall (t :: Type -&gt; Type).
+(HasCallStack, Traversable t) =&gt;
+t AnyEvent -&gt; m Void
+</span><a href="#local-6989586621679450289"><span class="hs-identifier hs-var">runEvents</span></a></span><span> </span><span class="annot"><span class="annottext">t AnyEvent
+</span><a href="#local-6989586621679450287"><span class="hs-identifier hs-var">evts</span></a></span><span>
+</span><span id="line-101"></span><span>              </span><span class="annot"><span class="annottext">m Void -&gt; (SomeException -&gt; m Void) -&gt; m Void
+forall (m :: Type -&gt; Type) a.
+(HasCallStack, MonadCatch m) =&gt;
+m a -&gt; (SomeException -&gt; m a) -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/exception-utils-0.1-1728acbab622bcd9468979fe1d8c02c1c03a1513a46b35cc599c4d2e06790039/share/doc/html/src/Control.Exception.Utils.html#catchSync"><span class="hs-operator hs-var">`catchSync`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679450296"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679450296"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-102"></span><span>                </span><span class="annot"><span class="annottext">Async Void -&gt; m ()
+forall a. HasCallStack =&gt; Async a -&gt; m ()
+forall (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-async-0.1-92505361e9389c19c3a5d53a84746fea7444a136440f9d5dc875dfd7fe4e81c0/share/doc/html/src/Effects.Concurrent.Async.html#cancel"><span class="hs-identifier hs-var">Async.cancel</span></a></span><span> </span><span class="annot"><span class="annottext">Async Void
+</span><a href="#local-6989586621679450293"><span class="hs-identifier hs-var">logThread</span></a></span><span>
+</span><span id="line-103"></span><span>                </span><span class="hs-comment">-- handle remaining logs</span><span>
+</span><span id="line-104"></span><span>                </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679450298"><span class="annot"><span class="annottext">queue :: TBQueue LogStr
+</span><a href="#local-6989586621679450298"><span class="hs-identifier hs-var hs-var">queue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679450290"><span class="hs-identifier hs-var">logEnv</span></a></span><span> </span><span class="annot"><span class="annottext">LogEnv
+-&gt; Optic' A_Lens NoIx LogEnv (TBQueue LogStr) -&gt; TBQueue LogStr
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx LogEnv (TBQueue LogStr)
+</span><span class="">#logQueue</span></span><span>
+</span><span id="line-105"></span><span>                    </span><span id="local-6989586621679450300"><span class="annot"><span class="annottext">sendFn :: ByteString -&gt; m ()
+</span><a href="#local-6989586621679450300"><span class="hs-identifier hs-var hs-var">sendFn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogEnv -&gt; ByteString -&gt; m ()
+forall (m :: Type -&gt; Type).
+(HasCallStack, MonadHandleWriter m, MonadTerminal m) =&gt;
+LogEnv -&gt; ByteString -&gt; m ()
+</span><a href="Navi.html#getLoggerFn"><span class="hs-identifier hs-var">getLoggerFn</span></a></span><span> </span><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679450290"><span class="hs-identifier hs-var">logEnv</span></a></span><span>
+</span><span id="line-106"></span><span>                </span><span class="annot"><span class="annottext">TBQueue LogStr -&gt; m [LogStr]
+forall (m :: Type -&gt; Type) a.
+(HasCallStack, MonadSTM m) =&gt;
+TBQueue a -&gt; m [a]
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#flushTBQueueA"><span class="hs-identifier hs-var">flushTBQueueA</span></a></span><span> </span><span class="annot"><span class="annottext">TBQueue LogStr
+</span><a href="#local-6989586621679450298"><span class="hs-identifier hs-var">queue</span></a></span><span> </span><span class="annot"><span class="annottext">m [LogStr] -&gt; ([LogStr] -&gt; m ()) -&gt; m ()
+forall a b. m a -&gt; (a -&gt; m b) -&gt; m b
+forall (m :: Type -&gt; Type) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">(LogStr -&gt; m ()) -&gt; [LogStr] -&gt; m ()
+forall (t :: Type -&gt; Type) (f :: Type -&gt; Type) a b.
+(Foldable t, Applicative f) =&gt;
+(a -&gt; f b) -&gt; t a -&gt; f ()
+</span><span class="hs-identifier hs-var">traverse_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; m ()
+</span><a href="#local-6989586621679450300"><span class="hs-identifier hs-var">sendFn</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; m ()) -&gt; (LogStr -&gt; ByteString) -&gt; LogStr -&gt; m ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LogStr -&gt; ByteString
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Utils.html#logStrToBs"><span class="hs-identifier hs-var">logStrToBs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>                </span><span class="annot"><span class="annottext">SomeException -&gt; m Void
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; m a
+forall (m :: Type -&gt; Type) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679450296"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-108"></span><span>
+</span><span id="line-109"></span><span>    </span><span class="hs-comment">-- run events and notify threads</span><span>
+</span><span id="line-110"></span><span>    </span><span id="local-6989586621679450305"><span class="annot"><a href="#local-6989586621679450289"><span class="hs-identifier hs-type">runEvents</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Traversable</span></span><span> </span><span class="annot"><a href="#local-6989586621679450305"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679450305"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier hs-type">AnyEvent</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span></span><span>
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621679450289"><span class="annot"><span class="annottext">runEvents :: forall (t :: Type -&gt; Type).
+(HasCallStack, Traversable t) =&gt;
+t AnyEvent -&gt; m Void
+</span><a href="#local-6989586621679450289"><span class="hs-identifier hs-var hs-var">runEvents</span></a></span></span><span> </span><span id="local-6989586621679450349"><span class="annot"><span class="annottext">t AnyEvent
+</span><a href="#local-6989586621679450349"><span class="hs-identifier hs-var">evts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-112"></span><span>      </span><span class="annot"><span class="annottext">m Void -&gt; (Async Void -&gt; m Void) -&gt; m Void
+forall a b. HasCallStack =&gt; m a -&gt; (Async a -&gt; m b) -&gt; m b
+forall (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+m a -&gt; (Async a -&gt; m b) -&gt; m b
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-async-0.1-92505361e9389c19c3a5d53a84746fea7444a136440f9d5dc875dfd7fe4e81c0/share/doc/html/src/Effects.Concurrent.Async.html#withAsync"><span class="hs-identifier hs-var">Async.withAsync</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; m Void -&gt; m Void
+forall a. Text -&gt; m a -&gt; m a
+</span><a href="#local-6989586621679450350"><span class="hs-identifier hs-var">logExAndRethrow</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Notify: &quot;</span></span><span> </span><span class="annot"><span class="annottext">m Void
+forall env (m :: Type -&gt; Type) k.
+(HasCallStack, HasNoteQueue env, MonadCatch m,
+ MonadLoggerNS m env k, MonadNotify m, MonadSTM m) =&gt;
+m Void
+</span><a href="Navi.html#pollNoteQueue"><span class="hs-identifier hs-var">pollNoteQueue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((Async Void -&gt; m Void) -&gt; m Void)
+-&gt; (Async Void -&gt; m Void) -&gt; m Void
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679450352"><span class="annot"><span class="annottext">Async Void
+</span><a href="#local-6989586621679450352"><span class="hs-identifier hs-var">noteThread</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-113"></span><span>        </span><span class="annot"><span class="annottext">m (t Void) -&gt; (Async (t Void) -&gt; m Void) -&gt; m Void
+forall a b. HasCallStack =&gt; m a -&gt; (Async a -&gt; m b) -&gt; m b
+forall (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+m a -&gt; (Async a -&gt; m b) -&gt; m b
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-async-0.1-92505361e9389c19c3a5d53a84746fea7444a136440f9d5dc875dfd7fe4e81c0/share/doc/html/src/Effects.Concurrent.Async.html#withAsync"><span class="hs-identifier hs-var">Async.withAsync</span></a></span><span>
+</span><span id="line-114"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (t Void) -&gt; m (t Void)
+forall a. Text -&gt; m a -&gt; m a
+</span><a href="#local-6989586621679450350"><span class="hs-identifier hs-var">logExAndRethrow</span></a></span><span>
+</span><span id="line-115"></span><span>              </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Event processing: &quot;</span></span><span>
+</span><span id="line-116"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(AnyEvent -&gt; m Void) -&gt; t AnyEvent -&gt; m (t Void)
+forall (m :: Type -&gt; Type) (t :: Type -&gt; Type) a b.
+(MonadAsync m, Traversable t) =&gt;
+(a -&gt; m b) -&gt; t a -&gt; m (t b)
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-async-0.1-92505361e9389c19c3a5d53a84746fea7444a136440f9d5dc875dfd7fe4e81c0/share/doc/html/src/Effects.Concurrent.Async.html#mapConcurrently"><span class="hs-identifier hs-var">Async.mapConcurrently</span></a></span><span> </span><span class="annot"><span class="annottext">AnyEvent -&gt; m Void
+forall (m :: Type -&gt; Type) env k.
+(HasCallStack, HasNoteQueue env, MonadCatch m, MonadIORef m,
+ MonadLoggerNS m env k, MonadSTM m, MonadSystemInfo m,
+ MonadThread m) =&gt;
+AnyEvent -&gt; m Void
+</span><a href="Navi.html#processEvent"><span class="hs-identifier hs-var">processEvent</span></a></span><span> </span><span class="annot"><span class="annottext">t AnyEvent
+</span><a href="#local-6989586621679450349"><span class="hs-identifier hs-var">evts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((Void, t Void) -&gt; Void) -&gt; m (Void, t Void) -&gt; m Void
+forall a b. (a -&gt; b) -&gt; m a -&gt; m b
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">(Void, t Void) -&gt; Void
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">(m (Void, t Void) -&gt; m Void)
+-&gt; (Async (t Void) -&gt; m (Void, t Void)) -&gt; Async (t Void) -&gt; m Void
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Async Void -&gt; Async (t Void) -&gt; m (Void, t Void)
+forall a b. HasCallStack =&gt; Async a -&gt; Async b -&gt; m (a, b)
+forall (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; Async b -&gt; m (a, b)
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-async-0.1-92505361e9389c19c3a5d53a84746fea7444a136440f9d5dc875dfd7fe4e81c0/share/doc/html/src/Effects.Concurrent.Async.html#waitBoth"><span class="hs-identifier hs-var">Async.waitBoth</span></a></span><span> </span><span class="annot"><span class="annottext">Async Void
+</span><a href="#local-6989586621679450352"><span class="hs-identifier hs-var">noteThread</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span>    </span><span id="local-6989586621679449968"><span class="annot"><a href="#local-6989586621679450350"><span class="hs-identifier hs-type">logExAndRethrow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449968"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679449873"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449968"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-121"></span><span>    </span><span id="local-6989586621679450350"><span class="annot"><span class="annottext">logExAndRethrow :: forall a. Text -&gt; m a -&gt; m a
+</span><a href="#local-6989586621679450350"><span class="hs-identifier hs-var hs-var">logExAndRethrow</span></a></span></span><span> </span><span id="local-6989586621679450371"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679450371"><span class="hs-identifier hs-var">prefix</span></a></span></span><span> </span><span id="local-6989586621679450372"><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621679450372"><span class="hs-identifier hs-var">io</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m a -&gt; (SomeException -&gt; m a) -&gt; m a
+forall (m :: Type -&gt; Type) a.
+(HasCallStack, MonadCatch m) =&gt;
+m a -&gt; (SomeException -&gt; m a) -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/exception-utils-0.1-1728acbab622bcd9468979fe1d8c02c1c03a1513a46b35cc599c4d2e06790039/share/doc/html/src/Control.Exception.Utils.html#catchSync"><span class="hs-identifier hs-var">catchSync</span></a></span><span> </span><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621679450372"><span class="hs-identifier hs-var">io</span></a></span><span> </span><span class="annot"><span class="annottext">((SomeException -&gt; m a) -&gt; m a) -&gt; (SomeException -&gt; m a) -&gt; m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679450373"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679450373"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-122"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logError"><span class="hs-identifier hs-type">logError</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679450371"><span class="hs-identifier hs-var">prefix</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; Text
+forall e. Exception e =&gt; e -&gt; Text
+</span><a href="Navi.Prelude.html#displayExceptiont"><span class="hs-identifier hs-var">displayExceptiont</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679450373"><span class="hs-identifier hs-var">ex</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>      </span><span class="annot"><span class="annottext">SomeException -&gt; m a
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; m a
+forall (m :: Type -&gt; Type) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679450373"><span class="hs-identifier hs-var">ex</span></a></span><span>
+</span><span id="line-124"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#runNavi"><span class="hs-pragma hs-type">runNavi</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-125"></span><span>
+</span><span id="line-126"></span><span class="hs-comment">{- HLINT ignore module &quot;Redundant bracket&quot; -}</span><span>
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span class="annot"><a href="Navi.html#processEvent"><span class="hs-identifier hs-type">processEvent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679449977"><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621679449976"><span class="annot"><a href="#local-6989586621679449976"><span class="hs-identifier hs-type">env</span></a></span></span><span> </span><span id="local-6989586621679449978"><span class="annot"><a href="#local-6989586621679449978"><span class="hs-identifier hs-type">k</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-131"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasNoteQueue"><span class="hs-identifier hs-type">HasNoteQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449976"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadCatch</span></span><span> </span><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#MonadIORef"><span class="hs-identifier hs-type">MonadIORef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#MonadLoggerNS"><span class="hs-identifier hs-type">MonadLoggerNS</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449976"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449978"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#MonadSTM"><span class="hs-identifier hs-type">MonadSTM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-136"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html#MonadSystemInfo"><span class="hs-identifier hs-type">MonadSystemInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-137"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#MonadThread"><span class="hs-identifier hs-type">MonadThread</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-138"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier hs-type">AnyEvent</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-140"></span><span>  </span><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
+</span><span id="line-141"></span><span id="processEvent"><span class="annot"><span class="annottext">processEvent :: forall (m :: Type -&gt; Type) env k.
+(HasCallStack, HasNoteQueue env, MonadCatch m, MonadIORef m,
+ MonadLoggerNS m env k, MonadSTM m, MonadSystemInfo m,
+ MonadThread m) =&gt;
+AnyEvent -&gt; m Void
+</span><a href="Navi.html#processEvent"><span class="hs-identifier hs-var hs-var">processEvent</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#MkAnyEvent"><span class="hs-identifier hs-type">MkAnyEvent</span></a></span><span> </span><span id="local-6989586621679450492"><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679450492"><span class="hs-identifier hs-var">event</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Void -&gt; m Void
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679450494"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">(m Void -&gt; m Void) -&gt; m Void -&gt; m Void
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-142"></span><span>  </span><span id="local-6989586621679450495"><span class="annot"><span class="annottext">ThreadId
+</span><a href="#local-6989586621679450495"><span class="hs-identifier hs-var">tid</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m ThreadId
+forall (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+m ThreadId
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#myThreadId"><span class="hs-identifier hs-var">myThreadId</span></a></span><span>
+</span><span id="line-143"></span><span>  </span><span class="annot"><span class="annottext">ThreadId -&gt; String -&gt; m ()
+forall (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+ThreadId -&gt; String -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#labelThread"><span class="hs-identifier hs-var">labelThread</span></a></span><span> </span><span class="annot"><span class="annottext">ThreadId
+</span><a href="#local-6989586621679450495"><span class="hs-identifier hs-var">tid</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679450494"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-144"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m Void
+forall (f :: Type -&gt; Type) a b. Applicative f =&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">forever</span></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m Void) -&gt; m () -&gt; m Void
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-145"></span><span>    </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logInfo"><span class="hs-identifier hs-type">logInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Checking &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679450494"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span>    </span><span id="local-6989586621679450500"><span class="annot"><span class="annottext">Maybe PollInterval
+</span><a href="#local-6989586621679450500"><span class="hs-identifier hs-var">dynamicPollInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-147"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Event result trigger -&gt; m (EventSuccess result trigger)
+forall (m :: Type -&gt; Type) env k result trigger.
+(HasCallStack, MonadLoggerNS m env k, MonadSystemInfo m,
+ Show result) =&gt;
+Event result trigger -&gt; m (EventSuccess result trigger)
+</span><a href="Navi.Event.html#runEvent"><span class="hs-identifier hs-var">Event.runEvent</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679450492"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">m (EventSuccess result trigger)
+-&gt; (EventSuccess result trigger -&gt; m (Maybe PollInterval))
+-&gt; m (Maybe PollInterval)
+forall a b. m a -&gt; (a -&gt; m b) -&gt; m b
+forall (m :: Type -&gt; Type) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">EventSuccess result trigger -&gt; m (Maybe PollInterval)
+forall trigger result.
+(HasCallStack, Ord trigger, Show result, Show trigger) =&gt;
+EventSuccess result trigger -&gt; m (Maybe PollInterval)
+</span><a href="#local-6989586621679450502"><span class="hs-identifier hs-var">handleSuccess</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-148"></span><span>        </span><span class="annot"><span class="annottext">m (Maybe PollInterval)
+-&gt; (EventError -&gt; m (Maybe PollInterval)) -&gt; m (Maybe PollInterval)
+forall e a. (HasCallStack, Exception e) =&gt; m a -&gt; (e -&gt; m a) -&gt; m a
+forall (m :: Type -&gt; Type) e a.
+(MonadCatch m, HasCallStack, Exception e) =&gt;
+m a -&gt; (e -&gt; m a) -&gt; m a
+</span><span class="hs-operator hs-var">`catch`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HasCallStack =&gt; EventError -&gt; m ()
+EventError -&gt; m ()
+</span><a href="#local-6989586621679450504"><span class="hs-identifier hs-var">handleEventError</span></a></span><span> </span><span class="annot"><span class="annottext">(EventError -&gt; m ())
+-&gt; (m () -&gt; m (Maybe PollInterval))
+-&gt; EventError
+-&gt; m (Maybe PollInterval)
+forall {k} (cat :: k -&gt; k -&gt; Type) (a :: k) (b :: k) (c :: k).
+Category cat =&gt;
+cat a b -&gt; cat b c -&gt; cat a c
+</span><span class="hs-operator hs-var">&gt;&gt;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m () -&gt; Maybe PollInterval -&gt; m (Maybe PollInterval)
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe PollInterval
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-149"></span><span>        </span><span class="annot"><span class="annottext">m (Maybe PollInterval)
+-&gt; (SomeException -&gt; m (Maybe PollInterval))
+-&gt; m (Maybe PollInterval)
+forall (m :: Type -&gt; Type) a.
+(HasCallStack, MonadCatch m) =&gt;
+m a -&gt; (SomeException -&gt; m a) -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/exception-utils-0.1-1728acbab622bcd9468979fe1d8c02c1c03a1513a46b35cc599c4d2e06790039/share/doc/html/src/Control.Exception.Utils.html#catchSync"><span class="hs-operator hs-var">`catchSync`</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HasCallStack =&gt; SomeException -&gt; m ()
+SomeException -&gt; m ()
+</span><a href="#local-6989586621679450507"><span class="hs-identifier hs-var">handleSomeException</span></a></span><span> </span><span class="annot"><span class="annottext">(SomeException -&gt; m ())
+-&gt; (m () -&gt; m (Maybe PollInterval))
+-&gt; SomeException
+-&gt; m (Maybe PollInterval)
+forall {k} (cat :: k -&gt; k -&gt; Type) (a :: k) (b :: k) (c :: k).
+Category cat =&gt;
+cat a b -&gt; cat b c -&gt; cat a c
+</span><span class="hs-operator hs-var">&gt;&gt;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m () -&gt; Maybe PollInterval -&gt; m (Maybe PollInterval)
+forall (f :: Type -&gt; Type) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe PollInterval
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-150"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679450508"><span class="annot"><span class="annottext">pollInterval :: PollInterval
+</span><a href="#local-6989586621679450508"><span class="hs-identifier hs-var hs-var">pollInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PollInterval -&gt; Maybe PollInterval -&gt; PollInterval
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">PollInterval
+</span><a href="#local-6989586621679450510"><span class="hs-identifier hs-var">staticPollInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PollInterval
+</span><a href="#local-6989586621679450500"><span class="hs-identifier hs-var">dynamicPollInterval</span></a></span><span>
+</span><span id="line-151"></span><span>    </span><span class="annot"><span class="annottext">Natural -&gt; m ()
+forall (m :: Type -&gt; Type).
+(HasCallStack, MonadThread m) =&gt;
+Natural -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#sleep"><span class="hs-identifier hs-var">sleep</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PollInterval
+</span><a href="#local-6989586621679450508"><span class="hs-identifier hs-var">pollInterval</span></a></span><span> </span><span class="annot"><span class="annottext">PollInterval -&gt; Optic' An_Iso NoIx PollInterval Natural -&gt; Natural
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' An_Iso NoIx PollInterval Natural
+</span><span class="">#unPollInterval</span></span><span class="hs-special">)</span><span>
+</span><span id="line-152"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-153"></span><span>    </span><span id="local-6989586621679450494"><span class="annot"><span class="annottext">name :: Text
+</span><a href="#local-6989586621679450494"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679450492"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+-&gt; Optic' A_Lens NoIx (Event result trigger) Text -&gt; Text
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event result trigger) Text
+</span><span class="">#name</span></span><span>
+</span><span id="line-154"></span><span>    </span><span id="local-6989586621679450511"><span class="annot"><span class="annottext">errorNote :: ErrorNote
+</span><a href="#local-6989586621679450511"><span class="hs-identifier hs-var hs-var">errorNote</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679450492"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+-&gt; Optic' A_Lens NoIx (Event result trigger) ErrorNote -&gt; ErrorNote
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event result trigger) ErrorNote
+</span><span class="">#errorNote</span></span><span>
+</span><span id="line-155"></span><span>
+</span><span id="line-156"></span><span>    </span><span id="local-6989586621679450510"><span class="annot"><span class="annottext">staticPollInterval :: PollInterval
+</span><a href="#local-6989586621679450510"><span class="hs-identifier hs-var hs-var">staticPollInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Event result trigger
+</span><a href="#local-6989586621679450492"><span class="hs-identifier hs-var">event</span></a></span><span> </span><span class="annot"><span class="annottext">Event result trigger
+-&gt; Optic' A_Lens NoIx (Event result trigger) PollInterval
+-&gt; PollInterval
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (Event result trigger) PollInterval
+</span><span class="">#pollInterval</span></span><span>
+</span><span id="line-157"></span><span>
+</span><span id="line-158"></span><span>    </span><span id="local-6989586621679450036"><span id="local-6989586621679450037"><span class="annot"><a href="#local-6989586621679450502"><span class="hs-identifier hs-type">handleSuccess</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-159"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679450036"><span class="hs-identifier hs-type">trigger</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679450037"><span class="hs-identifier hs-type">result</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679450036"><span class="hs-identifier hs-type">trigger</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-160"></span><span>      </span><span class="annot"><a href="Navi.Event.Types.html#EventSuccess"><span class="hs-identifier hs-type">EventSuccess</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679450037"><span class="hs-identifier hs-type">result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679450036"><span class="hs-identifier hs-type">trigger</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-161"></span><span>      </span><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Data.PollInterval.html#PollInterval"><span class="hs-identifier hs-type">PollInterval</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-162"></span><span>    </span><span id="local-6989586621679450502"><span class="annot"><span class="annottext">handleSuccess :: forall trigger result.
+(HasCallStack, Ord trigger, Show result, Show trigger) =&gt;
+EventSuccess result trigger -&gt; m (Maybe PollInterval)
+</span><a href="#local-6989586621679450502"><span class="hs-identifier hs-var hs-var">handleSuccess</span></a></span></span><span> </span><span id="local-6989586621679450594"><span class="annot"><span class="annottext">EventSuccess result trigger
+</span><a href="#local-6989586621679450594"><span class="hs-identifier hs-var">es</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-163"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m (Maybe PollInterval) -&gt; m (Maybe PollInterval)
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;handleSuccess&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m (Maybe PollInterval) -&gt; m (Maybe PollInterval))
+-&gt; m (Maybe PollInterval) -&gt; m (Maybe PollInterval)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-164"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">result -&gt; Maybe (trigger, NaviNote)
+</span><a href="#local-6989586621679450595"><span class="hs-identifier hs-var">raiseAlert</span></a></span><span> </span><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679450596"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-165"></span><span>          </span><span class="annot"><span class="annottext">Maybe (trigger, NaviNote)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-166"></span><span>            </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;No alert to raise &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">result -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679450596"><span class="hs-identifier hs-var">result</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-167"></span><span>            </span><span class="annot"><span class="annottext">RepeatEvent trigger -&gt; Maybe trigger -&gt; m ()
+forall a (m :: Type -&gt; Type).
+(Eq a, MonadIORef m) =&gt;
+RepeatEvent a -&gt; Maybe a -&gt; m ()
+</span><a href="Navi.Event.html#updatePrevTrigger"><span class="hs-identifier hs-var">Event.updatePrevTrigger</span></a></span><span> </span><span class="annot"><span class="annottext">RepeatEvent trigger
+</span><a href="#local-6989586621679450601"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe trigger
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-168"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679450602"><span class="annot"><span class="annottext">trigger
+</span><a href="#local-6989586621679450602"><span class="hs-identifier hs-var">trigger</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679450603"><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679450603"><span class="hs-identifier hs-var">note</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-169"></span><span>            </span><span id="local-6989586621679450604"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679450604"><span class="hs-identifier hs-var">blocked</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">RepeatEvent trigger -&gt; trigger -&gt; m Bool
+forall a (m :: Type -&gt; Type) env k.
+(Ord a, MonadLoggerNS m env k, MonadIORef m, Show a) =&gt;
+RepeatEvent a -&gt; a -&gt; m Bool
+</span><a href="Navi.Event.html#blockRepeat"><span class="hs-identifier hs-var">Event.blockRepeat</span></a></span><span> </span><span class="annot"><span class="annottext">RepeatEvent trigger
+</span><a href="#local-6989586621679450601"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="annot"><span class="annottext">trigger
+</span><a href="#local-6989586621679450602"><span class="hs-identifier hs-var">trigger</span></a></span><span>
+</span><span id="line-170"></span><span>            </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679450604"><span class="hs-identifier hs-var">blocked</span></a></span><span>
+</span><span id="line-171"></span><span>              </span><span class="hs-keyword">then</span><span> </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Alert blocked &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">result -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">result
+</span><a href="#local-6989586621679450596"><span class="hs-identifier hs-var">result</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-172"></span><span>              </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-173"></span><span>                </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logInfo"><span class="hs-identifier hs-type">logInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Sending note &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">NaviNote -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679450603"><span class="hs-identifier hs-var">note</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-174"></span><span>                </span><span class="annot"><span class="annottext">RepeatEvent trigger -&gt; Maybe trigger -&gt; m ()
+forall a (m :: Type -&gt; Type).
+(Eq a, MonadIORef m) =&gt;
+RepeatEvent a -&gt; Maybe a -&gt; m ()
+</span><a href="Navi.Event.html#updatePrevTrigger"><span class="hs-identifier hs-var">Event.updatePrevTrigger</span></a></span><span> </span><span class="annot"><span class="annottext">RepeatEvent trigger
+</span><a href="#local-6989586621679450601"><span class="hs-identifier hs-var">repeatEvent</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">trigger -&gt; Maybe trigger
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">trigger
+</span><a href="#local-6989586621679450602"><span class="hs-identifier hs-var">trigger</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-175"></span><span>                </span><span class="annot"><span class="annottext">NaviNote -&gt; m ()
+forall env (m :: Type -&gt; Type).
+(HasCallStack, HasNoteQueue env, MonadReader env m, MonadSTM m) =&gt;
+NaviNote -&gt; m ()
+</span><a href="Navi.Env.Core.html#sendNoteQueue"><span class="hs-identifier hs-var">sendNoteQueue</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679450603"><span class="hs-identifier hs-var">note</span></a></span><span>
+</span><span id="line-176"></span><span>        </span><span class="hs-identifier">pure</span><span> </span><span class="annot"><span class="annottext">Maybe PollInterval
+</span><a href="#local-6989586621679450606"><span class="hs-identifier hs-var">pollInterval</span></a></span><span>
+</span><span id="line-177"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-178"></span><span>        </span><span id="local-6989586621679450606"><span class="annot"><span class="annottext">pollInterval :: Maybe PollInterval
+</span><a href="#local-6989586621679450606"><span class="hs-identifier hs-var hs-var">pollInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EventSuccess result trigger
+</span><a href="#local-6989586621679450594"><span class="hs-identifier hs-var">es</span></a></span><span> </span><span class="annot"><span class="annottext">EventSuccess result trigger
+-&gt; Optic'
+     A_Lens NoIx (EventSuccess result trigger) (Maybe PollInterval)
+-&gt; Maybe PollInterval
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic'
+  A_Lens NoIx (EventSuccess result trigger) (Maybe PollInterval)
+</span><span class="">#pollInterval</span></span><span>
+</span><span id="line-179"></span><span>        </span><span id="local-6989586621679450595"><span class="annot"><span class="annottext">raiseAlert :: result -&gt; Maybe (trigger, NaviNote)
+</span><a href="#local-6989586621679450595"><span class="hs-identifier hs-var hs-var">raiseAlert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EventSuccess result trigger
+</span><a href="#local-6989586621679450594"><span class="hs-identifier hs-var">es</span></a></span><span> </span><span class="annot"><span class="annottext">EventSuccess result trigger
+-&gt; Optic'
+     A_Lens
+     NoIx
+     (EventSuccess result trigger)
+     (result -&gt; Maybe (trigger, NaviNote))
+-&gt; result
+-&gt; Maybe (trigger, NaviNote)
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic'
+  A_Lens
+  NoIx
+  (EventSuccess result trigger)
+  (result -&gt; Maybe (trigger, NaviNote))
+</span><span class="">#raiseAlert</span></span><span>
+</span><span id="line-180"></span><span>        </span><span id="local-6989586621679450596"><span class="annot"><span class="annottext">result :: result
+</span><a href="#local-6989586621679450596"><span class="hs-identifier hs-var hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EventSuccess result trigger
+</span><a href="#local-6989586621679450594"><span class="hs-identifier hs-var">es</span></a></span><span> </span><span class="annot"><span class="annottext">EventSuccess result trigger
+-&gt; Optic' A_Lens NoIx (EventSuccess result trigger) result
+-&gt; result
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx (EventSuccess result trigger) result
+</span><span class="">#result</span></span><span>
+</span><span id="line-181"></span><span>        </span><span id="local-6989586621679450601"><span class="annot"><span class="annottext">repeatEvent :: RepeatEvent trigger
+</span><a href="#local-6989586621679450601"><span class="hs-identifier hs-var hs-var">repeatEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EventSuccess result trigger
+</span><a href="#local-6989586621679450594"><span class="hs-identifier hs-var">es</span></a></span><span> </span><span class="annot"><span class="annottext">EventSuccess result trigger
+-&gt; Optic'
+     A_Lens NoIx (EventSuccess result trigger) (RepeatEvent trigger)
+-&gt; RepeatEvent trigger
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic'
+  A_Lens NoIx (EventSuccess result trigger) (RepeatEvent trigger)
+</span><span class="">#repeatEvent</span></span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span>    </span><span class="annot"><a href="#local-6989586621679450504"><span class="hs-identifier hs-type">handleEventError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Navi.Event.Types.EventError.html#EventError"><span class="hs-identifier hs-type">EventError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-184"></span><span>    </span><span id="local-6989586621679450504"><span class="annot"><span class="annottext">handleEventError :: HasCallStack =&gt; EventError -&gt; m ()
+</span><a href="#local-6989586621679450504"><span class="hs-identifier hs-var hs-var">handleEventError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-185"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m () -&gt; m ()
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;handleEventError&quot;</span></span><span>
+</span><span id="line-186"></span><span>        </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; (EventError -&gt; m ()) -&gt; EventError -&gt; m ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(EventError -&gt; NaviNote) -&gt; EventError -&gt; m ()
+forall e.
+(HasCallStack, Exception e) =&gt;
+(e -&gt; NaviNote) -&gt; e -&gt; m ()
+</span><a href="#local-6989586621679450616"><span class="hs-identifier hs-var">handleErr</span></a></span><span> </span><span class="annot"><span class="annottext">EventError -&gt; NaviNote
+</span><a href="Navi.html#eventErrToNote"><span class="hs-identifier hs-var">eventErrToNote</span></a></span><span>
+</span><span id="line-187"></span><span>
+</span><span id="line-188"></span><span>    </span><span class="annot"><a href="#local-6989586621679450507"><span class="hs-identifier hs-type">handleSomeException</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SomeException</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-189"></span><span>    </span><span id="local-6989586621679450507"><span class="annot"><span class="annottext">handleSomeException :: HasCallStack =&gt; SomeException -&gt; m ()
+</span><a href="#local-6989586621679450507"><span class="hs-identifier hs-var hs-var">handleSomeException</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-190"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m () -&gt; m ()
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;handleSomeException&quot;</span></span><span>
+</span><span id="line-191"></span><span>        </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; (SomeException -&gt; m ()) -&gt; SomeException -&gt; m ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(SomeException -&gt; NaviNote) -&gt; SomeException -&gt; m ()
+forall e.
+(HasCallStack, Exception e) =&gt;
+(e -&gt; NaviNote) -&gt; e -&gt; m ()
+</span><a href="#local-6989586621679450616"><span class="hs-identifier hs-var">handleErr</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; NaviNote
+</span><a href="Navi.html#exToNote"><span class="hs-identifier hs-var">exToNote</span></a></span><span>
+</span><span id="line-192"></span><span>
+</span><span id="line-193"></span><span>    </span><span id="local-6989586621679450081"><span class="annot"><a href="#local-6989586621679450616"><span class="hs-identifier hs-type">handleErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="#local-6989586621679450081"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679450081"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679450081"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679449977"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-194"></span><span>    </span><span id="local-6989586621679450616"><span class="annot"><span class="annottext">handleErr :: forall e.
+(HasCallStack, Exception e) =&gt;
+(e -&gt; NaviNote) -&gt; e -&gt; m ()
+</span><a href="#local-6989586621679450616"><span class="hs-identifier hs-var hs-var">handleErr</span></a></span></span><span> </span><span id="local-6989586621679450651"><span class="annot"><span class="annottext">e -&gt; NaviNote
+</span><a href="#local-6989586621679450651"><span class="hs-identifier hs-var">toNote</span></a></span></span><span> </span><span id="local-6989586621679450652"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679450652"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-195"></span><span>      </span><span id="local-6989586621679450653"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679450653"><span class="hs-identifier hs-var">blockErrEvent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ErrorNote -&gt; m Bool
+forall (m :: Type -&gt; Type) env k.
+(MonadLoggerNS m env k, MonadIORef m) =&gt;
+ErrorNote -&gt; m Bool
+</span><a href="Navi.Event.html#blockErr"><span class="hs-identifier hs-var">Event.blockErr</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorNote
+</span><a href="#local-6989586621679450511"><span class="hs-identifier hs-var">errorNote</span></a></span><span>
+</span><span id="line-196"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logError"><span class="hs-identifier hs-type">logError</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">e -&gt; Text
+forall e. Exception e =&gt; e -&gt; Text
+</span><a href="Navi.Prelude.html#displayExceptiont"><span class="hs-identifier hs-var">displayExceptiont</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679450652"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-197"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679450653"><span class="hs-identifier hs-var">blockErrEvent</span></a></span><span>
+</span><span id="line-198"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Error note blocked&quot;</span></span><span>
+</span><span id="line-199"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">NaviNote -&gt; m ()
+forall env (m :: Type -&gt; Type).
+(HasCallStack, HasNoteQueue env, MonadReader env m, MonadSTM m) =&gt;
+NaviNote -&gt; m ()
+</span><a href="Navi.Env.Core.html#sendNoteQueue"><span class="hs-identifier hs-var">sendNoteQueue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">e -&gt; NaviNote
+</span><a href="#local-6989586621679450651"><span class="hs-identifier hs-var">toNote</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679450652"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-200"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#processEvent"><span class="hs-pragma hs-type">processEvent</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-201"></span><span>
+</span><span id="line-202"></span><span class="annot"><a href="Navi.html#eventErrToNote"><span class="hs-identifier hs-type">eventErrToNote</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Event.Types.EventError.html#EventError"><span class="hs-identifier hs-type">EventError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span>
+</span><span id="line-203"></span><span id="eventErrToNote"><span class="annot"><span class="annottext">eventErrToNote :: EventError -&gt; NaviNote
+</span><a href="Navi.html#eventErrToNote"><span class="hs-identifier hs-var hs-var">eventErrToNote</span></a></span></span><span> </span><span id="local-6989586621679450655"><span class="annot"><span class="annottext">EventError
+</span><a href="#local-6989586621679450655"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-204"></span><span>  </span><span class="annot"><a href="Navi.Data.NaviNote.html#MkNaviNote"><span class="hs-identifier hs-type">MkNaviNote</span></a></span><span>
+</span><span id="line-205"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">summary :: Text
+</span><a href="Navi.Data.NaviNote.html#summary"><span class="hs-identifier hs-var">summary</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EventError
+</span><a href="#local-6989586621679450655"><span class="hs-identifier hs-var">ex</span></a></span><span> </span><span class="annot"><span class="annottext">EventError -&gt; Optic' A_Lens NoIx EventError Text -&gt; Text
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx EventError Text
+</span><span class="">#name</span></span><span class="hs-special">,</span><span>
+</span><span id="line-206"></span><span>      </span><span class="annot"><span class="annottext">body :: Maybe Text
+</span><a href="Navi.Data.NaviNote.html#body"><span class="hs-identifier hs-var">body</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe Text) -&gt; Text -&gt; Maybe Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">EventError
+</span><a href="#local-6989586621679450655"><span class="hs-identifier hs-var">ex</span></a></span><span> </span><span class="annot"><span class="annottext">EventError -&gt; Optic' A_Lens NoIx EventError Text -&gt; Text
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx EventError Text
+</span><span class="">#short</span></span><span class="hs-special">,</span><span>
+</span><span id="line-207"></span><span>      </span><span class="annot"><span class="annottext">urgency :: Maybe UrgencyLevel
+</span><a href="Navi.Data.NaviNote.html#urgency"><span class="hs-identifier hs-var">urgency</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UrgencyLevel -&gt; Maybe UrgencyLevel
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">UrgencyLevel
+</span><a href="file:///nix/store/kdwapafxh1d365gbb6q2lr5bvqs8fbw2-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#Critical"><span class="hs-identifier hs-var">Critical</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-208"></span><span>      </span><span class="annot"><span class="annottext">timeout :: Maybe Timeout
+</span><a href="Navi.Data.NaviNote.html#timeout"><span class="hs-identifier hs-var">timeout</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Timeout
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-209"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-210"></span><span>
+</span><span id="line-211"></span><span class="annot"><a href="Navi.html#exToNote"><span class="hs-identifier hs-type">exToNote</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SomeException</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Navi.Data.NaviNote.html#NaviNote"><span class="hs-identifier hs-type">NaviNote</span></a></span><span>
+</span><span id="line-212"></span><span id="exToNote"><span class="annot"><span class="annottext">exToNote :: SomeException -&gt; NaviNote
+</span><a href="Navi.html#exToNote"><span class="hs-identifier hs-var hs-var">exToNote</span></a></span></span><span> </span><span id="local-6989586621679450656"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679450656"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-213"></span><span>  </span><span class="annot"><a href="Navi.Data.NaviNote.html#MkNaviNote"><span class="hs-identifier hs-type">MkNaviNote</span></a></span><span>
+</span><span id="line-214"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">summary :: Text
+</span><a href="Navi.Data.NaviNote.html#summary"><span class="hs-identifier hs-var">summary</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Exception&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-215"></span><span>      </span><span class="annot"><span class="annottext">body :: Maybe Text
+</span><a href="Navi.Data.NaviNote.html#body"><span class="hs-identifier hs-var">body</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe Text) -&gt; Text -&gt; Maybe Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="Navi.Prelude.html#packText"><span class="hs-identifier hs-var">packText</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SomeException -&gt; String
+forall e. Exception e =&gt; e -&gt; String
+</span><a href="Navi.Utils.html#displayInner"><span class="hs-identifier hs-var">U.displayInner</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679450656"><span class="hs-identifier hs-var">ex</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-216"></span><span>      </span><span class="annot"><span class="annottext">urgency :: Maybe UrgencyLevel
+</span><a href="Navi.Data.NaviNote.html#urgency"><span class="hs-identifier hs-var">urgency</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UrgencyLevel -&gt; Maybe UrgencyLevel
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">UrgencyLevel
+</span><a href="file:///nix/store/kdwapafxh1d365gbb6q2lr5bvqs8fbw2-fdo-notify-0.3.1-doc/share/doc/fdo-notify-0.3.1/html/src/DBus.Notify.html#Critical"><span class="hs-identifier hs-var">Critical</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-217"></span><span>      </span><span class="annot"><span class="annottext">timeout :: Maybe Timeout
+</span><a href="Navi.Data.NaviNote.html#timeout"><span class="hs-identifier hs-var">timeout</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Timeout
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-218"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-219"></span><span>
+</span><span id="line-220"></span><span id="local-6989586621679449969"><span id="local-6989586621679449970"><span id="local-6989586621679449971"><span class="annot"><a href="Navi.html#pollNoteQueue"><span class="hs-identifier hs-type">pollNoteQueue</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-221"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-222"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasNoteQueue"><span class="hs-identifier hs-type">HasNoteQueue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449969"><span class="hs-identifier hs-type">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-223"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadCatch</span></span><span> </span><span class="annot"><a href="#local-6989586621679449970"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-224"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#MonadLoggerNS"><span class="hs-identifier hs-type">MonadLoggerNS</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449970"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449969"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449971"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-225"></span><span>    </span><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier hs-type">MonadNotify</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449970"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-226"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#MonadSTM"><span class="hs-identifier hs-type">MonadSTM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449970"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-227"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-228"></span><span>  </span><span class="annot"><a href="#local-6989586621679449970"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span></span></span></span><span>
+</span><span id="line-229"></span><span id="pollNoteQueue"><span class="annot"><span class="annottext">pollNoteQueue :: forall env (m :: Type -&gt; Type) k.
+(HasCallStack, HasNoteQueue env, MonadCatch m,
+ MonadLoggerNS m env k, MonadNotify m, MonadSTM m) =&gt;
+m Void
+</span><a href="Navi.html#pollNoteQueue"><span class="hs-identifier hs-var hs-var">pollNoteQueue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Void -&gt; m Void
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;note-poller&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m Void -&gt; m Void) -&gt; m Void -&gt; m Void
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-230"></span><span>  </span><span id="local-6989586621679450703"><span class="annot"><span class="annottext">TBQueue NaviNote
+</span><a href="#local-6989586621679450703"><span class="hs-identifier hs-var">queue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(env -&gt; TBQueue NaviNote) -&gt; m (TBQueue NaviNote)
+forall r (m :: Type -&gt; Type) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">env -&gt; TBQueue NaviNote
+forall env. HasNoteQueue env =&gt; env -&gt; TBQueue NaviNote
+</span><a href="Navi.Env.Core.html#getNoteQueue"><span class="hs-identifier hs-var">getNoteQueue</span></a></span><span>
+</span><span id="line-231"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m Void
+forall (f :: Type -&gt; Type) a b. Applicative f =&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">forever</span></span><span>
+</span><span id="line-232"></span><span>    </span><span class="annot"><span class="annottext">(m () -&gt; m Void) -&gt; m () -&gt; m Void
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TBQueue NaviNote -&gt; m NaviNote
+forall (m :: Type -&gt; Type) a.
+(HasCallStack, MonadSTM m) =&gt;
+TBQueue a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#readTBQueueA"><span class="hs-identifier hs-var">readTBQueueA</span></a></span><span> </span><span class="annot"><span class="annottext">TBQueue NaviNote
+</span><a href="#local-6989586621679450703"><span class="hs-identifier hs-var">queue</span></a></span><span>
+</span><span id="line-233"></span><span>    </span><span class="annot"><span class="annottext">m NaviNote -&gt; (NaviNote -&gt; m ()) -&gt; m ()
+forall a b. m a -&gt; (a -&gt; m b) -&gt; m b
+forall (m :: Type -&gt; Type) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679450705"><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679450705"><span class="hs-identifier hs-var">nn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-234"></span><span>      </span><span class="annot"><span class="annottext">NaviNote -&gt; m ()
+forall (m :: Type -&gt; Type).
+(MonadNotify m, HasCallStack) =&gt;
+NaviNote -&gt; m ()
+</span><a href="Navi.Effects.MonadNotify.html#sendNote"><span class="hs-identifier hs-var">sendNote</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679450705"><span class="hs-identifier hs-var">nn</span></a></span><span> </span><span class="annot"><span class="annottext">m () -&gt; (ClientError -&gt; m ()) -&gt; m ()
+forall e a. (HasCallStack, Exception e) =&gt; m a -&gt; (e -&gt; m a) -&gt; m a
+forall (m :: Type -&gt; Type) e a.
+(MonadCatch m, HasCallStack, Exception e) =&gt;
+m a -&gt; (e -&gt; m a) -&gt; m a
+</span><span class="hs-operator hs-var">`catch`</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679450706"><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621679450706"><span class="hs-identifier hs-var">ce</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-235"></span><span>        </span><span class="hs-comment">-- NOTE: Rethrow all exceptions except:</span><span>
+</span><span id="line-236"></span><span>        </span><span class="hs-comment">--</span><span>
+</span><span id="line-237"></span><span>        </span><span class="hs-comment">-- 1. Non-fatal dbus errors e.g. quickly sending the same notif twice.</span><span>
+</span><span id="line-238"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">ClientError -&gt; Bool
+</span><a href="file:///nix/store/9wf5qn5d8b19y8x23msw7ilw9v6gzxbr-dbus-1.3.11-doc/share/doc/dbus-1.3.11/html/src/DBus.Client.html#clientErrorFatal"><span class="hs-identifier hs-var">clientErrorFatal</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621679450706"><span class="hs-identifier hs-var">ce</span></a></span><span>
+</span><span id="line-239"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">ClientError -&gt; m ()
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; m a
+forall (m :: Type -&gt; Type) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; m a
+</span><span class="hs-identifier hs-var">throwM</span></span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621679450706"><span class="hs-identifier hs-var">ce</span></a></span><span>
+</span><span id="line-240"></span><span>          </span><span class="hs-keyword">else</span><span>
+</span><span id="line-241"></span><span>            </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logError"><span class="hs-identifier hs-type">logError</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-242"></span><span>              </span><span class="annot"><span class="annottext">(Text -&gt; m ()) -&gt; Text -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Received non-fatal dbus error: &quot;</span></span><span>
+</span><span id="line-243"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="Navi.Prelude.html#packText"><span class="hs-identifier hs-var">packText</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ClientError -&gt; String
+forall e. Exception e =&gt; e -&gt; String
+</span><span class="hs-identifier hs-var">displayException</span></span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621679450706"><span class="hs-identifier hs-var">ce</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-244"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#pollNoteQueue"><span class="hs-pragma hs-type">pollNoteQueue</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-245"></span><span>
+</span><span id="line-246"></span><span id="local-6989586621679449939"><span id="local-6989586621679449940"><span id="local-6989586621679449941"><span class="annot"><a href="Navi.html#pollLogQueue"><span class="hs-identifier hs-type">pollLogQueue</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-247"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-248"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#MonadLoggerNS"><span class="hs-identifier hs-type">MonadLoggerNS</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449939"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449940"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449941"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-249"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-fs-0.1-939bb2cbf42411240e371281dbd18acb7c2362452fb536058a1de1cb3f641bb3/share/doc/html/src/Effects.FileSystem.HandleWriter.html#MonadHandleWriter"><span class="hs-identifier hs-type">MonadHandleWriter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449939"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-250"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadMask</span></span><span> </span><span class="annot"><a href="#local-6989586621679449939"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-251"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#MonadSTM"><span class="hs-identifier hs-type">MonadSTM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449939"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-252"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-terminal-0.1-5e9320c252a0a4f19fc23b01106505f5ee3c09507f1c769f2d400dfcdae28ef8/share/doc/html/src/Effects.System.Terminal.html#MonadTerminal"><span class="hs-identifier hs-type">MonadTerminal</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449939"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-253"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-254"></span><span>  </span><span class="annot"><a href="Navi.Data.NaviLog.html#LogEnv"><span class="hs-identifier hs-type">LogEnv</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-255"></span><span>  </span><span class="annot"><a href="#local-6989586621679449939"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span></span></span></span><span>
+</span><span id="line-256"></span><span id="pollLogQueue"><span class="annot"><span class="annottext">pollLogQueue :: forall (m :: Type -&gt; Type) env k.
+(HasCallStack, MonadLoggerNS m env k, MonadHandleWriter m,
+ MonadMask m, MonadSTM m, MonadTerminal m) =&gt;
+LogEnv -&gt; m Void
+</span><a href="Navi.html#pollLogQueue"><span class="hs-identifier hs-var hs-var">pollLogQueue</span></a></span></span><span> </span><span id="local-6989586621679450741"><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679450741"><span class="hs-identifier hs-var">logEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Void -&gt; m Void
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;logger&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m Void -&gt; m Void) -&gt; m Void -&gt; m Void
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-257"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m Void
+forall (f :: Type -&gt; Type) a b. Applicative f =&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">forever</span></span><span>
+</span><span id="line-258"></span><span>    </span><span class="annot"><span class="annottext">(m () -&gt; m Void) -&gt; m () -&gt; m Void
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-259"></span><span>    </span><span class="hs-comment">-- NOTE: Rethrow all exceptions</span><span>
+</span><span id="line-260"></span><span>    </span><span class="annot"><span class="annottext">TBQueue LogStr -&gt; (LogStr -&gt; m ()) -&gt; m ()
+forall (m :: Type -&gt; Type) a b.
+(HasCallStack, MonadMask m, MonadSTM m) =&gt;
+TBQueue a -&gt; (a -&gt; m b) -&gt; m ()
+</span><a href="Navi.html#atomicReadWrite"><span class="hs-identifier hs-var">atomicReadWrite</span></a></span><span> </span><span class="annot"><span class="annottext">TBQueue LogStr
+</span><a href="#local-6989586621679450743"><span class="hs-identifier hs-var">queue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; m ()
+</span><a href="#local-6989586621679450744"><span class="hs-identifier hs-var">sendFn</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; m ()) -&gt; (LogStr -&gt; ByteString) -&gt; LogStr -&gt; m ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LogStr -&gt; ByteString
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Utils.html#logStrToBs"><span class="hs-identifier hs-var">logStrToBs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-261"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-262"></span><span>    </span><span id="local-6989586621679450743"><span class="annot"><span class="annottext">queue :: TBQueue LogStr
+</span><a href="#local-6989586621679450743"><span class="hs-identifier hs-var hs-var">queue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679450741"><span class="hs-identifier hs-var">logEnv</span></a></span><span> </span><span class="annot"><span class="annottext">LogEnv
+-&gt; Optic' A_Lens NoIx LogEnv (TBQueue LogStr) -&gt; TBQueue LogStr
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx LogEnv (TBQueue LogStr)
+</span><span class="">#logQueue</span></span><span>
+</span><span id="line-263"></span><span>    </span><span id="local-6989586621679450744"><span class="annot"><span class="annottext">sendFn :: ByteString -&gt; m ()
+</span><a href="#local-6989586621679450744"><span class="hs-identifier hs-var hs-var">sendFn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogEnv -&gt; ByteString -&gt; m ()
+forall (m :: Type -&gt; Type).
+(HasCallStack, MonadHandleWriter m, MonadTerminal m) =&gt;
+LogEnv -&gt; ByteString -&gt; m ()
+</span><a href="Navi.html#getLoggerFn"><span class="hs-identifier hs-var">getLoggerFn</span></a></span><span> </span><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679450741"><span class="hs-identifier hs-var">logEnv</span></a></span><span>
+</span><span id="line-264"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#pollLogQueue"><span class="hs-pragma hs-type">pollLogQueue</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-265"></span><span>
+</span><span id="line-266"></span><span id="local-6989586621679449952"><span class="annot"><a href="Navi.html#getLoggerFn"><span class="hs-identifier hs-type">getLoggerFn</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-267"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-268"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-fs-0.1-939bb2cbf42411240e371281dbd18acb7c2362452fb536058a1de1cb3f641bb3/share/doc/html/src/Effects.FileSystem.HandleWriter.html#MonadHandleWriter"><span class="hs-identifier hs-type">MonadHandleWriter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449952"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-269"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-terminal-0.1-5e9320c252a0a4f19fc23b01106505f5ee3c09507f1c769f2d400dfcdae28ef8/share/doc/html/src/Effects.System.Terminal.html#MonadTerminal"><span class="hs-identifier hs-type">MonadTerminal</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679449952"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-270"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-271"></span><span>  </span><span class="annot"><a href="Navi.Data.NaviLog.html#LogEnv"><span class="hs-identifier hs-type">LogEnv</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-272"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679449952"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-273"></span><span id="getLoggerFn"><span class="annot"><span class="annottext">getLoggerFn :: forall (m :: Type -&gt; Type).
+(HasCallStack, MonadHandleWriter m, MonadTerminal m) =&gt;
+LogEnv -&gt; ByteString -&gt; m ()
+</span><a href="Navi.html#getLoggerFn"><span class="hs-identifier hs-var hs-var">getLoggerFn</span></a></span></span><span> </span><span id="local-6989586621679450760"><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679450760"><span class="hs-identifier hs-var">logEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; m ())
+-&gt; (Handle -&gt; ByteString -&gt; m ())
+-&gt; Maybe Handle
+-&gt; ByteString
+-&gt; m ()
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; m ()
+forall (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+ByteString -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-terminal-0.1-5e9320c252a0a4f19fc23b01106505f5ee3c09507f1c769f2d400dfcdae28ef8/share/doc/html/src/Effects.System.Terminal.html#putBinary"><span class="hs-identifier hs-var">putBinary</span></a></span><span> </span><span class="annot"><span class="annottext">Handle -&gt; ByteString -&gt; m ()
+forall {f :: Type -&gt; Type}.
+MonadHandleWriter f =&gt;
+Handle -&gt; ByteString -&gt; f ()
+</span><a href="#local-6989586621679450762"><span class="hs-identifier hs-var">toFile</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Handle
+</span><a href="#local-6989586621679450763"><span class="hs-identifier hs-var">mfileHandle</span></a></span><span>
+</span><span id="line-274"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-275"></span><span>    </span><span id="local-6989586621679450763"><span class="annot"><span class="annottext">mfileHandle :: Maybe Handle
+</span><a href="#local-6989586621679450763"><span class="hs-identifier hs-var hs-var">mfileHandle</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679450760"><span class="hs-identifier hs-var">logEnv</span></a></span><span> </span><span class="annot"><span class="annottext">LogEnv -&gt; Optic' A_Lens NoIx LogEnv (Maybe Handle) -&gt; Maybe Handle
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx LogEnv (Maybe Handle)
+</span><span class="">#logHandle</span></span><span>
+</span><span id="line-276"></span><span>    </span><span id="local-6989586621679450762"><span class="annot"><span class="annottext">toFile :: Handle -&gt; ByteString -&gt; f ()
+</span><a href="#local-6989586621679450762"><span class="hs-identifier hs-var hs-var">toFile</span></a></span></span><span> </span><span id="local-6989586621679450780"><span class="annot"><span class="annottext">Handle
+</span><a href="#local-6989586621679450780"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span id="local-6989586621679450781"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679450781"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Handle -&gt; ByteString -&gt; f ()
+forall (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; ByteString -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-fs-0.1-939bb2cbf42411240e371281dbd18acb7c2362452fb536058a1de1cb3f641bb3/share/doc/html/src/Effects.FileSystem.HandleWriter.html#hPut"><span class="hs-identifier hs-var">hPut</span></a></span><span> </span><span class="annot"><span class="annottext">Handle
+</span><a href="#local-6989586621679450780"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679450781"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">f () -&gt; f () -&gt; f ()
+forall a b. f a -&gt; f b -&gt; f b
+forall (f :: Type -&gt; Type) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
+</span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Handle -&gt; f ()
+forall (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-fs-0.1-939bb2cbf42411240e371281dbd18acb7c2362452fb536058a1de1cb3f641bb3/share/doc/html/src/Effects.FileSystem.HandleWriter.html#hFlush"><span class="hs-identifier hs-var">hFlush</span></a></span><span> </span><span class="annot"><span class="annottext">Handle
+</span><a href="#local-6989586621679450780"><span class="hs-identifier hs-var">h</span></a></span><span>
+</span><span id="line-277"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#getLoggerFn"><span class="hs-pragma hs-type">getLoggerFn</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-278"></span><span>
+</span><span id="line-279"></span><span id="local-6989586621679450100"><span id="local-6989586621679450101"><span id="local-6989586621679450102"><span class="annot"><a href="Navi.html#atomicReadWrite"><span class="hs-identifier hs-type">atomicReadWrite</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-280"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCallStack</span></span><span class="hs-special">,</span><span>
+</span><span id="line-281"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadMask</span></span><span> </span><span class="annot"><a href="#local-6989586621679450100"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-282"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#MonadSTM"><span class="hs-identifier hs-type">MonadSTM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679450100"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-283"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-284"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Queue from which to read.</span></span><span>
+</span><span id="line-285"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">TBQueue</span></span><span> </span><span class="annot"><a href="#local-6989586621679450101"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-286"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Function to apply.</span></span><span>
+</span><span id="line-287"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679450101"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679450100"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679450102"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-288"></span><span>  </span><span class="annot"><a href="#local-6989586621679450100"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-289"></span><span id="atomicReadWrite"><span class="annot"><span class="annottext">atomicReadWrite :: forall (m :: Type -&gt; Type) a b.
+(HasCallStack, MonadMask m, MonadSTM m) =&gt;
+TBQueue a -&gt; (a -&gt; m b) -&gt; m ()
+</span><a href="Navi.html#atomicReadWrite"><span class="hs-identifier hs-var hs-var">atomicReadWrite</span></a></span></span><span> </span><span id="local-6989586621679450800"><span class="annot"><span class="annottext">TBQueue a
+</span><a href="#local-6989586621679450800"><span class="hs-identifier hs-var">queue</span></a></span></span><span> </span><span id="local-6989586621679450801"><span class="annot"><span class="annottext">a -&gt; m b
+</span><a href="#local-6989586621679450801"><span class="hs-identifier hs-var">logAction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-290"></span><span>  </span><span class="hs-comment">-- NOTE: There are several options we could take here:</span><span>
+</span><span id="line-291"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-292"></span><span>  </span><span class="hs-comment">-- 1. uninterruptibleMask_ $ tryReadTBQueueA queue &gt;&gt;= traverse_ logAction</span><span>
+</span><span id="line-293"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-294"></span><span>  </span><span class="hs-comment">--    This gives us guaranteed atomicity, at the risk of a possible deadlock,</span><span>
+</span><span id="line-295"></span><span>  </span><span class="hs-comment">--    if either the read or logAction blocks indefinitely. IMPORTANT: If we</span><span>
+</span><span id="line-296"></span><span>  </span><span class="hs-comment">--    go this route, readTBQueueA _must_ be swapped for tryReadTBQueueA, as</span><span>
+</span><span id="line-297"></span><span>  </span><span class="hs-comment">--    the former relies on cancellation via an async exception i.e.</span><span>
+</span><span id="line-298"></span><span>  </span><span class="hs-comment">--    uninterruptibleMask_ + readTBQueueA = deadlock.</span><span>
+</span><span id="line-299"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-300"></span><span>  </span><span class="hs-comment">-- 2. mask $ \restore -&gt; restore (readTBQueueA queue) &gt;&gt;= void . logAction</span><span>
+</span><span id="line-301"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-302"></span><span>  </span><span class="hs-comment">--    This does not give us absolute atomicity, as logAction could be</span><span>
+</span><span id="line-303"></span><span>  </span><span class="hs-comment">--    interrupted if it is actually blocking; but that is probably the right</span><span>
+</span><span id="line-304"></span><span>  </span><span class="hs-comment">--    choice (responsiveness), and we have atomicity as long as logAction</span><span>
+</span><span id="line-305"></span><span>  </span><span class="hs-comment">--    does not block.</span><span>
+</span><span id="line-306"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-307"></span><span>  </span><span class="hs-comment">-- 3. mask_ $ readTBQueueA queue &gt;&gt;= void . logAction</span><span>
+</span><span id="line-308"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-309"></span><span>  </span><span class="hs-comment">--    Slightly simpler than 2, has the same caveat regarding atomicity.</span><span>
+</span><span id="line-310"></span><span>  </span><span class="hs-comment">--    The difference is that in the latter, readTBQueueA is also masked</span><span>
+</span><span id="line-311"></span><span>  </span><span class="hs-comment">--    as long as it is not blocking. There really is no reason for this,</span><span>
+</span><span id="line-312"></span><span>  </span><span class="hs-comment">--    as the invariant we care about is _if_ successful read then</span><span>
+</span><span id="line-313"></span><span>  </span><span class="hs-comment">--    successful handle.</span><span>
+</span><span id="line-314"></span><span>  </span><span class="annot"><span class="annottext">((forall a. m a -&gt; m a) -&gt; m ()) -&gt; m ()
+forall b. HasCallStack =&gt; ((forall a. m a -&gt; m a) -&gt; m b) -&gt; m b
+forall (m :: Type -&gt; Type) b.
+(MonadMask m, HasCallStack) =&gt;
+((forall a. m a -&gt; m a) -&gt; m b) -&gt; m b
+</span><span class="hs-identifier hs-var">mask</span></span><span> </span><span class="annot"><span class="annottext">(((forall a. m a -&gt; m a) -&gt; m ()) -&gt; m ())
+-&gt; ((forall a. m a -&gt; m a) -&gt; m ()) -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679450803"><span class="annot"><span class="annottext">forall a. m a -&gt; m a
+</span><a href="#local-6989586621679450803"><span class="hs-identifier hs-var">restore</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m a -&gt; m a
+forall a. m a -&gt; m a
+</span><a href="#local-6989586621679450803"><span class="hs-identifier hs-var">restore</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TBQueue a -&gt; m a
+forall (m :: Type -&gt; Type) a.
+(HasCallStack, MonadSTM m) =&gt;
+TBQueue a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#readTBQueueA"><span class="hs-identifier hs-var">readTBQueueA</span></a></span><span> </span><span class="annot"><span class="annottext">TBQueue a
+</span><a href="#local-6989586621679450800"><span class="hs-identifier hs-var">queue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">m a -&gt; (a -&gt; m ()) -&gt; m ()
+forall a b. m a -&gt; (a -&gt; m b) -&gt; m b
+forall (m :: Type -&gt; Type) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">m b -&gt; m ()
+forall (f :: Type -&gt; Type) a. Functor f =&gt; f a -&gt; f ()
+</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(m b -&gt; m ()) -&gt; (a -&gt; m b) -&gt; a -&gt; m ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; m b
+</span><a href="#local-6989586621679450801"><span class="hs-identifier hs-var">logAction</span></a></span><span>
+</span><span id="line-315"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.html#atomicReadWrite"><span class="hs-pragma hs-type">atomicReadWrite</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-316"></span></pre></body></html>

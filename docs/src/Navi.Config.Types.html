@@ -1,0 +1,275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE CPP #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="annot"><span class="hs-comment">-- | Provides configuration types.</span></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Config.Types.html"><span class="hs-identifier">Navi.Config.Types</span></a></span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Config</span></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#Config"><span class="hs-identifier">Config</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#ConfigErr"><span class="hs-identifier">ConfigErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Logging</span></span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#Logging"><span class="hs-identifier">Logging</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#LogLoc"><span class="hs-identifier">LogLoc</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#FilesSizeMode"><span class="hs-identifier">FilesSizeMode</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#defaultLogging"><span class="hs-identifier">defaultLogging</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#defaultSizeMode"><span class="hs-identifier">defaultSizeMode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Note System</span></span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#NoteSystem"><span class="hs-identifier">NoteSystem</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Navi.Config.Types.html#defaultNoteSystem"><span class="hs-identifier">defaultNoteSystem</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/9wf5qn5d8b19y8x23msw7ilw9v6gzxbr-dbus-1.3.11-doc/share/doc/dbus-1.3.11/html/src/DBus.Client.html"><span class="hs-identifier">DBus.Client</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/9wf5qn5d8b19y8x23msw7ilw9v6gzxbr-dbus-1.3.11-doc/share/doc/dbus-1.3.11/html/src/DBus.html"><span class="hs-identifier">DBus</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.html"><span class="hs-identifier">Data.Bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Size.html#Size"><span class="hs-identifier">Size</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Size.html#M"><span class="hs-identifier">M</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.html"><span class="hs-identifier">Data.Bytes</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Bytes</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Config.Phase.html"><span class="hs-identifier">Navi.Config.Phase</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhase"><span class="hs-identifier">ConfigPhase</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhaseEnv"><span class="hs-identifier">ConfigPhaseEnv</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhaseToml"><span class="hs-identifier">ConfigPhaseToml</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Event.html"><span class="hs-identifier">Navi.Event</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier">AnyEvent</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="annot"><span class="hs-comment">-- | Log location configuration.</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="LogLoc"><span class="annot"><a href="Navi.Config.Types.html#LogLoc"><span class="hs-identifier hs-var">LogLoc</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="DefPath"><span class="annot"><a href="Navi.Config.Types.html#DefPath"><span class="hs-identifier hs-var">DefPath</span></a></span></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Stdout"><span class="annot"><a href="Navi.Config.Types.html#Stdout"><span class="hs-identifier hs-var">Stdout</span></a></span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="File"><span class="annot"><a href="Navi.Config.Types.html#File"><span class="hs-identifier hs-var">File</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">OsPath</span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679445555"><span id="local-6989586621679445562"><span class="annot"><span class="annottext">LogLoc -&gt; LogLoc -&gt; Bool
+(LogLoc -&gt; LogLoc -&gt; Bool)
+-&gt; (LogLoc -&gt; LogLoc -&gt; Bool) -&gt; Eq LogLoc
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: LogLoc -&gt; LogLoc -&gt; Bool
+== :: LogLoc -&gt; LogLoc -&gt; Bool
+$c/= :: LogLoc -&gt; LogLoc -&gt; Bool
+/= :: LogLoc -&gt; LogLoc -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679445567"><span id="local-6989586621679445573"><span id="local-6989586621679445577"><span class="annot"><span class="annottext">Int -&gt; LogLoc -&gt; ShowS
+[LogLoc] -&gt; ShowS
+LogLoc -&gt; String
+(Int -&gt; LogLoc -&gt; ShowS)
+-&gt; (LogLoc -&gt; String) -&gt; ([LogLoc] -&gt; ShowS) -&gt; Show LogLoc
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; LogLoc -&gt; ShowS
+showsPrec :: Int -&gt; LogLoc -&gt; ShowS
+$cshow :: LogLoc -&gt; String
+show :: LogLoc -&gt; String
+$cshowList :: [LogLoc] -&gt; ShowS
+showList :: [LogLoc] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- | Determines what to do if the log file surpasses the given size</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- threshold.</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">data</span><span> </span><span id="FilesSizeMode"><span class="annot"><a href="Navi.Config.Types.html#FilesSizeMode"><span class="hs-identifier hs-var">FilesSizeMode</span></a></span></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | Print a warning.</span></span><span>
+</span><span id="line-43"></span><span>    </span><span id="FilesSizeModeWarn"><span class="annot"><a href="Navi.Config.Types.html#FilesSizeModeWarn"><span class="hs-identifier hs-var">FilesSizeModeWarn</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Internal.html#Bytes"><span class="hs-identifier hs-type">Bytes</span></a></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Size.html#B"><span class="hs-identifier hs-type">B</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Delete the file.</span></span><span>
+</span><span id="line-45"></span><span>    </span><span id="FilesSizeModeDelete"><span class="annot"><a href="Navi.Config.Types.html#FilesSizeModeDelete"><span class="hs-identifier hs-var">FilesSizeModeDelete</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Internal.html#Bytes"><span class="hs-identifier hs-type">Bytes</span></a></span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Size.html#B"><span class="hs-identifier hs-type">B</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679445584"><span id="local-6989586621679445592"><span class="annot"><span class="annottext">FilesSizeMode -&gt; FilesSizeMode -&gt; Bool
+(FilesSizeMode -&gt; FilesSizeMode -&gt; Bool)
+-&gt; (FilesSizeMode -&gt; FilesSizeMode -&gt; Bool) -&gt; Eq FilesSizeMode
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: FilesSizeMode -&gt; FilesSizeMode -&gt; Bool
+== :: FilesSizeMode -&gt; FilesSizeMode -&gt; Bool
+$c/= :: FilesSizeMode -&gt; FilesSizeMode -&gt; Bool
+/= :: FilesSizeMode -&gt; FilesSizeMode -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679445597"><span id="local-6989586621679445605"><span id="local-6989586621679445609"><span class="annot"><span class="annottext">Int -&gt; FilesSizeMode -&gt; ShowS
+[FilesSizeMode] -&gt; ShowS
+FilesSizeMode -&gt; String
+(Int -&gt; FilesSizeMode -&gt; ShowS)
+-&gt; (FilesSizeMode -&gt; String)
+-&gt; ([FilesSizeMode] -&gt; ShowS)
+-&gt; Show FilesSizeMode
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; FilesSizeMode -&gt; ShowS
+showsPrec :: Int -&gt; FilesSizeMode -&gt; ShowS
+$cshow :: FilesSizeMode -&gt; String
+show :: FilesSizeMode -&gt; String
+$cshowList :: [FilesSizeMode] -&gt; ShowS
+showList :: [FilesSizeMode] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="annot"><span class="hs-comment">-- | Logging configuration.</span></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">data</span><span> </span><span id="Logging"><span class="annot"><a href="Navi.Config.Types.html#Logging"><span class="hs-identifier hs-var">Logging</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkLogging"><span class="annot"><a href="Navi.Config.Types.html#MkLogging"><span class="hs-identifier hs-var">MkLogging</span></a></span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Determines the log level.</span></span><span>
+</span><span id="line-51"></span><span>    </span><span id="severity"><span class="annot"><span class="annottext">Logging -&gt; Maybe LogLevel
+</span><a href="Navi.Config.Types.html#severity"><span class="hs-identifier hs-var hs-var">severity</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#LogLevel"><span class="hs-identifier hs-type">LogLevel</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Determines the log location (i.e. file or stdout).</span></span><span>
+</span><span id="line-53"></span><span>    </span><span id="location"><span class="annot"><span class="annottext">Logging -&gt; Maybe LogLoc
+</span><a href="Navi.Config.Types.html#location"><span class="hs-identifier hs-var hs-var">location</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Config.Types.html#LogLoc"><span class="hs-identifier hs-type">LogLoc</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Determines whether to warn/delete large log files.</span></span><span>
+</span><span id="line-55"></span><span>    </span><span id="sizeMode"><span class="annot"><span class="annottext">Logging -&gt; Maybe FilesSizeMode
+</span><a href="Navi.Config.Types.html#sizeMode"><span class="hs-identifier hs-var hs-var">sizeMode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Navi.Config.Types.html#FilesSizeMode"><span class="hs-identifier hs-type">FilesSizeMode</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679445617"><span id="local-6989586621679445626"><span class="annot"><span class="annottext">Logging -&gt; Logging -&gt; Bool
+(Logging -&gt; Logging -&gt; Bool)
+-&gt; (Logging -&gt; Logging -&gt; Bool) -&gt; Eq Logging
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Logging -&gt; Logging -&gt; Bool
+== :: Logging -&gt; Logging -&gt; Bool
+$c/= :: Logging -&gt; Logging -&gt; Bool
+/= :: Logging -&gt; Logging -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679445631"><span id="local-6989586621679445641"><span id="local-6989586621679445645"><span class="annot"><span class="annottext">Int -&gt; Logging -&gt; ShowS
+[Logging] -&gt; ShowS
+Logging -&gt; String
+(Int -&gt; Logging -&gt; ShowS)
+-&gt; (Logging -&gt; String) -&gt; ([Logging] -&gt; ShowS) -&gt; Show Logging
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Logging -&gt; ShowS
+showsPrec :: Int -&gt; Logging -&gt; ShowS
+$cshow :: Logging -&gt; String
+show :: Logging -&gt; String
+$cshowList :: [Logging] -&gt; ShowS
+showList :: [Logging] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span id="local-6989586621679445467"><span id="local-6989586621679445468"><span id="local-6989586621679445469"><span id="local-6989586621679445470"><span id="local-6989586621679445471"><span id="local-6989586621679445472"><span id="local-6989586621679445473"><span id="local-6989586621679445474"><span id="local-6989586621679445475"><span id="local-6989586621679445652"><span id="local-6989586621679445657"><span id="local-6989586621679445662"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Logging</span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#DBusF"><span class="hs-identifier hs-type">DBusF</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhase"><span class="hs-identifier hs-type">ConfigPhase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
+</span><span id="line-62"></span><span class="hs-keyword">type</span><span> </span><span class="hs-keyword">family</span><span> </span><span id="DBusF"><span class="annot"><a href="Navi.Config.Types.html#DBusF"><span class="hs-identifier hs-var">DBusF</span></a></span></span><span> </span><span id="local-6989586621679445702"><span class="annot"><a href="#local-6989586621679445702"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-63"></span><span>  </span><span id="DBusF"><span class="annot"><a href="Navi.Config.Types.html#DBusF"><span class="hs-identifier hs-var">DBusF</span></a></span></span><span> </span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhaseToml"><span class="hs-identifier hs-type">ConfigPhaseToml</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>  </span><span id="DBusF"><span class="annot"><a href="Navi.Config.Types.html#DBusF"><span class="hs-identifier hs-var">DBusF</span></a></span></span><span> </span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhaseEnv"><span class="hs-identifier hs-type">ConfigPhaseEnv</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///nix/store/9wf5qn5d8b19y8x23msw7ilw9v6gzxbr-dbus-1.3.11-doc/share/doc/dbus-1.3.11/html/src/DBus.Client.html#Client"><span class="hs-identifier hs-type">DBus.Client</span></a></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="annot"><span class="hs-comment">-- | Configuration for notification systems.</span></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#NoteSystem"><span class="hs-identifier hs-type">NoteSystem</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhase"><span class="hs-identifier hs-type">ConfigPhase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
+</span><span id="line-68"></span><span class="hs-keyword">data</span><span> </span><span id="NoteSystem"><span class="annot"><a href="Navi.Config.Types.html#NoteSystem"><span class="hs-identifier hs-var">NoteSystem</span></a></span></span><span> </span><span id="local-6989586621679445492"><span class="annot"><a href="#local-6989586621679445492"><span class="hs-identifier hs-type">p</span></a></span></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | For use with osx.</span></span><span>
+</span><span id="line-70"></span><span>    </span><span id="AppleScript"><span class="annot"><a href="Navi.Config.Types.html#AppleScript"><span class="hs-identifier hs-var">AppleScript</span></a></span></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | For use with a running notification server that receives messages</span><span>
+</span><span id="line-72"></span><span>    </span><span class="hs-comment">-- via DBus.</span><span>
+</span><span id="line-73"></span><span>    </span><span id="DBus"><span class="annot"><a href="Navi.Config.Types.html#DBus"><span class="hs-identifier hs-var">DBus</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#DBusF"><span class="hs-identifier hs-type">DBusF</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679445492"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | For use with the notify-send tool.</span></span><span>
+</span><span id="line-75"></span><span>    </span><span id="NotifySend"><span class="annot"><a href="Navi.Config.Types.html#NotifySend"><span class="hs-identifier hs-var">NotifySend</span></a></span></span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span id="local-6989586621679445708"><span id="local-6989586621679445714"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#NoteSystem"><span class="hs-identifier hs-type">NoteSystem</span></a></span><span> </span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhaseToml"><span class="hs-identifier hs-type">ConfigPhaseToml</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span id="local-6989586621679445718"><span id="local-6989586621679445723"><span id="local-6989586621679445727"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#NoteSystem"><span class="hs-identifier hs-type">NoteSystem</span></a></span><span> </span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhaseToml"><span class="hs-identifier hs-type">ConfigPhaseToml</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="annot"><span class="hs-comment">-- | Default notification system i.e. DBus for linux, AppleScript for osx.</span></span><span>
+</span><span id="line-82"></span><span class="annot"><a href="Navi.Config.Types.html#defaultNoteSystem"><span class="hs-identifier hs-type">defaultNoteSystem</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#NoteSystem"><span class="hs-identifier hs-type">NoteSystem</span></a></span><span> </span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhaseToml"><span class="hs-identifier hs-type">ConfigPhaseToml</span></a></span><span class="hs-cpp">
+#if OSX
+</span><span class="hs-identifier">defaultNoteSystem</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">AppleScript</span><span class="hs-cpp">
+#else
+</span><span id="defaultNoteSystem"><span class="annot"><span class="annottext">defaultNoteSystem :: NoteSystem 'ConfigPhaseToml
+</span><a href="Navi.Config.Types.html#defaultNoteSystem"><span class="hs-identifier hs-var hs-var">defaultNoteSystem</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DBusF 'ConfigPhaseToml -&gt; NoteSystem 'ConfigPhaseToml
+forall (p :: ConfigPhase). DBusF p -&gt; NoteSystem p
+</span><a href="Navi.Config.Types.html#DBus"><span class="hs-identifier hs-var">DBus</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-cpp">
+#endif
+</span><span>
+</span><span id="line-89"></span><span class="annot"><span class="hs-comment">-- | Default logging i.e. log errors and use the default path.</span></span><span>
+</span><span id="line-90"></span><span class="annot"><a href="Navi.Config.Types.html#defaultLogging"><span class="hs-identifier hs-type">defaultLogging</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#Logging"><span class="hs-identifier hs-type">Logging</span></a></span><span>
+</span><span id="line-91"></span><span id="defaultLogging"><span class="annot"><span class="annottext">defaultLogging :: Logging
+</span><a href="Navi.Config.Types.html#defaultLogging"><span class="hs-identifier hs-var hs-var">defaultLogging</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><span class="annottext">Maybe LogLevel -&gt; Maybe LogLoc -&gt; Maybe FilesSizeMode -&gt; Logging
+</span><a href="Navi.Config.Types.html#MkLogging"><span class="hs-identifier hs-var">MkLogging</span></a></span><span>
+</span><span id="line-93"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel -&gt; Maybe LogLevel
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLoc -&gt; Maybe LogLoc
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">LogLoc
+</span><a href="Navi.Config.Types.html#DefPath"><span class="hs-identifier hs-var">DefPath</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilesSizeMode -&gt; Maybe FilesSizeMode
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">FilesSizeMode
+</span><a href="Navi.Config.Types.html#defaultSizeMode"><span class="hs-identifier hs-var">defaultSizeMode</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-98"></span><span class="annot"><a href="Navi.Config.Types.html#defaultSizeMode"><span class="hs-identifier hs-type">defaultSizeMode</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#FilesSizeMode"><span class="hs-identifier hs-type">FilesSizeMode</span></a></span><span>
+</span><span id="line-99"></span><span id="defaultSizeMode"><span class="annot"><span class="annottext">defaultSizeMode :: FilesSizeMode
+</span><a href="Navi.Config.Types.html#defaultSizeMode"><span class="hs-identifier hs-var hs-var">defaultSizeMode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bytes 'B Natural -&gt; FilesSizeMode
+</span><a href="Navi.Config.Types.html#FilesSizeModeDelete"><span class="hs-identifier hs-var">FilesSizeModeDelete</span></a></span><span> </span><span class="annot"><span class="annottext">(Bytes 'B Natural -&gt; FilesSizeMode)
+-&gt; Bytes 'B Natural -&gt; FilesSizeMode
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bytes 'M Natural -&gt; Converted 'B (Bytes 'M Natural)
+forall a (t :: Size). (Conversion a, SingI t) =&gt; a -&gt; Converted t a
+forall (t :: Size).
+SingI t =&gt;
+Bytes 'M Natural -&gt; Converted t (Bytes 'M Natural)
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Class.Conversion.html#convert_"><span class="hs-identifier hs-var">Bytes.convert_</span></a></span><span> </span><span class="annot"><span class="annottext">Bytes 'M Natural
+</span><a href="#local-6989586621679445731"><span class="hs-identifier hs-var">fiftyMb</span></a></span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-101"></span><span>    </span><span id="local-6989586621679445731"><span class="annot"><span class="annottext">fiftyMb :: Bytes 'M Natural
+</span><a href="#local-6989586621679445731"><span class="hs-identifier hs-var hs-var">fiftyMb</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (s :: Size) n. n -&gt; Bytes s n
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Internal.html#MkBytes"><span class="hs-identifier hs-var">MkBytes</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/si-bytes-0.1-b16f6c6eb3b198a1e493ba8c5f716b3b5c8851274b5b998bd6c91c4764581f58/share/doc/html/src/Data.Bytes.Size.html#M"><span class="hs-identifier hs-type">M</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-number">50</span></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="hs-comment">-- | 'Config' holds the data from 'Navi.Config.Toml.ConfigToml' once it has been processed</span><span>
+</span><span id="line-104"></span><span class="hs-comment">-- (e.g., all user defined Events are parsed).</span><span>
+</span><span id="line-105"></span><span class="hs-keyword">data</span><span> </span><span id="Config"><span class="annot"><a href="Navi.Config.Types.html#Config"><span class="hs-identifier hs-var">Config</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkConfig"><span class="annot"><a href="Navi.Config.Types.html#MkConfig"><span class="hs-identifier hs-var">MkConfig</span></a></span></span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | The notification events.</span></span><span>
+</span><span id="line-107"></span><span>    </span><span id="events"><span class="annot"><span class="annottext">Config -&gt; NonEmpty AnyEvent
+</span><a href="Navi.Config.Types.html#events"><span class="hs-identifier hs-var hs-var">events</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Navi.Event.Types.html#AnyEvent"><span class="hs-identifier hs-type">AnyEvent</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Logging configuration.</span></span><span>
+</span><span id="line-109"></span><span>    </span><span id="logging"><span class="annot"><span class="annottext">Config -&gt; Logging
+</span><a href="Navi.Config.Types.html#logging"><span class="hs-identifier hs-var hs-var">logging</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#Logging"><span class="hs-identifier hs-type">Logging</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-110"></span><span>    </span><span class="annot"><span class="hs-comment">-- | The notification system to use.</span></span><span>
+</span><span id="line-111"></span><span>    </span><span id="noteSystem"><span class="annot"><span class="annottext">Config -&gt; NoteSystem 'ConfigPhaseToml
+</span><a href="Navi.Config.Types.html#noteSystem"><span class="hs-identifier hs-var hs-var">noteSystem</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#NoteSystem"><span class="hs-identifier hs-type">NoteSystem</span></a></span><span> </span><span class="annot"><a href="Navi.Config.Phase.html#ConfigPhaseToml"><span class="hs-identifier hs-type">ConfigPhaseToml</span></a></span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-113"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679445740"><span id="local-6989586621679445748"><span id="local-6989586621679445752"><span class="annot"><span class="annottext">Int -&gt; Config -&gt; ShowS
+[Config] -&gt; ShowS
+Config -&gt; String
+(Int -&gt; Config -&gt; ShowS)
+-&gt; (Config -&gt; String) -&gt; ([Config] -&gt; ShowS) -&gt; Show Config
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Config -&gt; ShowS
+showsPrec :: Int -&gt; Config -&gt; ShowS
+$cshow :: Config -&gt; String
+show :: Config -&gt; String
+$cshowList :: [Config] -&gt; ShowS
+showList :: [Config] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span id="local-6989586621679445515"><span id="local-6989586621679445516"><span id="local-6989586621679445517"><span id="local-6989586621679445518"><span id="local-6989586621679445519"><span id="local-6989586621679445520"><span id="local-6989586621679445521"><span id="local-6989586621679445522"><span id="local-6989586621679445523"><span id="local-6989586621679445759"><span id="local-6989586621679445764"><span id="local-6989586621679445769"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Config</span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-116"></span><span>
+</span><span id="line-117"></span><span class="hs-comment">-- | 'ConfigErr' represents the errors we can encounter when attempting to</span><span>
+</span><span id="line-118"></span><span class="hs-comment">-- parse a config file.</span><span>
+</span><span id="line-119"></span><span class="hs-keyword">data</span><span> </span><span id="ConfigErr"><span class="annot"><a href="Navi.Config.Types.html#ConfigErr"><span class="hs-identifier hs-var">ConfigErr</span></a></span></span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FileErr"><span class="annot"><a href="Navi.Config.Types.html#FileErr"><span class="hs-identifier hs-var">FileErr</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SomeException</span></span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TomlError"><span class="annot"><a href="Navi.Config.Types.html#TomlError"><span class="hs-identifier hs-var">TomlError</span></a></span></span><span> </span><span class="annot"><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Error.html#TOMLError"><span class="hs-identifier hs-type">TOMLError</span></a></span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NoEvents"><span class="annot"><a href="Navi.Config.Types.html#NoEvents"><span class="hs-identifier hs-var">NoEvents</span></a></span></span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679445810"><span id="local-6989586621679445818"><span id="local-6989586621679445822"><span class="annot"><span class="annottext">Int -&gt; ConfigErr -&gt; ShowS
+[ConfigErr] -&gt; ShowS
+ConfigErr -&gt; String
+(Int -&gt; ConfigErr -&gt; ShowS)
+-&gt; (ConfigErr -&gt; String)
+-&gt; ([ConfigErr] -&gt; ShowS)
+-&gt; Show ConfigErr
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ConfigErr -&gt; ShowS
+showsPrec :: Int -&gt; ConfigErr -&gt; ShowS
+$cshow :: ConfigErr -&gt; String
+show :: ConfigErr -&gt; String
+$cshowList :: [ConfigErr] -&gt; ShowS
+showList :: [ConfigErr] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679445829"><span id="local-6989586621679445833"><span id="local-6989586621679445837"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Navi.Config.Types.html#ConfigErr"><span class="hs-identifier hs-type">ConfigErr</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-126"></span><span>  </span><span id="local-6989586621679445849"><span class="annot"><span class="annottext">displayException :: ConfigErr -&gt; String
+</span><a href="#local-6989586621679445849"><span class="hs-identifier hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#FileErr"><span class="hs-identifier hs-type">FileErr</span></a></span><span> </span><span id="local-6989586621679445851"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679445851"><span class="hs-identifier hs-var">ex</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Error reading file: &lt;&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; String
+forall e. Exception e =&gt; e -&gt; String
+</span><span class="hs-identifier hs-var">displayException</span></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679445851"><span class="hs-identifier hs-var">ex</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&gt;&quot;</span></span><span>
+</span><span id="line-127"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">displayException</span></span><span> </span><span class="annot"><span class="annottext">ConfigErr
+</span><a href="Navi.Config.Types.html#NoEvents"><span class="hs-identifier hs-var">NoEvents</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;No events found&quot;</span></span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">displayException</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#TomlError"><span class="hs-identifier hs-type">TomlError</span></a></span><span> </span><span id="local-6989586621679445852"><span class="annot"><span class="annottext">TOMLError
+</span><a href="#local-6989586621679445852"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TOMLError -&gt; Text
+</span><a href="file:///nix/store/6iwrq4vdzijiaczr9f1m550vqzj7hirn-toml-reader-0.2.2.0-doc/share/doc/toml-reader-0.2.2.0/html/src/TOML.Error.html#renderTOMLError"><span class="hs-identifier hs-var">renderTOMLError</span></a></span><span> </span><span class="annot"><span class="annottext">TOMLError
+</span><a href="#local-6989586621679445852"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-129"></span></pre></body></html>

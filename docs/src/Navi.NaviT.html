@@ -1,0 +1,1974 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="annot"><span class="hs-comment">-- | Provides 'NaviT', the main type that runs the application.</span></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.NaviT.html"><span class="hs-identifier">Navi.NaviT</span></a></span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.NaviT.html#NaviT"><span class="hs-identifier">NaviT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Navi.NaviT.html#runNaviT"><span class="hs-identifier">runNaviT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html"><span class="hs-identifier">Effects.Logger.Namespace</span></a></span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Utils.html#defaultLogFormatter"><span class="hs-identifier">defaultLogFormatter</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#formatLog"><span class="hs-identifier">formatLog</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-typed-process-0.1-8888432432a71c579e54c55b0263a4cf87cdd28103b8e9a3fcbfd00effd4fb7a/share/doc/html/src/Effects.Process.Typed.html"><span class="hs-identifier">Effects.Process.Typed</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TP</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-time-0.1-b866c4d34c8aeef4a452de10b147d031b63b7abac53567e761b021ce62d33a0e/share/doc/html/src/Effects.Time.html"><span class="hs-identifier">Effects.Time</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-time-0.1-b866c4d34c8aeef4a452de10b147d031b63b7abac53567e761b021ce62d33a0e/share/doc/html/src/Effects.Time.html#MonadTime"><span class="hs-identifier">MonadTime</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Config.Types.html"><span class="hs-identifier">Navi.Config.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#NoteSystem"><span class="hs-identifier">NoteSystem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Config.Types.html#AppleScript"><span class="hs-identifier">AppleScript</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#DBus"><span class="hs-identifier">DBus</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Navi.Config.Types.html#NotifySend"><span class="hs-identifier">NotifySend</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.MonadNotify.html"><span class="hs-identifier">Navi.Effects.MonadNotify</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier">MonadNotify</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadNotify.html#sendNote"><span class="hs-identifier">sendNote</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html"><span class="hs-identifier">Navi.Effects.MonadSystemInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Effects.MonadSystemInfo.html#MonadSystemInfo"><span class="hs-identifier">MonadSystemInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Env.AppleScript.html"><span class="hs-identifier">Navi.Env.AppleScript</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Env.AppleScript.html#naviToAppleScript"><span class="hs-identifier">naviToAppleScript</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Env.Core.html"><span class="hs-identifier">Navi.Env.Core</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Env.Core.html#Env"><span class="hs-identifier">Env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Navi.Env.Core.html#HasLogEnv"><span class="hs-identifier">HasLogEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Env.Core.html#getLogEnv"><span class="hs-identifier">getLogEnv</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Env.DBus.html"><span class="hs-identifier">Navi.Env.DBus</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Env.DBus.html#MonadDBus"><span class="hs-identifier">MonadDBus</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Env.DBus.html"><span class="hs-identifier">Navi.Env.DBus</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///nix/store/9wf5qn5d8b19y8x23msw7ilw9v6gzxbr-dbus-1.3.11-doc/share/doc/dbus-1.3.11/html/src/DBus.html"><span class="hs-identifier">DBus</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Env.NotifySend.html"><span class="hs-identifier">Navi.Env.NotifySend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.Env.NotifySend.html#naviToNotifySend"><span class="hs-identifier">naviToNotifySend</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="annot"><span class="hs-comment">-- | NaviT is the core type used to run the application.</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Navi.NaviT.html#NaviT"><span class="hs-identifier hs-type">NaviT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">newtype</span><span> </span><span id="NaviT"><span class="annot"><a href="Navi.NaviT.html#NaviT"><span class="hs-identifier hs-var">NaviT</span></a></span></span><span> </span><span id="local-6989586621679448273"><span class="annot"><a href="#local-6989586621679448273"><span class="hs-identifier hs-type">e</span></a></span></span><span> </span><span id="local-6989586621679448274"><span class="annot"><a href="#local-6989586621679448274"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621679448275"><span class="annot"><a href="#local-6989586621679448275"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkNaviT"><span class="annot"><a href="Navi.NaviT.html#MkNaviT"><span class="hs-identifier hs-var">MkNaviT</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621679448273"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448274"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448275"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-34"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621679448279"><span id="local-6989586621679448284"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; NaviT e m a -&gt; NaviT e m b)
+-&gt; (forall a b. a -&gt; NaviT e m b -&gt; NaviT e m a)
+-&gt; Functor (NaviT e m)
+forall a b. a -&gt; NaviT e m b -&gt; NaviT e m a
+forall a b. (a -&gt; b) -&gt; NaviT e m a -&gt; NaviT e m b
+forall e (m :: Type -&gt; Type) a b.
+Functor m =&gt;
+a -&gt; NaviT e m b -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; NaviT e m a -&gt; NaviT e m b
+forall (f :: Type -&gt; Type).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall e (m :: Type -&gt; Type) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; NaviT e m a -&gt; NaviT e m b
+fmap :: forall a b. (a -&gt; b) -&gt; NaviT e m a -&gt; NaviT e m b
+$c&lt;$ :: forall e (m :: Type -&gt; Type) a b.
+Functor m =&gt;
+a -&gt; NaviT e m b -&gt; NaviT e m a
+&lt;$ :: forall a b. a -&gt; NaviT e m b -&gt; NaviT e m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>      </span><span id="local-6989586621679448295"><span id="local-6989586621679448300"><span id="local-6989586621679448304"><span id="local-6989586621679448308"><span id="local-6989586621679448312"><span class="annot"><span class="annottext">Functor (NaviT e m)
+Functor (NaviT e m) =&gt;
+(forall a. a -&gt; NaviT e m a)
+-&gt; (forall a b. NaviT e m (a -&gt; b) -&gt; NaviT e m a -&gt; NaviT e m b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c) -&gt; NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m c)
+-&gt; (forall a b. NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m b)
+-&gt; (forall a b. NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m a)
+-&gt; Applicative (NaviT e m)
+forall a. a -&gt; NaviT e m a
+forall a b. NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m a
+forall a b. NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m b
+forall a b. NaviT e m (a -&gt; b) -&gt; NaviT e m a -&gt; NaviT e m b
+forall a b c.
+(a -&gt; b -&gt; c) -&gt; NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m c
+forall e (m :: Type -&gt; Type). Applicative m =&gt; Functor (NaviT e m)
+forall e (m :: Type -&gt; Type) a. Applicative m =&gt; a -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type) a b.
+Applicative m =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type) a b.
+Applicative m =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m b
+forall e (m :: Type -&gt; Type) a b.
+Applicative m =&gt;
+NaviT e m (a -&gt; b) -&gt; NaviT e m a -&gt; NaviT e m b
+forall e (m :: Type -&gt; Type) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c) -&gt; NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m c
+forall (f :: Type -&gt; Type).
+Functor f =&gt;
+(forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+$cpure :: forall e (m :: Type -&gt; Type) a. Applicative m =&gt; a -&gt; NaviT e m a
+pure :: forall a. a -&gt; NaviT e m a
+$c&lt;*&gt; :: forall e (m :: Type -&gt; Type) a b.
+Applicative m =&gt;
+NaviT e m (a -&gt; b) -&gt; NaviT e m a -&gt; NaviT e m b
+&lt;*&gt; :: forall a b. NaviT e m (a -&gt; b) -&gt; NaviT e m a -&gt; NaviT e m b
+$cliftA2 :: forall e (m :: Type -&gt; Type) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c) -&gt; NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m c
+liftA2 :: forall a b c.
+(a -&gt; b -&gt; c) -&gt; NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m c
+$c*&gt; :: forall e (m :: Type -&gt; Type) a b.
+Applicative m =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m b
+*&gt; :: forall a b. NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m b
+$c&lt;* :: forall e (m :: Type -&gt; Type) a b.
+Applicative m =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m a
+&lt;* :: forall a b. NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621679448325"><span id="local-6989586621679448330"><span id="local-6989586621679448334"><span class="annot"><span class="annottext">Applicative (NaviT e m)
+Applicative (NaviT e m) =&gt;
+(forall a b. NaviT e m a -&gt; (a -&gt; NaviT e m b) -&gt; NaviT e m b)
+-&gt; (forall a b. NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m b)
+-&gt; (forall a. a -&gt; NaviT e m a)
+-&gt; Monad (NaviT e m)
+forall a. a -&gt; NaviT e m a
+forall a b. NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m b
+forall a b. NaviT e m a -&gt; (a -&gt; NaviT e m b) -&gt; NaviT e m b
+forall e (m :: Type -&gt; Type). Monad m =&gt; Applicative (NaviT e m)
+forall e (m :: Type -&gt; Type) a. Monad m =&gt; a -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type) a b.
+Monad m =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m b
+forall e (m :: Type -&gt; Type) a b.
+Monad m =&gt;
+NaviT e m a -&gt; (a -&gt; NaviT e m b) -&gt; NaviT e m b
+forall (m :: Type -&gt; Type).
+Applicative m =&gt;
+(forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+$c&gt;&gt;= :: forall e (m :: Type -&gt; Type) a b.
+Monad m =&gt;
+NaviT e m a -&gt; (a -&gt; NaviT e m b) -&gt; NaviT e m b
+&gt;&gt;= :: forall a b. NaviT e m a -&gt; (a -&gt; NaviT e m b) -&gt; NaviT e m b
+$c&gt;&gt; :: forall e (m :: Type -&gt; Type) a b.
+Monad m =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m b
+&gt;&gt; :: forall a b. NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m b
+$creturn :: forall e (m :: Type -&gt; Type) a. Monad m =&gt; a -&gt; NaviT e m a
+return :: forall a. a -&gt; NaviT e m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>      </span><span id="local-6989586621679448348"><span id="local-6989586621679448359"><span id="local-6989586621679448369"><span id="local-6989586621679448379"><span id="local-6989586621679448389"><span id="local-6989586621679448399"><span id="local-6989586621679448409"><span id="local-6989586621679448419"><span id="local-6989586621679448429"><span id="local-6989586621679448439"><span id="local-6989586621679448451"><span id="local-6989586621679448463"><span id="local-6989586621679448473"><span id="local-6989586621679448483"><span id="local-6989586621679448493"><span id="local-6989586621679448503"><span id="local-6989586621679448513"><span id="local-6989586621679448523"><span id="local-6989586621679448533"><span id="local-6989586621679448543"><span id="local-6989586621679448553"><span id="local-6989586621679448563"><span id="local-6989586621679448573"><span id="local-6989586621679448583"><span id="local-6989586621679448593"><span id="local-6989586621679448603"><span id="local-6989586621679448613"><span id="local-6989586621679448623"><span id="local-6989586621679448633"><span id="local-6989586621679448643"><span id="local-6989586621679448653"><span id="local-6989586621679448663"><span id="local-6989586621679448673"><span id="local-6989586621679448685"><span id="local-6989586621679448699"><span id="local-6989586621679448713"><span id="local-6989586621679448727"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(forall a b.
+ HasCallStack =&gt;
+ NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b)
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b)
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Int -&gt; NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b)
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+    -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b)
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Int
+    -&gt; ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+    -&gt; (Async a -&gt; NaviT e m b)
+    -&gt; NaviT e m b)
+-&gt; (forall a. HasCallStack =&gt; Async a -&gt; NaviT e m a)
+-&gt; (forall a.
+    HasCallStack =&gt;
+    Async a -&gt; NaviT e m (Maybe (Either SomeException a)))
+-&gt; (forall a.
+    HasCallStack =&gt;
+    Async a -&gt; NaviT e m (Either SomeException a))
+-&gt; (forall a. HasCallStack =&gt; Async a -&gt; NaviT e m ())
+-&gt; (forall a. HasCallStack =&gt; Async a -&gt; NaviT e m ())
+-&gt; (forall e a.
+    (Exception e, HasCallStack) =&gt;
+    Async a -&gt; e -&gt; NaviT e m ())
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m (Either a b))
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m (a, b))
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m ())
+-&gt; (forall a. HasCallStack =&gt; [Async a] -&gt; NaviT e m (Async a, a))
+-&gt; (forall a.
+    HasCallStack =&gt;
+    [Async a] -&gt; NaviT e m (Async a, Either SomeException a))
+-&gt; (forall a. HasCallStack =&gt; [Async a] -&gt; NaviT e m (Async a, a))
+-&gt; (forall a.
+    HasCallStack =&gt;
+    [Async a] -&gt; NaviT e m (Async a, Either SomeException a))
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Async a -&gt; Async b -&gt; NaviT e m (Either a b))
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Async a
+    -&gt; Async b
+    -&gt; NaviT
+         e m (Either (Either SomeException a) (Either SomeException b)))
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Async a -&gt; Async b -&gt; NaviT e m (Either a b))
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Async a
+    -&gt; Async b
+    -&gt; NaviT
+         e m (Either (Either SomeException a) (Either SomeException b)))
+-&gt; (forall a b. HasCallStack =&gt; Async a -&gt; Async b -&gt; NaviT e m ())
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Async a -&gt; Async b -&gt; NaviT e m (a, b))
+-&gt; (forall a. HasCallStack =&gt; NaviT e m a -&gt; NaviT e m (Async a))
+-&gt; (forall a. HasCallStack =&gt; NaviT e m a -&gt; NaviT e m (Async a))
+-&gt; (forall a.
+    HasCallStack =&gt;
+    Int -&gt; NaviT e m a -&gt; NaviT e m (Async a))
+-&gt; (forall a.
+    HasCallStack =&gt;
+    ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+    -&gt; NaviT e m (Async a))
+-&gt; (forall a.
+    HasCallStack =&gt;
+    Int
+    -&gt; ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+    -&gt; NaviT e m (Async a))
+-&gt; (forall a. HasCallStack =&gt; Async a -&gt; NaviT e m ())
+-&gt; (forall a.
+    HasCallStack =&gt;
+    (SomeException -&gt; Bool) -&gt; Async a -&gt; NaviT e m ())
+-&gt; (forall a b. HasCallStack =&gt; Async a -&gt; Async b -&gt; NaviT e m ())
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    (SomeException -&gt; Bool) -&gt; Async a -&gt; Async b -&gt; NaviT e m ())
+-&gt; (forall (t :: Type -&gt; Type) a b.
+    (HasCallStack, Traversable t) =&gt;
+    Positive Int -&gt; (a -&gt; NaviT e m b) -&gt; t a -&gt; NaviT e m (t b))
+-&gt; (forall (t :: Type -&gt; Type) a b.
+    (HasCallStack, Traversable t) =&gt;
+    (a -&gt; NaviT e m b) -&gt; t a -&gt; NaviT e m (t b))
+-&gt; (forall (f :: Type -&gt; Type) a b.
+    (Foldable f, HasCallStack) =&gt;
+    Positive Int -&gt; (a -&gt; NaviT e m b) -&gt; f a -&gt; NaviT e m ())
+-&gt; (forall (f :: Type -&gt; Type) a b.
+    (Foldable f, HasCallStack) =&gt;
+    (a -&gt; NaviT e m b) -&gt; f a -&gt; NaviT e m ())
+-&gt; MonadAsync (NaviT e m)
+forall a. HasCallStack =&gt; Int -&gt; NaviT e m a -&gt; NaviT e m (Async a)
+forall a.
+HasCallStack =&gt;
+Int
+-&gt; ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; NaviT e m (Async a)
+forall a. HasCallStack =&gt; [Async a] -&gt; NaviT e m (Async a, a)
+forall a.
+HasCallStack =&gt;
+[Async a] -&gt; NaviT e m (Async a, Either SomeException a)
+forall a. HasCallStack =&gt; Async a -&gt; NaviT e m a
+forall a.
+HasCallStack =&gt;
+Async a -&gt; NaviT e m (Maybe (Either SomeException a))
+forall a.
+HasCallStack =&gt;
+Async a -&gt; NaviT e m (Either SomeException a)
+forall a. HasCallStack =&gt; Async a -&gt; NaviT e m ()
+forall a. HasCallStack =&gt; NaviT e m a -&gt; NaviT e m (Async a)
+forall a.
+HasCallStack =&gt;
+(SomeException -&gt; Bool) -&gt; Async a -&gt; NaviT e m ()
+forall a.
+HasCallStack =&gt;
+((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; NaviT e m (Async a)
+forall a b.
+HasCallStack =&gt;
+Int -&gt; NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+forall a b.
+HasCallStack =&gt;
+Int
+-&gt; ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; (Async a -&gt; NaviT e m b)
+-&gt; NaviT e m b
+forall a b.
+HasCallStack =&gt;
+Async a -&gt; Async b -&gt; NaviT e m (Either a b)
+forall a b.
+HasCallStack =&gt;
+Async a
+-&gt; Async b
+-&gt; NaviT
+     e m (Either (Either SomeException a) (Either SomeException b))
+forall a b. HasCallStack =&gt; Async a -&gt; Async b -&gt; NaviT e m ()
+forall a b. HasCallStack =&gt; Async a -&gt; Async b -&gt; NaviT e m (a, b)
+forall a b.
+HasCallStack =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m (Either a b)
+forall a b.
+HasCallStack =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m ()
+forall a b.
+HasCallStack =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m (a, b)
+forall a b.
+HasCallStack =&gt;
+NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+forall a b.
+HasCallStack =&gt;
+(SomeException -&gt; Bool) -&gt; Async a -&gt; Async b -&gt; NaviT e m ()
+forall a b.
+HasCallStack =&gt;
+((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+forall e a.
+(Exception e, HasCallStack) =&gt;
+Async a -&gt; e -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type). MonadAsync m =&gt; Monad (NaviT e m)
+forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Int -&gt; NaviT e m a -&gt; NaviT e m (Async a)
+forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Int
+-&gt; ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; NaviT e m (Async a)
+forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+[Async a] -&gt; NaviT e m (Async a, a)
+forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+[Async a] -&gt; NaviT e m (Async a, Either SomeException a)
+forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; NaviT e m (Maybe (Either SomeException a))
+forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; NaviT e m (Either SomeException a)
+forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; NaviT e m (Async a)
+forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+(SomeException -&gt; Bool) -&gt; Async a -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; NaviT e m (Async a)
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Int -&gt; NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Int
+-&gt; ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; (Async a -&gt; NaviT e m b)
+-&gt; NaviT e m b
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; Async b -&gt; NaviT e m (Either a b)
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a
+-&gt; Async b
+-&gt; NaviT
+     e m (Either (Either SomeException a) (Either SomeException b))
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; Async b -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; Async b -&gt; NaviT e m (a, b)
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m (Either a b)
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m (a, b)
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+(SomeException -&gt; Bool) -&gt; Async a -&gt; Async b -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+forall e (m :: Type -&gt; Type) e a.
+(MonadAsync m, Exception e, HasCallStack) =&gt;
+Async a -&gt; e -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) (f :: Type -&gt; Type) a b.
+(MonadAsync m, Foldable f, HasCallStack) =&gt;
+Positive Int -&gt; (a -&gt; NaviT e m b) -&gt; f a -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) (f :: Type -&gt; Type) a b.
+(MonadAsync m, Foldable f, HasCallStack) =&gt;
+(a -&gt; NaviT e m b) -&gt; f a -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) (t :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack, Traversable t) =&gt;
+Positive Int -&gt; (a -&gt; NaviT e m b) -&gt; t a -&gt; NaviT e m (t b)
+forall e (m :: Type -&gt; Type) (t :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack, Traversable t) =&gt;
+(a -&gt; NaviT e m b) -&gt; t a -&gt; NaviT e m (t b)
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(forall a b. HasCallStack =&gt; m a -&gt; (Async a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. HasCallStack =&gt; m a -&gt; (Async a -&gt; m b) -&gt; m b)
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Int -&gt; m a -&gt; (Async a -&gt; m b) -&gt; m b)
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    ((forall c. m c -&gt; m c) -&gt; m a) -&gt; (Async a -&gt; m b) -&gt; m b)
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Int -&gt; ((forall c. m c -&gt; m c) -&gt; m a) -&gt; (Async a -&gt; m b) -&gt; m b)
+-&gt; (forall a. HasCallStack =&gt; Async a -&gt; m a)
+-&gt; (forall a.
+    HasCallStack =&gt;
+    Async a -&gt; m (Maybe (Either SomeException a)))
+-&gt; (forall a.
+    HasCallStack =&gt;
+    Async a -&gt; m (Either SomeException a))
+-&gt; (forall a. HasCallStack =&gt; Async a -&gt; m ())
+-&gt; (forall a. HasCallStack =&gt; Async a -&gt; m ())
+-&gt; (forall e a.
+    (Exception e, HasCallStack) =&gt;
+    Async a -&gt; e -&gt; m ())
+-&gt; (forall a b. HasCallStack =&gt; m a -&gt; m b -&gt; m (Either a b))
+-&gt; (forall a b. HasCallStack =&gt; m a -&gt; m b -&gt; m (a, b))
+-&gt; (forall a b. HasCallStack =&gt; m a -&gt; m b -&gt; m ())
+-&gt; (forall a. HasCallStack =&gt; [Async a] -&gt; m (Async a, a))
+-&gt; (forall a.
+    HasCallStack =&gt;
+    [Async a] -&gt; m (Async a, Either SomeException a))
+-&gt; (forall a. HasCallStack =&gt; [Async a] -&gt; m (Async a, a))
+-&gt; (forall a.
+    HasCallStack =&gt;
+    [Async a] -&gt; m (Async a, Either SomeException a))
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Async a -&gt; Async b -&gt; m (Either a b))
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Async a
+    -&gt; Async b
+    -&gt; m (Either (Either SomeException a) (Either SomeException b)))
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Async a -&gt; Async b -&gt; m (Either a b))
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    Async a
+    -&gt; Async b
+    -&gt; m (Either (Either SomeException a) (Either SomeException b)))
+-&gt; (forall a b. HasCallStack =&gt; Async a -&gt; Async b -&gt; m ())
+-&gt; (forall a b. HasCallStack =&gt; Async a -&gt; Async b -&gt; m (a, b))
+-&gt; (forall a. HasCallStack =&gt; m a -&gt; m (Async a))
+-&gt; (forall a. HasCallStack =&gt; m a -&gt; m (Async a))
+-&gt; (forall a. HasCallStack =&gt; Int -&gt; m a -&gt; m (Async a))
+-&gt; (forall a.
+    HasCallStack =&gt;
+    ((forall c. m c -&gt; m c) -&gt; m a) -&gt; m (Async a))
+-&gt; (forall a.
+    HasCallStack =&gt;
+    Int -&gt; ((forall c. m c -&gt; m c) -&gt; m a) -&gt; m (Async a))
+-&gt; (forall a. HasCallStack =&gt; Async a -&gt; m ())
+-&gt; (forall a.
+    HasCallStack =&gt;
+    (SomeException -&gt; Bool) -&gt; Async a -&gt; m ())
+-&gt; (forall a b. HasCallStack =&gt; Async a -&gt; Async b -&gt; m ())
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    (SomeException -&gt; Bool) -&gt; Async a -&gt; Async b -&gt; m ())
+-&gt; (forall (t :: Type -&gt; Type) a b.
+    (HasCallStack, Traversable t) =&gt;
+    Positive Int -&gt; (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (t :: Type -&gt; Type) a b.
+    (HasCallStack, Traversable t) =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (f :: Type -&gt; Type) a b.
+    (Foldable f, HasCallStack) =&gt;
+    Positive Int -&gt; (a -&gt; m b) -&gt; f a -&gt; m ())
+-&gt; (forall (f :: Type -&gt; Type) a b.
+    (Foldable f, HasCallStack) =&gt;
+    (a -&gt; m b) -&gt; f a -&gt; m ())
+-&gt; MonadAsync m
+forall (f :: Type -&gt; Type) a b.
+(Foldable f, HasCallStack) =&gt;
+Positive Int -&gt; (a -&gt; NaviT e m b) -&gt; f a -&gt; NaviT e m ()
+forall (f :: Type -&gt; Type) a b.
+(Foldable f, HasCallStack) =&gt;
+(a -&gt; NaviT e m b) -&gt; f a -&gt; NaviT e m ()
+forall (t :: Type -&gt; Type) a b.
+(HasCallStack, Traversable t) =&gt;
+Positive Int -&gt; (a -&gt; NaviT e m b) -&gt; t a -&gt; NaviT e m (t b)
+forall (t :: Type -&gt; Type) a b.
+(HasCallStack, Traversable t) =&gt;
+(a -&gt; NaviT e m b) -&gt; t a -&gt; NaviT e m (t b)
+$cwithAsync :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+withAsync :: forall a b.
+HasCallStack =&gt;
+NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+$cwithAsyncBound :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+withAsyncBound :: forall a b.
+HasCallStack =&gt;
+NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+$cwithAsyncOn :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Int -&gt; NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+withAsyncOn :: forall a b.
+HasCallStack =&gt;
+Int -&gt; NaviT e m a -&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+$cwithAsyncWithUnmask :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+withAsyncWithUnmask :: forall a b.
+HasCallStack =&gt;
+((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; (Async a -&gt; NaviT e m b) -&gt; NaviT e m b
+$cwithAsyncOnWithUnmask :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Int
+-&gt; ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; (Async a -&gt; NaviT e m b)
+-&gt; NaviT e m b
+withAsyncOnWithUnmask :: forall a b.
+HasCallStack =&gt;
+Int
+-&gt; ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; (Async a -&gt; NaviT e m b)
+-&gt; NaviT e m b
+$cwait :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; NaviT e m a
+wait :: forall a. HasCallStack =&gt; Async a -&gt; NaviT e m a
+$cpoll :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; NaviT e m (Maybe (Either SomeException a))
+poll :: forall a.
+HasCallStack =&gt;
+Async a -&gt; NaviT e m (Maybe (Either SomeException a))
+$cwaitCatch :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; NaviT e m (Either SomeException a)
+waitCatch :: forall a.
+HasCallStack =&gt;
+Async a -&gt; NaviT e m (Either SomeException a)
+$ccancel :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; NaviT e m ()
+cancel :: forall a. HasCallStack =&gt; Async a -&gt; NaviT e m ()
+$cuninterruptibleCancel :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; NaviT e m ()
+uninterruptibleCancel :: forall a. HasCallStack =&gt; Async a -&gt; NaviT e m ()
+$ccancelWith :: forall e (m :: Type -&gt; Type) e a.
+(MonadAsync m, Exception e, HasCallStack) =&gt;
+Async a -&gt; e -&gt; NaviT e m ()
+cancelWith :: forall e a.
+(Exception e, HasCallStack) =&gt;
+Async a -&gt; e -&gt; NaviT e m ()
+$crace :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m (Either a b)
+race :: forall a b.
+HasCallStack =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m (Either a b)
+$cconcurrently :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m (a, b)
+concurrently :: forall a b.
+HasCallStack =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m (a, b)
+$cconcurrently_ :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m ()
+concurrently_ :: forall a b.
+HasCallStack =&gt;
+NaviT e m a -&gt; NaviT e m b -&gt; NaviT e m ()
+$cwaitAny :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+[Async a] -&gt; NaviT e m (Async a, a)
+waitAny :: forall a. HasCallStack =&gt; [Async a] -&gt; NaviT e m (Async a, a)
+$cwaitAnyCatch :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+[Async a] -&gt; NaviT e m (Async a, Either SomeException a)
+waitAnyCatch :: forall a.
+HasCallStack =&gt;
+[Async a] -&gt; NaviT e m (Async a, Either SomeException a)
+$cwaitAnyCancel :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+[Async a] -&gt; NaviT e m (Async a, a)
+waitAnyCancel :: forall a. HasCallStack =&gt; [Async a] -&gt; NaviT e m (Async a, a)
+$cwaitAnyCatchCancel :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+[Async a] -&gt; NaviT e m (Async a, Either SomeException a)
+waitAnyCatchCancel :: forall a.
+HasCallStack =&gt;
+[Async a] -&gt; NaviT e m (Async a, Either SomeException a)
+$cwaitEither :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; Async b -&gt; NaviT e m (Either a b)
+waitEither :: forall a b.
+HasCallStack =&gt;
+Async a -&gt; Async b -&gt; NaviT e m (Either a b)
+$cwaitEitherCatch :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a
+-&gt; Async b
+-&gt; NaviT
+     e m (Either (Either SomeException a) (Either SomeException b))
+waitEitherCatch :: forall a b.
+HasCallStack =&gt;
+Async a
+-&gt; Async b
+-&gt; NaviT
+     e m (Either (Either SomeException a) (Either SomeException b))
+$cwaitEitherCancel :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; Async b -&gt; NaviT e m (Either a b)
+waitEitherCancel :: forall a b.
+HasCallStack =&gt;
+Async a -&gt; Async b -&gt; NaviT e m (Either a b)
+$cwaitEitherCatchCancel :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a
+-&gt; Async b
+-&gt; NaviT
+     e m (Either (Either SomeException a) (Either SomeException b))
+waitEitherCatchCancel :: forall a b.
+HasCallStack =&gt;
+Async a
+-&gt; Async b
+-&gt; NaviT
+     e m (Either (Either SomeException a) (Either SomeException b))
+$cwaitEither_ :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; Async b -&gt; NaviT e m ()
+waitEither_ :: forall a b. HasCallStack =&gt; Async a -&gt; Async b -&gt; NaviT e m ()
+$cwaitBoth :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; Async b -&gt; NaviT e m (a, b)
+waitBoth :: forall a b. HasCallStack =&gt; Async a -&gt; Async b -&gt; NaviT e m (a, b)
+$casync :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; NaviT e m (Async a)
+async :: forall a. HasCallStack =&gt; NaviT e m a -&gt; NaviT e m (Async a)
+$casyncBound :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+NaviT e m a -&gt; NaviT e m (Async a)
+asyncBound :: forall a. HasCallStack =&gt; NaviT e m a -&gt; NaviT e m (Async a)
+$casyncOn :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Int -&gt; NaviT e m a -&gt; NaviT e m (Async a)
+asyncOn :: forall a. HasCallStack =&gt; Int -&gt; NaviT e m a -&gt; NaviT e m (Async a)
+$casyncWithUnmask :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; NaviT e m (Async a)
+asyncWithUnmask :: forall a.
+HasCallStack =&gt;
+((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; NaviT e m (Async a)
+$casyncOnWithUnmask :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Int
+-&gt; ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; NaviT e m (Async a)
+asyncOnWithUnmask :: forall a.
+HasCallStack =&gt;
+Int
+-&gt; ((forall c. NaviT e m c -&gt; NaviT e m c) -&gt; NaviT e m a)
+-&gt; NaviT e m (Async a)
+$clink :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; NaviT e m ()
+link :: forall a. HasCallStack =&gt; Async a -&gt; NaviT e m ()
+$clinkOnly :: forall e (m :: Type -&gt; Type) a.
+(MonadAsync m, HasCallStack) =&gt;
+(SomeException -&gt; Bool) -&gt; Async a -&gt; NaviT e m ()
+linkOnly :: forall a.
+HasCallStack =&gt;
+(SomeException -&gt; Bool) -&gt; Async a -&gt; NaviT e m ()
+$clink2 :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+Async a -&gt; Async b -&gt; NaviT e m ()
+link2 :: forall a b. HasCallStack =&gt; Async a -&gt; Async b -&gt; NaviT e m ()
+$clink2Only :: forall e (m :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack) =&gt;
+(SomeException -&gt; Bool) -&gt; Async a -&gt; Async b -&gt; NaviT e m ()
+link2Only :: forall a b.
+HasCallStack =&gt;
+(SomeException -&gt; Bool) -&gt; Async a -&gt; Async b -&gt; NaviT e m ()
+$cpooledMapConcurrentlyN :: forall e (m :: Type -&gt; Type) (t :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack, Traversable t) =&gt;
+Positive Int -&gt; (a -&gt; NaviT e m b) -&gt; t a -&gt; NaviT e m (t b)
+pooledMapConcurrentlyN :: forall (t :: Type -&gt; Type) a b.
+(HasCallStack, Traversable t) =&gt;
+Positive Int -&gt; (a -&gt; NaviT e m b) -&gt; t a -&gt; NaviT e m (t b)
+$cpooledMapConcurrently :: forall e (m :: Type -&gt; Type) (t :: Type -&gt; Type) a b.
+(MonadAsync m, HasCallStack, Traversable t) =&gt;
+(a -&gt; NaviT e m b) -&gt; t a -&gt; NaviT e m (t b)
+pooledMapConcurrently :: forall (t :: Type -&gt; Type) a b.
+(HasCallStack, Traversable t) =&gt;
+(a -&gt; NaviT e m b) -&gt; t a -&gt; NaviT e m (t b)
+$cpooledMapConcurrentlyN_ :: forall e (m :: Type -&gt; Type) (f :: Type -&gt; Type) a b.
+(MonadAsync m, Foldable f, HasCallStack) =&gt;
+Positive Int -&gt; (a -&gt; NaviT e m b) -&gt; f a -&gt; NaviT e m ()
+pooledMapConcurrentlyN_ :: forall (f :: Type -&gt; Type) a b.
+(Foldable f, HasCallStack) =&gt;
+Positive Int -&gt; (a -&gt; NaviT e m b) -&gt; f a -&gt; NaviT e m ()
+$cpooledMapConcurrently_ :: forall e (m :: Type -&gt; Type) (f :: Type -&gt; Type) a b.
+(MonadAsync m, Foldable f, HasCallStack) =&gt;
+(a -&gt; NaviT e m b) -&gt; f a -&gt; NaviT e m ()
+pooledMapConcurrently_ :: forall (f :: Type -&gt; Type) a b.
+(Foldable f, HasCallStack) =&gt;
+(a -&gt; NaviT e m b) -&gt; f a -&gt; NaviT e m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-async-0.1-92505361e9389c19c3a5d53a84746fea7444a136440f9d5dc875dfd7fe4e81c0/share/doc/html/src/Effects.Concurrent.Async.html#MonadAsync"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadAsync</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>      </span><span id="local-6989586621679448786"><span class="annot"><span class="annottext">MonadThrow (NaviT e m)
+MonadThrow (NaviT e m) =&gt;
+(forall e a.
+ (HasCallStack, Exception e) =&gt;
+ NaviT e m a -&gt; (e -&gt; NaviT e m a) -&gt; NaviT e m a)
+-&gt; MonadCatch (NaviT e m)
+forall e a.
+(HasCallStack, Exception e) =&gt;
+NaviT e m a -&gt; (e -&gt; NaviT e m a) -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type).
+MonadCatch m =&gt;
+MonadThrow (NaviT e m)
+forall e (m :: Type -&gt; Type) e a.
+(MonadCatch m, HasCallStack, Exception e) =&gt;
+NaviT e m a -&gt; (e -&gt; NaviT e m a) -&gt; NaviT e m a
+forall (m :: Type -&gt; Type).
+MonadThrow m =&gt;
+(forall e a.
+ (HasCallStack, Exception e) =&gt;
+ m a -&gt; (e -&gt; m a) -&gt; m a)
+-&gt; MonadCatch m
+$ccatch :: forall e (m :: Type -&gt; Type) e a.
+(MonadCatch m, HasCallStack, Exception e) =&gt;
+NaviT e m a -&gt; (e -&gt; NaviT e m a) -&gt; NaviT e m a
+catch :: forall e a.
+(HasCallStack, Exception e) =&gt;
+NaviT e m a -&gt; (e -&gt; NaviT e m a) -&gt; NaviT e m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadCatch</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>      </span><span id="local-6989586621679448807"><span id="local-6989586621679448818"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(HasCallStack =&gt; NaviT e m Client)
+-&gt; (HasCallStack =&gt; Client -&gt; NaviNote -&gt; NaviT e m ())
+-&gt; MonadDBus (NaviT e m)
+HasCallStack =&gt; NaviT e m Client
+HasCallStack =&gt; Client -&gt; NaviNote -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type). MonadDBus m =&gt; Monad (NaviT e m)
+forall e (m :: Type -&gt; Type).
+(MonadDBus m, HasCallStack) =&gt;
+NaviT e m Client
+forall e (m :: Type -&gt; Type).
+(MonadDBus m, HasCallStack) =&gt;
+Client -&gt; NaviNote -&gt; NaviT e m ()
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(HasCallStack =&gt; m Client)
+-&gt; (HasCallStack =&gt; Client -&gt; NaviNote -&gt; m ()) -&gt; MonadDBus m
+$cconnectSession :: forall e (m :: Type -&gt; Type).
+(MonadDBus m, HasCallStack) =&gt;
+NaviT e m Client
+connectSession :: HasCallStack =&gt; NaviT e m Client
+$cnotify :: forall e (m :: Type -&gt; Type).
+(MonadDBus m, HasCallStack) =&gt;
+Client -&gt; NaviNote -&gt; NaviT e m ()
+notify :: HasCallStack =&gt; Client -&gt; NaviNote -&gt; NaviT e m ()
+</span><a href="Navi.Env.DBus.html#MonadDBus"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadDBus</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621679448837"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(HasCallStack =&gt; OsPath -&gt; NaviT e m ByteString)
+-&gt; MonadFileReader (NaviT e m)
+HasCallStack =&gt; OsPath -&gt; NaviT e m ByteString
+forall e (m :: Type -&gt; Type).
+MonadFileReader m =&gt;
+Monad (NaviT e m)
+forall e (m :: Type -&gt; Type).
+(MonadFileReader m, HasCallStack) =&gt;
+OsPath -&gt; NaviT e m ByteString
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(HasCallStack =&gt; OsPath -&gt; m ByteString) -&gt; MonadFileReader m
+$creadBinaryFile :: forall e (m :: Type -&gt; Type).
+(MonadFileReader m, HasCallStack) =&gt;
+OsPath -&gt; NaviT e m ByteString
+readBinaryFile :: HasCallStack =&gt; OsPath -&gt; NaviT e m ByteString
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-fs-0.1-939bb2cbf42411240e371281dbd18acb7c2362452fb536058a1de1cb3f641bb3/share/doc/html/src/Effects.FileSystem.FileReader.html#MonadFileReader"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadFileReader</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>      </span><span id="local-6989586621679448856"><span id="local-6989586621679448867"><span id="local-6989586621679448877"><span id="local-6989586621679448887"><span id="local-6989586621679448897"><span id="local-6989586621679448907"><span id="local-6989586621679448917"><span id="local-6989586621679448927"><span id="local-6989586621679448937"><span id="local-6989586621679448947"><span id="local-6989586621679448957"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(HasCallStack =&gt; OsPath -&gt; IOMode -&gt; NaviT e m Handle)
+-&gt; (forall a.
+    HasCallStack =&gt;
+    OsPath -&gt; IOMode -&gt; (Handle -&gt; NaviT e m a) -&gt; NaviT e m a)
+-&gt; (HasCallStack =&gt; Handle -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; Integer -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; BufferMode -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; SeekMode -&gt; Integer -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; NaviT e m Integer)
+-&gt; (HasCallStack =&gt; Handle -&gt; Bool -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; ByteString -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; ByteString -&gt; NaviT e m ByteString)
+-&gt; MonadHandleWriter (NaviT e m)
+HasCallStack =&gt; Handle -&gt; NaviT e m Integer
+HasCallStack =&gt; Handle -&gt; NaviT e m ()
+HasCallStack =&gt; Handle -&gt; Bool -&gt; NaviT e m ()
+HasCallStack =&gt; Handle -&gt; Integer -&gt; NaviT e m ()
+HasCallStack =&gt; Handle -&gt; ByteString -&gt; NaviT e m ()
+HasCallStack =&gt; Handle -&gt; ByteString -&gt; NaviT e m ByteString
+HasCallStack =&gt; Handle -&gt; SeekMode -&gt; Integer -&gt; NaviT e m ()
+HasCallStack =&gt; Handle -&gt; BufferMode -&gt; NaviT e m ()
+HasCallStack =&gt; OsPath -&gt; IOMode -&gt; NaviT e m Handle
+forall a.
+HasCallStack =&gt;
+OsPath -&gt; IOMode -&gt; (Handle -&gt; NaviT e m a) -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type).
+MonadHandleWriter m =&gt;
+Monad (NaviT e m)
+forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; NaviT e m Integer
+forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; Bool -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; Integer -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; ByteString -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; ByteString -&gt; NaviT e m ByteString
+forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; SeekMode -&gt; Integer -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; BufferMode -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+OsPath -&gt; IOMode -&gt; NaviT e m Handle
+forall e (m :: Type -&gt; Type) a.
+(MonadHandleWriter m, HasCallStack) =&gt;
+OsPath -&gt; IOMode -&gt; (Handle -&gt; NaviT e m a) -&gt; NaviT e m a
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(HasCallStack =&gt; OsPath -&gt; IOMode -&gt; m Handle)
+-&gt; (forall a.
+    HasCallStack =&gt;
+    OsPath -&gt; IOMode -&gt; (Handle -&gt; m a) -&gt; m a)
+-&gt; (HasCallStack =&gt; Handle -&gt; m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; Integer -&gt; m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; BufferMode -&gt; m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; SeekMode -&gt; Integer -&gt; m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; m Integer)
+-&gt; (HasCallStack =&gt; Handle -&gt; Bool -&gt; m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; ByteString -&gt; m ())
+-&gt; (HasCallStack =&gt; Handle -&gt; ByteString -&gt; m ByteString)
+-&gt; MonadHandleWriter m
+$copenBinaryFile :: forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+OsPath -&gt; IOMode -&gt; NaviT e m Handle
+openBinaryFile :: HasCallStack =&gt; OsPath -&gt; IOMode -&gt; NaviT e m Handle
+$cwithBinaryFile :: forall e (m :: Type -&gt; Type) a.
+(MonadHandleWriter m, HasCallStack) =&gt;
+OsPath -&gt; IOMode -&gt; (Handle -&gt; NaviT e m a) -&gt; NaviT e m a
+withBinaryFile :: forall a.
+HasCallStack =&gt;
+OsPath -&gt; IOMode -&gt; (Handle -&gt; NaviT e m a) -&gt; NaviT e m a
+$chClose :: forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; NaviT e m ()
+hClose :: HasCallStack =&gt; Handle -&gt; NaviT e m ()
+$chFlush :: forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; NaviT e m ()
+hFlush :: HasCallStack =&gt; Handle -&gt; NaviT e m ()
+$chSetFileSize :: forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; Integer -&gt; NaviT e m ()
+hSetFileSize :: HasCallStack =&gt; Handle -&gt; Integer -&gt; NaviT e m ()
+$chSetBuffering :: forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; BufferMode -&gt; NaviT e m ()
+hSetBuffering :: HasCallStack =&gt; Handle -&gt; BufferMode -&gt; NaviT e m ()
+$chSeek :: forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; SeekMode -&gt; Integer -&gt; NaviT e m ()
+hSeek :: HasCallStack =&gt; Handle -&gt; SeekMode -&gt; Integer -&gt; NaviT e m ()
+$chTell :: forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; NaviT e m Integer
+hTell :: HasCallStack =&gt; Handle -&gt; NaviT e m Integer
+$chSetEcho :: forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; Bool -&gt; NaviT e m ()
+hSetEcho :: HasCallStack =&gt; Handle -&gt; Bool -&gt; NaviT e m ()
+$chPut :: forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; ByteString -&gt; NaviT e m ()
+hPut :: HasCallStack =&gt; Handle -&gt; ByteString -&gt; NaviT e m ()
+$chPutNonBlocking :: forall e (m :: Type -&gt; Type).
+(MonadHandleWriter m, HasCallStack) =&gt;
+Handle -&gt; ByteString -&gt; NaviT e m ByteString
+hPutNonBlocking :: HasCallStack =&gt; Handle -&gt; ByteString -&gt; NaviT e m ByteString
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-fs-0.1-939bb2cbf42411240e371281dbd18acb7c2362452fb536058a1de1cb3f641bb3/share/doc/html/src/Effects.FileSystem.HandleWriter.html#MonadHandleWriter"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadHandleWriter</span></a></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>      </span><span id="local-6989586621679448982"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(forall a. IO a -&gt; NaviT e m a) -&gt; MonadIO (NaviT e m)
+forall a. IO a -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type). MonadIO m =&gt; Monad (NaviT e m)
+forall e (m :: Type -&gt; Type) a. MonadIO m =&gt; IO a -&gt; NaviT e m a
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(forall a. IO a -&gt; m a) -&gt; MonadIO m
+$cliftIO :: forall e (m :: Type -&gt; Type) a. MonadIO m =&gt; IO a -&gt; NaviT e m a
+liftIO :: forall a. IO a -&gt; NaviT e m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>      </span><span id="local-6989586621679448998"><span id="local-6989586621679449009"><span id="local-6989586621679449019"><span id="local-6989586621679449029"><span id="local-6989586621679449039"><span id="local-6989586621679449049"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(forall a. HasCallStack =&gt; a -&gt; NaviT e m (IORef a))
+-&gt; (forall a. HasCallStack =&gt; IORef a -&gt; NaviT e m a)
+-&gt; (forall a. HasCallStack =&gt; IORef a -&gt; a -&gt; NaviT e m ())
+-&gt; (forall a. HasCallStack =&gt; IORef a -&gt; a -&gt; NaviT e m ())
+-&gt; (forall a. HasCallStack =&gt; IORef a -&gt; (a -&gt; a) -&gt; NaviT e m ())
+-&gt; (forall a b.
+    HasCallStack =&gt;
+    IORef a -&gt; (a -&gt; (a, b)) -&gt; NaviT e m b)
+-&gt; MonadIORef (NaviT e m)
+forall a. HasCallStack =&gt; a -&gt; NaviT e m (IORef a)
+forall a. HasCallStack =&gt; IORef a -&gt; NaviT e m a
+forall a. HasCallStack =&gt; IORef a -&gt; a -&gt; NaviT e m ()
+forall a. HasCallStack =&gt; IORef a -&gt; (a -&gt; a) -&gt; NaviT e m ()
+forall a b. HasCallStack =&gt; IORef a -&gt; (a -&gt; (a, b)) -&gt; NaviT e m b
+forall e (m :: Type -&gt; Type). MonadIORef m =&gt; Monad (NaviT e m)
+forall e (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+a -&gt; NaviT e m (IORef a)
+forall e (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; a -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; (a -&gt; a) -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) a b.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; (a -&gt; (a, b)) -&gt; NaviT e m b
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(forall a. HasCallStack =&gt; a -&gt; m (IORef a))
+-&gt; (forall a. HasCallStack =&gt; IORef a -&gt; m a)
+-&gt; (forall a. HasCallStack =&gt; IORef a -&gt; a -&gt; m ())
+-&gt; (forall a. HasCallStack =&gt; IORef a -&gt; a -&gt; m ())
+-&gt; (forall a. HasCallStack =&gt; IORef a -&gt; (a -&gt; a) -&gt; m ())
+-&gt; (forall a b. HasCallStack =&gt; IORef a -&gt; (a -&gt; (a, b)) -&gt; m b)
+-&gt; MonadIORef m
+$cnewIORef :: forall e (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+a -&gt; NaviT e m (IORef a)
+newIORef :: forall a. HasCallStack =&gt; a -&gt; NaviT e m (IORef a)
+$creadIORef :: forall e (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; NaviT e m a
+readIORef :: forall a. HasCallStack =&gt; IORef a -&gt; NaviT e m a
+$cwriteIORef :: forall e (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; a -&gt; NaviT e m ()
+writeIORef :: forall a. HasCallStack =&gt; IORef a -&gt; a -&gt; NaviT e m ()
+$catomicWriteIORef :: forall e (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; a -&gt; NaviT e m ()
+atomicWriteIORef :: forall a. HasCallStack =&gt; IORef a -&gt; a -&gt; NaviT e m ()
+$cmodifyIORef' :: forall e (m :: Type -&gt; Type) a.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; (a -&gt; a) -&gt; NaviT e m ()
+modifyIORef' :: forall a. HasCallStack =&gt; IORef a -&gt; (a -&gt; a) -&gt; NaviT e m ()
+$catomicModifyIORef' :: forall e (m :: Type -&gt; Type) a b.
+(MonadIORef m, HasCallStack) =&gt;
+IORef a -&gt; (a -&gt; (a, b)) -&gt; NaviT e m b
+atomicModifyIORef' :: forall a b. HasCallStack =&gt; IORef a -&gt; (a -&gt; (a, b)) -&gt; NaviT e m b
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-ioref-0.1-25c95ecfb75289adf8e828362701d2f37c9416a7dcb79ab845a0ea3f271c8e04/share/doc/html/src/Effects.IORef.html#MonadIORef"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadIORef</span></a></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>      </span><span id="local-6989586621679449072"><span id="local-6989586621679449083"><span id="local-6989586621679449093"><span class="annot"><span class="annottext">MonadCatch (NaviT e m)
+MonadCatch (NaviT e m) =&gt;
+(forall b.
+ HasCallStack =&gt;
+ ((forall a. NaviT e m a -&gt; NaviT e m a) -&gt; NaviT e m b)
+ -&gt; NaviT e m b)
+-&gt; (forall b.
+    HasCallStack =&gt;
+    ((forall a. NaviT e m a -&gt; NaviT e m a) -&gt; NaviT e m b)
+    -&gt; NaviT e m b)
+-&gt; (forall a b c.
+    HasCallStack =&gt;
+    NaviT e m a
+    -&gt; (a -&gt; ExitCase b -&gt; NaviT e m c)
+    -&gt; (a -&gt; NaviT e m b)
+    -&gt; NaviT e m (b, c))
+-&gt; MonadMask (NaviT e m)
+forall b.
+HasCallStack =&gt;
+((forall a. NaviT e m a -&gt; NaviT e m a) -&gt; NaviT e m b)
+-&gt; NaviT e m b
+forall a b c.
+HasCallStack =&gt;
+NaviT e m a
+-&gt; (a -&gt; ExitCase b -&gt; NaviT e m c)
+-&gt; (a -&gt; NaviT e m b)
+-&gt; NaviT e m (b, c)
+forall e (m :: Type -&gt; Type). MonadMask m =&gt; MonadCatch (NaviT e m)
+forall e (m :: Type -&gt; Type) b.
+(MonadMask m, HasCallStack) =&gt;
+((forall a. NaviT e m a -&gt; NaviT e m a) -&gt; NaviT e m b)
+-&gt; NaviT e m b
+forall e (m :: Type -&gt; Type) a b c.
+(MonadMask m, HasCallStack) =&gt;
+NaviT e m a
+-&gt; (a -&gt; ExitCase b -&gt; NaviT e m c)
+-&gt; (a -&gt; NaviT e m b)
+-&gt; NaviT e m (b, c)
+forall (m :: Type -&gt; Type).
+MonadCatch m =&gt;
+(forall b. HasCallStack =&gt; ((forall a. m a -&gt; m a) -&gt; m b) -&gt; m b)
+-&gt; (forall b.
+    HasCallStack =&gt;
+    ((forall a. m a -&gt; m a) -&gt; m b) -&gt; m b)
+-&gt; (forall a b c.
+    HasCallStack =&gt;
+    m a -&gt; (a -&gt; ExitCase b -&gt; m c) -&gt; (a -&gt; m b) -&gt; m (b, c))
+-&gt; MonadMask m
+$cmask :: forall e (m :: Type -&gt; Type) b.
+(MonadMask m, HasCallStack) =&gt;
+((forall a. NaviT e m a -&gt; NaviT e m a) -&gt; NaviT e m b)
+-&gt; NaviT e m b
+mask :: forall b.
+HasCallStack =&gt;
+((forall a. NaviT e m a -&gt; NaviT e m a) -&gt; NaviT e m b)
+-&gt; NaviT e m b
+$cuninterruptibleMask :: forall e (m :: Type -&gt; Type) b.
+(MonadMask m, HasCallStack) =&gt;
+((forall a. NaviT e m a -&gt; NaviT e m a) -&gt; NaviT e m b)
+-&gt; NaviT e m b
+uninterruptibleMask :: forall b.
+HasCallStack =&gt;
+((forall a. NaviT e m a -&gt; NaviT e m a) -&gt; NaviT e m b)
+-&gt; NaviT e m b
+$cgeneralBracket :: forall e (m :: Type -&gt; Type) a b c.
+(MonadMask m, HasCallStack) =&gt;
+NaviT e m a
+-&gt; (a -&gt; ExitCase b -&gt; NaviT e m c)
+-&gt; (a -&gt; NaviT e m b)
+-&gt; NaviT e m (b, c)
+generalBracket :: forall a b c.
+HasCallStack =&gt;
+NaviT e m a
+-&gt; (a -&gt; ExitCase b -&gt; NaviT e m c)
+-&gt; (a -&gt; NaviT e m b)
+-&gt; NaviT e m (b, c)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadMask</span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>      </span><span id="local-6989586621679449109"><span id="local-6989586621679449114"><span id="local-6989586621679449118"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621679448273"><span class="hs-identifier hs-type">e</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>      </span><span id="local-6989586621679449134"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(forall a. HasCallStack =&gt; STM a -&gt; NaviT e m a)
+-&gt; MonadSTM (NaviT e m)
+forall a. HasCallStack =&gt; STM a -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type). MonadSTM m =&gt; Monad (NaviT e m)
+forall e (m :: Type -&gt; Type) a.
+(MonadSTM m, HasCallStack) =&gt;
+STM a -&gt; NaviT e m a
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(forall a. HasCallStack =&gt; STM a -&gt; m a) -&gt; MonadSTM m
+$catomically :: forall e (m :: Type -&gt; Type) a.
+(MonadSTM m, HasCallStack) =&gt;
+STM a -&gt; NaviT e m a
+atomically :: forall a. HasCallStack =&gt; STM a -&gt; NaviT e m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#MonadSTM"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadSTM</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>      </span><span id="local-6989586621679449153"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(forall result.
+ HasCallStack =&gt;
+ ServiceType result -&gt; NaviT e m (result, Maybe PollInterval))
+-&gt; MonadSystemInfo (NaviT e m)
+forall result.
+HasCallStack =&gt;
+ServiceType result -&gt; NaviT e m (result, Maybe PollInterval)
+forall e (m :: Type -&gt; Type).
+MonadSystemInfo m =&gt;
+Monad (NaviT e m)
+forall e (m :: Type -&gt; Type) result.
+(MonadSystemInfo m, HasCallStack) =&gt;
+ServiceType result -&gt; NaviT e m (result, Maybe PollInterval)
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(forall result.
+ HasCallStack =&gt;
+ ServiceType result -&gt; m (result, Maybe PollInterval))
+-&gt; MonadSystemInfo m
+$cquery :: forall e (m :: Type -&gt; Type) result.
+(MonadSystemInfo m, HasCallStack) =&gt;
+ServiceType result -&gt; NaviT e m (result, Maybe PollInterval)
+query :: forall result.
+HasCallStack =&gt;
+ServiceType result -&gt; NaviT e m (result, Maybe PollInterval)
+</span><a href="Navi.Effects.MonadSystemInfo.html#MonadSystemInfo"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadSystemInfo</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>      </span><span id="local-6989586621679449172"><span id="local-6989586621679449183"><span id="local-6989586621679449193"><span id="local-6989586621679449203"><span id="local-6989586621679449213"><span id="local-6989586621679449223"><span id="local-6989586621679449235"><span id="local-6989586621679449247"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(HasCallStack =&gt; String -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; String -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; ByteString -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; NaviT e m Char)
+-&gt; (HasCallStack =&gt; NaviT e m String)
+-&gt; (HasCallStack =&gt; NaviT e m String)
+-&gt; (forall a. (HasCallStack, Integral a) =&gt; NaviT e m (Window a))
+-&gt; (HasCallStack =&gt; NaviT e m Bool)
+-&gt; MonadTerminal (NaviT e m)
+HasCallStack =&gt; NaviT e m Bool
+HasCallStack =&gt; NaviT e m Char
+HasCallStack =&gt; NaviT e m String
+HasCallStack =&gt; String -&gt; NaviT e m ()
+HasCallStack =&gt; ByteString -&gt; NaviT e m ()
+forall a. (HasCallStack, Integral a) =&gt; NaviT e m (Window a)
+forall e (m :: Type -&gt; Type). MonadTerminal m =&gt; Monad (NaviT e m)
+forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+NaviT e m Bool
+forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+NaviT e m Char
+forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+NaviT e m String
+forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+String -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+ByteString -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) a.
+(MonadTerminal m, HasCallStack, Integral a) =&gt;
+NaviT e m (Window a)
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(HasCallStack =&gt; String -&gt; m ())
+-&gt; (HasCallStack =&gt; String -&gt; m ())
+-&gt; (HasCallStack =&gt; ByteString -&gt; m ())
+-&gt; (HasCallStack =&gt; m Char)
+-&gt; (HasCallStack =&gt; m String)
+-&gt; (HasCallStack =&gt; m String)
+-&gt; (forall a. (HasCallStack, Integral a) =&gt; m (Window a))
+-&gt; (HasCallStack =&gt; m Bool)
+-&gt; MonadTerminal m
+$cputStr :: forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+String -&gt; NaviT e m ()
+putStr :: HasCallStack =&gt; String -&gt; NaviT e m ()
+$cputStrLn :: forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+String -&gt; NaviT e m ()
+putStrLn :: HasCallStack =&gt; String -&gt; NaviT e m ()
+$cputBinary :: forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+ByteString -&gt; NaviT e m ()
+putBinary :: HasCallStack =&gt; ByteString -&gt; NaviT e m ()
+$cgetChar :: forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+NaviT e m Char
+getChar :: HasCallStack =&gt; NaviT e m Char
+$cgetLine :: forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+NaviT e m String
+getLine :: HasCallStack =&gt; NaviT e m String
+$cgetContents' :: forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+NaviT e m String
+getContents' :: HasCallStack =&gt; NaviT e m String
+$cgetTerminalSize :: forall e (m :: Type -&gt; Type) a.
+(MonadTerminal m, HasCallStack, Integral a) =&gt;
+NaviT e m (Window a)
+getTerminalSize :: forall a. (HasCallStack, Integral a) =&gt; NaviT e m (Window a)
+$csupportsPretty :: forall e (m :: Type -&gt; Type).
+(MonadTerminal m, HasCallStack) =&gt;
+NaviT e m Bool
+supportsPretty :: HasCallStack =&gt; NaviT e m Bool
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-terminal-0.1-5e9320c252a0a4f19fc23b01106505f5ee3c09507f1c769f2d400dfcdae28ef8/share/doc/html/src/Effects.System.Terminal.html#MonadTerminal"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadTerminal</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>      </span><span id="local-6989586621679449272"><span id="local-6989586621679449283"><span id="local-6989586621679449293"><span id="local-6989586621679449303"><span id="local-6989586621679449313"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(HasCallStack =&gt; NaviT e m ZonedTime)
+-&gt; (HasCallStack =&gt; UTCTime -&gt; NaviT e m TimeZone)
+-&gt; (HasCallStack =&gt; UTCTime -&gt; NaviT e m ZonedTime)
+-&gt; (HasCallStack =&gt; NaviT e m TZ)
+-&gt; (HasCallStack =&gt; NaviT e m Double)
+-&gt; MonadTime (NaviT e m)
+HasCallStack =&gt; NaviT e m Double
+HasCallStack =&gt; NaviT e m ZonedTime
+HasCallStack =&gt; NaviT e m TZ
+HasCallStack =&gt; UTCTime -&gt; NaviT e m TimeZone
+HasCallStack =&gt; UTCTime -&gt; NaviT e m ZonedTime
+forall e (m :: Type -&gt; Type). MonadTime m =&gt; Monad (NaviT e m)
+forall e (m :: Type -&gt; Type).
+(MonadTime m, HasCallStack) =&gt;
+NaviT e m Double
+forall e (m :: Type -&gt; Type).
+(MonadTime m, HasCallStack) =&gt;
+NaviT e m ZonedTime
+forall e (m :: Type -&gt; Type).
+(MonadTime m, HasCallStack) =&gt;
+NaviT e m TZ
+forall e (m :: Type -&gt; Type).
+(MonadTime m, HasCallStack) =&gt;
+UTCTime -&gt; NaviT e m TimeZone
+forall e (m :: Type -&gt; Type).
+(MonadTime m, HasCallStack) =&gt;
+UTCTime -&gt; NaviT e m ZonedTime
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(HasCallStack =&gt; m ZonedTime)
+-&gt; (HasCallStack =&gt; UTCTime -&gt; m TimeZone)
+-&gt; (HasCallStack =&gt; UTCTime -&gt; m ZonedTime)
+-&gt; (HasCallStack =&gt; m TZ)
+-&gt; (HasCallStack =&gt; m Double)
+-&gt; MonadTime m
+$cgetSystemZonedTime :: forall e (m :: Type -&gt; Type).
+(MonadTime m, HasCallStack) =&gt;
+NaviT e m ZonedTime
+getSystemZonedTime :: HasCallStack =&gt; NaviT e m ZonedTime
+$cgetTimeZone :: forall e (m :: Type -&gt; Type).
+(MonadTime m, HasCallStack) =&gt;
+UTCTime -&gt; NaviT e m TimeZone
+getTimeZone :: HasCallStack =&gt; UTCTime -&gt; NaviT e m TimeZone
+$cutcToLocalZonedTime :: forall e (m :: Type -&gt; Type).
+(MonadTime m, HasCallStack) =&gt;
+UTCTime -&gt; NaviT e m ZonedTime
+utcToLocalZonedTime :: HasCallStack =&gt; UTCTime -&gt; NaviT e m ZonedTime
+$cloadLocalTZ :: forall e (m :: Type -&gt; Type).
+(MonadTime m, HasCallStack) =&gt;
+NaviT e m TZ
+loadLocalTZ :: HasCallStack =&gt; NaviT e m TZ
+$cgetMonotonicTime :: forall e (m :: Type -&gt; Type).
+(MonadTime m, HasCallStack) =&gt;
+NaviT e m Double
+getMonotonicTime :: HasCallStack =&gt; NaviT e m Double
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-time-0.1-b866c4d34c8aeef4a452de10b147d031b63b7abac53567e761b021ce62d33a0e/share/doc/html/src/Effects.Time.html#MonadTime"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadTime</span></a></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>      </span><span id="local-6989586621679449335"><span id="local-6989586621679449348"><span id="local-6989586621679449360"><span id="local-6989586621679449370"><span id="local-6989586621679449380"><span id="local-6989586621679449390"><span id="local-6989586621679449400"><span id="local-6989586621679449410"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(HasCallStack =&gt; Int -&gt; NaviT e m ())
+-&gt; (forall e.
+    (Exception e, HasCallStack) =&gt;
+    ThreadId -&gt; e -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; NaviT e m Int)
+-&gt; (HasCallStack =&gt; Int -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; ThreadId -&gt; NaviT e m (Int, Bool))
+-&gt; (HasCallStack =&gt; NaviT e m ThreadId)
+-&gt; (HasCallStack =&gt; ThreadId -&gt; String -&gt; NaviT e m ())
+-&gt; (HasCallStack =&gt; ThreadId -&gt; NaviT e m (Maybe String))
+-&gt; MonadThread (NaviT e m)
+HasCallStack =&gt; NaviT e m Int
+HasCallStack =&gt; NaviT e m ThreadId
+HasCallStack =&gt; Int -&gt; NaviT e m ()
+HasCallStack =&gt; ThreadId -&gt; NaviT e m (Maybe String)
+HasCallStack =&gt; ThreadId -&gt; NaviT e m (Int, Bool)
+HasCallStack =&gt; ThreadId -&gt; String -&gt; NaviT e m ()
+forall e.
+(Exception e, HasCallStack) =&gt;
+ThreadId -&gt; e -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type). MonadThread m =&gt; Monad (NaviT e m)
+forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+NaviT e m Int
+forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+NaviT e m ThreadId
+forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+Int -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+ThreadId -&gt; NaviT e m (Maybe String)
+forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+ThreadId -&gt; NaviT e m (Int, Bool)
+forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+ThreadId -&gt; String -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) e.
+(MonadThread m, Exception e, HasCallStack) =&gt;
+ThreadId -&gt; e -&gt; NaviT e m ()
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(HasCallStack =&gt; Int -&gt; m ())
+-&gt; (forall e. (Exception e, HasCallStack) =&gt; ThreadId -&gt; e -&gt; m ())
+-&gt; (HasCallStack =&gt; m Int)
+-&gt; (HasCallStack =&gt; Int -&gt; m ())
+-&gt; (HasCallStack =&gt; ThreadId -&gt; m (Int, Bool))
+-&gt; (HasCallStack =&gt; m ThreadId)
+-&gt; (HasCallStack =&gt; ThreadId -&gt; String -&gt; m ())
+-&gt; (HasCallStack =&gt; ThreadId -&gt; m (Maybe String))
+-&gt; MonadThread m
+$cthreadDelay :: forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+Int -&gt; NaviT e m ()
+threadDelay :: HasCallStack =&gt; Int -&gt; NaviT e m ()
+$cthrowTo :: forall e (m :: Type -&gt; Type) e.
+(MonadThread m, Exception e, HasCallStack) =&gt;
+ThreadId -&gt; e -&gt; NaviT e m ()
+throwTo :: forall e.
+(Exception e, HasCallStack) =&gt;
+ThreadId -&gt; e -&gt; NaviT e m ()
+$cgetNumCapabilities :: forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+NaviT e m Int
+getNumCapabilities :: HasCallStack =&gt; NaviT e m Int
+$csetNumCapabilities :: forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+Int -&gt; NaviT e m ()
+setNumCapabilities :: HasCallStack =&gt; Int -&gt; NaviT e m ()
+$cthreadCapability :: forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+ThreadId -&gt; NaviT e m (Int, Bool)
+threadCapability :: HasCallStack =&gt; ThreadId -&gt; NaviT e m (Int, Bool)
+$cmyThreadId :: forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+NaviT e m ThreadId
+myThreadId :: HasCallStack =&gt; NaviT e m ThreadId
+$clabelThread :: forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+ThreadId -&gt; String -&gt; NaviT e m ()
+labelThread :: HasCallStack =&gt; ThreadId -&gt; String -&gt; NaviT e m ()
+$cthreadLabel :: forall e (m :: Type -&gt; Type).
+(MonadThread m, HasCallStack) =&gt;
+ThreadId -&gt; NaviT e m (Maybe String)
+threadLabel :: HasCallStack =&gt; ThreadId -&gt; NaviT e m (Maybe String)
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#MonadThread"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadThread</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>      </span><span id="local-6989586621679449437"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(forall e a. (HasCallStack, Exception e) =&gt; e -&gt; NaviT e m a)
+-&gt; MonadThrow (NaviT e m)
+forall e a. (HasCallStack, Exception e) =&gt; e -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type). MonadThrow m =&gt; Monad (NaviT e m)
+forall e (m :: Type -&gt; Type) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; NaviT e m a
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(forall e a. (HasCallStack, Exception e) =&gt; e -&gt; m a)
+-&gt; MonadThrow m
+$cthrowM :: forall e (m :: Type -&gt; Type) e a.
+(MonadThrow m, HasCallStack, Exception e) =&gt;
+e -&gt; NaviT e m a
+throwM :: forall e a. (HasCallStack, Exception e) =&gt; e -&gt; NaviT e m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadThrow</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>      </span><span id="local-6989586621679449457"><span id="local-6989586621679449468"><span id="local-6989586621679449478"><span id="local-6989586621679449488"><span id="local-6989586621679449498"><span id="local-6989586621679449508"><span id="local-6989586621679449518"><span id="local-6989586621679449528"><span id="local-6989586621679449538"><span id="local-6989586621679449548"><span id="local-6989586621679449558"><span id="local-6989586621679449568"><span id="local-6989586621679449578"><span id="local-6989586621679449588"><span id="local-6989586621679449598"><span id="local-6989586621679449608"><span id="local-6989586621679449618"><span id="local-6989586621679449628"><span id="local-6989586621679449638"><span class="annot"><span class="annottext">Monad (NaviT e m)
+Monad (NaviT e m) =&gt;
+(forall stdin stdout stderr.
+ HasCallStack =&gt;
+ ProcessConfig stdin stdout stderr -&gt; NaviT e m ExitCode)
+-&gt; (forall stdin stdoutIgnored stderrIgnored.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderrIgnored
+    -&gt; NaviT e m (ExitCode, ByteString, ByteString))
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr
+    -&gt; NaviT e m (ExitCode, ByteString))
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr
+    -&gt; NaviT e m (ExitCode, ByteString))
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr
+    -&gt; NaviT e m (ExitCode, ByteString))
+-&gt; (forall stdin stdout stderr a.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr
+    -&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a)
+-&gt; (forall stdin stdout stderr a.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr
+    -&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a)
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr
+    -&gt; NaviT e m (Process stdin stdout stderr))
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    Process stdin stdout stderr -&gt; NaviT e m ())
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr -&gt; NaviT e m ())
+-&gt; (forall stdin stdoutIgnored stderrIgnored.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderrIgnored
+    -&gt; NaviT e m (ByteString, ByteString))
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr -&gt; NaviT e m ByteString)
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr -&gt; NaviT e m ByteString)
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr -&gt; NaviT e m ByteString)
+-&gt; (forall stdin stdout stderr a.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr
+    -&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a)
+-&gt; (forall stdin stdout stderr a.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr
+    -&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a)
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    Process stdin stdout stderr -&gt; NaviT e m ExitCode)
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    Process stdin stdout stderr -&gt; NaviT e m (Maybe ExitCode))
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    Process stdin stdout stderr -&gt; NaviT e m ())
+-&gt; MonadTypedProcess (NaviT e m)
+forall stdin stdout stderr.
+HasCallStack =&gt;
+Process stdin stdout stderr -&gt; NaviT e m (Maybe ExitCode)
+forall stdin stdout stderr.
+HasCallStack =&gt;
+Process stdin stdout stderr -&gt; NaviT e m ()
+forall stdin stdout stderr.
+HasCallStack =&gt;
+Process stdin stdout stderr -&gt; NaviT e m ExitCode
+forall stdin stdout stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdout stderr -&gt; NaviT e m ()
+forall stdin stdoutIgnored stderrIgnored.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; NaviT e m (ByteString, ByteString)
+forall stdin stdoutIgnored stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderr
+-&gt; NaviT e m (ExitCode, ByteString)
+forall stdin stdoutIgnored stderrIgnored.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; NaviT e m (ExitCode, ByteString, ByteString)
+forall stdin stdoutIgnored stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderr -&gt; NaviT e m ByteString
+forall stdin stdout stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdout stderr -&gt; NaviT e m ExitCode
+forall stdin stdout stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; NaviT e m (Process stdin stdout stderr)
+forall stdin stdout stderr a.
+HasCallStack =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a
+forall e (m :: Type -&gt; Type).
+MonadTypedProcess m =&gt;
+Monad (NaviT e m)
+forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+Process stdin stdout stderr -&gt; NaviT e m (Maybe ExitCode)
+forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+Process stdin stdout stderr -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+Process stdin stdout stderr -&gt; NaviT e m ExitCode
+forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdout stderr -&gt; NaviT e m ()
+forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderrIgnored.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; NaviT e m (ByteString, ByteString)
+forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderr
+-&gt; NaviT e m (ExitCode, ByteString)
+forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderrIgnored.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; NaviT e m (ExitCode, ByteString, ByteString)
+forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderr -&gt; NaviT e m ByteString
+forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdout stderr -&gt; NaviT e m ExitCode
+forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; NaviT e m (Process stdin stdout stderr)
+forall e (m :: Type -&gt; Type) stdin stdout stderr a.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a
+forall (m :: Type -&gt; Type).
+Monad m =&gt;
+(forall stdin stdout stderr.
+ HasCallStack =&gt;
+ ProcessConfig stdin stdout stderr -&gt; m ExitCode)
+-&gt; (forall stdin stdoutIgnored stderrIgnored.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderrIgnored
+    -&gt; m (ExitCode, ByteString, ByteString))
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr
+    -&gt; m (ExitCode, ByteString))
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr
+    -&gt; m (ExitCode, ByteString))
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr
+    -&gt; m (ExitCode, ByteString))
+-&gt; (forall stdin stdout stderr a.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr
+    -&gt; (Process stdin stdout stderr -&gt; m a) -&gt; m a)
+-&gt; (forall stdin stdout stderr a.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr
+    -&gt; (Process stdin stdout stderr -&gt; m a) -&gt; m a)
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr
+    -&gt; m (Process stdin stdout stderr))
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    Process stdin stdout stderr -&gt; m ())
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr -&gt; m ())
+-&gt; (forall stdin stdoutIgnored stderrIgnored.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderrIgnored
+    -&gt; m (ByteString, ByteString))
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr -&gt; m ByteString)
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr -&gt; m ByteString)
+-&gt; (forall stdin stdoutIgnored stderr.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdoutIgnored stderr -&gt; m ByteString)
+-&gt; (forall stdin stdout stderr a.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr
+    -&gt; (Process stdin stdout stderr -&gt; m a) -&gt; m a)
+-&gt; (forall stdin stdout stderr a.
+    HasCallStack =&gt;
+    ProcessConfig stdin stdout stderr
+    -&gt; (Process stdin stdout stderr -&gt; m a) -&gt; m a)
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    Process stdin stdout stderr -&gt; m ExitCode)
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    Process stdin stdout stderr -&gt; m (Maybe ExitCode))
+-&gt; (forall stdin stdout stderr.
+    HasCallStack =&gt;
+    Process stdin stdout stderr -&gt; m ())
+-&gt; MonadTypedProcess m
+$crunProcess :: forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdout stderr -&gt; NaviT e m ExitCode
+runProcess :: forall stdin stdout stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdout stderr -&gt; NaviT e m ExitCode
+$creadProcess :: forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderrIgnored.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; NaviT e m (ExitCode, ByteString, ByteString)
+readProcess :: forall stdin stdoutIgnored stderrIgnored.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; NaviT e m (ExitCode, ByteString, ByteString)
+$creadProcessStdout :: forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderr
+-&gt; NaviT e m (ExitCode, ByteString)
+readProcessStdout :: forall stdin stdoutIgnored stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderr
+-&gt; NaviT e m (ExitCode, ByteString)
+$creadProcessStderr :: forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderr
+-&gt; NaviT e m (ExitCode, ByteString)
+readProcessStderr :: forall stdin stdoutIgnored stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderr
+-&gt; NaviT e m (ExitCode, ByteString)
+$creadProcessInterleaved :: forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderr
+-&gt; NaviT e m (ExitCode, ByteString)
+readProcessInterleaved :: forall stdin stdoutIgnored stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderr
+-&gt; NaviT e m (ExitCode, ByteString)
+$cwithProcessWait :: forall e (m :: Type -&gt; Type) stdin stdout stderr a.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a
+withProcessWait :: forall stdin stdout stderr a.
+HasCallStack =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a
+$cwithProcessTerm :: forall e (m :: Type -&gt; Type) stdin stdout stderr a.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a
+withProcessTerm :: forall stdin stdout stderr a.
+HasCallStack =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a
+$cstartProcess :: forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; NaviT e m (Process stdin stdout stderr)
+startProcess :: forall stdin stdout stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; NaviT e m (Process stdin stdout stderr)
+$cstopProcess :: forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+Process stdin stdout stderr -&gt; NaviT e m ()
+stopProcess :: forall stdin stdout stderr.
+HasCallStack =&gt;
+Process stdin stdout stderr -&gt; NaviT e m ()
+$crunProcess_ :: forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdout stderr -&gt; NaviT e m ()
+runProcess_ :: forall stdin stdout stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdout stderr -&gt; NaviT e m ()
+$creadProcess_ :: forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderrIgnored.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; NaviT e m (ByteString, ByteString)
+readProcess_ :: forall stdin stdoutIgnored stderrIgnored.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; NaviT e m (ByteString, ByteString)
+$creadProcessStdout_ :: forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderr -&gt; NaviT e m ByteString
+readProcessStdout_ :: forall stdin stdoutIgnored stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderr -&gt; NaviT e m ByteString
+$creadProcessStderr_ :: forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderr -&gt; NaviT e m ByteString
+readProcessStderr_ :: forall stdin stdoutIgnored stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderr -&gt; NaviT e m ByteString
+$creadProcessInterleaved_ :: forall e (m :: Type -&gt; Type) stdin stdoutIgnored stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderr -&gt; NaviT e m ByteString
+readProcessInterleaved_ :: forall stdin stdoutIgnored stderr.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderr -&gt; NaviT e m ByteString
+$cwithProcessWait_ :: forall e (m :: Type -&gt; Type) stdin stdout stderr a.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a
+withProcessWait_ :: forall stdin stdout stderr a.
+HasCallStack =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a
+$cwithProcessTerm_ :: forall e (m :: Type -&gt; Type) stdin stdout stderr a.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a
+withProcessTerm_ :: forall stdin stdout stderr a.
+HasCallStack =&gt;
+ProcessConfig stdin stdout stderr
+-&gt; (Process stdin stdout stderr -&gt; NaviT e m a) -&gt; NaviT e m a
+$cwaitExitCode :: forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+Process stdin stdout stderr -&gt; NaviT e m ExitCode
+waitExitCode :: forall stdin stdout stderr.
+HasCallStack =&gt;
+Process stdin stdout stderr -&gt; NaviT e m ExitCode
+$cgetExitCode :: forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+Process stdin stdout stderr -&gt; NaviT e m (Maybe ExitCode)
+getExitCode :: forall stdin stdout stderr.
+HasCallStack =&gt;
+Process stdin stdout stderr -&gt; NaviT e m (Maybe ExitCode)
+$ccheckExitCode :: forall e (m :: Type -&gt; Type) stdin stdout stderr.
+(MonadTypedProcess m, HasCallStack) =&gt;
+Process stdin stdout stderr -&gt; NaviT e m ()
+checkExitCode :: forall stdin stdout stderr.
+HasCallStack =&gt;
+Process stdin stdout stderr -&gt; NaviT e m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-typed-process-0.1-8888432432a71c579e54c55b0263a4cf87cdd28103b8e9a3fcbfd00effd4fb7a/share/doc/html/src/Effects.Process.Typed.html#MonadTypedProcess"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadTypedProcess</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-53"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>    </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621679448273"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448274"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621679448152"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Env.DBus.html#MonadDBus"><span class="hs-identifier hs-type">MonadDBus</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448152"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#MonadSTM"><span class="hs-identifier hs-type">MonadSTM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448152"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-time-0.1-b866c4d34c8aeef4a452de10b147d031b63b7abac53567e761b021ce62d33a0e/share/doc/html/src/Effects.Time.html#MonadTime"><span class="hs-identifier hs-type">MonadTime</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448152"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#MonadThread"><span class="hs-identifier hs-type">MonadThread</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448152"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-typed-process-0.1-8888432432a71c579e54c55b0263a4cf87cdd28103b8e9a3fcbfd00effd4fb7a/share/doc/html/src/Effects.Process.Typed.html#MonadTypedProcess"><span class="hs-identifier hs-type">MonadTypedProcess</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448152"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Navi.Effects.MonadNotify.html#MonadNotify"><span class="hs-identifier hs-type">MonadNotify</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.NaviT.html#NaviT"><span class="hs-identifier hs-type">NaviT</span></a></span><span> </span><span class="annot"><a href="Navi.Env.Core.html#Env"><span class="hs-identifier hs-type">Env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448152"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621679449741"><span class="annot"><span class="annottext">sendNote :: HasCallStack =&gt; NaviNote -&gt; NaviT Env m ()
+</span><a href="Navi.Effects.MonadNotify.html#sendNote"><span class="hs-identifier hs-var hs-var hs-var">sendNote</span></a></span></span><span> </span><span id="local-6989586621679449742"><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679449742"><span class="hs-identifier hs-var">naviNote</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><span class="annottext">(Env -&gt; NoteSystem 'ConfigPhaseEnv)
+-&gt; NaviT Env m (NoteSystem 'ConfigPhaseEnv)
+forall r (m :: Type -&gt; Type) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Optic' A_Lens NoIx Env (NoteSystem 'ConfigPhaseEnv)
+-&gt; Env -&gt; NoteSystem 'ConfigPhaseEnv
+forall k (is :: IxList) s a.
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx Env (NoteSystem 'ConfigPhaseEnv)
+</span><span class="">#notifySystem</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">NaviT Env m (NoteSystem 'ConfigPhaseEnv)
+-&gt; (NoteSystem 'ConfigPhaseEnv -&gt; NaviT Env m ()) -&gt; NaviT Env m ()
+forall a b. NaviT Env m a -&gt; (a -&gt; NaviT Env m b) -&gt; NaviT Env m b
+forall (m :: Type -&gt; Type) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">NoteSystem 'ConfigPhaseEnv
+</span><a href="Navi.Config.Types.html#AppleScript"><span class="hs-identifier hs-var">AppleScript</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; NaviT Env m () -&gt; NaviT Env m ()
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;apple-script&quot;</span></span><span> </span><span class="annot"><span class="annottext">(NaviT Env m () -&gt; NaviT Env m ())
+-&gt; NaviT Env m () -&gt; NaviT Env m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-68"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679449746"><span class="annot"><span class="annottext">noteTxt :: Text
+</span><a href="#local-6989586621679449746"><span class="hs-identifier hs-var hs-var">noteTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NaviNote -&gt; Text
+</span><a href="Navi.Env.AppleScript.html#naviToAppleScript"><span class="hs-identifier hs-var">naviToAppleScript</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679449742"><span class="hs-identifier hs-var">naviNote</span></a></span><span>
+</span><span id="line-69"></span><span>        </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679449746"><span class="hs-identifier hs-var">noteTxt</span></a></span><span>
+</span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">NaviT Env m (ExitCode, ByteString, ByteString) -&gt; NaviT Env m ()
+forall (f :: Type -&gt; Type) a. Functor f =&gt; f a -&gt; f ()
+</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(NaviT Env m (ExitCode, ByteString, ByteString) -&gt; NaviT Env m ())
+-&gt; NaviT Env m (ExitCode, ByteString, ByteString) -&gt; NaviT Env m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ProcessConfig () () ()
+-&gt; NaviT Env m (ExitCode, ByteString, ByteString)
+forall stdin stdoutIgnored stderrIgnored.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; NaviT Env m (ExitCode, ByteString, ByteString)
+forall (m :: Type -&gt; Type) stdin stdoutIgnored stderrIgnored.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; m (ExitCode, ByteString, ByteString)
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-typed-process-0.1-8888432432a71c579e54c55b0263a4cf87cdd28103b8e9a3fcbfd00effd4fb7a/share/doc/html/src/Effects.Process.Typed.html#readProcess"><span class="hs-identifier hs-var">TP.readProcess</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ProcessConfig () () ()
+</span><a href="#local-6989586621679449755"><span class="hs-identifier hs-var">mkProc</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679449746"><span class="hs-identifier hs-var">noteTxt</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>      </span><span class="annot"><a href="Navi.Config.Types.html#DBus"><span class="hs-identifier hs-type">DBus</span></a></span><span> </span><span id="local-6989586621679449756"><span class="annot"><span class="annottext">DBusF 'ConfigPhaseEnv
+</span><a href="#local-6989586621679449756"><span class="hs-identifier hs-var">client</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; NaviT Env m () -&gt; NaviT Env m ()
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;dbus&quot;</span></span><span> </span><span class="annot"><span class="annottext">(NaviT Env m () -&gt; NaviT Env m ())
+-&gt; NaviT Env m () -&gt; NaviT Env m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-72"></span><span>        </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NaviNote -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Navi.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679449742"><span class="hs-identifier hs-var">naviNote</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">NaviT Env m () -&gt; NaviT Env m ()
+forall (f :: Type -&gt; Type) a. Functor f =&gt; f a -&gt; f ()
+</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(NaviT Env m () -&gt; NaviT Env m ())
+-&gt; NaviT Env m () -&gt; NaviT Env m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Client -&gt; NaviNote -&gt; NaviT Env m ()
+forall (m :: Type -&gt; Type).
+(MonadDBus m, HasCallStack) =&gt;
+Client -&gt; NaviNote -&gt; m ()
+</span><a href="Navi.Env.DBus.html#notify"><span class="hs-identifier hs-var">DBus.notify</span></a></span><span> </span><span class="annot"><span class="annottext">Client
+DBusF 'ConfigPhaseEnv
+</span><a href="#local-6989586621679449756"><span class="hs-identifier hs-var">client</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679449742"><span class="hs-identifier hs-var">naviNote</span></a></span><span>
+</span><span id="line-74"></span><span>      </span><span class="annot"><span class="annottext">NoteSystem 'ConfigPhaseEnv
+</span><a href="Navi.Config.Types.html#NotifySend"><span class="hs-identifier hs-var">NotifySend</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; NaviT Env m () -&gt; NaviT Env m ()
+forall (m :: Type -&gt; Type) env a k.
+(Is k A_Setter, LabelOptic' &quot;namespace&quot; k env Namespace,
+ MonadReader env m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;notify-send&quot;</span></span><span> </span><span class="annot"><span class="annottext">(NaviT Env m () -&gt; NaviT Env m ())
+-&gt; NaviT Env m () -&gt; NaviT Env m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-75"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679449758"><span class="annot"><span class="annottext">noteTxt :: Text
+</span><a href="#local-6989586621679449758"><span class="hs-identifier hs-var hs-var">noteTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NaviNote -&gt; Text
+</span><a href="Navi.Env.NotifySend.html#naviToNotifySend"><span class="hs-identifier hs-var">naviToNotifySend</span></a></span><span> </span><span class="annot"><span class="annottext">NaviNote
+</span><a href="#local-6989586621679449742"><span class="hs-identifier hs-var">naviNote</span></a></span><span>
+</span><span id="line-76"></span><span>        </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#logDebug"><span class="hs-identifier hs-type">logDebug</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679449758"><span class="hs-identifier hs-var">noteTxt</span></a></span><span>
+</span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">NaviT Env m (ExitCode, ByteString, ByteString) -&gt; NaviT Env m ()
+forall (f :: Type -&gt; Type) a. Functor f =&gt; f a -&gt; f ()
+</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(NaviT Env m (ExitCode, ByteString, ByteString) -&gt; NaviT Env m ())
+-&gt; NaviT Env m (ExitCode, ByteString, ByteString) -&gt; NaviT Env m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ProcessConfig () () ()
+-&gt; NaviT Env m (ExitCode, ByteString, ByteString)
+forall stdin stdoutIgnored stderrIgnored.
+HasCallStack =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; NaviT Env m (ExitCode, ByteString, ByteString)
+forall (m :: Type -&gt; Type) stdin stdoutIgnored stderrIgnored.
+(MonadTypedProcess m, HasCallStack) =&gt;
+ProcessConfig stdin stdoutIgnored stderrIgnored
+-&gt; m (ExitCode, ByteString, ByteString)
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-typed-process-0.1-8888432432a71c579e54c55b0263a4cf87cdd28103b8e9a3fcbfd00effd4fb7a/share/doc/html/src/Effects.Process.Typed.html#readProcess"><span class="hs-identifier hs-var">TP.readProcess</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ProcessConfig () () ()
+</span><a href="#local-6989586621679449755"><span class="hs-identifier hs-var">mkProc</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679449758"><span class="hs-identifier hs-var">noteTxt</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-79"></span><span>      </span><span id="local-6989586621679449755"><span class="annot"><span class="annottext">mkProc :: Text -&gt; ProcessConfig () () ()
+</span><a href="#local-6989586621679449755"><span class="hs-identifier hs-var hs-var">mkProc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ProcessConfig () () ()
+</span><a href="file:///nix/store/04dqap3hjv3grnkb848b6il14xzmqw32-typed-process-0.2.13.0-doc/share/doc/typed-process-0.2.13.0/html/src/System.Process.Typed.Internal.html#shell"><span class="hs-identifier hs-var">TP.shell</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ProcessConfig () () ())
+-&gt; (Text -&gt; String) -&gt; Text -&gt; ProcessConfig () () ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+forall {k} (cat :: k -&gt; k -&gt; Type) (b :: k) (c :: k) (a :: k).
+Category cat =&gt;
+cat b c -&gt; cat a b -&gt; cat a c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="Navi.Prelude.html#unpackText"><span class="hs-identifier hs-var">unpackText</span></a></span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621679448183"><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#MonadSTM"><span class="hs-identifier hs-type">MonadSTM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448183"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-83"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-time-0.1-b866c4d34c8aeef4a452de10b147d031b63b7abac53567e761b021ce62d33a0e/share/doc/html/src/Effects.Time.html#MonadTime"><span class="hs-identifier hs-type">MonadTime</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448183"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-84"></span><span>    </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-thread-0.1-984337e11e74caefb237fc99375eac74d438a0df24f81d572c72963188ec227c/share/doc/html/src/Effects.Concurrent.Thread.html#MonadThread"><span class="hs-identifier hs-type">MonadThread</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448183"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-86"></span><span>  </span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#MonadLogger"><span class="hs-identifier hs-type">MonadLogger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.NaviT.html#NaviT"><span class="hs-identifier hs-type">NaviT</span></a></span><span> </span><span class="annot"><a href="Navi.Env.Core.html#Env"><span class="hs-identifier hs-type">Env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448183"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621679449821"><span class="annot"><span class="annottext">monadLoggerLog :: forall msg.
+ToLogStr msg =&gt;
+Loc -&gt; Text -&gt; LogLevel -&gt; msg -&gt; NaviT Env m ()
+</span><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#monadLoggerLog"><span class="hs-identifier hs-var hs-var hs-var">monadLoggerLog</span></a></span></span><span> </span><span id="local-6989586621679449822"><span class="annot"><span class="annottext">Loc
+</span><a href="#local-6989586621679449822"><span class="hs-identifier hs-var">loc</span></a></span></span><span> </span><span id="local-6989586621679449823"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679449823"><span class="hs-identifier hs-var">_src</span></a></span></span><span> </span><span id="local-6989586621679449824"><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679449824"><span class="hs-identifier hs-var">lvl</span></a></span></span><span> </span><span id="local-6989586621679449825"><span class="annot"><span class="annottext">msg
+</span><a href="#local-6989586621679449825"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-89"></span><span>    </span><span id="local-6989586621679449826"><span class="annot"><span class="annottext">Maybe LogEnv
+</span><a href="#local-6989586621679449826"><span class="hs-identifier hs-var">mLogEnv</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Env -&gt; Maybe LogEnv) -&gt; NaviT Env m (Maybe LogEnv)
+forall r (m :: Type -&gt; Type) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">Env -&gt; Maybe LogEnv
+forall env. HasLogEnv env =&gt; env -&gt; Maybe LogEnv
+</span><a href="Navi.Env.Core.html#getLogEnv"><span class="hs-identifier hs-var">getLogEnv</span></a></span><span>
+</span><span id="line-90"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe LogEnv
+</span><a href="#local-6989586621679449826"><span class="hs-identifier hs-var">mLogEnv</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-91"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679449827"><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679449827"><span class="hs-identifier hs-var">logEnv</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-92"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679449828"><span class="annot"><span class="annottext">logQueue :: TBQueue LogStr
+</span><a href="#local-6989586621679449828"><span class="hs-identifier hs-var hs-var">logQueue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679449827"><span class="hs-identifier hs-var">logEnv</span></a></span><span> </span><span class="annot"><span class="annottext">LogEnv
+-&gt; Optic' A_Lens NoIx LogEnv (TBQueue LogStr) -&gt; TBQueue LogStr
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx LogEnv (TBQueue LogStr)
+</span><span class="">#logQueue</span></span><span>
+</span><span id="line-93"></span><span>            </span><span id="local-6989586621679449830"><span class="annot"><span class="annottext">logLevel :: LogLevel
+</span><a href="#local-6989586621679449830"><span class="hs-identifier hs-var hs-var">logLevel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogEnv
+</span><a href="#local-6989586621679449827"><span class="hs-identifier hs-var">logEnv</span></a></span><span> </span><span class="annot"><span class="annottext">LogEnv -&gt; Optic' A_Lens NoIx LogEnv LogLevel -&gt; LogLevel
+forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' A_Lens NoIx LogEnv LogLevel
+</span><span class="">#logLevel</span></span><span>
+</span><span id="line-94"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; NaviT Env m () -&gt; NaviT Env m ()
+forall (f :: Type -&gt; Type). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679449830"><span class="hs-identifier hs-var">logLevel</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; LogLevel -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679449824"><span class="hs-identifier hs-var">lvl</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NaviT Env m () -&gt; NaviT Env m ())
+-&gt; NaviT Env m () -&gt; NaviT Env m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-95"></span><span>          </span><span id="local-6989586621679449833"><span class="annot"><span class="annottext">LogStr
+</span><a href="#local-6989586621679449833"><span class="hs-identifier hs-var">formatted</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">LogFormatter -&gt; LogLevel -&gt; msg -&gt; NaviT Env m LogStr
+forall (m :: Type -&gt; Type) env msg k.
+(HasCallStack, Is k A_Getter,
+ LabelOptic' &quot;namespace&quot; k env Namespace, MonadReader env m,
+ MonadThread m, MonadTime m, ToLogStr msg) =&gt;
+LogFormatter -&gt; LogLevel -&gt; msg -&gt; m LogStr
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Namespace.html#formatLog"><span class="hs-identifier hs-var">formatLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogFormatter
+</span><a href="#local-6989586621679449834"><span class="hs-identifier hs-var">formatter</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679449824"><span class="hs-identifier hs-var">lvl</span></a></span><span> </span><span class="annot"><span class="annottext">msg
+</span><a href="#local-6989586621679449825"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><span id="line-96"></span><span>          </span><span class="annot"><span class="annottext">TBQueue LogStr -&gt; LogStr -&gt; NaviT Env m ()
+forall (m :: Type -&gt; Type) a.
+(HasCallStack, MonadSTM m) =&gt;
+TBQueue a -&gt; a -&gt; m ()
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-stm-0.1-40899f55d48f65db7cb4133b939db8d91dc3f278e6eb5e4e974f6a0dace8862a/share/doc/html/src/Effects.Concurrent.STM.html#writeTBQueueA"><span class="hs-identifier hs-var">writeTBQueueA</span></a></span><span> </span><span class="annot"><span class="annottext">TBQueue LogStr
+</span><a href="#local-6989586621679449828"><span class="hs-identifier hs-var">logQueue</span></a></span><span> </span><span class="annot"><span class="annottext">LogStr
+</span><a href="#local-6989586621679449833"><span class="hs-identifier hs-var">formatted</span></a></span><span>
+</span><span id="line-97"></span><span>      </span><span class="annot"><span class="annottext">Maybe LogEnv
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; NaviT Env m ()
+forall a. a -&gt; NaviT Env m a
+forall (f :: Type -&gt; Type) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-99"></span><span>      </span><span id="local-6989586621679449834"><span class="annot"><span class="annottext">formatter :: LogFormatter
+</span><a href="#local-6989586621679449834"><span class="hs-identifier hs-var hs-var">formatter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Optic A_Lens NoIx LogFormatter LogFormatter Bool Bool
+-&gt; Bool -&gt; LogFormatter -&gt; LogFormatter
+forall k (is :: IxList) s t a b.
+Is k A_Setter =&gt;
+Optic k is s t a b -&gt; b -&gt; s -&gt; t
+</span><a href="file:///nix/store/p6bvlvr5rdvj4y8b69w8rqyly64c6n1d-optics-core-0.4.1.1-doc/share/doc/optics-core-0.4.1.1/html/src/Optics.Setter.html#set%27"><span class="hs-identifier hs-var">set'</span></a></span><span> </span><span class="annot"><span class="annottext">Optic A_Lens NoIx LogFormatter LogFormatter Bool Bool
+</span><span class="">#threadLabel</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Loc -&gt; LogFormatter
+</span><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Utils.html#defaultLogFormatter"><span class="hs-identifier hs-var">defaultLogFormatter</span></a></span><span> </span><span class="annot"><span class="annottext">Loc
+</span><a href="#local-6989586621679449822"><span class="hs-identifier hs-var">loc</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span class="annot"><span class="hs-comment">-- | Runs 'NaviT'.</span></span><span>
+</span><span id="line-102"></span><span id="local-6989586621679448254"><span id="local-6989586621679448255"><span id="local-6989586621679448256"><span class="annot"><a href="Navi.NaviT.html#runNaviT"><span class="hs-identifier hs-type">runNaviT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Navi.NaviT.html#NaviT"><span class="hs-identifier hs-type">NaviT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448254"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448255"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448256"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679448254"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679448255"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679448256"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-103"></span><span id="runNaviT"><span class="annot"><span class="annottext">runNaviT :: forall env (m :: Type -&gt; Type) a. NaviT env m a -&gt; env -&gt; m a
+</span><a href="Navi.NaviT.html#runNaviT"><span class="hs-identifier hs-var hs-var">runNaviT</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Navi.NaviT.html#MkNaviT"><span class="hs-identifier hs-type">MkNaviT</span></a></span><span> </span><span id="local-6989586621679449837"><span class="annot"><span class="annottext">ReaderT env m a
+</span><a href="#local-6989586621679449837"><span class="hs-identifier hs-var">rdr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT env m a -&gt; env -&gt; m a
+forall r (m :: Type -&gt; Type) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">ReaderT env m a
+</span><a href="#local-6989586621679449837"><span class="hs-identifier hs-var">rdr</span></a></span><span>
+</span><span id="line-104"></span><span class="hs-pragma">{-# INLINEABLE</span><span> </span><span class="annot"><a href="Navi.NaviT.html#runNaviT"><span class="hs-pragma hs-type">runNaviT</span></a></span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-105"></span></pre></body></html>

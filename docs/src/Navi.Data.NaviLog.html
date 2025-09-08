@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="annot"><span class="hs-comment">-- | Provides the types for logging.</span></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Navi.Data.NaviLog.html"><span class="hs-identifier">Navi.Data.NaviLog</span></a></span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Navi.Data.NaviLog.html#LogEnv"><span class="hs-identifier">LogEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Navi.Prelude.html"><span class="hs-identifier">Navi.Prelude</span></a></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- | Holds logging env data.</span><span>
+</span><span id="line-13"></span><span class="hs-comment">--</span><span>
+</span><span id="line-14"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">data</span><span> </span><span id="LogEnv"><span class="annot"><a href="Navi.Data.NaviLog.html#LogEnv"><span class="hs-identifier hs-var">LogEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkLogEnv"><span class="annot"><a href="Navi.Data.NaviLog.html#MkLogEnv"><span class="hs-identifier hs-var">MkLogEnv</span></a></span></span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | Handle for file logging.</span><span>
+</span><span id="line-17"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-18"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-19"></span><span>    </span><span id="logHandle"><span class="annot"><span class="annottext">LogEnv -&gt; Maybe Handle
+</span><a href="Navi.Data.NaviLog.html#logHandle"><span class="hs-identifier hs-var hs-var">logHandle</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Handle</span></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="hs-comment">-- | Level in which to log.</span><span>
+</span><span id="line-21"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-22"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-23"></span><span>    </span><span id="logLevel"><span class="annot"><span class="annottext">LogEnv -&gt; LogLevel
+</span><a href="Navi.Data.NaviLog.html#logLevel"><span class="hs-identifier hs-var hs-var">logLevel</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/2ldhhd3xg3xjgi2jcy732005vg4q9m18-monad-logger-0.3.42-doc/share/doc/monad-logger-0.3.42/html/src/Control.Monad.Logger.html#LogLevel"><span class="hs-identifier hs-type">LogLevel</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="hs-comment">-- | The current logging namespace.</span><span>
+</span><span id="line-25"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-26"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-27"></span><span>    </span><span id="logNamespace"><span class="annot"><span class="annottext">LogEnv -&gt; Namespace
+</span><a href="Navi.Data.NaviLog.html#logNamespace"><span class="hs-identifier hs-var hs-var">logNamespace</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/tommy/.local/state/cabal/store/ghc-9.10.2-b583/effects-logger-0.1-534575177414a3065bd298cdd3b99ef88c7069d7cc0451735e055fe61f45c7f7/share/doc/html/src/Effects.Logger.Utils.html#Namespace"><span class="hs-identifier hs-type">Namespace</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="hs-comment">-- | Log queue.</span><span>
+</span><span id="line-29"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-31"></span><span>    </span><span id="logQueue"><span class="annot"><span class="annottext">LogEnv -&gt; TBQueue LogStr
+</span><a href="Navi.Data.NaviLog.html#logQueue"><span class="hs-identifier hs-var hs-var">logQueue</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TBQueue</span></span><span> </span><span class="annot"><a href="file:///nix/store/4zzk8cqgw814qm01hy7hh0g2ljrnz3g7-fast-logger-3.2.5-doc/share/doc/fast-logger-3.2.5/html/src/System.Log.FastLogger.LogStr.html#LogStr"><span class="hs-identifier hs-type">LogStr</span></a></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="annot"><span class="hs-comment">-- | @since 0.1</span></span><span>
+</span><span id="line-35"></span><span id="local-6989586621679439055"><span id="local-6989586621679439056"><span id="local-6989586621679439057"><span id="local-6989586621679439058"><span id="local-6989586621679439059"><span id="local-6989586621679439060"><span id="local-6989586621679439061"><span id="local-6989586621679439062"><span id="local-6989586621679439063"><span id="local-6989586621679439064"><span id="local-6989586621679439065"><span id="local-6989586621679439066"><span id="local-6989586621679439089"><span id="local-6989586621679439094"><span id="local-6989586621679439099"><span id="local-6989586621679439104"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">LogEnv</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-36"></span></pre></body></html>
