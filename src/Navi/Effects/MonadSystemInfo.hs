@@ -16,8 +16,7 @@ import Navi.Services.Types
       ( BatteryPercentage,
         BatteryStatus,
         Multiple,
-        NetworkInterface,
-        Single
+        NetworkInterface
       ),
   )
 import Navi.Utils qualified as U
@@ -48,7 +47,6 @@ instance MonadSystemInfo IO where
       rethrowPythia "Battery Status" $ (,Nothing) . view #status <$> Pythia.queryBattery bp
     NetworkInterface device cp ->
       rethrowPythia "NetInterface" $ (,Nothing) <$> Pythia.queryNetInterface device cp
-    Single cmd parser -> rethrowPythia "Single" $ querySimple cmd parser
     Multiple cmd parser -> rethrowPythia "Multiple" $ querySimple cmd parser
 
 rethrowPythia :: Text -> IO a -> IO a

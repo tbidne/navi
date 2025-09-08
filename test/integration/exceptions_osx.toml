@@ -4,14 +4,14 @@ note-system = "apple-script"
 severity = "debug"
 location = "stdout"
 
-[[single]]
+[[multiple]]
 name = "exception test"
 poll-interval = 1
 repeat-events = true
 command = ""
-trigger = ""
 
-[single.note]
+[[multiple.trigger-note]]
+trigger = ""
 summary = ""
 body = ""
 timeout = 2

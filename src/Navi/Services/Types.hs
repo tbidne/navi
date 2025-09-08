@@ -1,6 +1,12 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | This module provides the 'ServiceType' type.
 module Navi.Services.Types
   ( ServiceType (..),
+    _BatteryPercentage,
+    _BatteryStatus,
+    _NetworkInterface,
+    _Multiple,
   )
 where
 
@@ -21,9 +27,10 @@ data ServiceType result where
   BatteryPercentage :: BatteryApp -> ServiceType Battery
   BatteryStatus :: BatteryApp -> ServiceType BatteryStatus
   NetworkInterface :: Device -> NetInterfaceApp -> ServiceType NetInterface
-  Single :: Command -> CommandResultParser -> ServiceType CommandResult
   Multiple :: Command -> CommandResultParser -> ServiceType CommandResult
 
 deriving stock instance Show (ServiceType result)
 
 deriving stock instance Eq (ServiceType result)
+
+makePrisms ''ServiceType

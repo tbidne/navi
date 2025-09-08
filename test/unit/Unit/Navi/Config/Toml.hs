@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Unit.Navi.Config.Toml
@@ -15,8 +16,7 @@ import Navi.Config.Toml
         logToml,
         multipleToml,
         netInterfacesToml,
-        noteSystemToml,
-        singleToml
+        noteSystemToml
       ),
   )
 import Navi.Config.Types
@@ -67,18 +67,18 @@ import Navi.Services.Battery.Status.Toml
         repeatEvent
       ),
   )
-import Navi.Services.Custom.Single.Toml
-  ( SingleToml
-      ( MkSingleToml,
+import Navi.Services.Custom.Multiple.Toml
+  ( MultipleToml
+      ( MkMultipleToml,
         command,
         errEventCfg,
         name,
-        note,
         parser,
         pollInterval,
         repeatEventCfg,
-        triggerVal
+        triggerNotes
       ),
+    TriggerNoteToml (MkTriggerNoteToml),
   )
 import Navi.Services.Network.NetInterfaces.Toml
   ( NetInterfacesToml
@@ -175,7 +175,6 @@ logTests =
                   sizeMode = Nothing
                 },
           noteSystemToml = Nothing,
-          singleToml = [],
           multipleToml = [],
           batteryPercentageToml = Nothing,
           batteryStatusToml = expectedBatteryStatus,
@@ -209,24 +208,24 @@ expectedFull =
               sizeMode = Just (FilesSizeModeWarn (MkBytes 50_000_000))
             },
       noteSystemToml = Nothing,
-      singleToml = expectedSingle,
-      multipleToml = [],
+      multipleToml = expectedCustom,
       batteryPercentageToml = expectedBatteryPercentage,
       batteryStatusToml = expectedBatteryStatus,
       netInterfacesToml = expectedNetInterfaces
     }
 
-expectedSingle :: [SingleToml]
-expectedSingle =
-  [ MkSingleToml
+expectedCustom :: [MultipleToml]
+expectedCustom =
+  [ MkMultipleToml
       { command = "  some multiline cmd\n  end cmd\n",
         name = Just "a-single",
         parser = Nothing,
-        triggerVal = "true",
         pollInterval = Just $ MkPollInterval 121,
-        note = note,
         repeatEventCfg = Nothing,
-        errEventCfg = Nothing
+        errEventCfg = Nothing,
+        triggerNotes =
+          [ MkTriggerNoteToml "true" note
+          ]
       }
   ]
   where
@@ -311,16 +310,16 @@ fullConfig =
       "app = \"nmcli\"",
       "device = \"my-device\"",
       "",
-      "[[single]]",
+      "[[multiple]]",
       "name = \"a-single\"",
       "command = \"\"\"",
       "  some multiline cmd",
       "  end cmd",
       "\"\"\"",
-      "trigger = \"true\"",
       "poll-interval = \"1m61s\"",
       "",
-      "[single.note]",
+      "[[multiple.trigger-note]]",
+      "trigger = \"true\"",
       "summary = \"Some single\"",
       "body = \"A body\"",
       "timeout = 15"

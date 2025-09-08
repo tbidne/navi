@@ -47,8 +47,7 @@ import Navi.Services.Types
       ( BatteryPercentage,
         BatteryStatus,
         Multiple,
-        NetworkInterface,
-        Single
+        NetworkInterface
       ),
   )
 import Navi.Utils qualified as U
@@ -131,7 +130,6 @@ instance MonadSystemInfo ExceptionsT where
     BatteryPercentage _ -> error "battery percentage unimplemented"
     BatteryStatus _ -> error "battery status unimplemented"
     NetworkInterface _ _ -> error "network interface unimplemented"
-    Single _ _ -> pure (MkCommandResult Nothing Nothing "single", Nothing)
     Multiple _ _ -> pure (MkCommandResult Nothing Nothing "multiple", Nothing)
 
 instance MonadLogger ExceptionsT where

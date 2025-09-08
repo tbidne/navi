@@ -11,6 +11,8 @@ module Integration.MockApp
 where
 
 import Control.Concurrent qualified as CC
+import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as Map
 import Effects.Concurrent.Async qualified as Async
 import FileSystem.OsPath (decodeLenient)
 import Integration.Prelude
@@ -35,11 +37,11 @@ import Navi.Services.Types
       ( BatteryPercentage,
         BatteryStatus,
         Multiple,
-        NetworkInterface,
-        Single
+        NetworkInterface
       ),
   )
 import Pythia.Control.Exception (CommandException (MkCommandException))
+import Pythia.Data.Command (Command)
 import Pythia.Data.Percentage qualified as Percentage
 import Pythia.Services.Battery
   ( Battery (MkBattery),
@@ -54,9 +56,8 @@ data MockEnv = MkMockEnv
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
     sentNotes :: IORef [NaviNote],
-    multipleResponses :: IORef [Text],
-    percentageResponses :: IORef [Percentage],
-    singleResponses :: IORef [Text]
+    customResponses :: IORef (Map Command [Text]),
+    percentageResponses :: IORef [Percentage]
   }
 
 makeFieldLabelsNoPrefix ''MockEnv
@@ -135,24 +136,24 @@ instance MonadSystemInfo MockAppT where
   -- Service error. Can test error behavior.
   query (NetworkInterface _ _) =
     throwM $ MkCommandException "nmcli" "Nmcli error"
-  query (Single _ p) = getResponseOrDefault p #singleResponses "single trigger"
-  query (Multiple _ p) = getResponseOrDefault p #multipleResponses "multiple result"
+  query (Multiple cmd p) = getResponseOrDefault cmd p "multiple result"
 
 getResponseOrDefault ::
+  Command ->
   CommandResultParser ->
-  Lens' MockEnv (IORef [Text]) ->
   Text ->
   MockAppT (CommandResult, Maybe PollInterval)
-getResponseOrDefault parser l def = do
-  ref <- asks (view l)
-  singleResponses <- readIORef ref
-  case singleResponses of
+getResponseOrDefault cmd parser def = do
+  ref <- asks (view #customResponses)
+  responseMap <- readIORef ref
+  let responses = Map.findWithDefault [] cmd responseMap
+  case responses of
     -- No events (i.e. using the default).
     [] -> parse def
     -- If we have 1 event left, just send it repeatedly.
     [r] -> parse r
     r : rs -> do
-      writeIORef ref rs
+      writeIORef ref (Map.insert cmd rs responseMap)
       parse r
   where
     parse txt = case (parser ^. #unCommandResultParser) txt of
@@ -164,9 +165,8 @@ runMockApp = runMockAppEnv pure
 
 runMockAppEnv :: (MockEnv -> IO MockEnv) -> Word8 -> OsPath -> IO MockEnv
 runMockAppEnv modEnv maxSeconds configPath = do
-  multipleResponses <- newIORef []
+  customResponses <- newIORef Map.empty
   percentageResponses <- newIORef []
-  singleResponses <- newIORef []
   sentNotes <- newIORef []
 
   let action = SysEnv.withArgs args $ Runner.withEnv $ \coreEnv -> do
@@ -174,9 +174,8 @@ runMockAppEnv modEnv maxSeconds configPath = do
               MkMockEnv
                 { coreEnv,
                   sentNotes,
-                  multipleResponses,
-                  percentageResponses,
-                  singleResponses
+                  customResponses,
+                  percentageResponses
                 }
         env' <- modEnv env
         Async.race

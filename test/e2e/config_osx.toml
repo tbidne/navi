@@ -3,7 +3,7 @@ note-system = "apple-script"
 [logging]
 severity = "none"
 
-[[single]]
+[[multiple]]
 name = "even-single"
 poll-interval = 3
 repeat-events = true
@@ -15,9 +15,9 @@ command = """
     echo -n "false"
   fi
 """
-trigger = "true"
 
-[single.note]
+[[multiple.trigger-note]]
+trigger = "true"
 summary = "Even Single"
 body = "Seconds are even!"
 timeout = 2

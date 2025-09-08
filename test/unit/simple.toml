@@ -5,14 +5,14 @@ severity = "debug"
 location = "stdout"
 size-mode = "warn 52 kilobytes"
 
-[[single]]
+[[multiple]]
 name = "trivial-service"
 poll-interval = 5
 repeat-events = true
 command = ""
-trigger = ""
 
-[single.note]
+[[multiple.trigger-note]]
+trigger = ""
 summary = "Trivial"
 body = "We did nothing, yay!"
 timeout = 2

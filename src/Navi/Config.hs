@@ -30,7 +30,6 @@ import Navi.Prelude
 import Navi.Services.Battery.Percentage qualified as BattState
 import Navi.Services.Battery.Status qualified as BattChargeStatus
 import Navi.Services.Custom.Multiple qualified as Multiple
-import Navi.Services.Custom.Single qualified as Single
 import Navi.Services.Network.NetInterfaces qualified as NetConn
 
 -- | Parses the provided toml file into a 'Config'. Throws 'ConfigErr' if
@@ -59,15 +58,11 @@ tomlToConfig ::
   ConfigToml ->
   m Config
 tomlToConfig toml = do
-  singleEvents <- traverse Single.toEvent singleToml
   multipleEvents <- traverse Multiple.toEvent multipleToml
   mBatteryLevelEvt <- traverse BattState.toEvent batteryPercentageToml
   mBatteryStatusEvt <- traverse BattChargeStatus.toEvent batteryStatusToml
   mNetInterfacesEvt <- traverse NetConn.toEvent netInterfacesToml
-  let multipleEvts =
-        singleEvents
-          <> multipleEvents
-          <> mNetInterfacesEvt
+  let multipleEvts = multipleEvents <> mNetInterfacesEvt
       maybeEvts =
         catMaybes
           [ mBatteryLevelEvt,
@@ -87,7 +82,6 @@ tomlToConfig toml = do
   where
     logCfg = fromMaybe defaultLogging (toml ^. #logToml)
     noteSysCfg = fromMaybe defaultNoteSystem (toml ^. #noteSystemToml)
-    singleToml = toml ^. #singleToml
     multipleToml = toml ^. #multipleToml
     batteryPercentageToml = toml ^. #batteryPercentageToml
     batteryStatusToml = toml ^. #batteryStatusToml

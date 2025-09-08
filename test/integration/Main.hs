@@ -16,6 +16,7 @@ module Main (main) where
 import DBus.Notify (UrgencyLevel (Critical, Low))
 import Data.List qualified as L
 import Data.List.NonEmpty qualified as NE
+import Data.Map.Strict qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as T
@@ -24,8 +25,18 @@ import Effects.FileSystem.PathWriter qualified as Dir
 import Integration.Exceptions qualified as Exceptions
 import Integration.MockApp (MockEnv, runMockAppEnv)
 import Integration.Prelude
-import Navi.Data.NaviNote (NaviNote (MkNaviNote, body, summary, timeout, urgency), Timeout (Seconds))
-import Navi.Event (AnyEvent (MkAnyEvent), EventError (MkEventError))
+import Navi.Data.NaviNote
+  ( NaviNote
+      ( MkNaviNote,
+        body,
+        summary,
+        timeout,
+        urgency
+      ),
+    Timeout (Seconds),
+  )
+import Navi.Event.Types (AnyEvent (MkAnyEvent), EventError (MkEventError))
+import Navi.Services.Types (ServiceType (Multiple), _Multiple)
 import Pythia.Data.Percentage (unsafePercentage)
 import Test.Tasty qualified as Tasty
 
@@ -79,6 +90,7 @@ testDuplicates = testCase "Send duplicate notifications" $ do
   mockEnv <- runMock 3 (singleEventConfig "repeat-events = true")
 
   sentNotes <- mockEnvToNotes mockEnv
+
   assertNoteRange 3 5 expected sentNotes
   where
     expected = MkNaviNote "Single" (Just "body") Nothing Nothing
@@ -161,25 +173,29 @@ testReplaceText = testCase "Replaces output text" $ do
 
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
-      writeIORef (env ^. #singleResponses) ["(t1, o1)"]
-      writeIORef (env ^. #multipleResponses) ["(t1, o1)", "(t2, o2)"]
+      let mp =
+            Map.fromList
+              [ ("cmd1", ["(t1, o1)"]),
+                ("cmd2", ["(t1, o1)", "(t2, o2)"])
+              ]
+      writeIORef (env ^. #customResponses) mp
       pure env
 
     cfg =
       T.unlines
-        [ "[[single]]",
+        [ "[[multiple]]",
           "poll-interval = 1",
-          "command = \"cmd\"",
-          "trigger = \"t1\"",
+          "command = \"cmd1\"",
           "command-result = \"(trigger, output)\"",
           "",
-          "[single.note]",
+          "[[multiple.trigger-note]]",
+          "trigger = \"t1\"",
           "summary = \"Single\"",
           "body = \"result is: $out\"",
           "",
           "[[multiple]]",
           "poll-interval = 1",
-          "command = \"cmd\"",
+          "command = \"cmd2\"",
           "command-result = \"(trigger, output)\"",
           "",
           "[[multiple.trigger-note]]",
@@ -226,6 +242,11 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
           t2 = "(t2, o2)"
           t3 = "(t3, o3)"
 
+          mp =
+            Map.fromList
+              [ ("cmd", [t1, t1, t3, t1, t2, t2, t2])
+              ]
+
       -- Behavior should be:
       --
       -- t1 (sent)
@@ -235,9 +256,7 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
       -- t2 (sent)
       -- t2 (sent)
       -- t2 (sent)
-      writeIORef
-        (env ^. #multipleResponses)
-        [t1, t1, t3, t1, t2, t2, t2]
+      writeIORef (env ^. #customResponses) mp
       pure env
 
     cfg =
@@ -310,11 +329,26 @@ testMultipleCustomText = testCase "Tests multiple dynamic example" $ do
           t4 = "(med, 30)"
           t5 = "(low, 5)"
           t6 = "(low, 4)"
-      writeIORef (env ^. #multipleResponses) [t1, t2, t3, t4, t5, t6]
+          mp =
+            Map.fromList
+              [ ("cmd", [t1, t2, t3, t4, t5, t6])
+              ]
 
-      let evts = case modEvts of
+      writeIORef (env ^. #customResponses) mp
+
+      let evts = case filteredEvts of
             [] -> error "empty list: "
-            [e] -> NE.singleton e
+            -- [e] -> NE.singleton e
+            [MkAnyEvent e] -> case e ^. #serviceType of
+              Multiple _ _ ->
+                NE.singleton
+                  . MkAnyEvent
+                  -- set cmn so mocked responses works
+                  . set' (#serviceType % _Multiple % _1) "cmd"
+                  -- set to faster poll-interval
+                  . set' #pollInterval 1
+                  $ e
+              other -> error $ "Expected custom serviceType, received: " ++ show other
             es@(_ : _ : _) -> error $ "Filter failed:" ++ show es
 
       pure
@@ -323,9 +357,8 @@ testMultipleCustomText = testCase "Tests multiple dynamic example" $ do
       where
         takeExact (MkAnyEvent evt) = evt ^. #name == "battery-manual"
 
-        modEvts =
-          fmap (\(MkAnyEvent e) -> MkAnyEvent (set' #pollInterval 1 e))
-            . NE.filter takeExact
+        filteredEvts =
+          NE.filter takeExact
             $ env
             ^. (#coreEnv % #events)
 
@@ -427,26 +460,31 @@ testDynamicPollIntervals = testCase "Uses dynamic poll-interval" $ do
 
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
-      writeIORef (env ^. #singleResponses) ["(t1, one, 1)", "(t1, two, 1)", "(t1, three, 30)", "(t1, four, 30)"]
-      writeIORef (env ^. #multipleResponses) ["(t1, 1, one)", "(t1, 1, two)", "(t2, 30, three)", "(t2, 30, four)"]
+      let mp =
+            Map.fromList
+              [ ("cmd1", ["(t1, one, 1)", "(t1, two, 1)", "(t1, three, 30)", "(t1, four, 30)"]),
+                ("cmd2", ["(t1, 1, one)", "(t1, 1, two)", "(t2, 30, three)", "(t2, 30, four)"])
+              ]
+
+      writeIORef (env ^. #customResponses) mp
       pure env
 
     cfg =
       T.unlines
-        [ "[[single]]",
+        [ "[[multiple]]",
           "poll-interval = 40",
-          "command = \"cmd\"",
-          "trigger = \"t1\"",
+          "command = \"cmd1\"",
           "command-result = \"(trigger, output, poll-interval)\"",
           "repeat-events = true",
           "",
-          "[single.note]",
+          "[[multiple.trigger-note]]",
+          "trigger = \"t1\"",
           "summary = \"Single\"",
           "body = \"Result is $out\"",
           "",
           "[[multiple]]",
           "poll-interval = 40",
-          "command = \"cmd\"",
+          "command = \"cmd2\"",
           "command-result = \"(trigger, poll-interval, output)\"",
           "repeat-events = [\"t1\", \"t2\"]",
           "",
@@ -522,13 +560,13 @@ batteryPercentageEventConfig =
 singleEventConfig :: Text -> Text
 singleEventConfig repeats =
   T.unlines
-    [ "[[single]]",
+    [ "[[multiple]]",
       "poll-interval = 1",
       "command = \"cmd\"",
-      "trigger = \"single trigger\"", -- matches trigger in MockApp
       repeats,
       "",
-      "[single.note]",
+      "[[multiple.trigger-note]]",
+      "trigger = \"multiple result\"", -- matches trigger in MockApp
       "summary = \"Single\"",
       "body = \"body\"",
       ""
@@ -548,13 +586,13 @@ netInterfaceEventConfig errorEvents =
 sendExceptionConfig :: Text
 sendExceptionConfig =
   T.unlines
-    [ "[[single]]",
+    [ "[[multiple]]",
       "poll-interval = 1",
       "name = \"Single\"",
       "command = \"cmd\"",
-      "trigger = \"single trigger\"", -- needs to be triggered to be sent
       "",
-      "[single.note]",
+      "[[multiple.trigger-note]]",
+      "trigger = \"multiple result\"", -- needs to be triggered to be sent
       "summary = \"SentException\"", -- matches MockApp's MonadNotify instance
       ""
     ]
