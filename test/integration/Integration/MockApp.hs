@@ -36,7 +36,7 @@ import Navi.Services.Types
   ( ServiceType
       ( BatteryPercentage,
         BatteryStatus,
-        Multiple,
+        Custom,
         NetworkInterface
       ),
   )
@@ -120,7 +120,7 @@ instance MonadNotify MockAppT where
         liftIO $ modifyIORef' notes (note :)
 
 instance MonadSystemInfo MockAppT where
-  -- Service that changes every time: can be used to test multiple
+  -- Service that changes every time: can be used to test custom
   -- notifications are sent.
   query (BatteryPercentage _) = do
     responsesRef <- asks (view #percentageResponses)
@@ -136,7 +136,7 @@ instance MonadSystemInfo MockAppT where
   -- Service error. Can test error behavior.
   query (NetworkInterface _ _) =
     throwM $ MkCommandException "nmcli" "Nmcli error"
-  query (Multiple cmd p) = getResponseOrDefault cmd p "multiple result"
+  query (Custom cmd p) = getResponseOrDefault cmd p "custom result"
 
 getResponseOrDefault ::
   Command ->

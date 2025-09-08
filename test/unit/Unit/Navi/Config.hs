@@ -30,7 +30,7 @@ tests =
       NotifySend @=? cfg ^. #noteSystem
       Nothing @=? cfg ^. #logging % #severity
       Just Stdout @=? cfg ^. #logging % #location
-      verifyEvents 8 (cfg ^. #events)
+      verifyEvents 7 (cfg ^. #events)
 
     verifySimple cfg = do
       NotifySend @=? cfg ^. #noteSystem

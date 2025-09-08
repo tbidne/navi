@@ -1,6 +1,6 @@
--- | This module provides a service for multiple alerts.
-module Navi.Services.Custom.Multiple
-  ( MultipleToml,
+-- | This module provides a service for custom alerts.
+module Navi.Services.Custom
+  ( CustomToml,
     toEvent,
   )
 where
@@ -31,21 +31,21 @@ import Navi.Event.Types
     RepeatEvent,
   )
 import Navi.Prelude
-import Navi.Services.Custom.Multiple.Toml
-  ( MultipleToml,
+import Navi.Services.Custom.Toml
+  ( CustomToml,
     TriggerNoteToml (MkTriggerNoteToml),
   )
-import Navi.Services.Types (ServiceType (Multiple))
+import Navi.Services.Types (ServiceType (Custom))
 import Pythia.Data.Command (Command)
 
 -- | Transforms toml configuration data into an 'AnyEvent'.
-toEvent :: (MonadIORef m) => MultipleToml -> m AnyEvent
+toEvent :: (MonadIORef m) => CustomToml -> m AnyEvent
 toEvent toml = do
   repeatEvent <- EventToml.mMultiRepeatEventTomlToVal toCommandResult (toml ^. #repeatEventCfg)
   errorNote <- EventToml.mErrorNoteTomlToVal (toml ^. #errEventCfg)
   pure
     $ MkAnyEvent
-    $ mkMultipleEvent
+    $ mkCustomEvent
       (toml ^. #name)
       (toml ^. #command)
       triggerNotePairs
@@ -61,7 +61,7 @@ toEvent toml = do
     toCommandResult = MkCommandResult Nothing Nothing
 {-# INLINEABLE toEvent #-}
 
-mkMultipleEvent ::
+mkCustomEvent ::
   Maybe Text ->
   Command ->
   NonEmpty (Text, NaviNote) ->
@@ -70,10 +70,10 @@ mkMultipleEvent ::
   ErrorNote ->
   Maybe CommandResultParserToml ->
   Event CommandResult CommandResult
-mkMultipleEvent mname cmd noteList pollInterval repeatEvent errorNote mParser =
+mkCustomEvent mname cmd noteList pollInterval repeatEvent errorNote mParser =
   MkEvent
     { name,
-      serviceType = Multiple cmd parser,
+      serviceType = Custom cmd parser,
       pollInterval,
       raiseAlert = \r -> do
         note <- Map.lookup (r ^. #result) noteMap
@@ -86,7 +86,7 @@ mkMultipleEvent mname cmd noteList pollInterval repeatEvent errorNote mParser =
     }
   where
     noteMap = Map.fromList $ NE.toList noteList
-    name = fromMaybe "multiple" mname
+    name = fromMaybe "custom" mname
 
     parser = case mParser of
       Just (MkCommandResultParserToml p) -> p name

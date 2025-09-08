@@ -24,18 +24,18 @@ import Navi.Config.Types
 import Navi.Prelude
 import Navi.Services.Battery.Percentage.Toml (BatteryPercentageToml)
 import Navi.Services.Battery.Status.Toml (BatteryStatusToml)
-import Navi.Services.Custom.Multiple.Toml (MultipleToml)
+import Navi.Services.Custom.Toml (CustomToml)
 import Navi.Services.Network.NetInterfaces.Toml (NetInterfacesToml)
 import Navi.Utils (getFieldOptArrayOf)
 
 -- | 'ConfigToml' holds the data that is defined in the configuration file.
 data ConfigToml = MkConfigToml
-  { logToml :: Maybe Logging,
-    noteSystemToml :: Maybe (NoteSystem ConfigPhaseToml),
-    multipleToml :: [MultipleToml],
-    batteryPercentageToml :: Maybe BatteryPercentageToml,
+  { batteryPercentageToml :: Maybe BatteryPercentageToml,
     batteryStatusToml :: Maybe BatteryStatusToml,
-    netInterfacesToml :: [NetInterfacesToml]
+    customToml :: [CustomToml],
+    logToml :: Maybe Logging,
+    netInterfacesToml :: [NetInterfacesToml],
+    noteSystemToml :: Maybe (NoteSystem ConfigPhaseToml)
   }
   deriving stock (Eq, Show)
 
@@ -43,14 +43,23 @@ makeFieldLabelsNoPrefix ''ConfigToml
 
 -- | @since 0.1
 instance DecodeTOML ConfigToml where
-  tomlDecoder =
-    MkConfigToml
-      <$> logDecoderOpt
-      <*> getFieldOptWith noteSystemDecoder "note-system"
-      <*> getFieldOptArrayOf "multiple"
-      <*> getFieldOptWith tomlDecoder "battery-percentage"
-      <*> getFieldOptWith tomlDecoder "battery-status"
-      <*> getFieldOptArrayOf "net-interface"
+  tomlDecoder = do
+    batteryPercentageToml <- getFieldOptWith tomlDecoder "battery-percentage"
+    batteryStatusToml <- getFieldOptWith tomlDecoder "battery-status"
+    customToml <- getFieldOptArrayOf "custom"
+    logToml <- logDecoderOpt
+    netInterfacesToml <- getFieldOptArrayOf "net-interface"
+    noteSystemToml <- getFieldOptWith noteSystemDecoder "note-system"
+
+    pure
+      $ MkConfigToml
+        { batteryPercentageToml,
+          batteryStatusToml,
+          customToml,
+          logToml,
+          netInterfacesToml,
+          noteSystemToml
+        }
 
 logDecoderOpt :: Decoder (Maybe Logging)
 logDecoderOpt = getFieldOptWith logDecoder "logging"

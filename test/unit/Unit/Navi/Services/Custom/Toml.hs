@@ -1,4 +1,4 @@
-module Unit.Navi.Services.Custom.Multiple.Toml (tests) where
+module Unit.Navi.Services.Custom.Toml (tests) where
 
 import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
@@ -13,8 +13,8 @@ import Navi.Event.Toml
       ),
     MultiRepeatEventToml (MultiAllowRepeatsToml, MultiNoRepeatsToml),
   )
-import Navi.Services.Custom.Multiple.Toml
-  ( MultipleToml,
+import Navi.Services.Custom.Toml
+  ( CustomToml,
     TriggerNoteToml
       ( MkTriggerNoteToml,
         note,
@@ -27,7 +27,7 @@ import Unit.Utils qualified as Utils
 tests :: TestTree
 tests =
   testGroup
-    "Navi.Services.Custom.Multiple.Toml"
+    "Navi.Services.Custom.Toml"
     [ parsesCmd,
       parsesNotes,
       repeatEventTests,
@@ -166,7 +166,7 @@ cmdResultTests =
     ]
 
 testCommandResultSuccess0 :: TestTree
-testCommandResultSuccess0 = assertDecode @MultipleToml desc txt $ \toml -> do
+testCommandResultSuccess0 = assertDecode @CustomToml desc txt $ \toml -> do
   case toml ^. #parser of
     Nothing -> pure ()
     Just _ -> assertFailure "Expected no explicit parser"
@@ -192,7 +192,7 @@ testCommandResultSuccess1 :: TestTree
 testCommandResultSuccess1 = testCase desc $ do
   -- no parens
   let cfg1 = mkTxt "trigger"
-  toml1 <- assertRight $ decode @MultipleToml cfg1
+  toml1 <- assertRight $ decode @CustomToml cfg1
 
   parser1 <- case toml1 ^? (#parser %? #unCommandResultParserToml) of
     Nothing -> assertFailure "Expected an explicit parser"
@@ -206,7 +206,7 @@ testCommandResultSuccess1 = testCase desc $ do
 
   -- parens
   let cfg2 = mkTxt "(trigger)"
-  toml2 <- assertRight $ decode @MultipleToml cfg2
+  toml2 <- assertRight $ decode @CustomToml cfg2
 
   parser2 <- case toml2 ^? (#parser %? #unCommandResultParserToml) of
     Nothing -> assertFailure "Expected an explicit parser"
@@ -241,7 +241,7 @@ testCommandResultFailure1 = testProp "testCommandResultFailure1" desc $ do
             "summary = \"a summary\""
           ]
 
-  case decode @MultipleToml cfg of
+  case decode @CustomToml cfg of
     Left e -> do
       annotateShow e
       let eTxt = packText $ displayException e
@@ -294,7 +294,7 @@ testCommandResultSuccess2 = testProp "testCommandResultSuccess2" desc $ do
   annotateShow crTxt
   annotateShow input
 
-  parser <- case decode @MultipleToml cfg of
+  parser <- case decode @CustomToml cfg of
     Left err -> do
       annotate $ "Parsing config fails: " <> show err
       failure
@@ -340,7 +340,7 @@ testCommandResultFailure2 = testProp "testCommandResultFailure2" desc $ do
 
   annotateShow crTxt
 
-  case decode @MultipleToml cfg of
+  case decode @CustomToml cfg of
     Left e -> do
       annotateShow e
       let eTxt = packText $ displayException e
@@ -378,7 +378,7 @@ testCommandResultSuccess3 = testProp "testCommandResultSuccess3" desc $ do
   annotateShow crTxt
   annotateShow input
 
-  parser <- case decode @MultipleToml cfg of
+  parser <- case decode @CustomToml cfg of
     Left err -> do
       annotate $ "Parsing config fails: " <> show err
       failure
@@ -431,7 +431,7 @@ testCommandResultFailure3 = testProp "testCommandResultFailure3" desc $ do
 
   annotateShow crTxt
 
-  case decode @MultipleToml cfg of
+  case decode @CustomToml cfg of
     Left e -> do
       annotateShow e
       let eTxt = packText $ displayException e
@@ -448,6 +448,6 @@ parsesExpected ::
   String ->
   Text ->
   a ->
-  (MultipleToml -> a) ->
+  (CustomToml -> a) ->
   TestTree
 parsesExpected = decodeExpected

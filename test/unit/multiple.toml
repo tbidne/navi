@@ -1,7 +1,7 @@
 note-system = "dbus"
 
 # Manual battery level alerts
-[[multiple]]
+[[custom]]
 name = "battery-manual"
 command = """
   regex="([0-9]{1,3})%"
@@ -26,19 +26,19 @@ command = """
 # Repeat '5' events only.
 repeat-events = ["5"]
 
-[[multiple.trigger-note]]
+[[custom.trigger-note]]
 trigger = "100"
 summary = "Battery Percentage"
 body = "battery is full"
 timeout = 10
 
-[[multiple.trigger-note]]
+[[custom.trigger-note]]
 trigger = "40"
 summary = "Battery Percentage"
 body = "battery < $trigger"
 timeout = 10
 
-[[multiple.trigger-note]]
+[[custom.trigger-note]]
 trigger = "5"
 summary = "Battery Percentage"
 body = "battery < $trigger"

@@ -16,7 +16,7 @@ module Navi.Config
 where
 
 import Data.Maybe (catMaybes)
-import Navi.Config.Toml (ConfigToml (..))
+import Navi.Config.Toml (ConfigToml)
 import Navi.Config.Types
   ( Config (..),
     ConfigErr (..),
@@ -29,7 +29,7 @@ import Navi.Config.Types
 import Navi.Prelude
 import Navi.Services.Battery.Percentage qualified as BattState
 import Navi.Services.Battery.Status qualified as BattChargeStatus
-import Navi.Services.Custom.Multiple qualified as Multiple
+import Navi.Services.Custom qualified as Custom
 import Navi.Services.Network.NetInterfaces qualified as NetConn
 
 -- | Parses the provided toml file into a 'Config'. Throws 'ConfigErr' if
@@ -58,11 +58,11 @@ tomlToConfig ::
   ConfigToml ->
   m Config
 tomlToConfig toml = do
-  multipleEvents <- traverse Multiple.toEvent multipleToml
   mBatteryLevelEvt <- traverse BattState.toEvent batteryPercentageToml
   mBatteryStatusEvt <- traverse BattChargeStatus.toEvent batteryStatusToml
+  customEvents <- traverse Custom.toEvent customToml
   mNetInterfacesEvt <- traverse NetConn.toEvent netInterfacesToml
-  let multipleEvts = multipleEvents <> mNetInterfacesEvt
+  let multipleEvts = customEvents <> mNetInterfacesEvt
       maybeEvts =
         catMaybes
           [ mBatteryLevelEvt,
@@ -82,7 +82,7 @@ tomlToConfig toml = do
   where
     logCfg = fromMaybe defaultLogging (toml ^. #logToml)
     noteSysCfg = fromMaybe defaultNoteSystem (toml ^. #noteSystemToml)
-    multipleToml = toml ^. #multipleToml
+    customToml = toml ^. #customToml
     batteryPercentageToml = toml ^. #batteryPercentageToml
     batteryStatusToml = toml ^. #batteryStatusToml
     netInterfacesToml = toml ^. #netInterfacesToml

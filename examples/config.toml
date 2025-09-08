@@ -33,7 +33,7 @@ location = "stdout"
 #
 #   - net-interface: Monitors a network interface.
 #
-#   - multiple: Custom service for sending events.
+#   - custom: Custom service for sending events.
 
 # Common service options. All are optional:
 #
@@ -155,11 +155,11 @@ device = "eth-device"
 #                                   Custom                                    #
 # --------------------------------------------------------------------------- #
 
-# Custom event. Sends notification for a text trigger(s). A custom config can
+# Custom event. Sends notifications for text trigger(s). A custom config can
 # define multiple custom services, hence this is a toml list.
 #
 # This example requires lm-sensors.
-[[multiple]]
+[[custom]]
 name = "temperature"
 command = """
   temp_res=$(sensors | grep "Core 0")
@@ -179,14 +179,16 @@ command = """
   fi
 """
 # The optional 'command-result' key defaults to "trigger" i.e. simple text
-# output that is compared against the trigger. See below examples for more
-# complicated usage.
+# output that is compared against the 'trigger' field. See below examples for
+# more sophisticated usage.
 #
 #command-result = "trigger"
 
-[[multiple.trigger-note]]
-# 'trigger' defines what 'command' text result should trigger a notification.
+[[custom.trigger-note]]
+# 'trigger' defines what 'command' text result should trigger this
+# notification.
 trigger = "true"
+# These other fields configure the notification that is sent.
 summary = "Temperature"
 body = "We're hot!"
 urgency = "critical"
@@ -199,7 +201,7 @@ timeout = 10
 # Like the above example, except the poll-interval is dynamic i.e. returned
 # by the command itself. This can be useful e.g. if we want an event to
 # poll faster because it is "high priority".
-[[multiple]]
+[[custom]]
 name = "temperature-dynamic-poll-interval"
 command = """
   temp_res=$(sensors | grep "Core 0")
@@ -221,7 +223,7 @@ command = """
 # Instead of the implicit 'command-result = "trigger"', we can return a
 # tuple (in any order) with the following keys:
 #
-#   - trigger: required trigger.
+#   - trigger: required text that might trigger a notification.
 #   - output: dynamic output.
 #   - poll-interval: dynamic poll-interval.
 #
@@ -230,7 +232,7 @@ command = """
 command-result = "(trigger, poll-interval)"
 # Allows for repeat events. Options are:
 #
-#   - false: No repeat events.
+#   - false: Do not repeat events.
 #   - true: Repeat all events.
 #   - ["t1", "t2", ...]: Allow repeats for each trigger (string) in the list.
 #     Notice the empty list is equivalent to false.
@@ -239,45 +241,12 @@ repeat-events = ["true"]
 # example).
 poll-interval = 20
 
-[[multiple.trigger-note]]
+[[custom.trigger-note]]
 trigger = "true"
 summary = "Temperature"
 body = "We're hot!"
 urgency = "critical"
 timeout = 2
-
-
-# --------------------------------------------------------------------------- #
-#                                Custom Multiple                              #
-# --------------------------------------------------------------------------- #
-
-# Custom with multiple events. Sends notifications for multiple triggers.
-[[multiple]]
-name = "minute-parity"
-poll-interval = 10
-command = """
-  min=`date +%M`;
-  if [[ \"$min % 2\" -eq 0 ]]; then
-    echo -n "true"
-  else
-    echo -n "false"
-  fi
-"""
-repeat-events = ["true"]
-
-# Send a notif for trigger "true"
-[[multiple.trigger-note]]
-trigger = "true"
-summary = "Even/Odd"
-body = "Minute is even"
-timeout = 10
-
-# Send a notif for trigger "false"
-[[multiple.trigger-note]]
-trigger = "false"
-summary = "Even/Odd"
-body = "Minute is odd"
-timeout = 10
 
 # --------------------------------------------------------------------------- #
 #                                Dynamic Output                               #
@@ -291,7 +260,7 @@ timeout = 10
 # This allows us to have different outputs with the same trigger. This requires
 # setting the 'command-result' field (see below).
 
-[[multiple]]
+[[custom]]
 name = "battery-manual"
 command = """
   regex="([0-9]{1,3})%"
@@ -319,19 +288,19 @@ repeat-events = ["low"]
 # Tell navi our command returns (trigger, output).
 command-result = "(trigger, output)"
 
-[[multiple.trigger-note]]
+[[custom.trigger-note]]
 trigger = "good"
 summary = "Battery Percentage"
 body = "Battery is good: $out"
 timeout = 10
 
-[[multiple.trigger-note]]
+[[custom.trigger-note]]
 trigger = "med"
 summary = "Battery Percentage"
 body = "Battery is medium: $out"
 timeout = 10
 
-[[multiple.trigger-note]]
+[[custom.trigger-note]]
 trigger = "low"
 summary = "Battery Percentage"
 body = "Battery is low: $out"

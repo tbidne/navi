@@ -5,8 +5,8 @@ module Navi.Services.Types
   ( ServiceType (..),
     _BatteryPercentage,
     _BatteryStatus,
+    _Custom,
     _NetworkInterface,
-    _Multiple,
   )
 where
 
@@ -20,14 +20,14 @@ import Pythia.Services.NetInterface (Device, NetInterface, NetInterfaceApp)
 -- | 'ServiceType' describes all implemented services.
 -- It provides several built-in services for querying and parsing
 -- system information (from the @pythia@ package), and then
--- 'Single' and 'Multiple' for custom services. It is a GADT so
+-- 'Single' and 'Custom' for custom services. It is a GADT so
 -- we can link each service with its result type.
 type ServiceType :: Type -> Type
 data ServiceType result where
   BatteryPercentage :: BatteryApp -> ServiceType Battery
   BatteryStatus :: BatteryApp -> ServiceType BatteryStatus
   NetworkInterface :: Device -> NetInterfaceApp -> ServiceType NetInterface
-  Multiple :: Command -> CommandResultParser -> ServiceType CommandResult
+  Custom :: Command -> CommandResultParser -> ServiceType CommandResult
 
 deriving stock instance Show (ServiceType result)
 

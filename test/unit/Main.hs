@@ -9,7 +9,7 @@ import Unit.Navi.Config qualified as Config
 import Unit.Navi.Config.Toml qualified as Config.Toml
 import Unit.Navi.Services.Battery.Percentage.Toml qualified as S.Battery.Percentage.Toml
 import Unit.Navi.Services.Battery.Status.Toml qualified as S.Battery.Status.Toml
-import Unit.Navi.Services.Custom.Multiple.Toml qualified as S.Custom.Multiple.Toml
+import Unit.Navi.Services.Custom.Toml qualified as S.Custom.Toml
 import Unit.Navi.Services.Network.NetInterfaces.Toml qualified as S.Network.NetInterfaces.Toml
 import Unit.Prelude hiding (($))
 
@@ -36,6 +36,6 @@ main =
         Config.Toml.tests,
         S.Battery.Percentage.Toml.tests,
         S.Battery.Status.Toml.tests,
-        S.Custom.Multiple.Toml.tests,
+        S.Custom.Toml.tests,
         S.Network.NetInterfaces.Toml.tests
       ]

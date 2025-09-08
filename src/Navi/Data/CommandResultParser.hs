@@ -139,7 +139,7 @@ parseCommand1Tuple txt = do
   inner <- parseTuple txt
   parseCommand1Literal inner
 
--- On the Multiple/Single DecodeTOML instance, but passed to MonadSystemInfo
+-- On the Custom/Single DecodeTOML instance, but passed to MonadSystemInfo
 -- as part of the Service Type.
 --
 -- So the service type has this parser on it. We are going to want the

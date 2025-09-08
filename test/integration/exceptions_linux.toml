@@ -4,13 +4,13 @@ note-system = "notify-send"
 severity = "debug"
 location = "stdout"
 
-[[multiple]]
+[[custom]]
 name = "exception test"
 poll-interval = 1
 repeat-events = true
 command = ""
 
-[[multiple.trigger-note]]
+[[custom.trigger-note]]
 trigger = ""
 summary = ""
 body = ""

@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | This module provides toml configuration for the custom multiple service.
-module Navi.Services.Custom.Multiple.Toml
-  ( MultipleToml (..),
+-- | This module provides toml configuration for the custom service.
+module Navi.Services.Custom.Toml
+  ( CustomToml (..),
     TriggerNoteToml (..),
   )
 where
@@ -43,8 +43,8 @@ instance DecodeTOML TriggerNoteToml where
       <$> getField "trigger"
       <*> tomlDecoder
 
--- | TOML for the custom multiple service.
-data MultipleToml = MkMultipleToml
+-- | TOML for the custom service.
+data CustomToml = MkCustomToml
   { -- | The command to run.
     command :: Command,
     -- | Determines how we handle errors.
@@ -62,10 +62,10 @@ data MultipleToml = MkMultipleToml
   }
   deriving stock (Eq, Show)
 
-makeFieldLabelsNoPrefix ''MultipleToml
+makeFieldLabelsNoPrefix ''CustomToml
 
 -- | @since 0.1
-instance DecodeTOML MultipleToml where
+instance DecodeTOML CustomToml where
   tomlDecoder = do
     command <- commandDecoder
     errEventCfg <- errorNoteOptDecoder
@@ -89,7 +89,7 @@ instance DecodeTOML MultipleToml where
       _ -> pure ()
 
     pure
-      $ MkMultipleToml
+      $ MkCustomToml
         { command,
           errEventCfg,
           name,

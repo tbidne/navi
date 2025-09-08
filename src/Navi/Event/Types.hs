@@ -59,8 +59,8 @@ data ErrorNote
 -- For most services, the (result -> trigger) map will be trivial i.e.
 -- result and trigger will be identical.
 --
--- For example, custom single/multiple services are both 'Text', and
--- NetInterfaces is NetInterface. In these cases, there is an exact
+-- For example, custom servicess is 'Text', and NetInterfaces is
+-- NetInterface. In these cases, there is an exact
 -- correspondonce between the service query result and the trigger.
 --
 -- But for e.g. battery percentage, the result is Battery (percentage and

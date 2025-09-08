@@ -85,8 +85,8 @@ library
     Navi.Services.Battery.Percentage.Toml
     Navi.Services.Battery.Status
     Navi.Services.Battery.Status.Toml
-    Navi.Services.Custom.Multiple
-    Navi.Services.Custom.Multiple.Toml
+    Navi.Services.Custom
+    Navi.Services.Custom.Toml
     Navi.Services.Network.NetInterfaces
     Navi.Services.Network.NetInterfaces.Toml
     Navi.Services.Types
@@ -147,7 +147,7 @@ test-suite unit
     Unit.Navi.Config.Toml
     Unit.Navi.Services.Battery.Percentage.Toml
     Unit.Navi.Services.Battery.Status.Toml
-    Unit.Navi.Services.Custom.Multiple.Toml
+    Unit.Navi.Services.Custom.Toml
     Unit.Navi.Services.Network.NetInterfaces.Toml
     Unit.Prelude
     Unit.Utils

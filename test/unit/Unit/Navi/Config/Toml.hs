@@ -13,8 +13,8 @@ import Navi.Config.Toml
       ( MkConfigToml,
         batteryPercentageToml,
         batteryStatusToml,
+        customToml,
         logToml,
-        multipleToml,
         netInterfacesToml,
         noteSystemToml
       ),
@@ -67,9 +67,9 @@ import Navi.Services.Battery.Status.Toml
         repeatEvent
       ),
   )
-import Navi.Services.Custom.Multiple.Toml
-  ( MultipleToml
-      ( MkMultipleToml,
+import Navi.Services.Custom.Toml
+  ( CustomToml
+      ( MkCustomToml,
         command,
         errEventCfg,
         name,
@@ -135,23 +135,23 @@ parsePercentageRepeatRefFailure = parsesConfigFail cfg expected desc
 parseMultipleRepeatRefFailure :: TestTree
 parseMultipleRepeatRefFailure = parsesConfigFail cfg expected desc
   where
-    desc = "multiple repeat-events bad reference fail"
+    desc = "custom repeat-events bad reference fail"
     expected =
       mconcat
-        [ "Decode error at '.multiple[0]': Found repeat-events that ",
+        [ "Decode error at '.custom[0]': Found repeat-events that ",
           "referenced non-extant triggers. All references should correspond ",
           "to a note 'trigger': t1, t3."
         ]
     cfg =
       T.unlines
-        [ "[[multiple]]",
+        [ "[[custom]]",
           "command = \"some_cmd\"",
           "repeat-events = [\"t1\", \"t2\", \"t3\", \"t4\"]",
           "",
-          "[[multiple.trigger-note]]",
+          "[[custom.trigger-note]]",
           "trigger = \"t2\"",
           "summary = \"s1\"",
-          "[[multiple.trigger-note]]",
+          "[[custom.trigger-note]]",
           "trigger = \"t4\"",
           "summary = \"s2\""
         ]
@@ -175,7 +175,7 @@ logTests =
                   sizeMode = Nothing
                 },
           noteSystemToml = Nothing,
-          multipleToml = [],
+          customToml = [],
           batteryPercentageToml = Nothing,
           batteryStatusToml = expectedBatteryStatus,
           netInterfacesToml = []
@@ -208,15 +208,15 @@ expectedFull =
               sizeMode = Just (FilesSizeModeWarn (MkBytes 50_000_000))
             },
       noteSystemToml = Nothing,
-      multipleToml = expectedCustom,
+      customToml = expectedCustom,
       batteryPercentageToml = expectedBatteryPercentage,
       batteryStatusToml = expectedBatteryStatus,
       netInterfacesToml = expectedNetInterfaces
     }
 
-expectedCustom :: [MultipleToml]
+expectedCustom :: [CustomToml]
 expectedCustom =
-  [ MkMultipleToml
+  [ MkCustomToml
       { command = "  some multiline cmd\n  end cmd\n",
         name = Just "a-single",
         parser = Nothing,
@@ -310,7 +310,7 @@ fullConfig =
       "app = \"nmcli\"",
       "device = \"my-device\"",
       "",
-      "[[multiple]]",
+      "[[custom]]",
       "name = \"a-single\"",
       "command = \"\"\"",
       "  some multiline cmd",
@@ -318,7 +318,7 @@ fullConfig =
       "\"\"\"",
       "poll-interval = \"1m61s\"",
       "",
-      "[[multiple.trigger-note]]",
+      "[[custom.trigger-note]]",
       "trigger = \"true\"",
       "summary = \"Some single\"",
       "body = \"A body\"",

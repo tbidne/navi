@@ -36,7 +36,7 @@ import Navi.Data.NaviNote
     Timeout (Seconds),
   )
 import Navi.Event.Types (AnyEvent (MkAnyEvent), EventError (MkEventError))
-import Navi.Services.Types (ServiceType (Multiple), _Multiple)
+import Navi.Services.Types (ServiceType (Custom), _Custom)
 import Pythia.Data.Percentage (unsafePercentage)
 import Test.Tasty qualified as Tasty
 
@@ -152,13 +152,13 @@ testReplaceText = testCase "Replaces output text" $ do
     expected =
       Set.fromList
         [ MkNaviNote
-            { summary = "Multiple",
+            { summary = "Custom",
               body = Just "Result is o2",
               urgency = Nothing,
               timeout = Nothing
             },
           MkNaviNote
-            { summary = "Multiple",
+            { summary = "Custom",
               body = Just "Result is o1",
               urgency = Nothing,
               timeout = Nothing
@@ -183,29 +183,29 @@ testReplaceText = testCase "Replaces output text" $ do
 
     cfg =
       T.unlines
-        [ "[[multiple]]",
+        [ "[[custom]]",
           "poll-interval = 1",
           "command = \"cmd1\"",
           "command-result = \"(trigger, output)\"",
           "",
-          "[[multiple.trigger-note]]",
+          "[[custom.trigger-note]]",
           "trigger = \"t1\"",
           "summary = \"Single\"",
           "body = \"result is: $out\"",
           "",
-          "[[multiple]]",
+          "[[custom]]",
           "poll-interval = 1",
           "command = \"cmd2\"",
           "command-result = \"(trigger, output)\"",
           "",
-          "[[multiple.trigger-note]]",
+          "[[custom.trigger-note]]",
           "trigger = \"t1\"",
-          "summary = \"Multiple\"",
+          "summary = \"Custom\"",
           "body = \"Result is $out\"",
           "",
-          "[[multiple.trigger-note]]",
+          "[[custom.trigger-note]]",
           "trigger = \"t2\"",
-          "summary = \"Multiple\"",
+          "summary = \"Custom\"",
           "body = \"Result is $out\""
         ]
 
@@ -221,7 +221,7 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
     t1s =
       replicate 2
         $ MkNaviNote
-          { summary = "Multiple",
+          { summary = "Custom",
             body = Just "Result is o1",
             urgency = Nothing,
             timeout = Nothing
@@ -230,7 +230,7 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
     t2s =
       replicate 3
         $ MkNaviNote
-          { summary = "Multiple",
+          { summary = "Custom",
             body = Just "Result is o2",
             urgency = Nothing,
             timeout = Nothing
@@ -261,25 +261,25 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
 
     cfg =
       T.unlines
-        [ "[[multiple]]",
+        [ "[[custom]]",
           "poll-interval = 1",
           "command = \"cmd\"",
           "repeat-events = [\"t2\"]",
           "command-result = \"(trigger, output)\"",
           "",
-          "[[multiple.trigger-note]]",
+          "[[custom.trigger-note]]",
           "trigger = \"t1\"",
-          "summary = \"Multiple\"",
+          "summary = \"Custom\"",
           "body = \"Result is $out\"",
           "",
-          "[[multiple.trigger-note]]",
+          "[[custom.trigger-note]]",
           "trigger = \"t2\"",
-          "summary = \"Multiple\"",
+          "summary = \"Custom\"",
           "body = \"Result is $out\""
         ]
 
 testMultipleCustomText :: TestTree
-testMultipleCustomText = testCase "Tests multiple dynamic example" $ do
+testMultipleCustomText = testCase "Tests custom dynamic example" $ do
   -- Tests complex config example that involves dynamic output and
   -- some repeat events.
 
@@ -340,11 +340,11 @@ testMultipleCustomText = testCase "Tests multiple dynamic example" $ do
             [] -> error "empty list: "
             -- [e] -> NE.singleton e
             [MkAnyEvent e] -> case e ^. #serviceType of
-              Multiple _ _ ->
+              Custom _ _ ->
                 NE.singleton
                   . MkAnyEvent
                   -- set cmn so mocked responses works
-                  . set' (#serviceType % _Multiple % _1) "cmd"
+                  . set' (#serviceType % _Custom % _1) "cmd"
                   -- set to faster poll-interval
                   . set' #pollInterval 1
                   $ e
@@ -439,19 +439,19 @@ testDynamicPollIntervals = testCase "Uses dynamic poll-interval" $ do
               timeout = Nothing
             },
           MkNaviNote
-            { summary = "Multiple",
+            { summary = "Custom",
               body = Just "Result is one",
               urgency = Nothing,
               timeout = Nothing
             },
           MkNaviNote
-            { summary = "Multiple",
+            { summary = "Custom",
               body = Just "Result is two",
               urgency = Nothing,
               timeout = Nothing
             },
           MkNaviNote
-            { summary = "Multiple",
+            { summary = "Custom",
               body = Just "Result is three",
               urgency = Nothing,
               timeout = Nothing
@@ -471,31 +471,31 @@ testDynamicPollIntervals = testCase "Uses dynamic poll-interval" $ do
 
     cfg =
       T.unlines
-        [ "[[multiple]]",
+        [ "[[custom]]",
           "poll-interval = 40",
           "command = \"cmd1\"",
           "command-result = \"(trigger, output, poll-interval)\"",
           "repeat-events = true",
           "",
-          "[[multiple.trigger-note]]",
+          "[[custom.trigger-note]]",
           "trigger = \"t1\"",
           "summary = \"Single\"",
           "body = \"Result is $out\"",
           "",
-          "[[multiple]]",
+          "[[custom]]",
           "poll-interval = 40",
           "command = \"cmd2\"",
           "command-result = \"(trigger, poll-interval, output)\"",
           "repeat-events = [\"t1\", \"t2\"]",
           "",
-          "[[multiple.trigger-note]]",
+          "[[custom.trigger-note]]",
           "trigger = \"t1\"",
-          "summary = \"Multiple\"",
+          "summary = \"Custom\"",
           "body = \"Result is $out\"",
           "",
-          "[[multiple.trigger-note]]",
+          "[[custom.trigger-note]]",
           "trigger = \"t2\"",
-          "summary = \"Multiple\"",
+          "summary = \"Custom\"",
           "body = \"Result is $out\""
         ]
 
@@ -560,13 +560,13 @@ batteryPercentageEventConfig =
 singleEventConfig :: Text -> Text
 singleEventConfig repeats =
   T.unlines
-    [ "[[multiple]]",
+    [ "[[custom]]",
       "poll-interval = 1",
       "command = \"cmd\"",
       repeats,
       "",
-      "[[multiple.trigger-note]]",
-      "trigger = \"multiple result\"", -- matches trigger in MockApp
+      "[[custom.trigger-note]]",
+      "trigger = \"custom result\"", -- matches trigger in MockApp
       "summary = \"Single\"",
       "body = \"body\"",
       ""
@@ -586,13 +586,13 @@ netInterfaceEventConfig errorEvents =
 sendExceptionConfig :: Text
 sendExceptionConfig =
   T.unlines
-    [ "[[multiple]]",
+    [ "[[custom]]",
       "poll-interval = 1",
       "name = \"Single\"",
       "command = \"cmd\"",
       "",
-      "[[multiple.trigger-note]]",
-      "trigger = \"multiple result\"", -- needs to be triggered to be sent
+      "[[custom.trigger-note]]",
+      "trigger = \"custom result\"", -- needs to be triggered to be sent
       "summary = \"SentException\"", -- matches MockApp's MonadNotify instance
       ""
     ]

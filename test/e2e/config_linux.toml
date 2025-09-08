@@ -3,7 +3,7 @@ note-system = "notify-send"
 [logging]
 severity = "none"
 
-[[multiple]]
+[[custom]]
 name = "even-single"
 poll-interval = 3
 repeat-events = true
@@ -16,13 +16,13 @@ command = """
   fi
 """
 
-[[multiple.trigger-note]]
+[[custom.trigger-note]]
 trigger = "true"
 summary = "Even Single"
 body = "Seconds are even!"
 timeout = 2
 
-[[multiple]]
+[[custom]]
 poll-interval = 3
 command = """
   min=`date +%M`;
@@ -35,13 +35,13 @@ command = """
 command-result = "(trigger, output)"
 repeat-events = ["false"]
 
-[[multiple.trigger-note]]
+[[custom.trigger-note]]
 trigger = "true"
 summary = "Even/Odd"
 body = "Minute is even: $out"
 timeout = 2
 
-[[multiple.trigger-note]]
+[[custom.trigger-note]]
 trigger = "false"
 summary = "Even/Odd"
 body = "Minute is odd: $out"
