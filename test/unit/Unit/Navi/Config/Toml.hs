@@ -224,7 +224,7 @@ expectedCustom =
         repeatEventCfg = Nothing,
         errEventCfg = Nothing,
         triggerNotes =
-          [ MkTriggerNoteToml "true" note
+          [ MkTriggerNoteToml note "true"
           ]
       }
   ]

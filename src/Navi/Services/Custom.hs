@@ -55,7 +55,7 @@ toEvent toml = do
       (toml ^. #parser)
   where
     triggerNotePairs = fmap toPair (toml ^. #triggerNotes)
-    toPair (MkTriggerNoteToml t n) = (T.strip t, n)
+    toPair (MkTriggerNoteToml n t) = (T.strip t, n)
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 
     toCommandResult = MkCommandResult Nothing Nothing

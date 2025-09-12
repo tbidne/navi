@@ -24,7 +24,12 @@ newtype PollInterval = MkPollInterval {unPollInterval :: Natural}
   deriving (Num) via Natural
 
 -- | @since 0.1
-makeFieldLabelsNoPrefix ''PollInterval
+instance
+  (k ~ An_Iso, a ~ Natural, b ~ Natural) =>
+  LabelOptic "unPollInterval" k PollInterval PollInterval a b
+  where
+  labelOptic = iso (\(MkPollInterval a1) -> a1) MkPollInterval
+  {-# INLINE labelOptic #-}
 
 -- | @since 0.1
 instance Bounded PollInterval where

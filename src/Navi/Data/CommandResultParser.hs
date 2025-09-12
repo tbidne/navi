@@ -28,7 +28,15 @@ newtype CommandResultParser = MkCommandResultParser
   { unCommandResultParser :: Text -> Either EventError CommandResult
   }
 
-makeFieldLabelsNoPrefix ''CommandResultParser
+instance
+  ( k ~ An_Iso,
+    a ~ (Text -> Either EventError CommandResult),
+    b ~ (Text -> Either EventError CommandResult)
+  ) =>
+  LabelOptic "unCommandResultParser" k CommandResultParser CommandResultParser a b
+  where
+  labelOptic = iso (\(MkCommandResultParser a1) -> a1) MkCommandResultParser
+  {-# INLINE labelOptic #-}
 
 instance Show CommandResultParser where
   show _ = "<parser>"
@@ -79,7 +87,15 @@ newtype CommandResultParserToml = MkCommandResultParserToml
   { unCommandResultParserToml :: Text -> CommandResultParser
   }
 
-makeFieldLabelsNoPrefix ''CommandResultParserToml
+instance
+  ( k ~ An_Iso,
+    a ~ (Text -> CommandResultParser),
+    b ~ (Text -> CommandResultParser)
+  ) =>
+  LabelOptic "unCommandResultParserToml" k CommandResultParserToml CommandResultParserToml a b
+  where
+  labelOptic = iso (\(MkCommandResultParserToml a1) -> a1) MkCommandResultParserToml
+  {-# INLINE labelOptic #-}
 
 instance Show CommandResultParserToml where
   show _ = "<parser>"

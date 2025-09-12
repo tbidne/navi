@@ -52,22 +52,56 @@ toPercentage (PercentageRange l _) = l
 
 -- | TOML for each individual battery percentage.
 data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml
-  { -- | The percentage (range) for this alert.
+  { -- | The timeout for this alert.
+    mTimeout :: Maybe Timeout,
+    -- | The percentage (range) for this alert.
     percentage :: PercentageData,
     -- | The urgency for this alert.
-    urgency :: Maybe UrgencyLevel,
-    -- | The timeout for this alert.
-    mTimeout :: Maybe Timeout
+    urgency :: Maybe UrgencyLevel
   }
   deriving stock (Eq, Show)
 
-makeFieldLabelsNoPrefix ''BatteryPercentageNoteToml
+instance
+  (k ~ A_Lens, a ~ Maybe Timeout, b ~ Maybe Timeout) =>
+  LabelOptic "mTimeout" k BatteryPercentageNoteToml BatteryPercentageNoteToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkBatteryPercentageNoteToml a1 a2 a3) ->
+        fmap
+          (\b -> MkBatteryPercentageNoteToml b a2 a3)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ PercentageData, b ~ PercentageData) =>
+  LabelOptic "percentage" k BatteryPercentageNoteToml BatteryPercentageNoteToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkBatteryPercentageNoteToml a1 a2 a3) ->
+        fmap
+          (\b -> MkBatteryPercentageNoteToml a1 b a3)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe UrgencyLevel, b ~ Maybe UrgencyLevel) =>
+  LabelOptic "urgency" k BatteryPercentageNoteToml BatteryPercentageNoteToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkBatteryPercentageNoteToml a1 a2 a3) ->
+        fmap
+          (\b -> MkBatteryPercentageNoteToml a1 a2 b)
+          (f a3)
+  {-# INLINE labelOptic #-}
 
 -- | @since 0.1
 instance DecodeTOML BatteryPercentageNoteToml where
   tomlDecoder = do
-    percentage <- percentageDataDecoder
     mTimeout <- timeoutOptDecoder
+    percentage <- percentageDataDecoder
     urgency <- urgencyLevelOptDecoder
     pure
       $ MkBatteryPercentageNoteToml
@@ -141,7 +175,65 @@ data BatteryPercentageToml = MkBatteryPercentageToml
   }
   deriving stock (Eq, Show)
 
-makeFieldLabelsNoPrefix ''BatteryPercentageToml
+instance
+  (k ~ A_Lens, a ~ NonEmpty BatteryPercentageNoteToml, b ~ NonEmpty BatteryPercentageNoteToml) =>
+  LabelOptic "alerts" k BatteryPercentageToml BatteryPercentageToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkBatteryPercentageToml a1 a2 a3 a4 a5) ->
+        fmap
+          (\b -> MkBatteryPercentageToml b a2 a3 a4 a5)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ BatteryApp, b ~ BatteryApp) =>
+  LabelOptic "app" k BatteryPercentageToml BatteryPercentageToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkBatteryPercentageToml a1 a2 a3 a4 a5) ->
+        fmap
+          (\b -> MkBatteryPercentageToml a1 b a3 a4 a5)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe ErrorNoteToml, b ~ Maybe ErrorNoteToml) =>
+  LabelOptic "errorNote" k BatteryPercentageToml BatteryPercentageToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkBatteryPercentageToml a1 a2 a3 a4 a5) ->
+        fmap
+          (\b -> MkBatteryPercentageToml a1 a2 b a4 a5)
+          (f a3)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe PollInterval, b ~ Maybe PollInterval) =>
+  LabelOptic "pollInterval" k BatteryPercentageToml BatteryPercentageToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkBatteryPercentageToml a1 a2 a3 a4 a5) ->
+        fmap
+          (\b -> MkBatteryPercentageToml a1 a2 a3 b a5)
+          (f a4)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe (MultiRepeatEventToml Percentage), b ~ Maybe (MultiRepeatEventToml Percentage)) =>
+  LabelOptic "repeatEvent" k BatteryPercentageToml BatteryPercentageToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkBatteryPercentageToml a1 a2 a3 a4 a5) ->
+        fmap
+          (\b -> MkBatteryPercentageToml a1 a2 a3 a4 b)
+          (f a5)
+  {-# INLINE labelOptic #-}
 
 -- | @since 0.1
 instance DecodeTOML BatteryPercentageToml where

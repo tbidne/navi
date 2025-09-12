@@ -47,16 +47,50 @@ data FilesSizeMode
 
 -- | Logging configuration.
 data Logging = MkLogging
-  { -- | Determines the log level.
-    severity :: Maybe LogLevel,
-    -- | Determines the log location (i.e. file or stdout).
+  { -- | Determines the log location (i.e. file or stdout).
     location :: Maybe LogLoc,
+    -- | Determines the log level.
+    severity :: Maybe LogLevel,
     -- | Determines whether to warn/delete large log files.
     sizeMode :: Maybe FilesSizeMode
   }
   deriving stock (Eq, Show)
 
-makeFieldLabelsNoPrefix ''Logging
+instance
+  (k ~ A_Lens, a ~ Maybe LogLoc, b ~ Maybe LogLoc) =>
+  LabelOptic "location" k Logging Logging a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkLogging a1 a2 a3) ->
+        fmap
+          (\b -> MkLogging b a2 a3)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe LogLevel, b ~ Maybe LogLevel) =>
+  LabelOptic "severity" k Logging Logging a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkLogging a1 a2 a3) ->
+        fmap
+          (\b -> MkLogging a1 b a3)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe FilesSizeMode, b ~ Maybe FilesSizeMode) =>
+  LabelOptic "sizeMode" k Logging Logging a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkLogging a1 a2 a3) ->
+        fmap
+          (\b -> MkLogging a1 a2 b)
+          (f a3)
+  {-# INLINE labelOptic #-}
 
 type DBusF :: ConfigPhase -> Type
 type family DBusF p where
@@ -90,8 +124,8 @@ defaultNoteSystem = DBus ()
 defaultLogging :: Logging
 defaultLogging =
   MkLogging
-    (Just LevelError)
     (Just DefPath)
+    (Just LevelError)
     (Just defaultSizeMode)
 
 -- | @since 0.1
@@ -112,7 +146,41 @@ data Config = MkConfig
   }
   deriving stock (Show)
 
-makeFieldLabelsNoPrefix ''Config
+instance
+  (k ~ A_Lens, a ~ NonEmpty AnyEvent, b ~ NonEmpty AnyEvent) =>
+  LabelOptic "events" k Config Config a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkConfig a1 a2 a3) ->
+        fmap
+          (\b -> MkConfig b a2 a3)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Logging, b ~ Logging) =>
+  LabelOptic "logging" k Config Config a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkConfig a1 a2 a3) ->
+        fmap
+          (\b -> MkConfig a1 b a3)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ NoteSystem ConfigPhaseToml, b ~ NoteSystem ConfigPhaseToml) =>
+  LabelOptic "noteSystem" k Config Config a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkConfig a1 a2 a3) ->
+        fmap
+          (\b -> MkConfig a1 a2 b)
+          (f a3)
+  {-# INLINE labelOptic #-}
 
 -- | 'ConfigErr' represents the errors we can encounter when attempting to
 -- parse a config file.

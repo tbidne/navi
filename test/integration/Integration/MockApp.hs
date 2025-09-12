@@ -30,7 +30,7 @@ import Navi.Env.Core
     HasLogEnv,
     HasNoteQueue,
   )
-import Navi.Event.Types (EventError (MkEventError))
+import Navi.Event.Types (EventError (MkEventError, long, name, short))
 import Navi.Runner qualified as Runner
 import Navi.Services.Types
   ( ServiceType
@@ -53,20 +53,63 @@ import System.Environment qualified as SysEnv
 -- | Mock configuration.
 data MockEnv = MkMockEnv
   { coreEnv :: Env,
+    customResponses :: IORef (Map Command [Text]),
+    percentageResponses :: IORef [Percentage],
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
-    sentNotes :: IORef [NaviNote],
-    customResponses :: IORef (Map Command [Text]),
-    percentageResponses :: IORef [Percentage]
+    sentNotes :: IORef [NaviNote]
   }
 
-makeFieldLabelsNoPrefix ''MockEnv
+instance
+  (k ~ A_Lens, a ~ Env, b ~ Env) =>
+  LabelOptic "coreEnv" k MockEnv MockEnv a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkMockEnv a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkMockEnv b a2 a3 a4)
+          (f a1)
+  {-# INLINE labelOptic #-}
 
 instance
-  ( k ~ A_Lens,
-    x ~ Namespace,
-    y ~ Namespace
-  ) =>
+  (k ~ A_Lens, a ~ IORef (Map Command [Text]), b ~ IORef (Map Command [Text])) =>
+  LabelOptic "customResponses" k MockEnv MockEnv a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkMockEnv a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkMockEnv a1 b a3 a4)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ IORef [Percentage], b ~ IORef [Percentage]) =>
+  LabelOptic "percentageResponses" k MockEnv MockEnv a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkMockEnv a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkMockEnv a1 a2 b a4)
+          (f a3)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ IORef [NaviNote], b ~ IORef [NaviNote]) =>
+  LabelOptic "sentNotes" k MockEnv MockEnv a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkMockEnv a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkMockEnv a1 a2 a3 b)
+          (f a4)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, x ~ Namespace, y ~ Namespace) =>
   LabelOptic "namespace" k MockEnv MockEnv x y
   where
   labelOptic =
@@ -114,7 +157,13 @@ instance MonadLogger MockAppT where
 instance MonadNotify MockAppT where
   sendNote note =
     if note ^. #summary == "SentException"
-      then throwM $ MkEventError "SentException" "sending mock exception" ""
+      then
+        throwM
+          $ MkEventError
+            { name = "SentException",
+              short = "sending mock exception",
+              long = ""
+            }
       else do
         notes <- asks (view #sentNotes)
         liftIO $ modifyIORef' notes (note :)

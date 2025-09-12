@@ -35,10 +35,7 @@ data Result e a
   deriving anyclass (NFData)
 
 instance
-  ( k ~ An_Iso,
-    x ~ Either e a,
-    y ~ Either e a
-  ) =>
+  (k ~ An_Iso, x ~ Either e a, y ~ Either e a) =>
   LabelOptic "eitherIso" k (Result e a) (Result e a) x y
   where
   labelOptic =

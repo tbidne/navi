@@ -114,7 +114,6 @@ library
     , gitrev-typed           ^>=0.1
     , mtl                    >=2.2.2     && <2.4
     , optics-core            ^>=0.4
-    , optics-th              ^>=0.4
     , optparse-applicative   >=0.16.1.0  && <0.20
     , os-string              ^>=2.0.1
     , pythia                 ^>=0.1

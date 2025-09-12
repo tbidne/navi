@@ -4,7 +4,16 @@ import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
 import Hedgehog qualified as H
 import Hedgehog.Gen qualified as G
-import Navi.Data.NaviNote (NaviNote (MkNaviNote), Timeout (Seconds))
+import Navi.Data.NaviNote
+  ( NaviNote
+      ( MkNaviNote,
+        body,
+        summary,
+        timeout,
+        urgency
+      ),
+    Timeout (Seconds),
+  )
 import Navi.Event.Toml
   ( ErrorNoteToml
       ( ErrNoteAllowRepeatsToml,
@@ -78,12 +87,24 @@ parsesNotes =
     firstNote =
       MkTriggerNoteToml
         { trigger = "first val",
-          note = MkNaviNote "first summary" (Just "first body") (Just Critical) (Just $ Seconds 5)
+          note =
+            MkNaviNote
+              { body = Just "first body",
+                summary = "first summary",
+                timeout = Just $ Seconds 5,
+                urgency = Just Critical
+              }
         }
     secondNote =
       MkTriggerNoteToml
         { trigger = "second val",
-          note = MkNaviNote "second summary" Nothing Nothing Nothing
+          note =
+            MkNaviNote
+              { body = Nothing,
+                summary = "second summary",
+                timeout = Nothing,
+                urgency = Nothing
+              }
         }
 
 repeatEventTests :: TestTree

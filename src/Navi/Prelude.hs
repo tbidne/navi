@@ -163,15 +163,19 @@ import Optics.Core as X
     A_Lens,
     A_Setter,
     AffineTraversal',
+    An_Iso,
     Is,
     Iso',
     LabelOptic',
     Lens',
+    Prism',
     Traversal',
+    iso,
     lens,
     lensVL,
     over',
     preview,
+    prism,
     review,
     set',
     view,
@@ -185,7 +189,6 @@ import Optics.Core as X
     _Just,
   )
 import Optics.Label as X (LabelOptic (labelOptic))
-import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
 import System.IO as X (IO)
 import TOML as X
   ( DecodeTOML (..),

@@ -27,21 +27,47 @@ import Pythia.Data.Command (Command)
 
 -- | TOML for alerts.
 data TriggerNoteToml = MkTriggerNoteToml
-  { -- | The text that triggers an alert.
-    trigger :: Text,
-    -- | The notification to send when triggered.
-    note :: NaviNote
+  { -- | The notification to send when triggered.
+    note :: NaviNote,
+    -- | The text that triggers an alert.
+    trigger :: Text
   }
   deriving stock (Eq, Show)
 
-makeFieldLabelsNoPrefix ''TriggerNoteToml
+instance
+  (k ~ A_Lens, a ~ NaviNote, b ~ NaviNote) =>
+  LabelOptic "note" k TriggerNoteToml TriggerNoteToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkTriggerNoteToml a1 a2) ->
+        fmap
+          (\b -> MkTriggerNoteToml b a2)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Text, b ~ Text) =>
+  LabelOptic "trigger" k TriggerNoteToml TriggerNoteToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkTriggerNoteToml a1 a2) ->
+        fmap
+          (\b -> MkTriggerNoteToml a1 b)
+          (f a2)
+  {-# INLINE labelOptic #-}
 
 -- | @since 0.1
 instance DecodeTOML TriggerNoteToml where
-  tomlDecoder =
-    MkTriggerNoteToml
-      <$> getField "trigger"
-      <*> tomlDecoder
+  tomlDecoder = do
+    note <- tomlDecoder
+    trigger <- getField "trigger"
+    pure
+      $ MkTriggerNoteToml
+        { note,
+          trigger
+        }
 
 -- | TOML for the custom service.
 data CustomToml = MkCustomToml
@@ -62,7 +88,89 @@ data CustomToml = MkCustomToml
   }
   deriving stock (Eq, Show)
 
-makeFieldLabelsNoPrefix ''CustomToml
+instance
+  (k ~ A_Lens, a ~ Command, b ~ Command) =>
+  LabelOptic "command" k CustomToml CustomToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkCustomToml a1 a2 a3 a4 a5 a6 a7) ->
+        fmap
+          (\b -> MkCustomToml b a2 a3 a4 a5 a6 a7)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe ErrorNoteToml, b ~ Maybe ErrorNoteToml) =>
+  LabelOptic "errEventCfg" k CustomToml CustomToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkCustomToml a1 a2 a3 a4 a5 a6 a7) ->
+        fmap
+          (\b -> MkCustomToml a1 b a3 a4 a5 a6 a7)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe Text, b ~ Maybe Text) =>
+  LabelOptic "name" k CustomToml CustomToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkCustomToml a1 a2 a3 a4 a5 a6 a7) ->
+        fmap
+          (\b -> MkCustomToml a1 a2 b a4 a5 a6 a7)
+          (f a3)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe CommandResultParserToml, b ~ Maybe CommandResultParserToml) =>
+  LabelOptic "parser" k CustomToml CustomToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkCustomToml a1 a2 a3 a4 a5 a6 a7) ->
+        fmap
+          (\b -> MkCustomToml a1 a2 a3 b a5 a6 a7)
+          (f a4)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe PollInterval, b ~ Maybe PollInterval) =>
+  LabelOptic "pollInterval" k CustomToml CustomToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkCustomToml a1 a2 a3 a4 a5 a6 a7) ->
+        fmap
+          (\b -> MkCustomToml a1 a2 a3 a4 b a6 a7)
+          (f a5)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe (MultiRepeatEventToml Text), b ~ Maybe (MultiRepeatEventToml Text)) =>
+  LabelOptic "repeatEventCfg" k CustomToml CustomToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkCustomToml a1 a2 a3 a4 a5 a6 a7) ->
+        fmap
+          (\b -> MkCustomToml a1 a2 a3 a4 a5 b a7)
+          (f a6)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ NonEmpty TriggerNoteToml, b ~ NonEmpty TriggerNoteToml) =>
+  LabelOptic "triggerNotes" k CustomToml CustomToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkCustomToml a1 a2 a3 a4 a5 a6 a7) ->
+        fmap
+          (\b -> MkCustomToml a1 a2 a3 a4 a5 a6 b)
+          (f a7)
+  {-# INLINE labelOptic #-}
 
 -- | @since 0.1
 instance DecodeTOML CustomToml where

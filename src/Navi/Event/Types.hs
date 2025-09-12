@@ -84,7 +84,77 @@ data Event result trigger = MkEvent
     serviceType :: ServiceType result
   }
 
-makeFieldLabelsNoPrefix ''Event
+instance
+  (k ~ A_Lens, a ~ ErrorNote, b ~ ErrorNote) =>
+  LabelOptic "errorNote" k (Event result trigger) (Event result trigger) a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEvent a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkEvent b a2 a3 a4 a5 a6)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Text, b ~ Text) =>
+  LabelOptic "name" k (Event result trigger) (Event result trigger) a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEvent a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkEvent a1 b a3 a4 a5 a6)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ PollInterval, b ~ PollInterval) =>
+  LabelOptic "pollInterval" k (Event result trigger) (Event result trigger) a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEvent a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkEvent a1 a2 b a4 a5 a6)
+          (f a3)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ (result -> Maybe (trigger, NaviNote)), b ~ (result -> Maybe (trigger, NaviNote))) =>
+  LabelOptic "raiseAlert" k (Event result trigger) (Event result trigger) a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEvent a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkEvent a1 a2 a3 b a5 a6)
+          (f a4)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ RepeatEvent trigger, b ~ RepeatEvent trigger) =>
+  LabelOptic "repeatEvent" k (Event result trigger) (Event result trigger) a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEvent a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkEvent a1 a2 a3 a4 b a6)
+          (f a5)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ ServiceType result, b ~ ServiceType result) =>
+  LabelOptic "serviceType" k (Event result trigger) (Event result trigger) a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEvent a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkEvent a1 a2 a3 a4 a5 b)
+          (f a6)
+  {-# INLINE labelOptic #-}
 
 instance (Show trigger) => Show (Event result trigger) where
   showsPrec i event =
@@ -116,9 +186,55 @@ deriving stock instance Show AnyEvent
 -- @since 0.1
 data EventSuccess result trigger = MkEventSuccess
   { pollInterval :: Maybe PollInterval,
-    result :: result,
+    raiseAlert :: result -> Maybe (trigger, NaviNote),
     repeatEvent :: RepeatEvent trigger,
-    raiseAlert :: result -> Maybe (trigger, NaviNote)
+    result :: result
   }
 
-makeFieldLabelsNoPrefix ''EventSuccess
+instance
+  (k ~ A_Lens, a ~ Maybe PollInterval, b ~ Maybe PollInterval) =>
+  LabelOptic "pollInterval" k (EventSuccess result trigger) (EventSuccess result trigger) a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEventSuccess a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkEventSuccess b a2 a3 a4)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ (result -> Maybe (trigger, NaviNote)), b ~ (result -> Maybe (trigger, NaviNote))) =>
+  LabelOptic "raiseAlert" k (EventSuccess result trigger) (EventSuccess result trigger) a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEventSuccess a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkEventSuccess a1 b a3 a4)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ RepeatEvent trigger, b ~ RepeatEvent trigger) =>
+  LabelOptic "repeatEvent" k (EventSuccess result trigger) (EventSuccess result trigger) a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEventSuccess a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkEventSuccess a1 a2 b a4)
+          (f a3)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ result, b ~ result) =>
+  LabelOptic "result" k (EventSuccess result trigger) (EventSuccess result trigger) a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEventSuccess a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkEventSuccess a1 a2 a3 b)
+          (f a4)
+  {-# INLINE labelOptic #-}

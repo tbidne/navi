@@ -35,7 +35,15 @@ import Navi.Data.NaviNote
       ),
     Timeout (Seconds),
   )
-import Navi.Event.Types (AnyEvent (MkAnyEvent), EventError (MkEventError))
+import Navi.Event.Types
+  ( AnyEvent (MkAnyEvent),
+    EventError
+      ( MkEventError,
+        long,
+        name,
+        short
+      ),
+  )
 import Navi.Services.Types (ServiceType (Custom), _Custom)
 import Pythia.Data.Percentage (unsafePercentage)
 import Test.Tasty qualified as Tasty
@@ -93,7 +101,13 @@ testDuplicates = testCase "Send duplicate notifications" $ do
 
   assertNoteRange 3 5 expected sentNotes
   where
-    expected = MkNaviNote "Single" (Just "body") Nothing Nothing
+    expected =
+      MkNaviNote
+        { summary = "Single",
+          body = Just "body",
+          urgency = Nothing,
+          timeout = Nothing
+        }
 
 testNoDuplicates :: TestTree
 testNoDuplicates = testCase "Does not send duplicate notifications" $ do
@@ -102,7 +116,14 @@ testNoDuplicates = testCase "Does not send duplicate notifications" $ do
   sentNotes <- mockEnvToNotes mockEnv
   expected @=? sentNotes
   where
-    expected = [MkNaviNote "Single" (Just "body") Nothing Nothing]
+    expected =
+      [ MkNaviNote
+          { summary = "Single",
+            body = Just "body",
+            urgency = Nothing,
+            timeout = Nothing
+          }
+      ]
 
 testNoDuplicateErrs :: TestTree
 testNoDuplicateErrs = testCase "Does not send duplicate errors" $ do
@@ -112,7 +133,14 @@ testNoDuplicateErrs = testCase "Does not send duplicate errors" $ do
   sentNotes <- mockEnvToNotes mockEnv
   expected @=? sentNotes
   where
-    expected = [MkNaviNote "Exception" (Just body) (Just Critical) Nothing]
+    expected =
+      [ MkNaviNote
+          { summary = "Exception",
+            body = Just body,
+            urgency = Just Critical,
+            timeout = Nothing
+          }
+      ]
     body = "Pythia exception: Command exception. Command: <nmcli>. Error: <Nmcli error>"
 
 testSwallowErrs :: TestTree
@@ -129,7 +157,13 @@ testSendsMultipleErrs = testCase "Sends multiple errors" $ do
   sentNotes <- mockEnvToNotes mockEnv
   assertNoteRange 3 5 expected sentNotes
   where
-    expected = MkNaviNote "Exception" (Just body) (Just Critical) Nothing
+    expected =
+      MkNaviNote
+        { summary = "Exception",
+          body = Just body,
+          urgency = Just Critical,
+          timeout = Nothing
+        }
     body = "Pythia exception: Command exception. Command: <nmcli>. Error: <Nmcli error>"
 
 testSendExceptionDies :: TestTree
@@ -140,7 +174,13 @@ testSendExceptionDies = testCase "Exception in send kills program" $ do
 
   expected @=? result
   where
-    expected = Just $ MkEventError "SentException" "sending mock exception" ""
+    expected =
+      Just
+        $ MkEventError
+          { name = "SentException",
+            short = "sending mock exception",
+            long = ""
+          }
 
 testReplaceText :: TestTree
 testReplaceText = testCase "Replaces output text" $ do

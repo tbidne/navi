@@ -18,7 +18,7 @@ import Navi.Config.Phase (ConfigPhase (ConfigPhaseToml))
 import Navi.Config.Types
   ( FilesSizeMode (FilesSizeModeDelete, FilesSizeModeWarn),
     LogLoc (DefPath, File, Stdout),
-    Logging (MkLogging),
+    Logging (MkLogging, location, severity, sizeMode),
     NoteSystem (AppleScript, DBus, NotifySend),
   )
 import Navi.Prelude
@@ -39,7 +39,77 @@ data ConfigToml = MkConfigToml
   }
   deriving stock (Eq, Show)
 
-makeFieldLabelsNoPrefix ''ConfigToml
+instance
+  (k ~ A_Lens, a ~ Maybe BatteryPercentageToml, b ~ Maybe BatteryPercentageToml) =>
+  LabelOptic "batteryPercentageToml" k ConfigToml ConfigToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkConfigToml a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkConfigToml b a2 a3 a4 a5 a6)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe BatteryStatusToml, b ~ Maybe BatteryStatusToml) =>
+  LabelOptic "batteryStatusToml" k ConfigToml ConfigToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkConfigToml a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkConfigToml a1 b a3 a4 a5 a6)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ [CustomToml], b ~ [CustomToml]) =>
+  LabelOptic "customToml" k ConfigToml ConfigToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkConfigToml a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkConfigToml a1 a2 b a4 a5 a6)
+          (f a3)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe Logging, b ~ Maybe Logging) =>
+  LabelOptic "logToml" k ConfigToml ConfigToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkConfigToml a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkConfigToml a1 a2 a3 b a5 a6)
+          (f a4)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ [NetInterfacesToml], b ~ [NetInterfacesToml]) =>
+  LabelOptic "netInterfacesToml" k ConfigToml ConfigToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkConfigToml a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkConfigToml a1 a2 a3 a4 b a6)
+          (f a5)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe (NoteSystem ConfigPhaseToml), b ~ Maybe (NoteSystem ConfigPhaseToml)) =>
+  LabelOptic "noteSystemToml" k ConfigToml ConfigToml a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkConfigToml a1 a2 a3 a4 a5 a6) ->
+        fmap
+          (\b -> MkConfigToml a1 a2 a3 a4 a5 b)
+          (f a6)
+  {-# INLINE labelOptic #-}
 
 -- | @since 0.1
 instance DecodeTOML ConfigToml where
@@ -65,11 +135,16 @@ logDecoderOpt :: Decoder (Maybe Logging)
 logDecoderOpt = getFieldOptWith logDecoder "logging"
 
 logDecoder :: Decoder Logging
-logDecoder =
-  MkLogging
-    <$> severityDecoderOpt
-    <*> locationDecoderOpt
-    <*> sizeModeDecoderOpt
+logDecoder = do
+  location <- locationDecoderOpt
+  severity <- severityDecoderOpt
+  sizeMode <- sizeModeDecoderOpt
+  pure
+    $ MkLogging
+      { location,
+        severity,
+        sizeMode
+      }
 
 severityDecoderOpt :: Decoder (Maybe LogLevel)
 severityDecoderOpt = setDef <$> getFieldOptWith severityDecoder "severity"

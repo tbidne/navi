@@ -66,13 +66,44 @@ data ExceptionEnv = MkExceptionEnv
     logsRef :: IORef (Seq ByteString)
   }
 
-makeFieldLabelsNoPrefix ''ExceptionEnv
+instance
+  (k ~ A_Lens, a ~ BadThread, b ~ BadThread) =>
+  LabelOptic "badThread" k ExceptionEnv ExceptionEnv a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkExceptionEnv a1 a2 a3) ->
+        fmap
+          (\b -> MkExceptionEnv b a2 a3)
+          (f a1)
+  {-# INLINE labelOptic #-}
 
 instance
-  ( k ~ A_Lens,
-    x ~ Namespace,
-    y ~ Namespace
-  ) =>
+  (k ~ A_Lens, a ~ Env, b ~ Env) =>
+  LabelOptic "coreEnv" k ExceptionEnv ExceptionEnv a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkExceptionEnv a1 a2 a3) ->
+        fmap
+          (\b -> MkExceptionEnv a1 b a3)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ IORef (Seq ByteString), b ~ IORef (Seq ByteString)) =>
+  LabelOptic "logsRef" k ExceptionEnv ExceptionEnv a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkExceptionEnv a1 a2 a3) ->
+        fmap
+          (\b -> MkExceptionEnv a1 a2 b)
+          (f a3)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, x ~ Namespace, y ~ Namespace) =>
   LabelOptic "namespace" k ExceptionEnv ExceptionEnv x y
   where
   labelOptic =

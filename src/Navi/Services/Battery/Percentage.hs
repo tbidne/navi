@@ -8,7 +8,15 @@ where
 import Data.List.NonEmpty qualified as NE
 import Data.Map (Map)
 import Data.Map qualified as Map
-import Navi.Data.NaviNote (NaviNote (MkNaviNote))
+import Navi.Data.NaviNote
+  ( NaviNote
+      ( MkNaviNote,
+        body,
+        summary,
+        timeout,
+        urgency
+      ),
+  )
 import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -55,10 +63,11 @@ tomlToNote :: BatteryPercentageNoteToml -> (PercentageData, NaviNote)
 tomlToNote toml =
   ( percentage,
     MkNaviNote
-      summary
-      Nothing
-      (toml ^. #urgency)
-      (toml ^. #mTimeout)
+      { body = Nothing,
+        summary,
+        timeout = toml ^. #mTimeout,
+        urgency = toml ^. #urgency
+      }
   )
   where
     percentage = toml ^. #percentage

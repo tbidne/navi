@@ -31,13 +31,59 @@ import Paths_navi qualified as Paths
 import System.Info qualified as Info
 
 data VersionInfo = MkVersionInfo
-  { gitCommitDate :: OsString,
-    ghc :: String,
+  { ghc :: String,
+    gitCommitDate :: OsString,
     gitHash :: OsString,
     gitShortHash :: OsString
   }
 
-makeFieldLabelsNoPrefix ''VersionInfo
+instance
+  (k ~ A_Lens, a ~ String, b ~ String) =>
+  LabelOptic "ghc" k VersionInfo VersionInfo a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkVersionInfo a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkVersionInfo b a2 a3 a4)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ OsString, b ~ OsString) =>
+  LabelOptic "gitCommitDate" k VersionInfo VersionInfo a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkVersionInfo a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkVersionInfo a1 b a3 a4)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ OsString, b ~ OsString) =>
+  LabelOptic "gitHash" k VersionInfo VersionInfo a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkVersionInfo a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkVersionInfo a1 a2 b a4)
+          (f a3)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ OsString, b ~ OsString) =>
+  LabelOptic "gitShortHash" k VersionInfo VersionInfo a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkVersionInfo a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkVersionInfo a1 a2 a3 b)
+          (f a4)
+  {-# INLINE labelOptic #-}
 
 -- | Represents command-line arguments. We use the \"higher-kinded data\"
 -- approach for:
@@ -49,7 +95,12 @@ newtype Args f = MkArgs
     configFile :: f OsPath
   }
 
-makeFieldLabelsNoPrefix ''Args
+instance
+  (k ~ An_Iso, a ~ f OsPath, b ~ f OsPath) =>
+  LabelOptic "configFile" k (Args f) (Args f) a b
+  where
+  labelOptic = iso (\(MkArgs a1) -> a1) MkArgs
+  {-# INLINE labelOptic #-}
 
 instance (Show1 f) => Show (Args f) where
   show MkArgs {configFile} =

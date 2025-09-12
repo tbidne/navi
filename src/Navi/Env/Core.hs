@@ -33,7 +33,53 @@ data Env = MkEnv
     notifySystem :: NoteSystem ConfigPhaseEnv
   }
 
-makeFieldLabelsNoPrefix ''Env
+instance
+  (k ~ A_Lens, a ~ NonEmpty AnyEvent, b ~ NonEmpty AnyEvent) =>
+  LabelOptic "events" k Env Env a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEnv a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkEnv b a2 a3 a4)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe LogEnv, b ~ Maybe LogEnv) =>
+  LabelOptic "logEnv" k Env Env a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEnv a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkEnv a1 b a3 a4)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ TBQueue NaviNote, b ~ TBQueue NaviNote) =>
+  LabelOptic "noteQueue" k Env Env a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEnv a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkEnv a1 a2 b a4)
+          (f a3)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ NoteSystem ConfigPhaseEnv, b ~ NoteSystem ConfigPhaseEnv) =>
+  LabelOptic "notifySystem" k Env Env a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkEnv a1 a2 a3 a4) ->
+        fmap
+          (\b -> MkEnv a1 a2 a3 b)
+          (f a4)
+  {-# INLINE labelOptic #-}
 
 deriving via (TopField Env) instance HasEvents Env
 
@@ -103,10 +149,7 @@ instance
   getNoteQueue (MkCoreEnvField x) = getNoteQueue $ view #coreEnv x
 
 instance
-  ( k ~ A_Lens,
-    x ~ Namespace,
-    y ~ Namespace
-  ) =>
+  (k ~ A_Lens, x ~ Namespace, y ~ Namespace) =>
   LabelOptic "namespace" k Env Env x y
   where
   labelOptic =

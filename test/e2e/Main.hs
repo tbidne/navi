@@ -33,7 +33,12 @@ newtype TestEnv = MkTestEnv
   { coreEnv :: Env
   }
 
-makeFieldLabelsNoPrefix ''TestEnv
+instance
+  (k ~ An_Iso, a ~ Env, b ~ Env) =>
+  LabelOptic "coreEnv" k TestEnv TestEnv a b
+  where
+  labelOptic = iso (\(MkTestEnv a1) -> a1) MkTestEnv
+  {-# INLINE labelOptic #-}
 
 deriving via (CoreEnvField TestEnv) instance HasEvents TestEnv
 
@@ -96,10 +101,7 @@ hoistNaviT :: NaviT Env IO a -> TestIO a
 hoistNaviT (MkNaviT r) = MkTestIO $ ReaderT $ \env -> runReaderT r (env ^. #coreEnv)
 
 instance
-  ( k ~ A_Lens,
-    x ~ Namespace,
-    y ~ Namespace
-  ) =>
+  (k ~ A_Lens, x ~ Namespace, y ~ Namespace) =>
   LabelOptic "namespace" k TestEnv TestEnv x y
   where
   labelOptic =

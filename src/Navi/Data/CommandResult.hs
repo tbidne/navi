@@ -20,7 +20,41 @@ data CommandResult = MkCommandResult
   }
   deriving stock (Show)
 
-makeFieldLabelsNoPrefix ''CommandResult
+instance
+  (k ~ A_Lens, a ~ Maybe Text, b ~ Maybe Text) =>
+  LabelOptic "output" k CommandResult CommandResult a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkCommandResult a1 a2 a3) ->
+        fmap
+          (\b -> MkCommandResult b a2 a3)
+          (f a1)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Maybe PollInterval, b ~ Maybe PollInterval) =>
+  LabelOptic "pollInterval" k CommandResult CommandResult a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkCommandResult a1 a2 a3) ->
+        fmap
+          (\b -> MkCommandResult a1 b a3)
+          (f a2)
+  {-# INLINE labelOptic #-}
+
+instance
+  (k ~ A_Lens, a ~ Text, b ~ Text) =>
+  LabelOptic "result" k CommandResult CommandResult a b
+  where
+  labelOptic =
+    lensVL
+      $ \f (MkCommandResult a1 a2 a3) ->
+        fmap
+          (\b -> MkCommandResult a1 a2 b)
+          (f a3)
+  {-# INLINE labelOptic #-}
 
 instance Eq CommandResult where
   x == y = toResult x == toResult y
