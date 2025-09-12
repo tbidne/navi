@@ -25,7 +25,7 @@ location = "stdout"
 #                                   Services                                  #
 # --------------------------------------------------------------------------- #
 
-# There are 5 service types:
+# There are 4 service types:
 #
 #   - battery-status: Monitors battery status.
 #
