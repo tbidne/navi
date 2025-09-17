@@ -152,7 +152,7 @@ parseCommand1Literal txt = do
 
 parseCommand1Tuple :: (MonadFail m) => Text -> m (Text -> CommandResultParser)
 parseCommand1Tuple txt = do
-  inner <- parseTuple txt
+  inner <- parseTuple1 txt
   parseCommand1Literal inner
 
 -- On the Custom/Single DecodeTOML instance, but passed to MonadSystemInfo
@@ -297,42 +297,73 @@ parseCommand3 txt = do
     _ ->
       fail $ "Expected 3 different elements, found: " ++ displayElems3 (o1, o2, o3)
 
-parseTuple :: (MonadFail m) => Text -> m Text
-parseTuple txt = do
-  r1 <- liftMonadFail ("Expected '(', received: " <> unpackText txt) $ T.stripPrefix "(" txt
-  let (inner, rest) = T.break (== ')') r1
-      rest' = T.strip rest
-      msg =
-        mconcat
-          [ "Expected closing ')', received: '",
-            rest',
-            "'"
-          ]
-  unless (rest' == ")") (fail $ unpackText msg)
-  pure inner
+parseTuple1 :: (MonadFail m) => Text -> m Text
+parseTuple1 txt = do
+  r1 <- parseC '(' txt
+  (e1, r2) <- parseTupleElem r1
+  _ <- parseC ')' r2
+  pure e1
 
 parseTuple2 :: (MonadFail m) => Text -> m (Text, Text)
 parseTuple2 txt = do
-  r1 <- parseTuple txt
-  case T.split (== ',') r1 of
-    [] -> fail "Expected 2-tuple, found 0 elements"
-    [_] -> fail $ "Expected 2-tuple, found 1 element: " ++ unpackText txt
-    [l, r] -> pure (T.strip l, T.strip r)
-    _ -> fail $ "Expected 2-tuple, found > 2 elements: " ++ unpackText txt
+  r1 <- parseC '(' txt
+  (e1, r2) <- parseTupleElem r1
+  r3 <- parseC ',' r2
+  (e2, r4) <- parseTupleElem r3
+  _ <- parseC ')' r4
+  pure (e1, e2)
 
 parseTuple3 :: (MonadFail m) => Text -> m (Text, Text, Text)
 parseTuple3 txt = do
-  r1 <- parseTuple txt
-  case T.split (== ',') r1 of
-    [] -> fail "Expected 3-tuple, found 0 elements"
-    [_] -> fail $ "Expected 3-tuple, found 1 element: " ++ unpackText txt
-    [_, _] -> fail $ "Expected 3-tuple, found 2 elements: " ++ unpackText txt
-    [x1, x2, x3] -> pure (T.strip x1, T.strip x2, T.strip x3)
-    _ -> fail $ "Expected 3-tuple, found > 3 elements: " ++ unpackText txt
+  r1 <- parseC '(' txt
+  (e1, r2) <- parseTupleElem r1
+  r3 <- parseC ',' r2
+  (e2, r4) <- parseTupleElem r3
+  r5 <- parseC ',' r4
+  (e3, r6) <- parseTupleElem r5
+  _ <- parseC ')' r6
+  pure (e1, e2, e3)
 
-liftMonadFail :: (MonadFail m) => String -> Maybe a -> m a
-liftMonadFail _ (Just x) = pure x
-liftMonadFail msg Nothing = fail msg
+parseTupleElem :: (MonadFail m) => Text -> m (Text, Text)
+parseTupleElem txt = do
+  -- 1. Assert output is non-empty.
+  (c, r1) <- lmf "Empty tuple element" $ T.uncons txt
+  -- 2. Check for special case quote.
+  if c == '\"'
+    then
+      -- 2.1. Started with a quote: Need to find closing mark.
+      let (preQuote, r2) = T.break (== '\"') r1
+       in case T.uncons r2 of
+            -- 2.1.1. Did not find a closing quote.
+            Nothing -> fail "Did not find closing quote"
+            -- 2.1.2. Found a closing quote: Return element without quotes,
+            -- and the rest after stripping leading white space.
+            Just (c, r3)
+              -- This check __should__ be impossible, since we only break
+              -- above when this element is a quote.
+              | c == '\"' -> pure (preQuote, T.stripStart r3)
+              | otherwise -> fail "Did not find closing quote"
+    -- 2.2: No quotes: Take everything until we reach a comma or closing
+    -- paren. We need to add the first char back into the elem, and strip
+    -- leading whitespace on the rest.
+    else
+      pure
+        $ bimap
+          (T.cons c)
+          T.stripStart
+          (T.break (\c -> c == ',' || c == ')') r1)
+
+-- | Parses a single character, stripping leading whitespace from the rest.
+parseC :: (MonadFail m) => Char -> Text -> m Text
+parseC c txt = case T.uncons txt of
+  Nothing -> fail "Empty text"
+  Just (d, r1)
+    | c == d -> pure (T.stripStart r1)
+    | otherwise -> fail $ "Expected '" ++ [c] ++ "', received: " ++ unpackText txt
+
+lmf :: (MonadFail m) => String -> Maybe a -> m a
+lmf _ (Just x) = pure x
+lmf msg Nothing = fail msg
 
 liftParse :: Text -> Text -> ResultDefault a -> Either EventError a
 liftParse name msg (Err err) =

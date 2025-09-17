@@ -66,6 +66,7 @@ main = do
         testMultipleCustomText,
         testBatteryPercentage,
         testDynamicPollIntervals,
+        testOutputParensCommas,
         Exceptions.tests
       ]
 
@@ -527,6 +528,67 @@ testDynamicPollIntervals = testCase "Uses dynamic poll-interval" $ do
           "command = \"cmd2\"",
           "command-result = \"(trigger, poll-interval, output)\"",
           "repeat-events = [\"t1\", \"t2\"]",
+          "",
+          "[[custom.trigger-note]]",
+          "trigger = \"t1\"",
+          "summary = \"Custom\"",
+          "body = \"Result is $out\"",
+          "",
+          "[[custom.trigger-note]]",
+          "trigger = \"t2\"",
+          "summary = \"Custom\"",
+          "body = \"Result is $out\""
+        ]
+
+testOutputParensCommas :: TestTree
+testOutputParensCommas = testCase "Custom output allows parens and commas" $ do
+  mockEnv <- runMockEnv modEnv 2 cfg
+
+  sentNotes <- mockEnvToNotes mockEnv
+  assertNotesOrder expected sentNotes
+  where
+    expected = [n1, n2]
+
+    n1 =
+      MkNaviNote
+        { summary = "Custom",
+          body = Just "Result is (some, fancy, output)",
+          urgency = Nothing,
+          timeout = Nothing
+        }
+
+    n2 =
+      MkNaviNote
+        { summary = "Custom",
+          body = Just "Result is (other, output)",
+          urgency = Nothing,
+          timeout = Nothing
+        }
+
+    modEnv :: MockEnv -> IO MockEnv
+    modEnv env = do
+      let t1 = "(t1, \"(some, fancy, output)\")"
+          t2 = "(t2, \"(other, output)\")"
+
+          mp =
+            Map.fromList
+              [ ("cmd", [t1, t2])
+              ]
+
+      -- Behavior should be:
+      --
+      -- t1 (sent)
+      -- t2 (sent)
+      writeIORef (env ^. #customResponses) mp
+      pure env
+
+    cfg =
+      T.unlines
+        [ "[[custom]]",
+          "poll-interval = 1",
+          "command = \"cmd\"",
+          "repeat-events = [\"t2\"]",
+          "command-result = \"(trigger, output)\"",
           "",
           "[[custom.trigger-note]]",
           "trigger = \"t1\"",

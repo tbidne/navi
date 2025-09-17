@@ -338,7 +338,7 @@ testCommandResultSuccess2 = testProp "testCommandResultSuccess2" desc $ do
   let e2Txt = packText $ displayException e2
   H.assert $ "name: Failed to parse " `T.isPrefixOf` e2Txt
   H.assert $ crTxt `T.isInfixOf` e1Txt
-  H.assert $ "Expected 2-tuple, found 1 element: (foo)" `T.isSuffixOf` e2Txt
+  H.assert $ "Expected ',', received: )" `T.isSuffixOf` e2Txt
 
   s1 <- hassertRight $ parser input
   assertOutput s1
@@ -422,14 +422,14 @@ testCommandResultSuccess3 = testProp "testCommandResultSuccess3" desc $ do
   let e2Txt = packText $ displayException e2
   H.assert $ "name: Failed to parse " `T.isPrefixOf` e2Txt
   H.assert $ crTxt `T.isInfixOf` e1Txt
-  H.assert $ "Expected 3-tuple, found 1 element: (foo)" `T.isSuffixOf` e2Txt
+  H.assert $ "Expected ',', received: )" `T.isSuffixOf` e2Txt
 
   e3 <- hassertLeft $ parser "(foo, bar)"
   annotateShow e3
   let e3Txt = packText $ displayException e3
   H.assert $ "name: Failed to parse " `T.isPrefixOf` e3Txt
   H.assert $ crTxt `T.isInfixOf` e1Txt
-  H.assert $ "Expected 3-tuple, found 2 elements: (foo, bar)" `T.isSuffixOf` e3Txt
+  H.assert $ "Expected ',', received: )" `T.isSuffixOf` e3Txt
 
   s1 <- hassertRight $ parser input
   Utils.assertCrs3Output s1
