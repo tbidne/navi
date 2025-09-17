@@ -568,7 +568,7 @@ testOutputParensCommas = testCase "Custom output allows parens and commas" $ do
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
       let t1 = "(t1, \"(some, fancy, output)\")"
-          t2 = "(t2, \"(other, output)\")"
+          t2 = "(t2, \'(other, output)\')"
 
           mp =
             Map.fromList

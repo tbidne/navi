@@ -328,29 +328,31 @@ parseTupleElem txt = do
   -- 1. Assert output is non-empty.
   (c, r1) <- lmf "Empty tuple element" $ T.uncons txt
   -- 2. Check for special case quote.
-  if c == '\"'
-    then
-      -- 2.1. Started with a quote: Need to find closing mark.
-      let (preQuote, r2) = T.break (== '\"') r1
-       in case T.uncons r2 of
+  if
+    | c == '\"' -> parseCloseQuote '\"' r1
+    | c == '\'' -> parseCloseQuote '\'' r1
+    -- 2.2: No quotes: Take everything until we reach a comma or closing
+    -- paren. We need to add the first char back into the elem, and strip
+    -- leading whitespace on the rest.
+    | otherwise ->
+        pure
+          $ bimap
+            (T.cons c)
+            T.stripStart
+            (T.break (\d -> d == ',' || d == ')') r1)
+  where
+    parseCloseQuote cquote t =
+      let (preQuote, r1) = T.break (== cquote) t
+       in case T.uncons r1 of
             -- 2.1.1. Did not find a closing quote.
             Nothing -> fail "Did not find closing quote"
             -- 2.1.2. Found a closing quote: Return element without quotes,
             -- and the rest after stripping leading white space.
-            Just (d, r3)
+            Just (d, r2)
               -- This check __should__ be impossible, since we only break
               -- above when this element is a quote.
-              | d == '\"' -> pure (preQuote, T.stripStart r3)
+              | d == cquote -> pure (preQuote, T.stripStart r2)
               | otherwise -> fail "Did not find closing quote"
-    -- 2.2: No quotes: Take everything until we reach a comma or closing
-    -- paren. We need to add the first char back into the elem, and strip
-    -- leading whitespace on the rest.
-    else
-      pure
-        $ bimap
-          (T.cons c)
-          T.stripStart
-          (T.break (\d -> d == ',' || d == ')') r1)
 
 -- | Parses a single character, stripping leading whitespace from the rest.
 parseC :: (MonadFail m) => Char -> Text -> m Text

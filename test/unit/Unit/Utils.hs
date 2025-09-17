@@ -36,7 +36,7 @@ mkCrs2Config PT = "(poll-interval, trigger)"
 mkCrs2Input :: CommandResultSuccess2 -> Text
 mkCrs2Input TO = "(some result, \"(some, output)\")"
 mkCrs2Input TP = "(some result, 5)"
-mkCrs2Input OT = "(\"(some, output)\", some result)"
+mkCrs2Input OT = "(\'(some, output)\', some result)"
 mkCrs2Input PT = "(5, some result)"
 
 assertCrs2Output :: CommandResultSuccess2 -> CommandResult -> PropertyT IO ()
@@ -91,9 +91,9 @@ mkCrs3Config POT = "(poll-interval, output, trigger)"
 
 mkCrs3Input :: CommandResultSuccess3 -> Text
 mkCrs3Input TOP = "(some result, \"(some, output)\", 5)"
-mkCrs3Input TPO = "(some result, 5, \"(some, output)\")"
+mkCrs3Input TPO = "(some result, 5, \'(some, output)\')"
 mkCrs3Input OTP = "(\"(some, output)\", some result, 5)"
-mkCrs3Input OPT = "(\"(some, output)\", 5, some result)"
+mkCrs3Input OPT = "(\'(some, output)\', 5, some result)"
 mkCrs3Input PTO = "(5, some result, \"(some, output)\")"
 mkCrs3Input POT = "(5, \"(some, output)\", some result)"
 
