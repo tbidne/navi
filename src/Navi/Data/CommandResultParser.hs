@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Navi.Data.CommandResultParser
@@ -338,10 +337,10 @@ parseTupleElem txt = do
             Nothing -> fail "Did not find closing quote"
             -- 2.1.2. Found a closing quote: Return element without quotes,
             -- and the rest after stripping leading white space.
-            Just (c, r3)
+            Just (d, r3)
               -- This check __should__ be impossible, since we only break
               -- above when this element is a quote.
-              | c == '\"' -> pure (preQuote, T.stripStart r3)
+              | d == '\"' -> pure (preQuote, T.stripStart r3)
               | otherwise -> fail "Did not find closing quote"
     -- 2.2: No quotes: Take everything until we reach a comma or closing
     -- paren. We need to add the first char back into the elem, and strip
@@ -351,7 +350,7 @@ parseTupleElem txt = do
         $ bimap
           (T.cons c)
           T.stripStart
-          (T.break (\c -> c == ',' || c == ')') r1)
+          (T.break (\d -> d == ',' || d == ')') r1)
 
 -- | Parses a single character, stripping leading whitespace from the rest.
 parseC :: (MonadFail m) => Char -> Text -> m Text

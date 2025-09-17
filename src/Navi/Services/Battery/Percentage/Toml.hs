@@ -1,6 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ViewPatterns #-}
 
 -- | This module provides toml configuration for the battery percentage service.
 module Navi.Services.Battery.Percentage.Toml

@@ -49,7 +49,7 @@ _BatteryStatus =
     )
 {-# INLINE _BatteryStatus #-}
 
-_Custom :: (result ~ CommandResult) => Prism' (ServiceType result) ((Command, CommandResultParser))
+_Custom :: (result ~ CommandResult) => Prism' (ServiceType result) (Command, CommandResultParser)
 _Custom =
   prism
     (uncurry Custom)
@@ -58,7 +58,7 @@ _Custom =
     )
 {-# INLINE _Custom #-}
 
-_NetworkInterface :: (result ~ NetInterface) => Prism' (ServiceType result) ((Device, NetInterfaceApp))
+_NetworkInterface :: (result ~ NetInterface) => Prism' (ServiceType result) (Device, NetInterfaceApp)
 _NetworkInterface =
   prism
     (uncurry NetworkInterface)
