@@ -146,8 +146,8 @@ percentageDecoder :: Decoder Percentage
 percentageDecoder =
   tomlDecoder >>= \x ->
     case Percentage.mkPercentage x of
-      Just n -> pure n
-      Nothing ->
+      Right n -> pure n
+      Left _ ->
         fail
           $ unpackText
           $ mconcat
@@ -266,8 +266,8 @@ instance DecodeTOML BatteryPercentageToml where
         }
     where
       decodePercentage (Integer s) = case mkPercentage (fromIntegral s) of
-        Just p -> pure p
-        Nothing -> fail $ "Failed to parse percentage: " ++ show s
+        Right p -> pure p
+        Left err -> fail $ "Failed to parse percentage '" ++ show s ++ "': " ++ err
       decodePercentage other = typeMismatch other
 
       mkAlertPercents :: NonEmpty BatteryPercentageNoteToml -> Set Percentage

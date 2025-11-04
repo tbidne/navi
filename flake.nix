@@ -113,22 +113,13 @@
       perSystem =
         { pkgs, ... }:
         let
-          ghc-version = "ghc9102";
+          ghc-version = "ghc9122";
           compiler = pkgs.haskell.packages."${ghc-version}".override {
             overrides =
               final: prev:
               {
-                gitrev-typed = (
-                  final.callHackageDirect {
-                    pkg = "gitrev-typed";
-                    ver = "0.1";
-                    sha256 = "sha256-s7LEekR7NLe3CNhD/8uChnh50eGfaArrrtc5hoCtJ1A=";
-                  } { }
-                );
-
+                Cabal-syntax_3_10_3_0 = hlib.doJailbreak prev.Cabal-syntax_3_10_3_0;
                 kairos-core = nix-hs-utils.mkRelLib inputs.kairos final "lib/core";
-
-                path = hlib.dontCheck prev.path_0_9_6;
               }
               // nix-hs-utils.mkLibs inputs final [
                 "algebra-simple"
@@ -189,8 +180,8 @@
 
           apps = {
             format = nix-hs-utils.format compilerPkgs;
-            #lint = nix-hs-utils.lint compilerPkgs;
-            #lint-refactor = nix-hs-utils.lint-refactor compilerPkgs;
+            lint = nix-hs-utils.lint compilerPkgs;
+            lint-refactor = nix-hs-utils.lint-refactor compilerPkgs;
           };
         };
       systems = [

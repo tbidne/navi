@@ -17,6 +17,7 @@ import Data.List qualified as L
 import Data.Version (showVersion)
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.Optparse (execParser, osPath)
+import Effects.Optparse.Completer qualified as EOC
 import FileSystem.OsString (OsString)
 import FileSystem.OsString qualified as OsString
 import Navi.Args.TH qualified as TH
@@ -228,6 +229,7 @@ configFileParser =
             <> OptApp.short 'c'
             <> mkHelp helpTxt
             <> OptApp.metavar "PATH"
+            <> OptApp.completer EOC.compgenCwdPathsCompleter
         )
     )
   where

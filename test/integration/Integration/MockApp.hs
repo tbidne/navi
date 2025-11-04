@@ -51,11 +51,11 @@ import System.Environment qualified as SysEnv
 -- | Mock configuration.
 data MockEnv = MkMockEnv
   { coreEnv :: Env,
-    customResponses :: IORef (Map Command [Text]),
-    percentageResponses :: IORef [Percentage],
+    customResponses :: TVar (Map Command [Text]),
+    percentageResponses :: TVar [Percentage],
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
-    sentNotes :: IORef [NaviNote]
+    sentNotes :: TVar [NaviNote]
   }
 
 instance
@@ -71,7 +71,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ IORef (Map Command [Text]), b ~ IORef (Map Command [Text])) =>
+  (k ~ A_Lens, a ~ TVar (Map Command [Text]), b ~ TVar (Map Command [Text])) =>
   LabelOptic "customResponses" k MockEnv MockEnv a b
   where
   labelOptic =
@@ -83,7 +83,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ IORef [Percentage], b ~ IORef [Percentage]) =>
+  (k ~ A_Lens, a ~ TVar [Percentage], b ~ TVar [Percentage]) =>
   LabelOptic "percentageResponses" k MockEnv MockEnv a b
   where
   labelOptic =
@@ -95,7 +95,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ IORef [NaviNote], b ~ IORef [NaviNote]) =>
+  (k ~ A_Lens, a ~ TVar [NaviNote], b ~ TVar [NaviNote]) =>
   LabelOptic "sentNotes" k MockEnv MockEnv a b
   where
   labelOptic =
@@ -164,19 +164,22 @@ instance MonadNotify MockAppT where
             }
       else do
         notes <- asks (view #sentNotes)
-        liftIO $ modifyIORef' notes (note :)
+        liftIO $ modifyTVarA' notes (note :)
 
 instance MonadSystemInfo MockAppT where
   -- Service that changes every time: can be used to test custom
   -- notifications are sent.
   query (BatteryPercentage _) = do
     responsesRef <- asks (view #percentageResponses)
-    responses <- readIORef responsesRef
-    newBp <- case responses of
-      (r : rs) -> do
-        writeIORef responsesRef rs
-        pure r
-      [] -> pure $ Percentage.unsafePercentage 80
+
+    newBp <- atomically $ do
+      responses <- readTVar responsesRef
+      case responses of
+        r : rs -> do
+          writeTVar responsesRef rs
+          pure r
+        [] -> pure $ Percentage.unsafePercentage 80
+
     pure (MkBattery newBp Discharging, Nothing)
   -- Constant service. Can test duplicate behavior.
   query (BatteryStatus _) = pure (Charging, Nothing)
@@ -192,16 +195,26 @@ getResponseOrDefault ::
   MockAppT (CommandResult, Maybe PollInterval)
 getResponseOrDefault cmd parser def = do
   ref <- asks (view #customResponses)
-  responseMap <- readIORef ref
-  let responses = Map.findWithDefault [] cmd responseMap
-  case responses of
-    -- No events (i.e. using the default).
-    [] -> parse def
-    -- If we have 1 event left, just send it repeatedly.
-    [r] -> parse r
-    r : rs -> do
-      writeIORef ref (Map.insert cmd rs responseMap)
-      parse r
+
+  -- We have an apparent race condition that is difficult to reproduce.
+  -- We sometimes get repeated events that _shouldn't_ happen, but probably
+  -- occur due to these variables previously being IORef.
+  --
+  -- Hence we switch the IORefs to TVars and surround read/write logic
+  -- with atomically.
+  result <- atomically $ do
+    responseMap <- readTVar ref
+    let responses = Map.findWithDefault [] cmd responseMap
+    case responses of
+      -- No events (i.e. using the default).
+      [] -> pure def
+      -- If we have 1 event left, just send it repeatedly.
+      [r] -> pure r
+      r : rs -> do
+        writeTVar ref (Map.insert cmd rs responseMap)
+        pure r
+
+  parse result
   where
     parse txt = case (parser ^. #unCommandResultParser) txt of
       Right x -> pure (x, x ^. #pollInterval)
@@ -212,9 +225,9 @@ runMockApp = runMockAppEnv pure
 
 runMockAppEnv :: (MockEnv -> IO MockEnv) -> Word8 -> OsPath -> IO MockEnv
 runMockAppEnv modEnv maxSeconds configPath = do
-  customResponses <- newIORef Map.empty
-  percentageResponses <- newIORef []
-  sentNotes <- newIORef []
+  customResponses <- newTVarA Map.empty
+  percentageResponses <- newTVarA []
+  sentNotes <- newTVarA []
 
   let action = SysEnv.withArgs args $ Runner.withEnv $ \coreEnv -> do
         let env =

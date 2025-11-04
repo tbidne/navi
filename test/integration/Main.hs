@@ -89,7 +89,7 @@ testMultiNotifs = testCase "Sends multiple new notifications" $ do
 
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
-      writeIORef
+      writeTVarA
         (env ^. #percentageResponses)
         (unsafePercentage <$> [5, 4, 3, 2, 1])
       pure env
@@ -219,7 +219,7 @@ testReplaceText = testCase "Replaces output text" $ do
               [ ("cmd1", ["(t1, o1)"]),
                 ("cmd2", ["(t1, o1)", "(t2, o2)"])
               ]
-      writeIORef (env ^. #customResponses) mp
+      writeTVarA (env ^. #customResponses) mp
       pure env
 
     cfg =
@@ -297,7 +297,7 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
       -- t2 (sent)
       -- t2 (sent)
       -- t2 (sent)
-      writeIORef (env ^. #customResponses) mp
+      writeTVarA (env ^. #customResponses) mp
       pure env
 
     cfg =
@@ -375,7 +375,7 @@ testMultipleCustomText = testCase "Tests custom dynamic example" $ do
               [ ("cmd", [t1, t2, t3, t4, t5, t6])
               ]
 
-      writeIORef (env ^. #customResponses) mp
+      writeTVarA (env ^. #customResponses) mp
 
       let evts = case filteredEvts of
             [] -> error "empty list: "
@@ -433,7 +433,7 @@ testBatteryPercentage = testCase "Tests battery percentage example" $ do
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
       let ps = [50, 45, 15, 11, 10, 8, 2]
-      writeIORef (env ^. #percentageResponses) (unsafePercentage <$> ps)
+      writeTVarA (env ^. #percentageResponses) (unsafePercentage <$> ps)
 
       let evts = case modEvts of
             [] -> error "empty list: "
@@ -507,7 +507,7 @@ testDynamicPollIntervals = testCase "Uses dynamic poll-interval" $ do
                 ("cmd2", ["(t1, 1, one)", "(t1, 1, two)", "(t2, 30, three)", "(t2, 30, four)"])
               ]
 
-      writeIORef (env ^. #customResponses) mp
+      writeTVarA (env ^. #customResponses) mp
       pure env
 
     cfg =
@@ -579,7 +579,7 @@ testOutputParensCommas = testCase "Custom output allows parens and commas" $ do
       --
       -- t1 (sent)
       -- t2 (sent)
-      writeIORef (env ^. #customResponses) mp
+      writeTVarA (env ^. #customResponses) mp
       pure env
 
     cfg =
@@ -701,7 +701,7 @@ sendExceptionConfig =
 
 mockEnvToNotes :: MockEnv -> IO [NaviNote]
 mockEnvToNotes mockEnv = do
-  sentNotes <- readIORef $ mockEnv ^. #sentNotes
+  sentNotes <- readTVarA $ mockEnv ^. #sentNotes
   pure
     . L.reverse
     . filter ((/= "Navi") . view #summary)
