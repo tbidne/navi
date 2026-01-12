@@ -154,13 +154,7 @@
               name = "navi";
               root = ./.;
 
-              # TODO: Once hlint is back to working with our GHC we can
-              # use nix-hs-utils.mkDevTools ++ otherDeps.
-              devTools = [
-                (hlib.dontCheck compiler.cabal-fmt)
-                (hlib.dontCheck compiler.haskell-language-server)
-                pkgs.nixfmt-rfc-style
-              ];
+              devTools = nix-hs-utils.mkDevTools compilerPkgs;
 
               modifier =
                 drv:
