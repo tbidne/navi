@@ -143,7 +143,7 @@ import Effects.Logger as X
   )
 import Effects.Logger.Namespace as X (MonadLoggerNS, Namespace, addNamespace)
 import Effects.Optparse as X (MonadOptparse)
-import Effects.Process.Typed as X (MonadTypedProcess, Process)
+import Effects.System.Process as X (MonadProcess)
 import Effects.System.Terminal as X (MonadTerminal, putStrLn, putTextLn)
 import FileSystem.OsPath as X (OsPath, osp, ospPathSep, (</>))
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum)

@@ -93,37 +93,37 @@ library
     Navi.Utils
 
   build-depends:
-    , base                   >=4.17      && <4.22
-    , bytestring             >=0.10.10.0 && <0.13
-    , containers             >=0.5.11.0  && <0.9
-    , dbus                   >=1.2.14    && <1.5
-    , deepseq                >=1.4.6.0   && <1.6
-    , effects-async          ^>=0.1
-    , effects-fs             ^>=0.1
-    , effects-ioref          ^>=0.1
-    , effects-logger         ^>=0.1
-    , effects-optparse       ^>=0.1
-    , effects-stm            ^>=0.1
-    , effects-terminal       ^>=0.1
-    , effects-thread         ^>=0.1
-    , effects-time           ^>=0.1
-    , effects-typed-process  ^>=0.1
-    , exception-utils        ^>=0.1
-    , exceptions             ^>=0.10.4
-    , fdo-notify             ^>=0.3.1
-    , gitrev-typed           ^>=0.1
-    , mtl                    >=2.2.2     && <2.4
-    , optics-core            ^>=0.4
-    , optparse-applicative   >=0.16.1.0  && <0.20
-    , os-string              ^>=2.0.1
-    , pythia                 ^>=0.1
-    , relative-time          ^>=0.1
-    , si-bytes               ^>=0.1
-    , template-haskell       >=2.17.0.0  && <2.24
-    , text                   >=1.2.3.2   && <2.2
-    , text-display           ^>=1.0.0.0
-    , time                   >=1.9.3     && <1.16
-    , toml-reader            >=0.1.0.0   && <0.4
+    , base                  >=4.17      && <4.22
+    , bytestring            >=0.10.10.0 && <0.13
+    , containers            >=0.5.11.0  && <0.9
+    , dbus                  >=1.2.14    && <1.5
+    , deepseq               >=1.4.6.0   && <1.6
+    , effects-async         ^>=0.1
+    , effects-fs            ^>=0.1
+    , effects-ioref         ^>=0.1
+    , effects-logger        ^>=0.1
+    , effects-optparse      ^>=0.1
+    , effects-process       ^>=0.1
+    , effects-stm           ^>=0.1
+    , effects-terminal      ^>=0.1
+    , effects-thread        ^>=0.1
+    , effects-time          ^>=0.1
+    , exception-utils       ^>=0.1
+    , exceptions            ^>=0.10.4
+    , fdo-notify            ^>=0.3.1
+    , gitrev-typed          ^>=0.1
+    , mtl                   >=2.2.2     && <2.4
+    , optics-core           ^>=0.4
+    , optparse-applicative  >=0.16.1.0  && <0.20
+    , os-string             ^>=2.0.1
+    , pythia                ^>=0.1
+    , relative-time         ^>=0.1
+    , si-bytes              ^>=0.1
+    , template-haskell      >=2.17.0.0  && <2.24
+    , text                  >=1.2.3.2   && <2.2
+    , text-display          ^>=1.0.0.0
+    , time                  >=1.9.3     && <1.16
+    , toml-reader           >=0.1.0.0   && <0.4
 
   hs-source-dirs:  src
 

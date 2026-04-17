@@ -70,11 +70,11 @@ makeEnvAndRun ::
     MonadOptparse m,
     MonadPathReader m,
     MonadPathWriter m,
+    MonadProcess m,
     MonadSystemInfo m,
     MonadTerminal m,
     MonadThread m,
-    MonadTime m,
-    MonadTypedProcess m
+    MonadTime m
   ) =>
   m ()
 makeEnvAndRun = withEnv runWithEnv

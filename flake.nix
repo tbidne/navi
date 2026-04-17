@@ -138,11 +138,11 @@
                 "effects-ioref"
                 "effects-logger"
                 "effects-optparse"
+                "effects-process"
                 "effects-stm"
                 "effects-time"
                 "effects-terminal"
                 "effects-thread"
-                "effects-typed-process"
                 "effects-unix-compat"
               ];
           };

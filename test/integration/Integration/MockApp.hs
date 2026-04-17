@@ -136,11 +136,11 @@ newtype MockAppT a = MkMockAppT (ReaderT MockEnv IO a)
       MonadIO,
       MonadIORef,
       MonadMask,
+      MonadProcess,
       MonadReader MockEnv,
       MonadTerminal,
       MonadThread,
-      MonadThrow,
-      MonadTypedProcess
+      MonadThrow
     )
     via (ReaderT MockEnv IO)
 

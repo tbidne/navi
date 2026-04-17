@@ -12,7 +12,7 @@ import Effects.Logger.Namespace
   ( defaultLogFormatter,
     formatLog,
   )
-import Effects.Process.Typed qualified as TP
+import Effects.System.Process qualified as P
 import Effects.Time (MonadTime)
 import Navi.Config.Types (NoteSystem (AppleScript, DBus, NotifySend))
 import Navi.Effects.MonadNotify (MonadNotify (sendNote))
@@ -43,22 +43,22 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       MonadIO,
       MonadIORef,
       MonadMask,
+      MonadProcess,
       MonadReader e,
       MonadSystemInfo,
       MonadTerminal,
       MonadTime,
       MonadThread,
-      MonadThrow,
-      MonadTypedProcess
+      MonadThrow
     )
     via (ReaderT e m)
 
 instance
   ( MonadAtomic m,
     MonadDBus m,
+    MonadProcess m,
     MonadTime m,
-    MonadThread m,
-    MonadTypedProcess m
+    MonadThread m
   ) =>
   MonadNotify (NaviT Env m)
   where
@@ -67,16 +67,16 @@ instance
       AppleScript -> addNamespace "apple-script" $ do
         let noteTxt = naviToAppleScript naviNote
         $(logDebug) noteTxt
-        void $ TP.readProcess (mkProc noteTxt)
+        void $ P.readCreateProcessWithExitCode (mkProc noteTxt) "sendNote"
       DBus client -> addNamespace "dbus" $ do
         $(logDebug) (showt naviNote)
         void $ DBus.notify client naviNote
       NotifySend -> addNamespace "notify-send" $ do
         let noteTxt = naviToNotifySend naviNote
         $(logDebug) noteTxt
-        void $ TP.readProcess (mkProc noteTxt)
+        void $ P.readCreateProcessWithExitCode (mkProc noteTxt) "sendNote"
     where
-      mkProc = TP.shell . unpackText
+      mkProc = P.shell . unpackText
 
 instance
   ( MonadAtomic m,

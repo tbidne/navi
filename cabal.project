@@ -61,17 +61,17 @@ source-repository-package
         lib/effects-ioref
         lib/effects-logger
         lib/effects-optparse
+        lib/effects-process
         lib/effects-stm
         lib/effects-time
         lib/effects-terminal
         lib/effects-thread
-        lib/effects-typed-process
         lib/effects-unix-compat
 
 source-repository-package
     type: git
     location: https://github.com/tbidne/pythia.git
-    tag: eec2082fac2b6d3175e4d4fa27222bece2181f9e
+    tag: 6bbd1a083f73a75670a27aaae69d8902d31e9483
 
 source-repository-package
     type: git

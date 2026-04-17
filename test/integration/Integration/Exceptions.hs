@@ -135,10 +135,10 @@ newtype ExceptionsT a = MkExceptionsT (ReaderT ExceptionEnv IO a)
       MonadIO,
       MonadIORef,
       MonadMask,
+      MonadProcess,
       MonadReader ExceptionEnv,
       MonadThread,
-      MonadThrow,
-      MonadTypedProcess
+      MonadThrow
     )
     via (ReaderT ExceptionEnv IO)
 
