@@ -16,7 +16,7 @@ import Navi.Prelude
 -- | Creates a 'AppleScriptEnv' from the provided log types and configuration
 -- data.
 mkAppleScriptEnv ::
-  (MonadSTM m) =>
+  (MonadAtomic m) =>
   Maybe LogEnv ->
   Config ->
   m Env

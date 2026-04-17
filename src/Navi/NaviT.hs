@@ -35,6 +35,7 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       Applicative,
       Monad,
       MonadAsync,
+      MonadAtomic,
       MonadCatch,
       MonadDBus,
       MonadFileReader,
@@ -43,7 +44,6 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       MonadIORef,
       MonadMask,
       MonadReader e,
-      MonadSTM,
       MonadSystemInfo,
       MonadTerminal,
       MonadTime,
@@ -54,8 +54,8 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
     via (ReaderT e m)
 
 instance
-  ( MonadDBus m,
-    MonadSTM m,
+  ( MonadAtomic m,
+    MonadDBus m,
     MonadTime m,
     MonadThread m,
     MonadTypedProcess m
@@ -79,7 +79,7 @@ instance
       mkProc = TP.shell . unpackText
 
 instance
-  ( MonadSTM m,
+  ( MonadAtomic m,
     MonadTime m,
     MonadThread m
   ) =>
@@ -93,7 +93,7 @@ instance
             logLevel = logEnv ^. #logLevel
         when (logLevel <= lvl) $ do
           formatted <- formatLog formatter lvl msg
-          writeTBQueueA logQueue formatted
+          writeTBQueueA' logQueue formatted
       Nothing -> pure ()
     where
       formatter = set' #threadLabel True (defaultLogFormatter loc)

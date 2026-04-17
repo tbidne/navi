@@ -163,11 +163,11 @@ instance
 sendNoteQueue ::
   ( HasCallStack,
     HasNoteQueue env,
-    MonadReader env m,
-    MonadSTM m
+    MonadAtomic m,
+    MonadReader env m
   ) =>
   NaviNote ->
   m ()
 sendNoteQueue naviNote =
-  asks getNoteQueue >>= (`writeTBQueueA` naviNote)
+  asks getNoteQueue >>= (`writeTBQueueA'` naviNote)
 {-# INLINEABLE sendNoteQueue #-}

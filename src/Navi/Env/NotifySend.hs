@@ -18,7 +18,7 @@ import Navi.Utils qualified as Utils
 -- | Creates a 'NotifySendEnv' from the provided log types and configuration
 -- data.
 mkNotifySendEnv ::
-  (MonadSTM m) =>
+  (MonadAtomic m) =>
   Maybe LogEnv ->
   Config ->
   m Env

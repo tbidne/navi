@@ -56,12 +56,12 @@ runNavi ::
     HasLogEnv env,
     HasNoteQueue env,
     MonadAsync m,
+    MonadAtomic m,
     MonadHandleWriter m,
     MonadIORef m,
     MonadLoggerNS m env k,
     MonadMask m,
     MonadNotify m,
-    MonadSTM m,
     MonadSystemInfo m,
     MonadTerminal m,
     MonadThread m
@@ -129,10 +129,10 @@ processEvent ::
   forall m env k.
   ( HasCallStack,
     HasNoteQueue env,
+    MonadAtomic m,
     MonadCatch m,
     MonadIORef m,
     MonadLoggerNS m env k,
-    MonadSTM m,
     MonadSystemInfo m,
     MonadThread m
   ) =>
@@ -220,16 +220,16 @@ exToNote ex =
 pollNoteQueue ::
   ( HasCallStack,
     HasNoteQueue env,
+    MonadAtomic m,
     MonadCatch m,
     MonadLoggerNS m env k,
-    MonadNotify m,
-    MonadSTM m
+    MonadNotify m
   ) =>
   m Void
 pollNoteQueue = addNamespace "note-poller" $ do
   queue <- asks getNoteQueue
   forever
-    $ readTBQueueA queue
+    $ readTBQueueA' queue
     >>= \nn ->
       sendNote nn `catch` \ce ->
         -- NOTE: Rethrow all exceptions except:
@@ -245,10 +245,10 @@ pollNoteQueue = addNamespace "note-poller" $ do
 
 pollLogQueue ::
   ( HasCallStack,
+    MonadAtomic m,
     MonadLoggerNS m env k,
     MonadHandleWriter m,
     MonadMask m,
-    MonadSTM m,
     MonadTerminal m
   ) =>
   LogEnv ->
@@ -278,8 +278,8 @@ getLoggerFn logEnv = maybe putBinary toFile mfileHandle
 
 atomicReadWrite ::
   ( HasCallStack,
-    MonadMask m,
-    MonadSTM m
+    MonadAtomic m,
+    MonadMask m
   ) =>
   -- | Queue from which to read.
   TBQueue a ->
@@ -311,5 +311,5 @@ atomicReadWrite queue logAction =
   --    as long as it is not blocking. There really is no reason for this,
   --    as the invariant we care about is _if_ successful read then
   --    successful handle.
-  mask $ \restore -> restore (readTBQueueA queue) >>= void . logAction
+  mask $ \restore -> restore (readTBQueueA' queue) >>= void . logAction
 {-# INLINEABLE atomicReadWrite #-}

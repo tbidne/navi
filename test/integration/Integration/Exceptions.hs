@@ -128,6 +128,7 @@ newtype ExceptionsT a = MkExceptionsT (ReaderT ExceptionEnv IO a)
       Applicative,
       Monad,
       MonadAsync,
+      MonadAtomic,
       MonadCatch,
       MonadFileReader,
       MonadHandleWriter,
@@ -135,7 +136,6 @@ newtype ExceptionsT a = MkExceptionsT (ReaderT ExceptionEnv IO a)
       MonadIORef,
       MonadMask,
       MonadReader ExceptionEnv,
-      MonadSTM,
       MonadThread,
       MonadThrow,
       MonadTypedProcess
@@ -171,7 +171,7 @@ instance MonadLogger ExceptionsT where
             logLevel = logEnv ^. #logLevel
         when (logLevel <= lvl) $ do
           formatted <- formatLog (defaultLogFormatter loc) lvl msg
-          writeTBQueueA logQueue formatted
+          writeTBQueueA' logQueue formatted
       Nothing -> pure ()
 
 instance MonadTime ExceptionsT where

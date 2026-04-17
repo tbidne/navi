@@ -60,6 +60,7 @@ makeEnvAndRun ::
   forall m.
   ( HasCallStack,
     MonadAsync m,
+    MonadAtomic m,
     MonadDBus m,
     MonadFileReader m,
     MonadFileWriter m,
@@ -69,7 +70,6 @@ makeEnvAndRun ::
     MonadOptparse m,
     MonadPathReader m,
     MonadPathWriter m,
-    MonadSTM m,
     MonadSystemInfo m,
     MonadTerminal m,
     MonadThread m,
@@ -85,6 +85,7 @@ withEnv ::
   forall m a.
   ( HasCallStack,
     MonadAsync m,
+    MonadAtomic m,
     MonadDBus m,
     MonadFileReader m,
     MonadFileWriter m,
@@ -94,7 +95,6 @@ withEnv ::
     MonadOptparse m,
     MonadPathReader m,
     MonadPathWriter m,
-    MonadSTM m,
     MonadTerminal m,
     MonadTime m
   ) =>
@@ -139,10 +139,10 @@ tryParseConfig =
 
 withLogEnv ::
   ( HasCallStack,
+    MonadAtomic m,
     MonadHandleWriter m,
     MonadPathReader m,
     MonadPathWriter m,
-    MonadSTM m,
     MonadTerminal m,
     MonadThrow m,
     MonadTime m

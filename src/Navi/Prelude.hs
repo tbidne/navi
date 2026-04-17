@@ -108,12 +108,12 @@ import Data.Void as X (Void, absurd)
 import Data.Word as X (Word16, Word8)
 import Effects.Concurrent.Async as X (MonadAsync)
 import Effects.Concurrent.STM as X
-  ( MonadSTM,
+  ( MonadAtomic,
     TBQueue,
     newTBQueueA,
-    readTBQueueA,
-    tryReadTBQueueA,
-    writeTBQueueA,
+    readTBQueueA',
+    tryReadTBQueueA',
+    writeTBQueueA',
   )
 import Effects.Concurrent.Thread as X (MonadThread)
 import Effects.FileSystem.FileReader as X

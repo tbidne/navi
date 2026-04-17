@@ -38,7 +38,7 @@ instance (MonadDBus m) => MonadDBus (ReaderT env m) where
 
 -- | Creates a 'DBusEnv' from the provided log types and configuration data.
 mkDBusEnv ::
-  (HasCallStack, MonadDBus m, MonadSTM m) =>
+  (HasCallStack, MonadAtomic m, MonadDBus m) =>
   Maybe LogEnv ->
   Config ->
   m Env
