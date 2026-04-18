@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Provides 'NaviT', the main type that runs the application.
@@ -12,19 +11,12 @@ import Effects.Logger.Namespace
   ( defaultLogFormatter,
     formatLog,
   )
-import Effects.System.Process qualified as P
 import Effects.Time (MonadTime)
-import Navi.Config.Types (NoteSystem (AppleScript, DBus, NotifySend))
-import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo)
-import Navi.Env.AppleScript (naviToAppleScript)
 import Navi.Env.Core
   ( Env,
     HasLogEnv (getLogEnv),
   )
-import Navi.Env.DBus (MonadDBus)
-import Navi.Env.DBus qualified as DBus
-import Navi.Env.NotifySend (naviToNotifySend)
 import Navi.Prelude
 
 -- | NaviT is the core type used to run the application.
@@ -37,12 +29,12 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       MonadAsync,
       MonadAtomic,
       MonadCatch,
-      MonadDBus,
       MonadFileReader,
       MonadHandleWriter,
       MonadIO,
       MonadIORef,
       MonadMask,
+      MonadNotify,
       MonadProcess,
       MonadReader e,
       MonadSystemInfo,
@@ -52,31 +44,6 @@ newtype NaviT e m a = MkNaviT (ReaderT e m a)
       MonadThrow
     )
     via (ReaderT e m)
-
-instance
-  ( MonadAtomic m,
-    MonadDBus m,
-    MonadProcess m,
-    MonadTime m,
-    MonadThread m
-  ) =>
-  MonadNotify (NaviT Env m)
-  where
-  sendNote naviNote =
-    asks (view #notifySystem) >>= \case
-      AppleScript -> addNamespace "apple-script" $ do
-        let noteTxt = naviToAppleScript naviNote
-        $(logDebug) noteTxt
-        void $ P.readCreateProcessWithExitCode (mkProc noteTxt) "sendNote"
-      DBus client -> addNamespace "dbus" $ do
-        $(logDebug) (showt naviNote)
-        void $ DBus.notify client naviNote
-      NotifySend -> addNamespace "notify-send" $ do
-        let noteTxt = naviToNotifySend naviNote
-        $(logDebug) noteTxt
-        void $ P.readCreateProcessWithExitCode (mkProc noteTxt) "sendNote"
-    where
-      mkProc = P.shell . unpackText
 
 instance
   ( MonadAtomic m,

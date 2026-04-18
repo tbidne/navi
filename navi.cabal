@@ -67,12 +67,8 @@ library
     Navi.Data.PollInterval
     Navi.Data.Result
     Navi.Effects
-    Navi.Effects.MonadNotify
     Navi.Effects.MonadSystemInfo
-    Navi.Env.AppleScript
     Navi.Env.Core
-    Navi.Env.DBus
-    Navi.Env.NotifySend
     Navi.Event
     Navi.Event.Toml
     Navi.Event.Types
@@ -96,12 +92,12 @@ library
     , base                  >=4.17      && <4.22
     , bytestring            >=0.10.10.0 && <0.13
     , containers            >=0.5.11.0  && <0.9
-    , dbus                  >=1.2.14    && <1.5
     , deepseq               >=1.4.6.0   && <1.6
     , effects-async         ^>=0.1
     , effects-fs            ^>=0.1
     , effects-ioref         ^>=0.1
     , effects-logger        ^>=0.1
+    , effects-notify        ^>=0.1
     , effects-optparse      ^>=0.1
     , effects-process       ^>=0.1
     , effects-stm           ^>=0.1
@@ -110,7 +106,6 @@ library
     , effects-time          ^>=0.1
     , exception-utils       ^>=0.1
     , exceptions            ^>=0.10.4
-    , fdo-notify            ^>=0.3.1
     , gitrev-typed          ^>=0.1
     , mtl                   >=2.2.2     && <2.4
     , optics-core           ^>=0.4
@@ -155,7 +150,7 @@ test-suite unit
     , base
     , containers
     , effects-fs
-    , fdo-notify
+    , effects-notify
     , hedgehog        >=1.0.2   && <1.8
     , navi
     , pythia
@@ -181,11 +176,11 @@ test-suite integration
     , effects-async
     , effects-fs
     , effects-logger
+    , effects-notify
     , effects-stm
     , effects-terminal
     , effects-thread
     , effects-time
-    , fdo-notify
     , navi
     , pythia
     , stm               ^>=2.5.0.0

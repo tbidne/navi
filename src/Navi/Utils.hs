@@ -23,7 +23,6 @@ where
 #if MIN_VERSION_base(4, 20, 0) && !MIN_VERSION_base(4, 21, 0)
 import Control.Exception qualified as E
 #endif
-import DBus.Notify (UrgencyLevel (Critical, Low, Normal))
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Builder (Builder)
@@ -53,16 +52,16 @@ getFieldOptArrayOf =
 -- | TOML decoder for optional 'UrgencyLevel' with field name "urgency".
 --
 -- @since 0.1
-urgencyLevelOptDecoder :: Decoder (Maybe UrgencyLevel)
+urgencyLevelOptDecoder :: Decoder (Maybe NotifyUrgency)
 urgencyLevelOptDecoder = getFieldOptWith urgencyLevelDecoder "urgency"
 
-urgencyLevelDecoder :: Decoder UrgencyLevel
+urgencyLevelDecoder :: Decoder NotifyUrgency
 urgencyLevelDecoder = do
   t <- tomlDecoder
   case t of
-    "low" -> pure Low
-    "normal" -> pure Normal
-    "critical" -> pure Critical
+    "low" -> pure NotifyUrgencyLow
+    "normal" -> pure NotifyUrgencyNormal
+    "critical" -> pure NotifyUrgencyCritical
     bad -> fail $ unpackText $ "Invalid value: " <> bad
 
 -- | TOML decoder for 'Command' with field name "command".

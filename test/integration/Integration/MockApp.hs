@@ -17,9 +17,7 @@ import Integration.Prelude
 import Navi (runNavi)
 import Navi.Data.CommandResult (CommandResult)
 import Navi.Data.CommandResultParser (CommandResultParser)
-import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.PollInterval (PollInterval)
-import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
   ( CoreEnvField (MkCoreEnvField),
@@ -27,6 +25,7 @@ import Navi.Env.Core
     HasEvents,
     HasLogEnv,
     HasNoteQueue,
+    HasNotifyEnv,
   )
 import Navi.Event.Types (EventError (MkEventError, long, name, short))
 import Navi.Runner qualified as Runner
@@ -55,7 +54,7 @@ data MockEnv = MkMockEnv
     percentageResponses :: TVar [Percentage],
     -- | "Sent" notifications are captured in this ref rather than
     -- actually sent. This way we can later test what was sent.
-    sentNotes :: TVar [NaviNote]
+    sentNotes :: TVar [Note]
   }
 
 instance
@@ -95,7 +94,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ TVar [NaviNote], b ~ TVar [NaviNote]) =>
+  (k ~ A_Lens, a ~ TVar [Note], b ~ TVar [Note]) =>
   LabelOptic "sentNotes" k MockEnv MockEnv a b
   where
   labelOptic =
@@ -122,6 +121,8 @@ deriving via (CoreEnvField MockEnv) instance HasEvents MockEnv
 deriving via (CoreEnvField MockEnv) instance HasLogEnv MockEnv
 
 deriving via (CoreEnvField MockEnv) instance HasNoteQueue MockEnv
+
+deriving via (CoreEnvField MockEnv) instance HasNotifyEnv MockEnv
 
 newtype MockAppT a = MkMockAppT (ReaderT MockEnv IO a)
   deriving
@@ -153,7 +154,9 @@ instance MonadLogger MockAppT where
   monadLoggerLog _loc _src _lvl _msg = pure ()
 
 instance MonadNotify MockAppT where
-  sendNote note =
+  initNotifyEnv _ = pure (error "mock-notify-env")
+
+  notify _ note =
     if note ^. #summary == "SentException"
       then
         throwM

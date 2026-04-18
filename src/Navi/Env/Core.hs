@@ -6,6 +6,7 @@ module Navi.Env.Core
     HasEvents (..),
     HasLogEnv (..),
     HasNoteQueue (..),
+    HasNotifyEnv (..),
     sendNoteQueue,
 
     -- ** Deriving
@@ -17,10 +18,7 @@ module Navi.Env.Core
   )
 where
 
-import Navi.Config.Phase (ConfigPhase (ConfigPhaseEnv))
-import Navi.Config.Types (NoteSystem)
 import Navi.Data.NaviLog (LogEnv)
-import Navi.Data.NaviNote (NaviNote)
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
 
@@ -28,8 +26,8 @@ import Navi.Prelude
 data Env = MkEnv
   { events :: NonEmpty AnyEvent,
     logEnv :: Maybe LogEnv,
-    noteQueue :: TBQueue NaviNote,
-    notifySystem :: NoteSystem ConfigPhaseEnv
+    noteQueue :: TBQueue Note,
+    notifyEnv :: NotifyEnv
   }
 
 instance
@@ -57,7 +55,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ TBQueue NaviNote, b ~ TBQueue NaviNote) =>
+  (k ~ A_Lens, a ~ TBQueue Note, b ~ TBQueue Note) =>
   LabelOptic "noteQueue" k Env Env a b
   where
   labelOptic =
@@ -69,8 +67,8 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ NoteSystem ConfigPhaseEnv, b ~ NoteSystem ConfigPhaseEnv) =>
-  LabelOptic "notifySystem" k Env Env a b
+  (k ~ A_Lens, a ~ NotifyEnv, b ~ NotifyEnv) =>
+  LabelOptic "notifyEnv" k Env Env a b
   where
   labelOptic =
     lensVL
@@ -85,6 +83,8 @@ deriving via (TopField Env) instance HasEvents Env
 deriving via (TopField Env) instance HasLogEnv Env
 
 deriving via (TopField Env) instance HasNoteQueue Env
+
+deriving via (TopField Env) instance HasNotifyEnv Env
 
 -- | Used for deriving instances from the top level field name e.g.
 -- 'events :: NonEmpty AnyEvent'.
@@ -105,7 +105,10 @@ class HasLogEnv env where
 
 -- | Retrieves the note queue.
 class HasNoteQueue env where
-  getNoteQueue :: env -> TBQueue NaviNote
+  getNoteQueue :: env -> TBQueue Note
+
+class HasNotifyEnv env where
+  getNotifyEnv :: env -> NotifyEnv
 
 -- NOTE: For some reason, we cannot really compose these optics together
 -- e.g. view (#coreEnv % #events) fails to typecheck. Probably there's a
@@ -136,7 +139,7 @@ instance
   getLogEnv (MkCoreEnvField x) = getLogEnv $ view #coreEnv x
 
 instance
-  (Is k A_Getter, LabelOptic' "noteQueue" k a (TBQueue NaviNote)) =>
+  (Is k A_Getter, LabelOptic' "noteQueue" k a (TBQueue Note)) =>
   HasNoteQueue (TopField a)
   where
   getNoteQueue (MkTopField x) = view #noteQueue x
@@ -146,6 +149,18 @@ instance
   HasNoteQueue (CoreEnvField a)
   where
   getNoteQueue (MkCoreEnvField x) = getNoteQueue $ view #coreEnv x
+
+instance
+  (Is k A_Getter, LabelOptic' "notifyEnv" k a NotifyEnv) =>
+  HasNotifyEnv (TopField a)
+  where
+  getNotifyEnv (MkTopField x) = view #notifyEnv x
+
+instance
+  (Is k A_Getter, LabelOptic' "coreEnv" k a Env) =>
+  HasNotifyEnv (CoreEnvField a)
+  where
+  getNotifyEnv (MkCoreEnvField x) = getNotifyEnv $ view #coreEnv x
 
 instance
   (k ~ A_Lens, x ~ Namespace, y ~ Namespace) =>
@@ -166,7 +181,7 @@ sendNoteQueue ::
     MonadAtomic m,
     MonadReader env m
   ) =>
-  NaviNote ->
+  Note ->
   m ()
 sendNoteQueue naviNote =
   asks getNoteQueue >>= (`writeTBQueueA'` naviNote)

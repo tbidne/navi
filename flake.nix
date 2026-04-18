@@ -137,6 +137,7 @@
                 "effects-fs"
                 "effects-ioref"
                 "effects-logger"
+                "effects-notify"
                 "effects-optparse"
                 "effects-process"
                 "effects-stm"

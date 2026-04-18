@@ -6,7 +6,7 @@ module Navi.Services.Battery.Status.Toml
   )
 where
 
-import Navi.Data.NaviNote (Timeout, timeoutOptDecoder)
+import Navi.Data.NaviNote (timeoutOptDecoder)
 import Navi.Data.PollInterval (PollInterval (..), pollIntervalOptDecoder)
 import Navi.Event.Toml
   ( ErrorNoteToml,
@@ -25,7 +25,7 @@ data BatteryStatusToml = MkBatteryStatusToml
     -- | Determines how we handle errors.
     errorNote :: Maybe ErrorNoteToml,
     -- | The timeout for this alert.
-    mTimeout :: Maybe Timeout,
+    mTimeout :: Maybe NotifyTimeout,
     -- | The poll interval.
     pollInterval :: Maybe PollInterval,
     -- | Determines how we treat repeat alerts.
@@ -58,7 +58,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ Maybe Timeout, b ~ Maybe Timeout) =>
+  (k ~ A_Lens, a ~ Maybe NotifyTimeout, b ~ Maybe NotifyTimeout) =>
   LabelOptic "mTimeout" k BatteryStatusToml BatteryStatusToml a b
   where
   labelOptic =

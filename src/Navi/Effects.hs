@@ -4,5 +4,4 @@ module Navi.Effects
   )
 where
 
-import Navi.Effects.MonadNotify as X
 import Navi.Effects.MonadSystemInfo as X

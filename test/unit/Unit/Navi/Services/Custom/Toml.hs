@@ -1,19 +1,9 @@
 module Unit.Navi.Services.Custom.Toml (tests) where
 
-import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
+import Effects.Notify qualified as Notify
 import Hedgehog qualified as H
 import Hedgehog.Gen qualified as G
-import Navi.Data.NaviNote
-  ( NaviNote
-      ( MkNaviNote,
-        body,
-        summary,
-        timeout,
-        urgency
-      ),
-    Timeout (Seconds),
-  )
 import Navi.Event.Toml
   ( ErrorNoteToml
       ( ErrNoteAllowRepeatsToml,
@@ -88,23 +78,16 @@ parsesNotes =
       MkTriggerNoteToml
         { trigger = "first val",
           note =
-            MkNaviNote
-              { body = Just "first body",
-                summary = "first summary",
-                timeout = Just $ Seconds 5,
-                urgency = Just Critical
-              }
+            Notify.mkNote "first summary"
+              & Notify.setBody (Just "first body")
+              & Notify.setTimeout (Just $ NotifyTimeoutMillis 5_000)
+              & Notify.setUrgency (Just NotifyUrgencyCritical)
         }
     secondNote =
       MkTriggerNoteToml
         { trigger = "second val",
           note =
-            MkNaviNote
-              { body = Nothing,
-                summary = "second summary",
-                timeout = Nothing,
-                urgency = Nothing
-              }
+            Notify.mkNote "second summary"
         }
 
 repeatEventTests :: TestTree

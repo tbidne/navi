@@ -8,15 +8,7 @@ where
 import Data.List.NonEmpty qualified as NE
 import Data.Map (Map)
 import Data.Map qualified as Map
-import Navi.Data.NaviNote
-  ( NaviNote
-      ( MkNaviNote,
-        body,
-        summary,
-        timeout,
-        urgency
-      ),
-  )
+import Effects.Notify qualified as Notify
 import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -59,15 +51,12 @@ toEvent toml = do
     pi = fromMaybe (MkPollInterval 30) (toml ^. #pollInterval)
 {-# INLINEABLE toEvent #-}
 
-tomlToNote :: BatteryPercentageNoteToml -> (PercentageData, NaviNote)
+tomlToNote :: BatteryPercentageNoteToml -> (PercentageData, Note)
 tomlToNote toml =
   ( percentage,
-    MkNaviNote
-      { body = Nothing,
-        summary,
-        timeout = toml ^. #mTimeout,
-        urgency = toml ^. #urgency
-      }
+    Notify.setTimeout (toml ^. #mTimeout)
+      . Notify.setUrgency (toml ^. #urgency)
+      $ Notify.mkNote summary
   )
   where
     percentage = toml ^. #percentage
@@ -104,7 +93,7 @@ tomlToNote toml =
 --     actual value (6) would produce the wrong result.
 
 mkBatteryEvent ::
-  NonEmpty (PercentageData, NaviNote) ->
+  NonEmpty (PercentageData, Note) ->
   BatteryApp ->
   PollInterval ->
   RepeatEvent PercentageData ->
@@ -126,7 +115,7 @@ mkBatteryEvent percentNoteList batteryProgram pollInterval repeatEvent errorNote
   where
     percentNoteMap = Map.fromList $ NE.toList percentNoteList
 
-lookupPercent :: Map PercentageData NaviNote -> Battery -> Maybe (PercentageData, NaviNote)
+lookupPercent :: Map PercentageData Note -> Battery -> Maybe (PercentageData, Note)
 lookupPercent percentNoteMap state = case state ^. #status of
   -- lookupLE so we can attempt to find ranges as well. Note that this can
   -- behave unexpectedly when ranges overlap. E.g. suppose our map contains

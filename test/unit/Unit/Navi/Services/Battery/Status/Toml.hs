@@ -3,7 +3,6 @@ module Unit.Navi.Services.Battery.Status.Toml
   )
 where
 
-import Navi.Data.NaviNote (Timeout (Seconds))
 import Navi.Event.Toml
   ( ErrorNoteToml
       ( ErrNoteAllowRepeatsToml,
@@ -40,7 +39,7 @@ noteTests =
       parsesExpected "no timeout" "app=\"upower\"\n" noTimeout (view #mTimeout)
     ]
   where
-    timeout = Just $ Seconds 5
+    timeout = Just $ NotifyTimeoutMillis 5_000
     noTimeout = Nothing
 
 appTests :: TestTree

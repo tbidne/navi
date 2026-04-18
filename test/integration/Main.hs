@@ -13,7 +13,6 @@
 -- @since 0.1
 module Main (main) where
 
-import DBus.Notify (UrgencyLevel (Critical, Low))
 import Data.List qualified as L
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict qualified as Map
@@ -22,19 +21,10 @@ import Data.Set qualified as Set
 import Data.Text qualified as T
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter qualified as Dir
+import Effects.Notify qualified as Notify
 import Integration.Exceptions qualified as Exceptions
 import Integration.MockApp (MockEnv, runMockAppEnv)
 import Integration.Prelude
-import Navi.Data.NaviNote
-  ( NaviNote
-      ( MkNaviNote,
-        body,
-        summary,
-        timeout,
-        urgency
-      ),
-    Timeout (Seconds),
-  )
 import Navi.Event.Types
   ( AnyEvent (MkAnyEvent),
     EventError
@@ -80,12 +70,9 @@ testMultiNotifs = testCase "Sends multiple new notifications" $ do
     -- Percentage is counting down, hence we receive them in order 5 .. 1.
     expected = L.reverse $ fmap toNote [1 .. 5 :: Int]
     toNote i =
-      MkNaviNote
-        { summary = "Battery Percentage",
-          body = Just (showt i <> "%"),
-          urgency = Nothing,
-          timeout = Nothing
-        }
+      Notify.mkNote "Battery Percentage"
+        & Notify.setBody (Just $ showt i <> "%")
+        & Notify.setTitle (Just "Navi")
 
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
@@ -103,12 +90,9 @@ testDuplicates = testCase "Send duplicate notifications" $ do
   assertNoteRange 3 5 expected sentNotes
   where
     expected =
-      MkNaviNote
-        { summary = "Single",
-          body = Just "body",
-          urgency = Nothing,
-          timeout = Nothing
-        }
+      Notify.mkNote "Single"
+        & Notify.setBody (Just "body")
+        & Notify.setTitle (Just "Navi")
 
 testNoDuplicates :: TestTree
 testNoDuplicates = testCase "Does not send duplicate notifications" $ do
@@ -118,12 +102,9 @@ testNoDuplicates = testCase "Does not send duplicate notifications" $ do
   expected @=? sentNotes
   where
     expected =
-      [ MkNaviNote
-          { summary = "Single",
-            body = Just "body",
-            urgency = Nothing,
-            timeout = Nothing
-          }
+      [ Notify.mkNote "Single"
+          & Notify.setBody (Just "body")
+          & Notify.setTitle (Just "Navi")
       ]
 
 testNoDuplicateErrs :: TestTree
@@ -135,12 +116,10 @@ testNoDuplicateErrs = testCase "Does not send duplicate errors" $ do
   expected @=? sentNotes
   where
     expected =
-      [ MkNaviNote
-          { summary = "Exception",
-            body = Just body,
-            urgency = Just Critical,
-            timeout = Nothing
-          }
+      [ Notify.mkNote "Exception"
+          & Notify.setBody (Just body)
+          & Notify.setUrgency (Just NotifyUrgencyCritical)
+          & Notify.setTitle (Just "Navi")
       ]
     body = "Pythia exception: Command exception. Command: <nmcli>. Error: <Nmcli error>"
 
@@ -159,12 +138,10 @@ testSendsMultipleErrs = testCase "Sends multiple errors" $ do
   assertNoteRange 3 5 expected sentNotes
   where
     expected =
-      MkNaviNote
-        { summary = "Exception",
-          body = Just body,
-          urgency = Just Critical,
-          timeout = Nothing
-        }
+      Notify.mkNote "Exception"
+        & Notify.setBody (Just body)
+        & Notify.setUrgency (Just NotifyUrgencyCritical)
+        & Notify.setTitle (Just "Navi")
     body = "Pythia exception: Command exception. Command: <nmcli>. Error: <Nmcli error>"
 
 testSendExceptionDies :: TestTree
@@ -192,24 +169,15 @@ testReplaceText = testCase "Replaces output text" $ do
   where
     expected =
       Set.fromList
-        [ MkNaviNote
-            { summary = "Custom",
-              body = Just "Result is o2",
-              urgency = Nothing,
-              timeout = Nothing
-            },
-          MkNaviNote
-            { summary = "Custom",
-              body = Just "Result is o1",
-              urgency = Nothing,
-              timeout = Nothing
-            },
-          MkNaviNote
-            { summary = "Single",
-              body = Just "result is: o1",
-              urgency = Nothing,
-              timeout = Nothing
-            }
+        [ Notify.mkNote "Custom"
+            & Notify.setBody (Just "Result is o2")
+            & Notify.setTitle (Just "Navi"),
+          Notify.mkNote "Custom"
+            & Notify.setBody (Just "Result is o1")
+            & Notify.setTitle (Just "Navi"),
+          Notify.mkNote "Single"
+            & Notify.setBody (Just "result is: o1")
+            & Notify.setTitle (Just "Navi")
         ]
 
     modEnv :: MockEnv -> IO MockEnv
@@ -261,21 +229,15 @@ testMultipleRepeats = testCase "Uses multiple repeats" $ do
 
     t1s =
       replicate 2
-        $ MkNaviNote
-          { summary = "Custom",
-            body = Just "Result is o1",
-            urgency = Nothing,
-            timeout = Nothing
-          }
+        $ Notify.mkNote "Custom"
+        & Notify.setBody (Just "Result is o1")
+        & Notify.setTitle (Just "Navi")
 
     t2s =
       replicate 3
-        $ MkNaviNote
-          { summary = "Custom",
-            body = Just "Result is o2",
-            urgency = Nothing,
-            timeout = Nothing
-          }
+        $ Notify.mkNote "Custom"
+        & Notify.setBody (Just "Result is o2")
+        & Notify.setTitle (Just "Navi")
 
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
@@ -333,30 +295,24 @@ testMultipleCustomText = testCase "Tests custom dynamic example" $ do
   where
     expected =
       Set.fromList
-        [ MkNaviNote
-            { summary = "Battery Percentage",
-              body = Just "Battery is good: 70",
-              urgency = Nothing,
-              timeout = Just $ Seconds 10
-            },
-          MkNaviNote
-            { summary = "Battery Percentage",
-              body = Just "Battery is medium: 35",
-              urgency = Nothing,
-              timeout = Just $ Seconds 10
-            },
-          MkNaviNote
-            { summary = "Battery Percentage",
-              body = Just "Battery is low: 5",
-              urgency = Just Critical,
-              timeout = Just $ Seconds 10
-            },
-          MkNaviNote
-            { summary = "Battery Percentage",
-              body = Just "Battery is low: 4",
-              urgency = Just Critical,
-              timeout = Just $ Seconds 10
-            }
+        [ Notify.mkNote "Battery Percentage"
+            & Notify.setBody (Just "Battery is good: 70")
+            & Notify.setTimeout (Just $ NotifyTimeoutMillis 10_000)
+            & Notify.setTitle (Just "Navi"),
+          Notify.mkNote "Battery Percentage"
+            & Notify.setBody (Just "Battery is medium: 35")
+            & Notify.setTimeout (Just $ NotifyTimeoutMillis 10_000)
+            & Notify.setTitle (Just "Navi"),
+          Notify.mkNote "Battery Percentage"
+            & Notify.setBody (Just "Battery is low: 5")
+            & Notify.setTimeout (Just $ NotifyTimeoutMillis 10_000)
+            & Notify.setUrgency (Just NotifyUrgencyCritical)
+            & Notify.setTitle (Just "Navi"),
+          Notify.mkNote "Battery Percentage"
+            & Notify.setBody (Just "Battery is low: 4")
+            & Notify.setTimeout (Just $ NotifyTimeoutMillis 10_000)
+            & Notify.setUrgency (Just NotifyUrgencyCritical)
+            & Notify.setTitle (Just "Navi")
         ]
 
     -- In addition to mocking the script responses, we want to filter out
@@ -419,16 +375,14 @@ testBatteryPercentage = testCase "Tests battery percentage example" $ do
   assertNotesOrder expected sentNotes
   where
     expected =
-      set' #urgency (Just Low) (mkNote "50%")
+      set' #urgency (Just NotifyUrgencyLow) (mkNote "50%")
         : (mkNote <$> ["10%", "8%", "2%"])
 
     mkNote i =
-      MkNaviNote
-        { summary = "Battery Percentage",
-          body = Just i,
-          urgency = Just Critical,
-          timeout = Nothing
-        }
+      Notify.mkNote "Battery Percentage"
+        & Notify.setBody (Just i)
+        & Notify.setUrgency (Just NotifyUrgencyCritical)
+        & Notify.setTitle (Just "Navi")
 
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
@@ -461,42 +415,24 @@ testDynamicPollIntervals = testCase "Uses dynamic poll-interval" $ do
   where
     expected =
       Set.fromList
-        [ MkNaviNote
-            { summary = "Single",
-              body = Just "Result is one",
-              urgency = Nothing,
-              timeout = Nothing
-            },
-          MkNaviNote
-            { summary = "Single",
-              body = Just "Result is two",
-              urgency = Nothing,
-              timeout = Nothing
-            },
-          MkNaviNote
-            { summary = "Single",
-              body = Just "Result is three",
-              urgency = Nothing,
-              timeout = Nothing
-            },
-          MkNaviNote
-            { summary = "Custom",
-              body = Just "Result is one",
-              urgency = Nothing,
-              timeout = Nothing
-            },
-          MkNaviNote
-            { summary = "Custom",
-              body = Just "Result is two",
-              urgency = Nothing,
-              timeout = Nothing
-            },
-          MkNaviNote
-            { summary = "Custom",
-              body = Just "Result is three",
-              urgency = Nothing,
-              timeout = Nothing
-            }
+        [ Notify.mkNote "Single"
+            & Notify.setBody (Just "Result is one")
+            & Notify.setTitle (Just "Navi"),
+          Notify.mkNote "Single"
+            & Notify.setBody (Just "Result is two")
+            & Notify.setTitle (Just "Navi"),
+          Notify.mkNote "Single"
+            & Notify.setBody (Just "Result is three")
+            & Notify.setTitle (Just "Navi"),
+          Notify.mkNote "Custom"
+            & Notify.setBody (Just "Result is one")
+            & Notify.setTitle (Just "Navi"),
+          Notify.mkNote "Custom"
+            & Notify.setBody (Just "Result is two")
+            & Notify.setTitle (Just "Navi"),
+          Notify.mkNote "Custom"
+            & Notify.setBody (Just "Result is three")
+            & Notify.setTitle (Just "Navi")
         ]
 
     modEnv :: MockEnv -> IO MockEnv
@@ -550,20 +486,14 @@ testOutputParensCommas = testCase "Custom output allows parens and commas" $ do
     expected = [n1, n2]
 
     n1 =
-      MkNaviNote
-        { summary = "Custom",
-          body = Just "Result is (some, fancy, output)",
-          urgency = Nothing,
-          timeout = Nothing
-        }
+      Notify.mkNote "Custom"
+        & Notify.setBody (Just "Result is (some, fancy, output)")
+        & Notify.setTitle (Just "Navi")
 
     n2 =
-      MkNaviNote
-        { summary = "Custom",
-          body = Just "Result is (other, output)",
-          urgency = Nothing,
-          timeout = Nothing
-        }
+      Notify.mkNote "Custom"
+        & Notify.setBody (Just "Result is (other, output)")
+        & Notify.setTitle (Just "Navi")
 
     modEnv :: MockEnv -> IO MockEnv
     modEnv env = do
@@ -699,7 +629,7 @@ sendExceptionConfig =
       ""
     ]
 
-mockEnvToNotes :: MockEnv -> IO [NaviNote]
+mockEnvToNotes :: MockEnv -> IO [Note]
 mockEnvToNotes mockEnv = do
   sentNotes <- readTVarA $ mockEnv ^. #sentNotes
   pure
@@ -709,7 +639,7 @@ mockEnvToNotes mockEnv = do
 
 -- For when the number of received notest is non-deterministic
 -- (i.e. based on timing).
-assertNoteRange :: Int -> Int -> NaviNote -> [NaviNote] -> IO ()
+assertNoteRange :: Int -> Int -> Note -> [Note] -> IO ()
 assertNoteRange l r expected actual = do
   assertBool (show l ++ " <= " ++ show numActual) (l <= numActual)
   assertBool (show numActual ++ " <= " ++ show r) (numActual <= r)
@@ -717,7 +647,7 @@ assertNoteRange l r expected actual = do
   where
     numActual = length actual
 
-assertNotesOrder :: [NaviNote] -> [NaviNote] -> IO ()
+assertNotesOrder :: [Note] -> [Note] -> IO ()
 assertNotesOrder expected actual =
   for_ (L.zip expected actual) $ uncurry (@=?)
 
@@ -729,7 +659,7 @@ assertNotesOrder expected actual =
 --
 -- Expected doesn't actually have to be a set, though it is mildly
 -- convenient as it makes calling this function correctly easier.
-assertNotesRange :: Int -> Int -> Set NaviNote -> [NaviNote] -> IO ()
+assertNotesRange :: Int -> Int -> Set Note -> [Note] -> IO ()
 assertNotesRange l r expected actual = do
   assertBool (mkErr $ showt l <> " <= " <> showt numActual) (l <= numActual)
   assertBool (mkErr $ showt numActual <> " <= " <> showt r) (numActual <= r)

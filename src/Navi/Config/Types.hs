@@ -13,18 +13,12 @@ module Navi.Config.Types
     FilesSizeMode (..),
     defaultLogging,
     defaultSizeMode,
-
-    -- * Note System
-    NoteSystem (..),
-    defaultNoteSystem,
   )
 where
 
-import DBus.Client qualified as DBus
 import Data.Bytes (Size (M))
 import Data.Bytes qualified as Bytes
 import Data.List.NonEmpty ()
-import Navi.Config.Phase (ConfigPhase (ConfigPhaseEnv, ConfigPhaseToml))
 import Navi.Event (AnyEvent)
 import Navi.Prelude
 
@@ -91,34 +85,6 @@ instance
           (f a3)
   {-# INLINE labelOptic #-}
 
-type DBusF :: ConfigPhase -> Type
-type family DBusF p where
-  DBusF ConfigPhaseToml = ()
-  DBusF ConfigPhaseEnv = DBus.Client
-
--- | Configuration for notification systems.
-type NoteSystem :: ConfigPhase -> Type
-data NoteSystem p
-  = -- | For use with osx.
-    AppleScript
-  | -- | For use with a running notification server that receives messages
-    -- via DBus.
-    DBus (DBusF p)
-  | -- | For use with the notify-send tool.
-    NotifySend
-
-deriving stock instance Eq (NoteSystem ConfigPhaseToml)
-
-deriving stock instance Show (NoteSystem ConfigPhaseToml)
-
--- | Default notification system i.e. DBus for linux, AppleScript for osx.
-defaultNoteSystem :: NoteSystem ConfigPhaseToml
-#if OSX
-defaultNoteSystem = AppleScript
-#else
-defaultNoteSystem = DBus ()
-#endif
-
 -- | Default logging i.e. log errors and use the default path.
 defaultLogging :: Logging
 defaultLogging =
@@ -141,7 +107,7 @@ data Config = MkConfig
     -- | Logging configuration.
     logging :: Logging,
     -- | The notification system to use.
-    noteSystem :: NoteSystem ConfigPhaseToml
+    noteSystem :: Maybe NotifySystem
   }
   deriving stock (Show)
 
@@ -170,7 +136,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ NoteSystem ConfigPhaseToml, b ~ NoteSystem ConfigPhaseToml) =>
+  (k ~ A_Lens, a ~ Maybe NotifySystem, b ~ Maybe NotifySystem) =>
   LabelOptic "noteSystem" k Config Config a b
   where
   labelOptic =

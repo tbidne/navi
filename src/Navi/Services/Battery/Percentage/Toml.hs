@@ -8,12 +8,11 @@ module Navi.Services.Battery.Percentage.Toml
   )
 where
 
-import DBus.Notify (UrgencyLevel)
 import Data.List.NonEmpty qualified as NE
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as T
-import Navi.Data.NaviNote (Timeout, timeoutOptDecoder)
+import Navi.Data.NaviNote (timeoutOptDecoder)
 import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
   ( ErrorNoteToml,
@@ -51,16 +50,16 @@ toPercentage (PercentageRange l _) = l
 -- | TOML for each individual battery percentage.
 data BatteryPercentageNoteToml = MkBatteryPercentageNoteToml
   { -- | The timeout for this alert.
-    mTimeout :: Maybe Timeout,
+    mTimeout :: Maybe NotifyTimeout,
     -- | The percentage (range) for this alert.
     percentage :: PercentageData,
     -- | The urgency for this alert.
-    urgency :: Maybe UrgencyLevel
+    urgency :: Maybe NotifyUrgency
   }
   deriving stock (Eq, Show)
 
 instance
-  (k ~ A_Lens, a ~ Maybe Timeout, b ~ Maybe Timeout) =>
+  (k ~ A_Lens, a ~ Maybe NotifyTimeout, b ~ Maybe NotifyTimeout) =>
   LabelOptic "mTimeout" k BatteryPercentageNoteToml BatteryPercentageNoteToml a b
   where
   labelOptic =
@@ -84,7 +83,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ Maybe UrgencyLevel, b ~ Maybe UrgencyLevel) =>
+  (k ~ A_Lens, a ~ Maybe NotifyUrgency, b ~ Maybe NotifyUrgency) =>
   LabelOptic "urgency" k BatteryPercentageNoteToml BatteryPercentageNoteToml a b
   where
   labelOptic =

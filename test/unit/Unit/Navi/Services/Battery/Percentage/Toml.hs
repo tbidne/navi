@@ -3,10 +3,8 @@ module Unit.Navi.Services.Battery.Percentage.Toml
   )
 where
 
-import DBus.Notify (UrgencyLevel (Critical))
 import Data.Set qualified as Set
 import Data.Text qualified as T
-import Navi.Data.NaviNote (Timeout (Seconds))
 import Navi.Event.Toml
   ( ErrorNoteToml
       ( ErrNoteAllowRepeatsToml,
@@ -77,14 +75,14 @@ parsesAlerts =
     alert2 =
       MkBatteryPercentageNoteToml
         { percentage = PercentageExact $ Percentage.unsafePercentage 20,
-          urgency = Just Critical,
+          urgency = Just NotifyUrgencyCritical,
           mTimeout = Nothing
         }
     alert3 =
       MkBatteryPercentageNoteToml
         { percentage = PercentageRange (Percentage.unsafePercentage 0) (Percentage.unsafePercentage 10),
-          urgency = Just Critical,
-          mTimeout = Just (Seconds 15)
+          urgency = Just NotifyUrgencyCritical,
+          mTimeout = Just (NotifyTimeoutMillis 15_000)
         }
 
 appTests :: TestTree
