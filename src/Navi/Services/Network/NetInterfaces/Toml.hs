@@ -7,7 +7,7 @@ module Navi.Services.Network.NetInterfaces.Toml
   )
 where
 
-import Navi.Data.NaviNote (Timeout, timeoutOptDecoder)
+import Navi.Data.NaviNote (timeoutOptDecoder)
 import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
   ( ErrorNoteToml,
@@ -34,7 +34,7 @@ data NetInterfacesToml = MkNetInterfacesToml
     -- | Determines how we handle errors.
     errorNote :: Maybe ErrorNoteToml,
     -- | The timeout for this alert.
-    mTimeout :: Maybe Timeout,
+    mTimeout :: Maybe NotifyTimeout,
     -- | The poll interval.
     pollInterval :: Maybe PollInterval,
     -- | Determines how we treat repeat alerts.
@@ -79,7 +79,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ Maybe Timeout, b ~ Maybe Timeout) =>
+  (k ~ A_Lens, a ~ Maybe NotifyTimeout, b ~ Maybe NotifyTimeout) =>
   LabelOptic "mTimeout" k NetInterfacesToml NetInterfacesToml a b
   where
   labelOptic =

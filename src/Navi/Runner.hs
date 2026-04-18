@@ -17,6 +17,7 @@ import Effects.FileSystem.HandleWriter (MonadHandleWriter (withBinaryFile), die)
 import Effects.FileSystem.PathReader qualified as Dir
 import Effects.FileSystem.PathWriter (MonadPathWriter)
 import Effects.FileSystem.PathWriter qualified as Dir
+import Effects.Notify qualified as Notify
 import Effects.Time (MonadTime)
 import Effects.Time qualified as Time
 import FileSystem.OsPath (encodeThrowM, encodeValidThrowM)
@@ -27,7 +28,6 @@ import Navi.Config
   ( Config,
     LogLoc (DefPath, File, Stdout),
     Logging,
-    NoteSystem (AppleScript, DBus, NotifySend),
     readConfig,
   )
 import Navi.Config.Types
@@ -47,11 +47,7 @@ import Navi.Data.NaviLog
       ),
   )
 import Navi.Effects (MonadSystemInfo)
-import Navi.Effects.MonadNotify (MonadNotify)
-import Navi.Env.AppleScript (mkAppleScriptEnv)
-import Navi.Env.Core (Env)
-import Navi.Env.DBus (MonadDBus, mkDBusEnv)
-import Navi.Env.NotifySend (mkNotifySendEnv)
+import Navi.Env.Core (Env (MkEnv, events, logEnv, noteQueue, notifyEnv))
 import Navi.Prelude
 
 {- ORMOLU_DISABLE -}
@@ -61,12 +57,12 @@ makeEnvAndRun ::
   ( HasCallStack,
     MonadAsync m,
     MonadAtomic m,
-    MonadDBus m,
     MonadFileReader m,
     MonadFileWriter m,
     MonadHandleWriter m,
     MonadIORef m,
     MonadMask m,
+    MonadNotify m,
     MonadOptparse m,
     MonadPathReader m,
     MonadPathWriter m,
@@ -86,12 +82,12 @@ withEnv ::
   ( HasCallStack,
     MonadAsync m,
     MonadAtomic m,
-    MonadDBus m,
     MonadFileReader m,
     MonadFileWriter m,
     MonadHandleWriter m,
     MonadIORef m,
     MonadMask m,
+    MonadNotify m,
     MonadOptparse m,
     MonadPathReader m,
     MonadPathWriter m,
@@ -107,20 +103,21 @@ withEnv onEnv = do
       `catchSync` writeConfigErr
 
   withLogEnv (config ^. #logging) $ \logEnv -> do
-    let mkNaviEnv :: (Maybe LogEnv -> Config -> m env) -> m env
-        mkNaviEnv envFn = envFn logEnv config
-    case config ^. #noteSystem of
-#if OSX
-      AppleScript -> mkNaviEnv mkAppleScriptEnv >>= onEnv
-      DBus () -> throwText "Detected osx, but DBus is only available on linux!"
-      NotifySend -> throwText "Detected osx, but NotifySend is only available on linux!"
-#else
-      AppleScript -> throwText "Detected linux, but AppleScript is only available on osx!"
-      DBus () -> mkNaviEnv mkDBusEnv >>= onEnv
-      NotifySend -> mkNaviEnv mkNotifySendEnv >>= onEnv
-#endif
-  --where
-  --  runWithEnv env = absurd <$> runNaviT runNavi env
+    notifySystem <- case config ^. #noteSystem of
+      Just system -> notifySystemToOs system
+      Nothing -> pure Notify.defaultNotifySystemOs
+
+    notifyEnv <- Notify.initNotifyEnv notifySystem
+
+    noteQueue <- newTBQueueA 1000
+    let env = MkEnv
+          { events = config ^. #events,
+            logEnv,
+            noteQueue,
+            notifyEnv
+          }
+
+    onEnv env
 
 {- ORMOLU_ENABLE -}
 

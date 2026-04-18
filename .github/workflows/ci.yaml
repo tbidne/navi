@@ -33,10 +33,13 @@ jobs:
             proj_file: ""
           - vers: "9.12.2"
             proj_file: "--project-file cabal.ghc9122.project"
-        os:
-          - "macos-latest"
-          - "ubuntu-latest"
-    runs-on: ${{ matrix.os }}
+        platform:
+          - os: "macos-latest"
+            e2e: "RUN_E2E=1"
+          - os: "ubuntu-latest"
+            e2e: ""
+    name: cabal (${{ matrix.ghc.vers }}, ${{ matrix.platform.os }})
+    runs-on: ${{ matrix.platform.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -59,7 +62,7 @@ jobs:
       - name: End-to-end Tests
         shell: bash
         run: |
-          RUN_E2E=1 cabal test ${{ matrix.ghc.proj_file }} e2e
+          ${{ matrix.platform.e2e }} cabal test ${{ matrix.ghc.proj_file }} e2e
 
       - name: Cabal check
         run: cabal check

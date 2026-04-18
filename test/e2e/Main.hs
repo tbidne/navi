@@ -10,16 +10,15 @@ import Control.Monad.Reader (ReaderT (ReaderT))
 import Effects.Concurrent.Async qualified as Async
 import FileSystem.OsPath (decodeLenient)
 import Navi qualified
-import Navi.Effects (MonadNotify, MonadSystemInfo)
-import Navi.Effects.MonadNotify (MonadNotify (sendNote))
+import Navi.Effects (MonadSystemInfo)
 import Navi.Env.Core
   ( CoreEnvField (MkCoreEnvField),
     Env,
     HasEvents,
     HasLogEnv,
     HasNoteQueue,
+    HasNotifyEnv,
   )
-import Navi.NaviT (NaviT (MkNaviT))
 import Navi.Prelude
 import Navi.Runner qualified as Runner
 import System.Environment qualified as SysEnv
@@ -44,6 +43,8 @@ deriving via (CoreEnvField TestEnv) instance HasEvents TestEnv
 deriving via (CoreEnvField TestEnv) instance HasLogEnv TestEnv
 
 deriving via (CoreEnvField TestEnv) instance HasNoteQueue TestEnv
+
+deriving via (CoreEnvField TestEnv) instance HasNotifyEnv TestEnv
 
 main :: IO ()
 main = guardOrElse' "RUN_E2E" ExpectEnvSet runTests dontRun
@@ -83,6 +84,7 @@ newtype TestIO a = MkTestIO (ReaderT TestEnv IO a)
       MonadIORef,
       MonadHandleWriter,
       MonadMask,
+      MonadNotify,
       MonadReader TestEnv,
       MonadSystemInfo,
       MonadTerminal,
@@ -92,12 +94,6 @@ newtype TestIO a = MkTestIO (ReaderT TestEnv IO a)
 
 instance MonadLogger TestIO where
   monadLoggerLog _ _ _ _ = pure ()
-
-instance MonadNotify TestIO where
-  sendNote = hoistNaviT . sendNote
-
-hoistNaviT :: NaviT Env IO a -> TestIO a
-hoistNaviT (MkNaviT r) = MkTestIO $ ReaderT $ \env -> runReaderT r (env ^. #coreEnv)
 
 instance
   (k ~ A_Lens, x ~ Namespace, y ~ Namespace) =>

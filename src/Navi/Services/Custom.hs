@@ -13,7 +13,7 @@ import Navi.Data.CommandResultParser
   ( CommandResultParserToml (MkCommandResultParserToml),
     defaultParser,
   )
-import Navi.Data.NaviNote (NaviNote, replaceOut)
+import Navi.Data.NaviNote (replaceOut)
 import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -64,7 +64,7 @@ toEvent toml = do
 mkCustomEvent ::
   Maybe Text ->
   Command ->
-  NonEmpty (Text, NaviNote) ->
+  NonEmpty (Text, Note) ->
   PollInterval ->
   RepeatEvent CommandResult ->
   ErrorNote ->

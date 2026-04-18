@@ -11,31 +11,21 @@ module Navi
   )
 where
 
-import DBus.Client (ClientError (clientErrorFatal))
-import DBus.Notify (UrgencyLevel (Critical, Normal))
 import Effects.Concurrent.Async qualified as Async
 import Effects.Concurrent.STM (flushTBQueueA)
 import Effects.Concurrent.Thread (MonadThread (labelThread, myThreadId), sleep)
 import Effects.Logger.Namespace (logStrToBs)
+import Effects.Notify qualified as Note
+import Effects.Notify qualified as Notify
 import Effects.System.Terminal (MonadTerminal (putBinary))
 import Navi.Data.NaviLog (LogEnv)
-import Navi.Data.NaviNote
-  ( NaviNote
-      ( MkNaviNote,
-        body,
-        summary,
-        timeout,
-        urgency
-      ),
-    Timeout (Seconds),
-  )
 import Navi.Data.PollInterval (PollInterval)
-import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo)
 import Navi.Env.Core
   ( HasEvents (getEvents),
     HasLogEnv (getLogEnv),
     HasNoteQueue (getNoteQueue),
+    HasNotifyEnv (getNotifyEnv),
     sendNoteQueue,
   )
 import Navi.Event qualified as Event
@@ -55,6 +45,7 @@ runNavi ::
     HasEvents env,
     HasLogEnv env,
     HasNoteQueue env,
+    HasNotifyEnv env,
     MonadAsync m,
     MonadAtomic m,
     MonadHandleWriter m,
@@ -69,12 +60,10 @@ runNavi ::
   m Void
 runNavi = do
   let welcome =
-        MkNaviNote
-          { summary = "Navi",
-            body = Just "Navi is up :-)",
-            urgency = Just Normal,
-            timeout = Just $ Seconds 10
-          }
+        Note.setBody (Just "Navi is up :-)")
+          . Note.setUrgency (Just NotifyUrgencyNormal)
+          . Note.setTimeout (Just $ NotifyTimeoutMillis 10_000)
+          $ Note.mkNote "Navi"
   sendNoteQueue welcome
   events <- asks getEvents
   runAllAsync events
@@ -190,7 +179,7 @@ processEvent (MkAnyEvent event) = addNamespace name $ do
       addNamespace "handleSomeException"
         . handleErr exToNote
 
-    handleErr :: (HasCallStack, Exception e) => (e -> NaviNote) -> e -> m ()
+    handleErr :: (HasCallStack, Exception e) => (e -> Note) -> e -> m ()
     handleErr toNote e = do
       blockErrEvent <- Event.blockErr errorNote
       $(logError) (displayExceptiont e)
@@ -199,27 +188,24 @@ processEvent (MkAnyEvent event) = addNamespace name $ do
         else sendNoteQueue (toNote e)
 {-# INLINEABLE processEvent #-}
 
-eventErrToNote :: EventError -> NaviNote
+eventErrToNote :: EventError -> Note
 eventErrToNote ex =
-  MkNaviNote
-    { summary = ex ^. #name,
-      body = Just $ ex ^. #short,
-      urgency = Just Critical,
-      timeout = Nothing
-    }
+  Note.setBody (Just $ ex ^. #short)
+    . Note.setUrgency (Just NotifyUrgencyCritical)
+    . Note.setTimeout Nothing
+    $ Note.mkNote (ex ^. #name)
 
-exToNote :: SomeException -> NaviNote
+exToNote :: SomeException -> Note
 exToNote ex =
-  MkNaviNote
-    { summary = "Exception",
-      body = Just $ packText (U.displayInner ex),
-      urgency = Just Critical,
-      timeout = Nothing
-    }
+  Note.setBody (Just $ packText (U.displayInner ex))
+    . Note.setUrgency (Just NotifyUrgencyCritical)
+    . Note.setTimeout Nothing
+    $ Note.mkNote "Exception"
 
 pollNoteQueue ::
   ( HasCallStack,
     HasNoteQueue env,
+    HasNotifyEnv env,
     MonadAtomic m,
     MonadCatch m,
     MonadLoggerNS m env k,
@@ -227,20 +213,15 @@ pollNoteQueue ::
   ) =>
   m Void
 pollNoteQueue = addNamespace "note-poller" $ do
+  notifyEnv <- asks getNotifyEnv
   queue <- asks getNoteQueue
-  forever
-    $ readTBQueueA' queue
-    >>= \nn ->
-      sendNote nn `catch` \ce ->
-        -- NOTE: Rethrow all exceptions except:
-        --
-        -- 1. Non-fatal dbus errors e.g. quickly sending the same notif twice.
-        if clientErrorFatal ce
-          then throwM ce
-          else
-            $(logError)
-              $ "Received non-fatal dbus error: "
-              <> packText (displayException ce)
+  forever $ do
+    note <- readTBQueueA' queue
+    let note' = Notify.setTitle (Just "Navi") note
+    Notify.catchNonFatalNotify notifyEnv note' $ \ex ->
+      $(logError)
+        $ "Received non-fatal error: "
+        <> packText (displayException ex)
 {-# INLINEABLE pollNoteQueue #-}
 
 pollLogQueue ::

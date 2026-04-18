@@ -4,7 +4,6 @@ module Unit.Navi.Services.Network.NetInterfaces.Toml
 where
 
 import Data.Text qualified as T
-import Navi.Data.NaviNote (Timeout (Seconds))
 import Navi.Event.Toml
   ( ErrorNoteToml
       ( ErrNoteAllowRepeatsToml,
@@ -41,7 +40,7 @@ timeoutTests =
       parsesExpected "no timeout" "app=\"nmcli\"\ndevice = \"my-device\"" Nothing (view #mTimeout)
     ]
   where
-    timeout = Just $ Seconds 5
+    timeout = Just $ NotifyTimeoutMillis 5_000
     toLines =
       T.unlines
         [ "app=\"nmcli\"",

@@ -12,7 +12,7 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as T
 import Navi.Data.CommandResultParser (CommandResultParserToml, commandResultParserDecoder)
-import Navi.Data.NaviNote (NaviNote)
+import Navi.Data.NaviNote (noteDecoder)
 import Navi.Data.PollInterval (PollInterval, pollIntervalOptDecoder)
 import Navi.Event.Toml
   ( ErrorNoteToml,
@@ -27,14 +27,14 @@ import Pythia.Data.Command (Command)
 -- | TOML for alerts.
 data TriggerNoteToml = MkTriggerNoteToml
   { -- | The notification to send when triggered.
-    note :: NaviNote,
+    note :: Note,
     -- | The text that triggers an alert.
     trigger :: Text
   }
   deriving stock (Eq, Show)
 
 instance
-  (k ~ A_Lens, a ~ NaviNote, b ~ NaviNote) =>
+  (k ~ A_Lens, a ~ Note, b ~ Note) =>
   LabelOptic "note" k TriggerNoteToml TriggerNoteToml a b
   where
   labelOptic =
@@ -60,7 +60,7 @@ instance
 -- | @since 0.1
 instance DecodeTOML TriggerNoteToml where
   tomlDecoder = do
-    note <- tomlDecoder
+    note <- noteDecoder
     trigger <- getField "trigger"
     pure
       $ MkTriggerNoteToml

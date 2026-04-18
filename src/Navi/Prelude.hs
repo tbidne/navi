@@ -85,7 +85,7 @@ import Data.Char as X (Char)
 import Data.Either as X (Either (Left, Right), either)
 import Data.Eq as X (Eq ((==)), (/=))
 import Data.Foldable as X (Foldable (elem, foldl'), for_, length, traverse_)
-import Data.Function as X (const, flip, id, ($))
+import Data.Function as X (const, flip, id, ($), (&))
 import Data.Functor as X (Functor (fmap), ($>), (<$>), (<&>))
 import Data.Int as X (Int32)
 import Data.Kind as X (Constraint, Type)
@@ -142,6 +142,24 @@ import Effects.Logger as X
     logWarn,
   )
 import Effects.Logger.Namespace as X (MonadLoggerNS, Namespace, addNamespace)
+import Effects.Notify as X
+  ( MonadNotify (initNotifyEnv, notify),
+    Note,
+    NotifyEnv,
+    NotifySystem
+      ( NotifySystemAppleScript,
+        NotifySystemDBus,
+        NotifySystemNotifySend
+      ),
+    NotifySystemOs,
+    NotifyTimeout (NotifyTimeoutMillis, NotifyTimeoutNever),
+    NotifyUrgency
+      ( NotifyUrgencyCritical,
+        NotifyUrgencyLow,
+        NotifyUrgencyNormal
+      ),
+    notifySystemToOs,
+  )
 import Effects.Optparse as X (MonadOptparse)
 import Effects.System.Process as X (MonadProcess)
 import Effects.System.Terminal as X (MonadTerminal, putStrLn, putTextLn)

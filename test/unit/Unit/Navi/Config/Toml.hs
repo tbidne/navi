@@ -6,8 +6,8 @@ module Unit.Navi.Config.Toml
   )
 where
 
-import DBus.Notify (UrgencyLevel (Critical))
 import Data.Text qualified as T
+import Effects.Notify qualified as Notify
 import Navi.Config.Toml
   ( ConfigToml
       ( MkConfigToml,
@@ -28,16 +28,6 @@ import Navi.Config.Types
         severity,
         sizeMode
       ),
-  )
-import Navi.Data.NaviNote
-  ( NaviNote
-      ( MkNaviNote,
-        body,
-        summary,
-        timeout,
-        urgency
-      ),
-    Timeout (Seconds),
   )
 import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Services.Battery.Percentage.Toml
@@ -230,12 +220,9 @@ expectedCustom =
   ]
   where
     note =
-      MkNaviNote
-        { summary = "Some single",
-          body = Just "A body",
-          urgency = Nothing,
-          timeout = Just $ Seconds 15
-        }
+      Notify.mkNote "Some single"
+        & Notify.setBody (Just "A body")
+        & Notify.setTimeout (Just $ NotifyTimeoutMillis 15_000)
 
 expectedBatteryPercentage :: Maybe BatteryPercentageToml
 expectedBatteryPercentage =
@@ -257,7 +244,7 @@ expectedBatteryPercentage =
     alert2 =
       MkBatteryPercentageNoteToml
         { percentage = PercentageExact $ Percentage.unsafePercentage 20,
-          urgency = Just Critical,
+          urgency = Just NotifyUrgencyCritical,
           mTimeout = Nothing
         }
 
@@ -269,7 +256,7 @@ expectedBatteryStatus =
         pollInterval = Nothing,
         repeatEvent = Nothing,
         errorNote = Nothing,
-        mTimeout = Just $ Seconds 5
+        mTimeout = Just $ NotifyTimeoutMillis 5_000
       }
 
 expectedNetInterfaces :: [NetInterfacesToml]

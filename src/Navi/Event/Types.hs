@@ -13,7 +13,6 @@ where
 
 import Data.Set (Set)
 import GHC.Show (showSpace)
-import Navi.Data.NaviNote (NaviNote)
 import Navi.Data.PollInterval (PollInterval)
 import Navi.Event.Types.EventError (EventError (MkEventError, long, name, short))
 import Navi.Prelude
@@ -76,7 +75,7 @@ data Event result trigger = MkEvent
     pollInterval :: PollInterval,
     -- | Conditionally raises an alert based on the (result -> trigger)
     -- mapping.
-    raiseAlert :: result -> Maybe (trigger, NaviNote),
+    raiseAlert :: result -> Maybe (trigger, Note),
     -- | Determines how we handle repeat alerts.
     repeatEvent :: RepeatEvent trigger,
     -- | The service to run.
@@ -120,7 +119,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ (result -> Maybe (trigger, NaviNote)), b ~ (result -> Maybe (trigger, NaviNote))) =>
+  (k ~ A_Lens, a ~ (result -> Maybe (trigger, Note)), b ~ (result -> Maybe (trigger, Note))) =>
   LabelOptic "raiseAlert" k (Event result trigger) (Event result trigger) a b
   where
   labelOptic =
@@ -185,7 +184,7 @@ deriving stock instance Show AnyEvent
 -- @since 0.1
 data EventSuccess result trigger = MkEventSuccess
   { pollInterval :: Maybe PollInterval,
-    raiseAlert :: result -> Maybe (trigger, NaviNote),
+    raiseAlert :: result -> Maybe (trigger, Note),
     repeatEvent :: RepeatEvent trigger,
     result :: result
   }
@@ -203,7 +202,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ (result -> Maybe (trigger, NaviNote)), b ~ (result -> Maybe (trigger, NaviNote))) =>
+  (k ~ A_Lens, a ~ (result -> Maybe (trigger, Note)), b ~ (result -> Maybe (trigger, Note))) =>
   LabelOptic "raiseAlert" k (EventSuccess result trigger) (EventSuccess result trigger) a b
   where
   labelOptic =

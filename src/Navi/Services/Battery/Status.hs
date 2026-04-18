@@ -5,8 +5,7 @@ module Navi.Services.Battery.Status
   )
 where
 
-import Navi.Data.NaviNote (NaviNote, Timeout)
-import Navi.Data.NaviNote qualified as NNote
+import Effects.Notify qualified as Notify
 import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -53,7 +52,7 @@ toEvent toml = do
 {-# INLINEABLE toEvent #-}
 
 mkStatusEvent ::
-  Maybe Timeout ->
+  Maybe NotifyTimeout ->
   BatteryApp ->
   PollInterval ->
   RepeatEvent BatteryStatus ->
@@ -69,7 +68,7 @@ mkStatusEvent to cfg pi repeatEvent errorNote =
       errorNote = errorNote
     }
 
-toNote :: Maybe Timeout -> BatteryStatus -> Maybe (BatteryStatus, NaviNote)
+toNote :: Maybe NotifyTimeout -> BatteryStatus -> Maybe (BatteryStatus, Note)
 toNote timeout status = (status,) <$> toNote' timeout (fromStatus status)
   where
     fromStatus Charging = "Battery charging"
@@ -77,12 +76,9 @@ toNote timeout status = (status,) <$> toNote' timeout (fromStatus status)
     fromStatus Full = "Battery full"
     fromStatus Pending = "Battery pending"
 
-toNote' :: Maybe Timeout -> Text -> Maybe NaviNote
+toNote' :: Maybe NotifyTimeout -> Text -> Maybe Note
 toNote' timeout msg =
   Just
-    $ NNote.MkNaviNote
-      { NNote.summary = "Battery Status",
-        NNote.body = Just msg,
-        NNote.urgency = Nothing,
-        NNote.timeout = timeout
-      }
+    . Notify.setBody (Just msg)
+    . Notify.setTimeout timeout
+    $ Notify.mkNote "Battery Status"

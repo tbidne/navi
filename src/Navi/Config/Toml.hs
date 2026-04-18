@@ -13,12 +13,10 @@ import Data.Char qualified as Ch
 import Data.Text qualified as T
 import FileSystem.OsPath (encodeFail)
 import GHC.Real (truncate)
-import Navi.Config.Phase (ConfigPhase (ConfigPhaseToml))
 import Navi.Config.Types
   ( FilesSizeMode (FilesSizeModeDelete, FilesSizeModeWarn),
     LogLoc (DefPath, File, Stdout),
     Logging (MkLogging, location, severity, sizeMode),
-    NoteSystem (AppleScript, DBus, NotifySend),
   )
 import Navi.Prelude
 import Navi.Services.Battery.Percentage.Toml (BatteryPercentageToml)
@@ -34,7 +32,7 @@ data ConfigToml = MkConfigToml
     customToml :: [CustomToml],
     logToml :: Maybe Logging,
     netInterfacesToml :: [NetInterfacesToml],
-    noteSystemToml :: Maybe (NoteSystem ConfigPhaseToml)
+    noteSystemToml :: Maybe NotifySystem
   }
   deriving stock (Eq, Show)
 
@@ -99,7 +97,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ Maybe (NoteSystem ConfigPhaseToml), b ~ Maybe (NoteSystem ConfigPhaseToml)) =>
+  (k ~ A_Lens, a ~ Maybe NotifySystem, b ~ Maybe NotifySystem) =>
   LabelOptic "noteSystemToml" k ConfigToml ConfigToml a b
   where
   labelOptic =
@@ -182,12 +180,12 @@ locationDecoder =
     "stdout" -> pure Stdout
     f -> File <$> encodeFail f
 
-noteSystemDecoder :: Decoder (NoteSystem ConfigPhaseToml)
+noteSystemDecoder :: Decoder NotifySystem
 noteSystemDecoder =
   tomlDecoder >>= \case
-    "apple-script" -> pure AppleScript
-    "dbus" -> pure $ DBus ()
-    "notify-send" -> pure NotifySend
+    "apple-script" -> pure NotifySystemAppleScript
+    "dbus" -> pure NotifySystemDBus
+    "notify-send" -> pure NotifySystemNotifySend
     bad -> fail $ unpackText $ "Unsupported NoteSystem: " <> bad
 
 sizeModeDecoderOpt :: Decoder (Maybe FilesSizeMode)

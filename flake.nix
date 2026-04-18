@@ -46,7 +46,7 @@
       inputs.monad-effects.follows = "monad-effects";
     };
     monad-effects = {
-      url = "github:tbidne/monad-effects";
+      url = "github:tbidne/monad-effects/notify";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nix-hs-utils.follows = "nix-hs-utils";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -137,6 +137,7 @@
                 "effects-fs"
                 "effects-ioref"
                 "effects-logger"
+                "effects-notify"
                 "effects-optparse"
                 "effects-process"
                 "effects-stm"

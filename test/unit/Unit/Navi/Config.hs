@@ -12,7 +12,6 @@ import Navi.Config qualified as Config
 import Navi.Config.Types
   ( Config,
     LogLoc (DefPath, Stdout),
-    NoteSystem (DBus, NotifySend),
   )
 import Navi.Event.Types (AnyEvent (MkAnyEvent))
 import Unit.Prelude
@@ -27,19 +26,19 @@ tests =
     ]
   where
     verifyConfig cfg = do
-      NotifySend @=? cfg ^. #noteSystem
+      Just NotifySystemNotifySend @=? cfg ^. #noteSystem
       Nothing @=? cfg ^. #logging % #severity
       Just Stdout @=? cfg ^. #logging % #location
       verifyEvents 7 (cfg ^. #events)
 
     verifySimple cfg = do
-      NotifySend @=? cfg ^. #noteSystem
+      Just NotifySystemNotifySend @=? cfg ^. #noteSystem
       Just LevelDebug @=? cfg ^. #logging % #severity
       Just Stdout @=? cfg ^. #logging % #location
       verifyEvents 1 (cfg ^. #events)
 
     verifyMultiple cfg = do
-      DBus () @=? cfg ^. #noteSystem
+      Just NotifySystemDBus @=? cfg ^. #noteSystem
       Just LevelError @=? cfg ^. #logging % #severity
       Just DefPath @=? cfg ^. #logging % #location
       verifyEvents 1 (cfg ^. #events)

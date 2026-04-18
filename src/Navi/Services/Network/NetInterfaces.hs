@@ -4,15 +4,7 @@ module Navi.Services.Network.NetInterfaces
   )
 where
 
-import Navi.Data.NaviNote
-  ( NaviNote
-      ( MkNaviNote,
-        body,
-        summary,
-        timeout,
-        urgency
-      ),
-  )
+import Effects.Notify qualified as Notify
 import Navi.Data.PollInterval (PollInterval (MkPollInterval))
 import Navi.Event.Toml qualified as EventToml
 import Navi.Event.Types
@@ -61,16 +53,13 @@ toEvent toml = do
       NetworkInterface device (toml ^. #app)
 {-# INLINEABLE toEvent #-}
 
-toNote :: NetInterfacesToml -> NetInterface -> Maybe (NetInterface, NaviNote)
+toNote :: NetInterfacesToml -> NetInterface -> Maybe (NetInterface, Note)
 toNote noteToml conn =
   Just
     ( conn,
-      MkNaviNote
-        { summary = "Network Connectivity",
-          body = Just body,
-          urgency = Nothing,
-          timeout = noteToml ^. #mTimeout
-        }
+      Notify.setBody (Just body)
+        . Notify.setTimeout (noteToml ^. #mTimeout)
+        $ Notify.mkNote "Network Connectivity"
     )
   where
     deviceTxt = conn ^. (#device % #unDevice)

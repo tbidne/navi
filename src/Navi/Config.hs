@@ -9,9 +9,6 @@ module Navi.Config
     -- * Logging
     Logging (..),
     LogLoc (..),
-
-    -- * Note System
-    NoteSystem (..),
   )
 where
 
@@ -22,9 +19,7 @@ import Navi.Config.Types
     ConfigErr (..),
     LogLoc (..),
     Logging (..),
-    NoteSystem (..),
     defaultLogging,
-    defaultNoteSystem,
   )
 import Navi.Prelude
 import Navi.Services.Battery.Percentage qualified as BattState
@@ -81,7 +76,7 @@ tomlToConfig toml = do
           }
   where
     logCfg = fromMaybe defaultLogging (toml ^. #logToml)
-    noteSysCfg = fromMaybe defaultNoteSystem (toml ^. #noteSystemToml)
+    noteSysCfg = toml ^. #noteSystemToml
     customToml = toml ^. #customToml
     batteryPercentageToml = toml ^. #batteryPercentageToml
     batteryStatusToml = toml ^. #batteryStatusToml

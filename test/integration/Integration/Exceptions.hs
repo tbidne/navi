@@ -31,7 +31,6 @@ import FileSystem.OsPath (decodeLenient)
 import Integration.Prelude
 import Navi (runNavi)
 import Navi.Data.CommandResult (CommandResult (MkCommandResult))
-import Navi.Effects.MonadNotify (MonadNotify (sendNote))
 import Navi.Effects.MonadSystemInfo (MonadSystemInfo (query))
 import Navi.Env.Core
   ( CoreEnvField (MkCoreEnvField),
@@ -39,6 +38,7 @@ import Navi.Env.Core
     HasEvents,
     HasLogEnv (getLogEnv),
     HasNoteQueue,
+    HasNotifyEnv,
   )
 import Navi.Runner qualified as Runner
 import Navi.Services.Types
@@ -118,6 +118,8 @@ deriving via (CoreEnvField ExceptionEnv) instance HasLogEnv ExceptionEnv
 
 deriving via (CoreEnvField ExceptionEnv) instance HasNoteQueue ExceptionEnv
 
+deriving via (CoreEnvField ExceptionEnv) instance HasNotifyEnv ExceptionEnv
+
 newtype TestEx = MkTestE String
   deriving stock (Show)
   deriving anyclass (Exception)
@@ -190,7 +192,7 @@ zonedTime = ZonedTime localTime utc
 instance MonadNotify ExceptionsT where
   -- NOTE: sendNote is used to fatally kill the notify thread, if we are
   -- testing it (badThread == NotifyThread)
-  sendNote _ = do
+  notify _ _ = do
     asks (view #badThread) >>= \case
       LogThread -> pure ()
       NotifyThread -> sleep 2 *> throwM (MkTestE "notify dying")
