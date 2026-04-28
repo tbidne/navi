@@ -38,7 +38,7 @@ import Navi.Env.Core
     HasEvents,
     HasLogEnv (getLogEnv),
     HasNoteQueue,
-    HasNotifyEnv,
+    HasNotifyEnv (getNotifyEnv),
   )
 import Navi.Runner qualified as Runner
 import Navi.Services.Types
@@ -61,7 +61,7 @@ data BadThread
 -- | Mock configuration.
 data ExceptionEnv = MkExceptionEnv
   { badThread :: BadThread,
-    coreEnv :: Env,
+    coreEnv :: Env NotifyEnv,
     logsRef :: IORef (Seq ByteString)
   }
 
@@ -78,7 +78,7 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ Env, b ~ Env) =>
+  (k ~ A_Lens, a ~ Env NotifyEnv, b ~ Env NotifyEnv) =>
   LabelOptic "coreEnv" k ExceptionEnv ExceptionEnv a b
   where
   labelOptic =
@@ -118,7 +118,9 @@ deriving via (CoreEnvField ExceptionEnv) instance HasLogEnv ExceptionEnv
 
 deriving via (CoreEnvField ExceptionEnv) instance HasNoteQueue ExceptionEnv
 
-deriving via (CoreEnvField ExceptionEnv) instance HasNotifyEnv ExceptionEnv
+-- See NOTE: [Derived notify env]
+instance HasNotifyEnv ExceptionEnv NotifyEnv where
+  getNotifyEnv = getNotifyEnv . view #coreEnv
 
 newtype TestEx = MkTestE String
   deriving stock (Show)
@@ -190,6 +192,8 @@ zonedTime :: ZonedTime
 zonedTime = ZonedTime localTime utc
 
 instance MonadNotify ExceptionsT where
+  type NotifyEnvF ExceptionsT = NotifyEnv
+
   -- NOTE: sendNote is used to fatally kill the notify thread, if we are
   -- testing it (badThread == NotifyThread)
   notify _ _ = do

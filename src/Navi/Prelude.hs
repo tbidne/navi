@@ -143,7 +143,7 @@ import Effects.Logger as X
   )
 import Effects.Logger.Namespace as X (MonadLoggerNS, Namespace, addNamespace)
 import Effects.Notify as X
-  ( MonadNotify (initNotifyEnv, notify),
+  ( MonadNotify (NotifyEnvF, initNotifyEnv, notify),
     Note,
     NotifyEnv,
     NotifySystem

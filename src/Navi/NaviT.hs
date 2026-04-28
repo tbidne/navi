@@ -50,7 +50,7 @@ instance
     MonadTime m,
     MonadThread m
   ) =>
-  MonadLogger (NaviT Env m)
+  MonadLogger (NaviT (Env nenv) m)
   where
   monadLoggerLog loc _src lvl msg = do
     mLogEnv <- asks getLogEnv

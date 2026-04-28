@@ -25,7 +25,7 @@ import Navi.Env.Core
     HasEvents,
     HasLogEnv,
     HasNoteQueue,
-    HasNotifyEnv,
+    HasNotifyEnv (getNotifyEnv),
   )
 import Navi.Event.Types (EventError (MkEventError, long, name, short))
 import Navi.Runner qualified as Runner
@@ -49,7 +49,7 @@ import System.Environment qualified as SysEnv
 
 -- | Mock configuration.
 data MockEnv = MkMockEnv
-  { coreEnv :: Env,
+  { coreEnv :: Env NotifyEnv,
     customResponses :: TVar (Map Command [Text]),
     percentageResponses :: TVar [Percentage],
     -- | "Sent" notifications are captured in this ref rather than
@@ -58,7 +58,7 @@ data MockEnv = MkMockEnv
   }
 
 instance
-  (k ~ A_Lens, a ~ Env, b ~ Env) =>
+  (k ~ A_Lens, a ~ Env NotifyEnv, b ~ Env NotifyEnv) =>
   LabelOptic "coreEnv" k MockEnv MockEnv a b
   where
   labelOptic =
@@ -122,7 +122,9 @@ deriving via (CoreEnvField MockEnv) instance HasLogEnv MockEnv
 
 deriving via (CoreEnvField MockEnv) instance HasNoteQueue MockEnv
 
-deriving via (CoreEnvField MockEnv) instance HasNotifyEnv MockEnv
+-- See NOTE: [Derived notify env]
+instance HasNotifyEnv MockEnv NotifyEnv where
+  getNotifyEnv = getNotifyEnv . view #coreEnv
 
 newtype MockAppT a = MkMockAppT (ReaderT MockEnv IO a)
   deriving
@@ -154,6 +156,8 @@ instance MonadLogger MockAppT where
   monadLoggerLog _loc _src _lvl _msg = pure ()
 
 instance MonadNotify MockAppT where
+  type NotifyEnvF MockAppT = NotifyEnv
+
   initNotifyEnv _ = pure (error "mock-notify-env")
 
   notify _ note =

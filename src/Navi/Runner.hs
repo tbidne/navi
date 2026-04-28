@@ -78,7 +78,7 @@ makeEnvAndRun = withEnv runWithEnv
     runWithEnv env = absurd <$> runNaviT runNavi env
 
 withEnv ::
-  forall m a.
+  forall m nenv a.
   ( HasCallStack,
     MonadAsync m,
     MonadAtomic m,
@@ -92,9 +92,10 @@ withEnv ::
     MonadPathReader m,
     MonadPathWriter m,
     MonadTerminal m,
-    MonadTime m
+    MonadTime m,
+    NotifyEnvF m ~ nenv
   ) =>
-  (Env -> m a) ->
+  (Env nenv -> m a) ->
   m a
 withEnv onEnv = do
   args <- getArgs

@@ -40,12 +40,12 @@ import Navi.Utils qualified as U
 
 -- | Entry point for the application.
 runNavi ::
-  forall env m k.
+  forall env nenv m k.
   ( HasCallStack,
     HasEvents env,
     HasLogEnv env,
     HasNoteQueue env,
-    HasNotifyEnv env,
+    HasNotifyEnv env nenv,
     MonadAsync m,
     MonadAtomic m,
     MonadHandleWriter m,
@@ -55,7 +55,8 @@ runNavi ::
     MonadNotify m,
     MonadSystemInfo m,
     MonadTerminal m,
-    MonadThread m
+    MonadThread m,
+    NotifyEnvF m ~ nenv
   ) =>
   m Void
 runNavi = do
@@ -98,7 +99,7 @@ runNavi = do
     -- run events and notify threads
     runEvents :: (HasCallStack, Traversable t) => t AnyEvent -> m Void
     runEvents evts =
-      Async.withAsync (logExAndRethrow "Notify: " pollNoteQueue) $ \noteThread ->
+      Async.withAsync (logExAndRethrow "Notify: " (pollNoteQueue @_ @nenv)) $ \noteThread ->
         Async.withAsync
           ( logExAndRethrow
               "Event processing: "
@@ -205,11 +206,12 @@ exToNote ex =
 pollNoteQueue ::
   ( HasCallStack,
     HasNoteQueue env,
-    HasNotifyEnv env,
+    HasNotifyEnv env nenv,
     MonadAtomic m,
     MonadCatch m,
     MonadLoggerNS m env k,
-    MonadNotify m
+    MonadNotify m,
+    NotifyEnvF m ~ nenv
   ) =>
   m Void
 pollNoteQueue = addNamespace "note-poller" $ do

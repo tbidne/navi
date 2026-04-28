@@ -17,7 +17,7 @@ import Navi.Env.Core
     HasEvents,
     HasLogEnv,
     HasNoteQueue,
-    HasNotifyEnv,
+    HasNotifyEnv (getNotifyEnv),
   )
 import Navi.Prelude
 import Navi.Runner qualified as Runner
@@ -28,11 +28,11 @@ import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit (testCase)
 
 newtype TestEnv = MkTestEnv
-  { coreEnv :: Env
+  { coreEnv :: Env NotifyEnv
   }
 
 instance
-  (k ~ An_Iso, a ~ Env, b ~ Env) =>
+  (k ~ An_Iso, a ~ Env NotifyEnv, b ~ Env NotifyEnv) =>
   LabelOptic "coreEnv" k TestEnv TestEnv a b
   where
   labelOptic = iso (\(MkTestEnv a1) -> a1) MkTestEnv
@@ -44,7 +44,9 @@ deriving via (CoreEnvField TestEnv) instance HasLogEnv TestEnv
 
 deriving via (CoreEnvField TestEnv) instance HasNoteQueue TestEnv
 
-deriving via (CoreEnvField TestEnv) instance HasNotifyEnv TestEnv
+-- See NOTE: [Derived notify env]
+instance HasNotifyEnv TestEnv NotifyEnv where
+  getNotifyEnv = getNotifyEnv . view #coreEnv
 
 main :: IO ()
 main = guardOrElse' "RUN_E2E" ExpectEnvSet runTests dontRun

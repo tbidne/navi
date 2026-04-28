@@ -18,21 +18,22 @@ module Navi.Env.Core
   )
 where
 
+import Data.Coerce (coerce)
 import Navi.Data.NaviLog (LogEnv)
 import Navi.Event.Types (AnyEvent)
 import Navi.Prelude
 
 -- | 'Env' holds all of our environment data that is used while running navi.
-data Env = MkEnv
+data Env nenv = MkEnv
   { events :: NonEmpty AnyEvent,
     logEnv :: Maybe LogEnv,
     noteQueue :: TBQueue Note,
-    notifyEnv :: NotifyEnv
+    notifyEnv :: nenv
   }
 
 instance
   (k ~ A_Lens, a ~ NonEmpty AnyEvent, b ~ NonEmpty AnyEvent) =>
-  LabelOptic "events" k Env Env a b
+  LabelOptic "events" k (Env nenv) (Env nenv) a b
   where
   labelOptic =
     lensVL
@@ -44,7 +45,7 @@ instance
 
 instance
   (k ~ A_Lens, a ~ Maybe LogEnv, b ~ Maybe LogEnv) =>
-  LabelOptic "logEnv" k Env Env a b
+  LabelOptic "logEnv" k (Env nenv) (Env nenv) a b
   where
   labelOptic =
     lensVL
@@ -56,7 +57,7 @@ instance
 
 instance
   (k ~ A_Lens, a ~ TBQueue Note, b ~ TBQueue Note) =>
-  LabelOptic "noteQueue" k Env Env a b
+  LabelOptic "noteQueue" k (Env nenv) (Env nenv) a b
   where
   labelOptic =
     lensVL
@@ -67,8 +68,8 @@ instance
   {-# INLINE labelOptic #-}
 
 instance
-  (k ~ A_Lens, a ~ NotifyEnv, b ~ NotifyEnv) =>
-  LabelOptic "notifyEnv" k Env Env a b
+  (k ~ A_Lens, a ~ nenv, b ~ nenv) =>
+  LabelOptic "notifyEnv" k (Env nenv) (Env nenv) a b
   where
   labelOptic =
     lensVL
@@ -78,13 +79,36 @@ instance
           (f a4)
   {-# INLINE labelOptic #-}
 
-deriving via (TopField Env) instance HasEvents Env
+deriving via (TopField (Env nenv)) instance HasEvents (Env nenv)
 
-deriving via (TopField Env) instance HasLogEnv Env
+deriving via (TopField (Env nenv)) instance HasLogEnv (Env nenv)
 
-deriving via (TopField Env) instance HasNoteQueue Env
+deriving via (TopField (Env nenv)) instance HasNoteQueue (Env nenv)
 
-deriving via (TopField Env) instance HasNotifyEnv Env
+-- NOTE: [Derived notify env]
+--
+-- For some reason, our attempt at a derived instance:
+--
+--    deriving via (TopField (Env nenv)) instance HasNotifyEnv (Env nenv) nenv
+--
+-- does not work. It /should/ be generating the below instance (that's what
+-- the other derivations produce), but instead it is trying to generate:
+--
+--   instance HasNotifyEnv (Env nenv) nenv where
+--     getNotifyEnv =
+--       coerce
+--         @(Env nenv -> TopField (Env nenv))
+--         @(Env nenv[sk:0] -> nenv)
+--         (getNotifyEnv @(Env nenv) @(TopField (Env nenv)))
+--
+-- In other words, the instance is backwards? This is maybe a GHC bug, consider
+-- reducing and reporting it.
+instance HasNotifyEnv (Env nenv) nenv where
+  getNotifyEnv =
+    coerce
+      @(TopField (Env nenv) -> nenv)
+      @(Env nenv -> nenv)
+      getNotifyEnv
 
 -- | Used for deriving instances from the top level field name e.g.
 -- 'events :: NonEmpty AnyEvent'.
@@ -107,8 +131,8 @@ class HasLogEnv env where
 class HasNoteQueue env where
   getNoteQueue :: env -> TBQueue Note
 
-class HasNotifyEnv env where
-  getNotifyEnv :: env -> NotifyEnv
+class HasNotifyEnv env nenv where
+  getNotifyEnv :: env -> nenv
 
 -- NOTE: For some reason, we cannot really compose these optics together
 -- e.g. view (#coreEnv % #events) fails to typecheck. Probably there's a
@@ -121,7 +145,7 @@ instance
   getEvents (MkTopField x) = view #events x
 
 instance
-  (Is k A_Getter, LabelOptic' "coreEnv" k a Env) =>
+  (Is k A_Getter, LabelOptic' "coreEnv" k a (Env nenv)) =>
   HasEvents (CoreEnvField a)
   where
   getEvents (MkCoreEnvField x) = getEvents $ view #coreEnv x
@@ -133,7 +157,7 @@ instance
   getLogEnv (MkTopField x) = view #logEnv x
 
 instance
-  (Is k A_Getter, LabelOptic' "coreEnv" k a Env) =>
+  (Is k A_Getter, LabelOptic' "coreEnv" k a (Env nenv)) =>
   HasLogEnv (CoreEnvField a)
   where
   getLogEnv (MkCoreEnvField x) = getLogEnv $ view #coreEnv x
@@ -145,26 +169,26 @@ instance
   getNoteQueue (MkTopField x) = view #noteQueue x
 
 instance
-  (Is k A_Getter, LabelOptic' "coreEnv" k a Env) =>
+  (Is k A_Getter, LabelOptic' "coreEnv" k a (Env nenv)) =>
   HasNoteQueue (CoreEnvField a)
   where
   getNoteQueue (MkCoreEnvField x) = getNoteQueue $ view #coreEnv x
 
 instance
-  (Is k A_Getter, LabelOptic' "notifyEnv" k a NotifyEnv) =>
-  HasNotifyEnv (TopField a)
+  (Is k A_Getter, LabelOptic' "notifyEnv" k a nenv) =>
+  HasNotifyEnv (TopField a) nenv
   where
   getNotifyEnv (MkTopField x) = view #notifyEnv x
 
 instance
-  (Is k A_Getter, LabelOptic' "coreEnv" k a Env) =>
-  HasNotifyEnv (CoreEnvField a)
+  (Is k A_Getter, LabelOptic' "coreEnv" k a (Env nenv)) =>
+  HasNotifyEnv (CoreEnvField a) nenv
   where
   getNotifyEnv (MkCoreEnvField x) = getNotifyEnv $ view #coreEnv x
 
 instance
   (k ~ A_Lens, x ~ Namespace, y ~ Namespace) =>
-  LabelOptic "namespace" k Env Env x y
+  LabelOptic "namespace" k (Env nenv) (Env nenv) x y
   where
   labelOptic =
     lensVL $ \f (MkEnv a1 a2 a3 a4) ->
